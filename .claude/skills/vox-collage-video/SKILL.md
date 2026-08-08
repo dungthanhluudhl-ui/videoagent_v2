@@ -1,6 +1,6 @@
 ---
 name: vox-collage-video
-description: Build a Vox-style grayscale-collage motion-graphics short in this Remotion project from just an audio file + script — no further style questions needed. Use this whenever the user hands over a voiceover/narration audio file (mp3/wav) plus its script and asks for a video, or says things like "make me a video from this audio", "dựng video từ audio này", "same style as before", "another Vox-style clip", or references a prior grayscale/collage video in this project. Covers the full pipeline end to end: Whisper transcription, scene segmentation, sourcing stock photos from the Pexels API (with an AI-image-prompt fallback list for anything Pexels doesn't have), turning them into grayscale cutouts, generating a varied SFX set, building the Remotion scene with a wide, non-repeating palette of entrance animations, registering it in Root.jsx, and previewing it via rendered frame screenshots.
+description: Build a Vox-style grayscale-collage motion-graphics short in this Remotion project from just an audio file + script — no further style questions needed. Use this whenever the user hands over a voiceover/narration audio file (mp3/wav) plus its script and asks for a video, or says things like "make me a video from this audio", "dựng video từ audio này", "same style as before", "another Vox-style clip", or references a prior grayscale/collage video in this project. Covers the full pipeline end to end: Whisper transcription, scene segmentation, sourcing stock photos from the Pexels API (with an AI-image-prompt fallback list for anything Pexels doesn't have), turning them into grayscale/color cutouts with a pixel-verified layout, a multi-scene Remotion build with TransitionSeries transitions, word-synced burned-in captions, and registering + previewing it.
 ---
 
 # Vox-collage video pipeline (grayscale + orange, 9:16)
@@ -10,19 +10,35 @@ MCP connection — everything runs through the Bash tool (Node/npm/npx are
 available) and Python via the `py -3` launcher (not `python3`). Whisper,
 rembg, scipy, and Pillow are already installed for this Python.
 
+**Always build the Remotion side using the official `remotion-dev/skills`
+package patterns** (`npx skills add remotion-dev/skills` — installs into
+`.agents/skills/`, symlinked into `.claude/skills/remotion-*`). This
+skill (`vox-collage-video`) only owns the parts official Remotion skills
+don't cover: the image-sourcing/cutout pipeline, the visual style rules,
+and the caption-timing pipeline. For markup, transitions, sfx, fonts,
+etc., defer to `remotion-markup` and its linked references — verify
+against the actually-installed package output before trusting an
+example in those docs (found one real doc/package mismatch already: see
+the sfx note in step 6).
+
 The visual target is the grayscale-collage look from
 `docs/Vox-Style_Motion_Graphics_Using_Only_Claude_Code___Remotion_frames/`:
-real stock photos, background removed, hero/person subjects desaturated
-to plain contrast-boosted grayscale (NO halftone dot-screen pattern —
-that was tried and explicitly rejected, don't reintroduce it), each with
-a baked-in offset SOLID-ORANGE drop shadow, laid out on a pale
-graph-paper-grid background (no kraft paper). Small supporting
-props/graphics (safety gear, a tank, a flag/chart illustration) stay in
-their original color instead of being desaturated. Bold black
-punch-phrase text for the one timed highlight per scene (no
-highlighter-yellow, no white paper-sticker edge, no persistent tag chip —
-those belong to a *different* Vox sub-style this project isn't using).
-Canvas is 1080x1920 @ 30fps (9:16) unless the user asks for 16:9.
+real stock photos, background removed, PERSON subjects desaturated to
+plain contrast-boosted grayscale (NO halftone dot-screen pattern — that
+was tried, technically confirmed as present in the source, and still
+explicitly rejected for this project; don't reintroduce it without being
+asked again) with a baked-in offset solid-orange drop shadow. OBJECT/prop
+cutouts (a flag, a scale statuette, a stack of books, an envelope) stay
+in full original color and get NO drop shadow by default — the shadow is
+a person-only treatment, confirmed the hard way after shipping a version
+where every cutout had one and it read as visually wrong. Pale
+graph-paper-grid background (grid line `rgba(20,20,20,0.32)`, ~84px
+cells — an earlier 0.07-alpha version was nearly invisible, don't
+undershoot contrast there again). Bold black punch-phrase text for one
+timed highlight per scene (no highlighter-yellow, no persistent tag
+chip — a chip was in an earlier draft of this skill and does NOT exist
+in the reference, confirmed by frame-by-frame review; don't reintroduce
+it). Canvas is 1080x1920 @ 30fps (9:16) unless the user asks for 16:9.
 
 Work through the steps below in order. Visual style is already decided —
 don't re-ask about it. The one thing worth pausing for, per video, is a
@@ -42,23 +58,27 @@ file (already gitignored). `scripts/fetch_pexels.py` reads it automatically.
 
 Copy the provided audio into `public/` under a short name (e.g.
 `audio.wav`). Transcribe with Whisper for word-level timestamps — these
-are what scene cuts, punch-phrase timing, and SFX cues all sync to:
+drive scene cuts, punch-phrase timing, SFX cues, AND captions (step 8):
 
 ```bash
 py -3 -c "
 import whisper, json
 model = whisper.load_model('base')
 result = model.transcribe('public/audio.wav', word_timestamps=True, language='vi')
-json.dump(result, open('transcript.json','w',encoding='utf-8'), ensure_ascii=False, indent=2)
+json.dump(result, open('input/transcript.json','w',encoding='utf-8'), ensure_ascii=False, indent=2)
 "
 ```
 
 Use `language='vi'` for Vietnamese scripts (or whatever language the
 script is actually in — don't default to English). The `base` model
-sometimes mis-hears specific Vietnamese words even with word_timestamps
-on; trust the user-provided script text for what a word *says*, and trust
-Whisper's timing for *when* it's said — match by position within a
-sentence, not by re-reading Whisper's own (possibly garbled) transcript.
+sometimes mis-hears specific words even with word_timestamps on; trust
+the user-provided script text for what a word *says*, trust Whisper's
+timing for *when* it's said. **Before pairing them up, verify the word
+COUNT matches 1:1 between Whisper's segment and the corresponding chunk
+of the real script** — if it doesn't, the position-matching breaks and
+timestamps land on the wrong words. It matched cleanly on every segment
+last time; if it doesn't this time, fall back to matching sentence-by-
+sentence instead of word-by-word rather than guessing an offset.
 
 ## 2. Segment the script into scenes, draft the shot list, checkpoint
 
@@ -69,21 +89,34 @@ emotionally-loaded line into its own scene even if short. Don't force a
 minimum or maximum scene count — let the sentences decide.
 
 For each scene decide:
-- **tag** — one short persistent word/phrase shown all scene as the
-  orange chip.
-- **punch phrase** — ONE short catchy highlight tied to a specific word,
-  computed as `appearAt = round(word.start * 30) - sceneStartFrame`
-  (LOCAL frame). Not a running caption — isolated, precisely-timed
-  pull-quotes only.
+- **punch phrase** — ONE short catchy highlight, timed to appear with
+  real dwell time before the NEXT scene's cut — not pinned to the exact
+  last word of the line. If the phrase's natural cue point is within
+  ~1.5s of the scene's end, move its `from` earlier so it's fully
+  settled and readable for at least ~45 frames before the cut; caught a
+  real case where a phrase appeared and got cut mid-read 20 frames
+  later and it read as a broken edit.
 - **hero image** — the single most visually central subject of the
   sentence.
-- **2-4 support elements** — smaller cutouts reinforcing the sentence's
-  specific content, not generic decoration.
-- **variant** — an entrance animation (see step 6); no two consecutive
-  scenes repeat one.
+- **2-3 support elements** — smaller cutouts reinforcing the sentence's
+  specific content. In the reference, a support is almost always
+  touching/overlapping the hero (at its feet, on its shoulder, stacked
+  on top) forming ONE cluster — never floated off in a far corner with
+  the hero isolated in the middle. See step 4's placement-verification
+  step; this is checked with real numbers now, not eyeballed.
+- **variant** — an entrance animation (see `references/animation-
+  variants.md`); no two consecutive scenes repeat one.
 
-**Present this shot list to the user as text before moving on** — tag,
-punch phrase + which word it's keyed to, hero + supports (named, not yet
+If the sentence's core action has a real cause→effect chain worth
+diagramming (money → influence → verdict, cause → consequence), that's
+a good candidate for the `FlowArrow` connecting-line technique (step 6)
+instead of forcing in a literal chart/map that doesn't match a non-data
+script — see step 6's note on translating reference techniques to
+content that doesn't have the same kind of content (no numbers, no
+geography) as the original reference video.
+
+**Present this shot list to the user as text before moving on** — punch
+phrase + which word it's keyed to, hero + supports (named, not yet
 sourced), variant. Only proceed to sourcing/building after they approve
 or adjust it. Skip this checkpoint only if the user has explicitly said
 to run a video end-to-end without review.
@@ -101,182 +134,248 @@ anything genuinely specific to the step-3 AI-image-prompt fallback.
 browser needed:
 
 ```bash
-# Preview candidates before downloading anything — id, dimensions,
-# photographer, a thumbnail URL:
 py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py list "gavel" --orientation portrait
-
-# Download one (index from the list above, default 0):
-py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py get "gavel" public/raw_gavel.jpg --orientation portrait --index 0
+py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py get "gavel" input/raw_cache/gavel.jpg --orientation portrait --index 0
 ```
 
+Save raw downloads under `input/raw_cache/` (not a throwaway temp dir) —
+keeping them means a later re-process (a fixed shadow rule, a better
+edge threshold) doesn't need a fresh API round-trip.
+
 **Picking which result to use matters more than it looks — check with
-the Read tool before committing.** rembg does great on a subject shot
-against a plain color backdrop or a clearly-separated scene, and does
-*badly* on a busy photo (a blurred background scene, a subject among
-similar-toned objects, a subject sitting on white paper/documents) —
-it can't tell where the subject ends and the "background" begins. Open
-the raw download with Read; if it's a busy/complex scene rather than one
-clear isolated subject, try the next index or a more specific query
-(e.g. "gavel white background" instead of "judge gavel") before running
-it through the cutout script.
+the Read tool before committing, at thumbnail scale** (the `list`
+command prints a `src.medium` preview URL — download and view THAT, not
+the full-res original, to screen candidates cheaply). rembg does great
+on a subject shot against a plain color backdrop or a clearly-separated
+scene, and does *badly* on: a busy/cluttered composition, a subject
+resting ON or AMONG a similarly-detailed surface (money on top of a
+pile of money — the classic failure, confirmed twice), large-scale
+architecture/building photos, and flat-lay top-down document shots.
+Route anything matching those patterns to a plain-background candidate
+or a different query before running the cutout script — don't retry the
+same busy photo through rembg hoping the mask cleanup fixes it, it won't.
 
-If a search genuinely turns up nothing usable (mainly: anything
-culturally/topically specific that a generic Western stock library
-won't have), add a line to an AI-image prompt list instead of keeping
-searching Pexels — see the prompt-writing note at the end of this
-section. Only ask the user to supply an image themselves as a last
-resort, when neither source works.
+If a search genuinely turns up nothing usable, add a line to an AI-image
+prompt list instead of continuing to search Pexels — save it to
+`assets/ai-image-prompts.txt` at the project root (one prompt per line,
+no bullet, so the user can paste the block into a batch generator), and
+tell the user the exact filename to save the result as.
 
-For the AI-image fallback: write each prompt on its own line with no
-leading bullet/number character (so the user can paste the whole block
-into a batch image generator), and save the list to
-`assets/ai-image-prompts.txt` at the project root. Tell the user which
-scene/element each prompt is for, and the exact filename to save the
-downloaded result as in `public/` (e.g. `raw_co_an_handshake.jpg`) so it
-drops straight into step 4.
-
-Also grab one subtle paper/graph-paper-texture photo for the background
-if you want more tactile depth than the flat pale-grid CSS gradient —
-only needs fetching once per video.
-
-## 4. Turn photos into grayscale cutouts
+## 4. Turn photos into cutouts, then verify placement with real pixels
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
-  public/raw_gavel.jpg public/el_gavel.png \
-  public/raw_envelope.jpg public/el_envelope.png \
-  ...
+  input/raw_cache/gavel.jpg public/el_gavel.png \
+  input/raw_cache/envelope.jpg public/el_envelope.png \
+  --color
+# (run person/hero subjects in a separate call WITHOUT --color — that's
+# the grayscale + drop-shadow path, the default when --color is omitted)
 ```
 
-This removes the background (rembg with the `isnet-general-use` model —
-checked head-to-head against the default `u2net`: isnet gives a visibly
-crisper edge, same speed once the ~179MB model is cached after its first
-run), drops stray disconnected mask fragments, crops tightly to content
-bounds with a small margin, desaturates to plain contrast-boosted
-grayscale, and bakes in the offset solid-orange drop shadow — all in one
-pass.
+rembg (`isnet-general-use` model — checked head-to-head against the
+default `u2net`, isnet gives a visibly crisper edge), a connected-
+component mask cleanup, an alpha-curve edge-tightening pass (kills the
+soft "smoke" fringe rembg leaves on a blurred/shadowed edge — this was a
+real visible defect in an earlier pass, fixed by steepening the alpha
+curve, not by re-picking photos), a tight content crop, then either
+grayscale+shadow or `--color` (no shadow unless `--shadow` is also
+passed).
 
-**No halftone dot-screen pattern.** An earlier pass applied a dot-screen
-effect (reasoning: a zoomed-in check of the reference frames showed the
-reference DOES use a genuine dot-screen on some photos, e.g. a ship) —
-that technical read was accurate, but the user explicitly rejected the
-dot-screen look for this project regardless and asked for plain
-grayscale. Follow that direction; don't re-derive dot-screen from the
-reference frames again without asking first — this is a standing
-product decision, not an open technical question.
+**Don't place hero/support x/y coordinates by eye.** Write (or reuse) a
+small script that reads each PNG's real pixel dimensions, computes its
+actual rendered bounding box at the configured width/x/y, and — ideally
+— composites the REAL alpha channels to measure what % of the hero's
+opaque pixels a support actually covers at those coordinates. Iterate
+coordinates until occlusion is ~0% and the support's box still overlaps
+the hero's outer bbox (so it reads as touching, not isolated in a
+corner). A synthetic "keep-clear center rectangle" heuristic is a decent
+first pass but overestimates the clash for thin/irregular silhouettes
+(a tall statue) — the real alpha-composite check is what actually
+answers "does this cover something that matters."
 
-Pass `--color` for small supporting PROPS that should stay in original
-color — confirmed against the reference frames that safety gear, a tank,
-etc. stay color while sitting next to a grayscale hero portrait.
-Full-color vector/3D graphics (a flag map illustration, a chart mockup)
-also want `--color`.
-
-The script warns on stderr if content is still small relative to its
-own crop, or if a source photo doesn't crop the way you'd expect —
-re-check that one with Read before moving on.
-
-**Preview a couple of outputs before wiring up the scene** — composite
-over the pale background color and view it:
+**Preview outputs before wiring up the scene** — composite over the pale
+background color, downscale, and view a combined contact sheet of
+several at once rather than one Read call per image (this is the
+single biggest token sink in this pipeline if skipped):
 
 ```bash
 py -3 -c "
 from PIL import Image
 im = Image.open('public/el_gavel.png')
-bg = Image.new('RGBA', im.size, (234,230,220,255))
+bg = Image.new('RGBA', im.size, (231,227,217,255))
 bg.alpha_composite(im)
-bg.convert('RGB').save('/tmp/check_gavel.jpg', quality=90)
+bg.convert('RGB').thumbnail((350,350))
+bg.save('/tmp/check_gavel.jpg', quality=88)
 "
 ```
-Then Read `/tmp/check_gavel.jpg`. Catching a bad cutout here is much
-cheaper than discovering it after the whole scene is wired up.
 
-## 5. Generate SFX
+## 5. SFX
 
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/generate_sfx.py public/sfx
+Use the official `@remotion/sfx` package, not a locally-synthesized set
+(`scripts/generate_sfx.py` exists from an earlier approach but is
+unused now — the official package has a real one-shot library and
+that's what shipped). **Note a real doc/package mismatch**: the
+`remotion-markup/sfx.md` example shows `import { Audio } from
+"@remotion/sfx"` — the installed package only exports plain URL string
+constants, no `Audio` component. Correct usage: `import * as sfx from
+"@remotion/sfx"` then play with remotion's own `<Audio src={sfx.whoosh}
+/>`. Verify against the installed package's actual `dist` output before
+trusting a skill doc's example code again.
+
+Wire SFX at the actual beat each belongs to (an entrance landing, an
+impact frame), not bunched at frame 0 every time. Keep volumes 0.3-0.5.
+
+## 6. Build the scenes
+
+Use a **separate file per scene** (`src/scenes/Scene1.jsx`, `Scene2.jsx`,
+...) plus one `src/scenes/shared.jsx` holding the reusable pieces, per
+`remotion-markup/multi-scene-video.md`. Treat the current project's
+`src/scenes/shared.jsx` and `src/scenes/Scene*.jsx` as the canonical
+reference to copy patterns from for the next video — it's proven,
+working code, not a synthetic example that drifts out of sync (an
+earlier `references/example-scene.jsx` in this skill did exactly that
+and was removed; see `references/README.md`). It currently has:
+
+- `SceneBackground` / `BottomBar` — identical grid+grain background and
+  the one always-present orange bottom bar (rendered OUTSIDE any zoom/
+  pan wrapper — a zoom scale >1 will push a bottom-anchored bar out of
+  frame if it's nested inside the zoom group, caught via pixel-sampling
+  a render).
+- `CameraGroup` — zoom AND/OR pan (translate), plus an optional `shake`
+  (brief decaying jitter at a specific frame, e.g. an impact landing).
+- `Hero` / `Support` — entrance variants (`rise`/`grow`/`punch`/`flip`/
+  `dropSpin`/`strike`, see `references/animation-variants.md`), an
+  `idle` secondary-motion mode (`sway`/`tremble`/`bob` — vary this
+  across elements, don't let everything wiggle identically), and a
+  `visibleFor` prop that fades+shrinks the element out before its scene
+  ends instead of letting it hard-vanish when the Sequence unmounts.
+- `ImpactFlash`, `FlowArrow`, `Shimmer` — punctuation effects: a radial
+  flash at a strike/landing frame, a self-drawing curved arrow
+  connecting two elements (for a cause→effect diagram — translate this
+  to whatever the SCRIPT's actual content chain is, don't copy the
+  reference's literal economic chart/map if the new script has no data
+  to back it), and a light-sweep masked to an element's own alpha shape.
+- `PunchPhrase` / `SpeechBubble` — both support a `stagger` prop for a
+  word-by-word kinetic-text reveal instead of the whole block popping at
+  once; vary which ones use it.
+- `Captions` — see step 8.
+
+## 7. Assemble the master timeline with real transitions
+
+Don't just stack scenes with plain back-to-back `<Sequence>`s — use
+`@remotion/transitions`' `TransitionSeries` (per `remotion-markup/
+transitions.md`) so cuts fade/slide instead of hard-switching. **The
+tricky part: scene start times are locked to real Whisper-derived
+narration timestamps (silence pauses between lines), and
+`TransitionSeries` shortens the total timeline by however much adjacent
+sequences overlap** — used naively, every scene after the first
+transition drifts earlier than its real audio cue, and the drift
+compounds scene over scene.
+
+The fix that keeps every scene's arrival frame exactly on its original
+timestamp despite the transitions: for each rail (each `TransitionSeries
+.Sequence`), pad its `durationInFrames` by the transition duration that
+comes immediately BEFORE it —
+
+```
+rail_i = (original_gap_to_next_scene) + (transition_duration_before_this_rail)
 ```
 
-Synthesizes eleven one-shots locally (whoosh, pop, coin, thud, boing,
-swipe, click, riser, drop, shatter, paper — see the script's docstring
-for pairing notes). Wire them via the `Sfx` helper in the reference
-scene at the actual beat each belongs to, not bunched at frame 0. Keep
-volumes 0.3-0.55. Spread the full set across a video's scenes the same
-way you vary entrance animations — reusing the same 2-3 sounds every
-scene reads as flat.
+(gap = the real silence between this scene's start and the next scene's
+start from the timestamps; first scene's padding is 0; last scene pads
+by its own trailing transition instead of a gap-to-next). Verify by
+rendering the composition's very last valid frame and confirming it
+doesn't error — that's the total-duration math checking out — and spot-
+check a few frames straddling each transition to see the actual
+fade/slide blend, not just that it builds.
 
-## 6. Build the scene
+## 8. Word-synced captions
 
-Copy `references/example-scene.jsx` to `src/<VideoName>.jsx`, rename the
-component and the two exported constants (`SOMETHING_CANVAS`,
-`SOMETHING_TOTAL_FRAMES`), fill in `SEGMENTS` with the approved shot
-list plus the real image filenames from step 4. The file's comments
-explain each piece; `references/animation-variants.md` has the full
-entrance-animation set (rise/grow/punch/flip plus shatter/peel/unfold/
-spiral/wobble-drop/zoom-through) with implementation notes and natural
-SFX pairing — read it before defaulting back to the same four on any
-video with more than 4 scenes.
+Burn in captions instead of leaving the video with only occasional
+punch-phrases/speech-bubbles — the reference-level "feel complete" gap
+was mostly this. Source of truth: Whisper's word-level timestamps
+(step 1) for WHEN, the real script text for WHAT (matched positionally,
+same 1:1-word-count caveat as step 1). Group words into short lines
+(~4 words; fold a 1-word remainder into the previous line instead of
+flashing it alone) and reset the grouping at each Whisper segment
+boundary — don't chunk mechanically across a real pause, it reads as
+two unrelated clauses glued into one line. Highlight the currently-
+speaking word (karaoke-style) against the rest of the line. Mount the
+captions component ONCE at the master-timeline level, as a sibling
+AFTER the `TransitionSeries` (not inside any one scene) so it reads off
+absolute frame numbers and isn't affected by scene fades/transitions.
+Position it low but clear of the bottom bar, with a translucent dark
+backing box — legible over any photo/color underneath it.
 
-Vietnamese (or other non-English) text needs a font that covers the
-right subset — the template already loads Be Vietnam Pro with the
-`vietnamese` subset via `@remotion/google-fonts/BeVietnamPro`. If a
-script uses a different language/script, swap in a font + subset that
-covers it.
+## 9. Register and preview
 
-Place the punch phrase (and any other big text) in whatever grid space
-is actually empty for that scene's hero layout — don't hardcode a fixed
-y-coordinate and assume it'll be clear. A fixed position that happens to
-land on the hero image reads as illegible/messy (this was caught by
-rendering a real test frame and looking at it, not assumed away) —
-check the hero's box for that scene and pick empty space, the way the
-reference frames keep headline text on open grid, never overlapping the
-photo.
-
-## 7. Register and preview
-
-Add the import + `<Composition>` block to `src/Root.jsx`, matching the
-pattern of scenes already registered there.
+Add a `<Folder>` of individually-playable scene `<Composition>`s plus
+one master `<Composition>` to `src/Root.jsx`, matching the pattern
+already there.
 
 There's no browser tool in this environment, so preview by starting
 Remotion Studio in the background and pulling still frames instead of
 scrubbing live:
 
 ```bash
-npx remotion studio   # run with run_in_background: true
+npx remotion studio --no-open   # run with run_in_background: true, redirect
+                                 # output to a log file — piping through
+                                 # `head` sends SIGPIPE and kills the
+                                 # install/server process early
 ```
 
-Once it's up (check the backgrounded task's output for the local URL),
-render a handful of representative frames straight to images for a fast
-look without a full MP4:
+Once it's up, render representative frames at **`--scale=0.25`** (a
+full-res still burns far more vision tokens for the same check) and
+combine several into ONE contact-sheet image with PIL before reading it
+— this is the single biggest token-saving habit in this whole pipeline,
+apply it every time, not just when token usage is already a problem:
 
 ```bash
-npx remotion still <CompositionId> /tmp/frame_0000.png --frame=0
-npx remotion still <CompositionId> /tmp/frame_0090.png --frame=90
+npx remotion still <CompositionId> --scale=0.25 --frame=90 /tmp/f.png
 ```
-Read each PNG to check composition, timing, and text legibility scene by
-scene. Only fall back to a full `npx remotion render <CompositionId>
+
+Only fall back to a full `npx remotion render <CompositionId>
 out/<name>.mp4 --overwrite` if the user specifically asks for an
-exported file, or stills aren't enough to debug something (e.g. audio
-sync, which stills can't show).
+exported file, or stills genuinely can't show what's being debugged
+(e.g. audio sync).
 
 ## Things earlier attempts got wrong (so you don't repeat them)
 
-- A word-by-word caption bar across the bottom reads as generic/basic —
-  use the persistent tag + single timed punch-phrase pattern instead.
-- Reusing one entrance animation for every scene reads as flat. Vary it
-  scene to scene on purpose.
+- Placing hero/support coordinates by eye instead of measuring real
+  pixel overlap — led to a support visibly covering part of a hero (a
+  gavel drawn over a hand) that read as a real editing bug, not style.
+  Always run the alpha-overlap check from step 4 now.
+- Applying the orange drop-shadow to every cutout regardless of subject
+  — it's a person/grayscale-only treatment; object/color cutouts get
+  none by default.
+- A punch-phrase timed to appear right as the line ends, with the next
+  scene's cut only ~20 frames later — reads as the text being cut off
+  mid-read. Give it real dwell time before the cut (step 2).
+- Background grid contrast too subtle (0.07 alpha) to actually read —
+  needs real contrast (0.32-ish), verified against a zoomed reference
+  crop, not asserted.
+- Reusing one entrance animation for every scene, or the same 1-2 SFX
+  everywhere, reads as flat — vary both deliberately scene to scene.
 - A cutout that's static after its entrance finishes looks frozen/dead —
-  always layer continuous low-amplitude idle motion under whatever the
-  scene's specific animation is doing.
-- Elements can look small even in a generously-sized layout box if the
-  source PNG has a lot of empty transparent padding — process_cutout.py
-  crops to content bounds automatically, but double-check anything that
-  looks off.
-- rembg does badly on busy/complex-background photos — route around this
-  at the sourcing stage (step 3) by previewing raw downloads with Read
-  before running the cutout script, not by fighting it after the fact.
-- A video where every scene uses the same 1-2 SFX sounds as flat as one
-  that reuses the same entrance animation everywhere.
+  layer continuous low-amplitude idle motion (vary the TYPE — sway vs.
+  tremble vs. bob — not just the phase).
+- rembg does badly on busy/complex-background photos, large architecture,
+  and flat-lay documents — route around this at the sourcing stage
+  (step 3), not by fighting the mask after the fact.
+- Trusting a "official skill doc" code example without checking it
+  against the actually-installed package — caught a real
+  doc/package mismatch (step 5's sfx note). Verify, don't assume
+  "official" means "currently accurate."
+- Copying a reference video's literal content-specific effects (a
+  numeric counter, an economic line chart, a geographic map) onto a
+  script that has no numbers/data/geography — translate the underlying
+  TECHNIQUE (kinetic emphasis, a self-drawing diagram) to content the
+  new script actually has, don't force in mismatched content.
 - Don't skip the step-2 checkpoint on a first video for a new script/
   topic — sourcing and building is the expensive part of this pipeline;
   catching a wrong creative direction in a text shot-list is cheap,
   catching it after building a scene isn't.
+- No git repo under the project meant no way to roll back a bad edit.
+  `git init` + commit once a version is genuinely approved, before
+  continuing to iterate — cheap insurance, and the natural checkpoint to
+  do it at is right after a user confirms a version is good.

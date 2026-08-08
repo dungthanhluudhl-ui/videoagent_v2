@@ -83,11 +83,28 @@ a touch of overshoot, like the camera is pushing through it. Pairs well as
 a hard cut into a new scene.
 SFX: `whoosh`.
 
-## Idle motion (after any entrance)
-Pick ONE, offset the phase per element so multiple cutouts on screen never
-bob in sync:
+## strike
+For an object with real striking weight (a gavel) — not a generic pop-in.
+Swings in from a raised rotation and snaps to rest fast, with a tiny
+overshoot recoil right at landing. Pair with a radial impact-flash at the
+landing point and a brief camera `shake` timed to the same frame — this
+combo (motion + flash + shake, all on the same frame) is what sells it as
+an actual hit rather than three unrelated effects.
 ```jsx
-const idle = Math.sin((frame - entranceEndFrame + phaseOffset) / 22) * 4; // px or deg
+const rotate = interpolate(frame, [0, 9], [-42, 0], { extrapolateRight: "clamp", easing: Easing.bezier(0.55, 0, 1, 0.45) });
+const scale = interpolate(frame, [8, 9, 13], [1, 1.06, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 ```
-Apply as a small `translateY`, `rotate`, or `scale` breathing amount — a
-few px / 1-2deg is enough. More reads as sloppy, not alive.
+SFX: a hard click/thud exactly on the landing frame, not frame 0.
+
+## Idle motion (after any entrance)
+Vary the MODE across elements on screen, not just the phase — reusing one
+sine wiggle everywhere reads as flat the same way one entrance does:
+- `sway` (default) — gentle rotation, `sin(frame/22) * 3deg`.
+- `tremble` — faster, smaller, less-smooth jitter (nervous energy):
+  `sin(frame/4)*1.1 + sin(frame/2.3)*0.6`, degrees.
+- `bob` — slow vertical drift instead of rotation (fits a hanging/flag-
+  like prop): `sin(frame/18) * 6`, px.
+
+Offset the phase per element so multiple cutouts on screen never move in
+sync, regardless of which mode. A few px / 1-2deg is enough — more reads
+as sloppy, not alive.

@@ -1,4 +1,9 @@
 """
+UNUSED as of the current pipeline — superseded by the official
+`@remotion/sfx` package (real one-shot library, see SKILL.md step 5).
+Left here in case a future video needs a custom sound the official
+package doesn't have; don't reach for this by default.
+
 Synthesize a small set of one-shot SFX locally (no sample library, no API).
 
     python generate_sfx.py public/sfx
