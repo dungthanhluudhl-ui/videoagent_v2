@@ -8,7 +8,7 @@ import { Scene2, SCENE2_DURATION } from "./scenes/Scene2";
 import { Scene3, SCENE3_DURATION } from "./scenes/Scene3";
 import { Scene4, SCENE4_DURATION } from "./scenes/Scene4";
 import { Scene5, SCENE5_DURATION } from "./scenes/Scene5";
-import { BG } from "./scenes/shared";
+import { BG, Captions } from "./scenes/shared";
 
 export const LUATSU_CANVAS = { width: 1080, height: 1920, fps: 30 };
 
@@ -64,6 +64,7 @@ export const LuatSuDaoDuc = () => {
           <Scene5 />
         </TransitionSeries.Sequence>
       </TransitionSeries>
+      <Captions />
     </AbsoluteFill>
   );
 };

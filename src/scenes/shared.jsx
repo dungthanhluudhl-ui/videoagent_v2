@@ -11,6 +11,7 @@ import {
 } from "remotion";
 import * as sfx from "@remotion/sfx";
 import { loadFont } from "@remotion/google-fonts/BeVietnamPro";
+import { CAPTION_LINES } from "../captionData";
 
 export const { fontFamily } = loadFont("normal", {
   weights: ["700", "900"],
@@ -429,5 +430,53 @@ export const SFX_URL = {
 };
 
 export const Sfx = ({ name, volume = 0.4 }) => <Audio src={SFX_URL[name]} volume={volume} />;
+
+// Burned-in word-synced captions, matched to the Whisper timestamps (see
+// captionData.js). Mount ONCE at the master-composition level, as a
+// sibling AFTER the TransitionSeries — using absolute frame numbers
+// (not scene-local), so it keeps reading correctly straight through
+// scene cuts/transitions instead of fading or resetting with them.
+export const Captions = () => {
+  const frame = useCurrentFrame();
+  const line = CAPTION_LINES.find((l) => frame >= l[0].startFrame - 2 && frame <= l[l.length - 1].endFrame + 5);
+  if (!line) return null;
+  const op = interpolate(frame, [line[0].startFrame - 2, line[0].startFrame + 2], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return (
+    <div style={{ position: "absolute", left: 60, right: 60, bottom: 58, display: "flex", justifyContent: "center", opacity: op }}>
+      <div
+        style={{
+          background: "rgba(10,10,10,0.72)",
+          borderRadius: 14,
+          padding: "12px 24px",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "0 0.32em",
+          maxWidth: "100%",
+        }}
+      >
+        {line.map((w, i) => {
+          const isActive = frame >= w.startFrame && frame <= w.endFrame + 2;
+          const isPast = frame > w.endFrame + 2;
+          return (
+            <span
+              key={i}
+              style={{
+                fontFamily,
+                fontWeight: 700,
+                fontSize: 40,
+                lineHeight: 1.25,
+                color: isActive ? ORANGE : "#FFFFFF",
+                opacity: isPast ? 0.6 : 1,
+              }}
+            >
+              {w.text}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export { Sequence };
