@@ -501,4 +501,145 @@ export const Captions = () => {
   );
 };
 
+// Large animated stat counter (e.g. 0 -> 18.000 or 0 -> 100.000.000) with glowing badge
+export const StatCounter = ({
+  fromValue = 0,
+  toValue = 18000,
+  prefix = "",
+  suffix = "",
+  label = "",
+  top = 120,
+  delay = 0,
+  duration = 30,
+  fontSize = 80,
+}) => {
+  const frame = useCurrentFrame();
+  const local = Math.max(0, frame - delay);
+  const currentRaw = interpolate(local, [0, duration], [fromValue, toValue], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.quad),
+  });
+  const currentFormatted = Math.round(currentRaw).toLocaleString("vi-VN");
+  const scale = interpolate(local, [0, 10], [0.5, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.spring({ damping: 10, stiffness: 140 }),
+    output: "perceptual-scale",
+  });
+  const opacity = interpolate(local, [0, 6], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <Interactive.Div
+      name="StatCounter"
+      style={{
+        position: "absolute",
+        left: 56,
+        right: 56,
+        top,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        scale,
+        opacity,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: INK,
+          color: BG,
+          borderRadius: 16,
+          padding: "10px 26px",
+          fontFamily,
+          fontWeight: 900,
+          fontSize,
+          lineHeight: 1.1,
+          boxShadow: `0 8px 24px ${ORANGE}66`,
+          border: `3px solid ${ORANGE}`,
+        }}
+      >
+        <span style={{ color: ORANGE }}>{prefix}</span>
+        {currentFormatted}
+        <span style={{ color: ORANGE }}>{suffix}</span>
+      </div>
+      {label && (
+        <div
+          style={{
+            fontFamily,
+            fontWeight: 700,
+            fontSize: 34,
+            color: INK,
+            marginTop: 8,
+            letterSpacing: "0.05em",
+          }}
+        >
+          {label}
+        </div>
+      )}
+    </Interactive.Div>
+  );
+};
+
+// Newspaper / Document spotlight cutout with animated orange highlighter stroke overlay
+export const NewspaperSpotlight = ({
+  src,
+  width = 680,
+  x = "50%",
+  y = 350,
+  delay = 10,
+  highlightBox = { x: "15%", y: "42%", w: "70%", h: "12%" },
+}) => {
+  const frame = useCurrentFrame();
+  const local = Math.max(0, frame - delay);
+  const progress = interpolate(local, [0, 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+
+  const left = typeof x === "string" ? x : `${x}px`;
+  const marginLeft = x === "50%" ? -width / 2 : 0;
+
+  return (
+    <Interactive.Div
+      name="NewspaperSpotlight"
+      style={{
+        position: "absolute",
+        left,
+        top: y,
+        width,
+        marginLeft,
+        boxShadow: "0 14px 40px rgba(0,0,0,0.22)",
+        borderRadius: 8,
+        overflow: "hidden",
+        backgroundColor: "#F9F6F0",
+        border: `2px solid rgba(20,20,20,0.15)`,
+      }}
+    >
+      <Img src={staticFile(src)} style={{ width: "100%", display: "block" }} />
+
+      {/* Animated Orange Highlighter Stroke */}
+      <svg
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+        width="100%"
+        height="100%"
+      >
+        <rect
+          x={highlightBox.x}
+          y={highlightBox.y}
+          width={`calc(${highlightBox.w} * ${progress})`}
+          height={highlightBox.h}
+          fill={ORANGE}
+          opacity={0.45}
+          rx={4}
+          style={{ mixBlendMode: "multiply" }}
+        />
+      </svg>
+    </Interactive.Div>
+  );
+};
+
 export { Sequence };

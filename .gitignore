@@ -2,11 +2,18 @@ node_modules
 dist
 .DS_Store
 .env
+.env.*
 
-# Ignore the output video from Git but not videos you import into src/.
+# Output files
 out
+input/raw_cache
 
-# Installed skill packages (reproducible via `npx skills add remotion-dev/skills`),
-# not authored project content. .claude/skills/remotion-* are symlinks into here.
-.agents
-.claude/skills/remotion-*
+# Large generated PNG cutouts (can be regenerated)
+public/el_*.png
+
+# Installed skills lock
+skills-lock.json
+
+# Keep authored vox-collage-video skill in .agents & .claude
+!.agents/skills/vox-collage-video
+!.claude/skills/vox-collage-video
