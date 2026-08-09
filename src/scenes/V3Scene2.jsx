@@ -9,14 +9,16 @@ export const V3Scene2 = () => {
       leftHero={{
         name: "Hero-Lawyer1",
         src: "el_lawyer1.png",
-        width: 440,
-        y: 380,
+        width: 360,
+        x: "25%",
+        y: 400,
       }}
       rightHero={{
         name: "Hero-LateNight",
         src: "el_lawyer_late_night.png",
-        width: 460,
-        y: 380,
+        width: 360,
+        x: "75%",
+        y: 400,
       }}
       leftLabel="5% HÀO HOA"
       rightLabel="95% THỰC TẾ"

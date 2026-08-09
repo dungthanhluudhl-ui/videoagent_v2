@@ -341,8 +341,10 @@ exported file, or stills genuinely can't show what's being debugged
 
 ## Things earlier attempts got wrong (so you don't repeat them)
 
+- `Hero` / `Support` percentage coordinates (`x="25%"`, `x="75%"`) failing to center — earlier code only calculated `marginLeft = -width / 2` for `x === "50%"`, leaving other percentage values using top-left anchor (`marginLeft = 0`). This pushed the right column cutout out of the 1080px canvas by ~78px, cutting off the right elbow/arm. ALWAYS use `marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0` to center percentage coordinates.
+- PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "BÓC TÁCH NGHỀ LUẬT \n SƯ"). ALWAYS enforce `whiteSpace: "nowrap"` & `flexWrap: "nowrap"` on line containers, use explicit `lines` array, and auto-scale `fontSize` with `maxCharCount` so lines never break mid-sentence.
+- `SplitCompareScene` column width & positioning — place Left Column at `x="25%"` and Right Column at `x="75%"` with `width <= 360px` to guarantee 90px symmetrical safety margins on both left and right canvas edges.
 - Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_image` on solid white background for 100% crisp studio cutouts.
-- PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "18.000 - 19.000 LUẬT \n SƯ"). Always use explicit `lines` array or `\n` to balance lines, and set `lineHeight: 1.22`.
 - Captions placed too low near the bottom margin (`bottom: 58`), getting covered by TikTok/Reels UI. Always position `Captions` at `bottom: 440` (~1/3 from bottom) and elevate hero elements (`y: 340-350`) so they never overlap.
 - Placing hero/support coordinates by eye instead of measuring real
   pixel overlap — led to a support visibly covering part of a hero (a

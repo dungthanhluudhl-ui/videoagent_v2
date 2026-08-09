@@ -8,13 +8,15 @@ export const Scene4 = () => {
       leftHero={{
         name: "Hero-Lawyer1",
         src: "el_lawyer1.png",
-        width: 460,
+        width: 360,
+        x: "25%",
         y: 380,
       }}
       rightHero={{
         name: "Hero-Globe",
         src: "el_globe.png",
-        width: 440,
+        width: 360,
+        x: "75%",
         y: 380,
       }}
       leftLabel="VIỆT NAM"

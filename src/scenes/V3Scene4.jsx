@@ -20,7 +20,7 @@ export const V3Scene4 = () => {
       </CameraGroup>
       <BottomBar />
       <Sequence from={60} layout="none">
-        <PunchPhrase lines={["BÓC TÁCH NGHỀ LUẬT SƯ", "TẠI VIỆT NAM"]} top={120} stagger />
+        <PunchPhrase lines={["BÓC TÁCH", "NGHỀ LUẬT SƯ", "TẠI VIỆT NAM"]} top={120} stagger />
       </Sequence>
       <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
       <Sequence from={30} layout="none"><Sfx name="ding" volume={0.35} /></Sequence>

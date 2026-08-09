@@ -110,7 +110,8 @@ export const Hero = ({ name, src, width, x, y, variant = "rise", phase = 0, idle
   const frame = useCurrentFrame();
   const { rot: idleRot, ty: idleTy } = idleMotion(Math.max(0, frame - 16), phase, idle);
   const left = typeof x === "string" ? x : `${x}px`;
-  const marginLeft = x === "50%" ? -width / 2 : 0;
+  // Center element horizontally around x coordinate whenever x is specified as percentage or x === "50%"
+  const marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0;
 
   let ty = 0;
   let sc = 1;
@@ -302,22 +303,35 @@ export const Shimmer = ({ src, width, x, y, delay = 0 }) => {
 };
 
 // Bold black headline / pull-quote — the ONE timed punch-phrase per scene.
+// Bold black headline / pull-quote — the ONE timed punch-phrase per scene.
 // Mount inside <Sequence from={appearAt}>. `top` must be chosen per-scene
 // to land on empty grid space, not over the hero. `stagger` reveals it
 // word-by-word (kinetic typography) instead of the whole block popping in
 // at once. Supports explicit `lines` array or `\n` to prevent orphan words on new lines.
 export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize = 70, lineHeight = 1.22 }) => {
   const frame = useCurrentFrame();
-  const phraseLines = lines || (typeof text === "string" ? text.split("\n") : [text]);
+  const rawLines = lines || (typeof text === "string" ? text.split("\n") : [text]);
 
-  let finalLines = phraseLines;
-  if (!lines && phraseLines.length === 1 && typeof text === "string") {
-    const words = text.split(" ");
-    if (words.length >= 4) {
-      const mid = Math.ceil(words.length / 2);
-      finalLines = [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  // Smart line-breaker: if any line > 15 chars, balance into multi-lines
+  let finalLines = [];
+  rawLines.forEach((l) => {
+    if (l && l.length > 15) {
+      const words = l.split(" ");
+      if (words.length >= 3) {
+        const mid = Math.ceil(words.length / 2);
+        finalLines.push(words.slice(0, mid).join(" "));
+        finalLines.push(words.slice(mid).join(" "));
+      } else {
+        finalLines.push(l);
+      }
+    } else if (l) {
+      finalLines.push(l);
     }
-  }
+  });
+
+  // Dynamically auto-scale fontSize if any line is long so it fits within 920px width
+  const maxCharCount = Math.max(...finalLines.map((l) => l.length), 1);
+  const effectiveFontSize = maxCharCount > 12 ? Math.min(fontSize, Math.floor(920 / (maxCharCount * 0.62))) : fontSize;
 
   if (!stagger) {
     return (
@@ -333,13 +347,13 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
           opacity: interpolate(frame, [0, 6], [0, 1], { extrapolateRight: "clamp" }),
           fontFamily,
           fontWeight: 900,
-          fontSize,
+          fontSize: effectiveFontSize,
           lineHeight,
           color: INK,
         }}
       >
         {finalLines.map((lineStr, lineIdx) => (
-          <div key={lineIdx}>{lineStr}</div>
+          <div key={lineIdx} style={{ whiteSpace: "nowrap", overflow: "hidden" }}>{lineStr}</div>
         ))}
       </Interactive.Div>
     );
@@ -349,12 +363,12 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
   return (
     <Interactive.Div
       name="PunchPhrase"
-      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize, lineHeight, color: INK }}
+      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize: effectiveFontSize, lineHeight, color: INK }}
     >
       {finalLines.map((lineStr, lineIdx) => {
         const lineWords = lineStr.split(" ");
         return (
-          <div key={lineIdx} style={{ display: "block" }}>
+          <div key={lineIdx} style={{ display: "flex", flexWrap: "nowrap", whiteSpace: "nowrap" }}>
             {lineWords.map((w, wIdx) => {
               const currentIdx = globalWordIndex++;
               const lf = frame - currentIdx * 4;
