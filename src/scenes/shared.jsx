@@ -604,6 +604,7 @@ export const NewspaperSpotlight = ({
   x = "50%",
   y = 350,
   delay = 10,
+  rot = -3,
   highlightBox = { x: "15%", y: "42%", w: "70%", h: "12%" },
 }) => {
   const frame = useCurrentFrame();
@@ -615,7 +616,7 @@ export const NewspaperSpotlight = ({
   });
 
   const left = typeof x === "string" ? x : `${x}px`;
-  const marginLeft = x === "50%" ? -width / 2 : 0;
+  const marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0;
 
   return (
     <Interactive.Div
@@ -631,6 +632,7 @@ export const NewspaperSpotlight = ({
         overflow: "hidden",
         backgroundColor: "#F9F6F0",
         border: `2px solid rgba(20,20,20,0.15)`,
+        rotate: `${rot}deg`,
       }}
     >
       <Img src={staticFile(src)} style={{ width: "100%", display: "block" }} />
@@ -647,11 +649,188 @@ export const NewspaperSpotlight = ({
           width={`calc(${highlightBox.w} * ${progress})`}
           height={highlightBox.h}
           fill={ORANGE}
-          opacity={0.45}
+          opacity={0.48}
           rx={4}
           style={{ mixBlendMode: "multiply" }}
         />
       </svg>
+    </Interactive.Div>
+  );
+};
+
+// Vintage Cream Quote Dialogue Card with word-by-word stagger & orange highlight
+export const SpeechBubbleQuote = ({
+  text = "Liệu nghề luật sư có giàu như đồn?",
+  highlight = "giàu",
+  top = 150,
+  delay = 10,
+}) => {
+  const frame = useCurrentFrame();
+  const words = text.split(" ");
+  const local = Math.max(0, frame - delay);
+  const scale = interpolate(local, [0, 10], [0.6, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.spring({ damping: 10, stiffness: 140 }),
+    output: "perceptual-scale",
+  });
+  const opacity = interpolate(local, [0, 6], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <Interactive.Div
+      name="SpeechBubbleQuote"
+      style={{
+        position: "absolute",
+        left: 56,
+        right: 56,
+        top,
+        backgroundColor: BUBBLE_CREAM,
+        border: `3px solid ${INK}`,
+        borderRadius: 20,
+        padding: "20px 32px",
+        boxShadow: `0 10px 30px rgba(0,0,0,0.18)`,
+        scale,
+        opacity,
+      }}
+    >
+      <div style={{ fontFamily, fontWeight: 900, fontSize: 44, lineHeight: 1.3, color: INK }}>
+        {words.map((w, i) => {
+          const lf = local - 4 - i * 4;
+          const wOp = interpolate(lf, [0, 5], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+          const wTy = interpolate(lf, [0, 7], [12, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.spring({ damping: 11 }) });
+          const isHL = highlight && w.toLowerCase().includes(highlight.toLowerCase());
+          return (
+            <span key={i} style={{ display: "inline-block", opacity: wOp, translate: `0px ${wTy}px`, marginRight: "0.28em", color: isHL ? ORANGE : INK }}>
+              {w}
+            </span>
+          );
+        })}
+      </div>
+    </Interactive.Div>
+  );
+};
+
+// Vintage Ink Stamp (e.g. "ĐÃ THẨM ĐỊNH" / "CONFIDENTIAL") with spring slam landing
+export const DocumentStamp = ({
+  text = "ĐÃ THẨM ĐỊNH",
+  color = "#D9381E",
+  x = "65%",
+  y = 380,
+  delay = 15,
+  rot = -12,
+  size = 42,
+}) => {
+  const frame = useCurrentFrame();
+  const local = Math.max(0, frame - delay);
+  const scale = interpolate(local, [0, 6, 12], [2.2, 0.95, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.175, 0.885, 0.32, 1.275),
+    output: "perceptual-scale",
+  });
+  const opacity = interpolate(local, [0, 4], [0, 0.92], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  const left = typeof x === "string" ? x : `${x}px`;
+
+  return (
+    <Interactive.Div
+      name="DocumentStamp"
+      style={{
+        position: "absolute",
+        left,
+        top: y,
+        marginLeft: -140,
+        scale,
+        opacity,
+        rotate: `${rot}deg`,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        style={{
+          border: `5px solid ${color}`,
+          borderRadius: 14,
+          padding: "8px 24px",
+          color,
+          fontFamily: "BeVietnamPro",
+          fontWeight: 900,
+          fontSize: size,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          backgroundColor: `${color}18`,
+          boxShadow: `0 0 20px ${color}35`,
+        }}
+      >
+        {text}
+      </div>
+    </Interactive.Div>
+  );
+};
+
+// Minimalist Geographic Location Pin with Pulsing Radar Ripple
+export const VoxMapPin = ({
+  locationName = "VIỆT NAM",
+  x = "50%",
+  y = 500,
+  delay = 10,
+}) => {
+  const frame = useCurrentFrame();
+  const local = Math.max(0, frame - delay);
+  const scale = interpolate(local, [0, 10], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.spring({ damping: 10, stiffness: 160 }),
+    output: "perceptual-scale",
+  });
+  const rippleSc = interpolate(local % 30, [0, 30], [1, 2.6], { extrapolateRight: "clamp" });
+  const rippleOp = interpolate(local % 30, [0, 30], [0.85, 0], { extrapolateRight: "clamp" });
+
+  const left = typeof x === "string" ? x : `${x}px`;
+  const marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? 0 : 0;
+
+  return (
+    <Interactive.Div
+      name="VoxMapPin"
+      style={{
+        position: "absolute",
+        left,
+        top: y,
+        marginLeft,
+        scale,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        translate: "-50% -100%",
+      }}
+    >
+      {/* Location Badge */}
+      <div
+        style={{
+          backgroundColor: INK,
+          color: ORANGE,
+          fontFamily: "BeVietnamPro",
+          fontWeight: 900,
+          fontSize: 30,
+          padding: "8px 22px",
+          borderRadius: 24,
+          border: `3px solid ${ORANGE}`,
+          whiteSpace: "nowrap",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+        }}
+      >
+        📍 {locationName}
+      </div>
+      {/* Pin Needle Dot & Radar Ripple */}
+      <div style={{ position: "relative", marginTop: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ position: "absolute", width: 28, height: 28, borderRadius: "50%", border: `3px solid ${ORANGE}`, scale: rippleSc, opacity: rippleOp }} />
+        <div style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: ORANGE, boxShadow: `0 0 14px ${ORANGE}` }} />
+      </div>
     </Interactive.Div>
   );
 };

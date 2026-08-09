@@ -249,15 +249,16 @@ and was removed; see `references/README.md`). It currently has:
   across elements, don't let everything wiggle identically), and a
   `visibleFor` prop that fades+shrinks the element out before its scene
   ends instead of letting it hard-vanish when the Sequence unmounts.
-- `ImpactFlash`, `FlowArrow`, `Shimmer` — punctuation effects: a radial
-  flash at a strike/landing frame, a self-drawing curved arrow
-  connecting two elements (for a cause→effect diagram — translate this
-  to whatever the SCRIPT's actual content chain is, don't copy the
-  reference's literal economic chart/map if the new script has no data
-  to back it), and a light-sweep masked to an element's own alpha shape.
-- `PunchPhrase` / `SpeechBubble` — both support a `stagger` prop for a
-  word-by-word kinetic-text reveal instead of the whole block popping at
-  once; vary which ones use it.
+- `ImpactFlash`, `FlowArrow`, `Shimmer`, `DocumentStamp`, `VoxMapPin` — punctuation & spotlight effects: a radial flash at a strike/landing frame, a self-drawing curved arrow connecting two elements, a light-sweep masked to an element's alpha shape, a vintage ink stamp ("ĐÃ THẨM ĐỊNH" / "CONFIDENTIAL") with spring slam landing, and a minimalist geographic location pin with pulsing radar ripple ("📍 VIỆT NAM").
+- `PunchPhrase` / `SpeechBubbleQuote` — both support a `stagger` prop for a word-by-word kinetic-text reveal with orange highlight keywords instead of the whole block popping at once; vary which ones use it.
+- **7 Modular Scene Templates (`SceneTemplates.jsx`)**:
+  1. `CollageScene`: Standard 1 Hero + 2 Supports layout.
+  2. `SplitCompareScene`: 50/50 dual column comparison with centered percentage coordinates (`x="25%"`, `x="75%"`).
+  3. `StatCalloutScene`: Animated stat counter (`StatCounter` from 0 -> N).
+  4. `NewspaperSpotlightScene`: Document/newspaper spotlight with animated orange highlighter stroke & vintage stamp (`DocumentStamp`).
+  5. `QuoteBubbleScene`: Vintage speech quote card (`SpeechBubbleQuote`) with word-by-word reveal.
+  6. `FlowDiagramScene`: Arrow-connected workflow cause-and-effect diagram (`FlowArrow`).
+  7. `MapLocationScene`: Geographic location pin callout (`VoxMapPin`) + hero element.
 - `Captions` — see step 8.
 
 ## 7. Assemble the master timeline with real transitions

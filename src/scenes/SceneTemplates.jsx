@@ -2,16 +2,78 @@ import { AbsoluteFill } from "remotion";
 import {
   BottomBar,
   CameraGroup,
+  DocumentStamp,
+  FlowArrow,
   Hero,
+  NewspaperSpotlight,
   PunchPhrase,
   SceneBackground,
   Sequence,
   Sfx,
+  SpeechBubbleQuote,
   StatCounter,
   Support,
+  VoxMapPin,
 } from "./shared";
 
-// Template A: Dual-Column Side-by-Side Comparison Layout (e.g., Vietnam vs World, 5% vs 95%)
+// ============================================================================
+// TEMPLATE 1: Collage Scene (1 Hero + 2 Supports)
+// ============================================================================
+export const CollageScene = ({
+  durationInFrames,
+  hero,
+  supports = [],
+  punchLines,
+  punchTop = 120,
+}) => {
+  return (
+    <AbsoluteFill name="CollageScene">
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
+        <SceneBackground />
+        
+        {/* Main Hero Asset */}
+        <Sequence from={0} layout="none">
+          <Hero
+            name={hero.name || "Hero"}
+            src={hero.src}
+            width={hero.width || 680}
+            x={hero.x || "50%"}
+            y={hero.y || 350}
+            variant={hero.variant || "dropSpin"}
+            visibleFor={durationInFrames}
+          />
+        </Sequence>
+
+        {/* Supports */}
+        {supports.map((sup, idx) => (
+          <Sequence key={idx} from={sup.delay || 30 + idx * 25} layout="none">
+            <Support
+              name={sup.name || `Support-${idx}`}
+              src={sup.src}
+              width={sup.width || 300}
+              x={sup.x}
+              y={sup.y || 1000}
+              idle={sup.idle || "sway"}
+              visibleFor={durationInFrames - (sup.delay || 30)}
+            />
+          </Sequence>
+        ))}
+      </CameraGroup>
+      <BottomBar />
+      {punchLines && (
+        <Sequence from={60} layout="none">
+          <PunchPhrase lines={punchLines} top={punchTop} stagger />
+        </Sequence>
+      )}
+      <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
+      <Sequence from={30} layout="none"><Sfx name="switchClick" volume={0.35} /></Sequence>
+    </AbsoluteFill>
+  );
+};
+
+// ============================================================================
+// TEMPLATE 2: Dual-Column Side-by-Side Comparison Layout (50/50 Split)
+// ============================================================================
 export const SplitCompareScene = ({
   durationInFrames,
   leftHero,
@@ -62,7 +124,9 @@ export const SplitCompareScene = ({
   );
 };
 
-// Template B: Large Animated Stat Callout Scene Layout
+// ============================================================================
+// TEMPLATE 3: Large Animated Stat Callout Scene
+// ============================================================================
 export const StatCalloutScene = ({
   durationInFrames,
   fromValue = 0,
@@ -98,6 +162,164 @@ export const StatCalloutScene = ({
       <BottomBar />
       <Sequence from={0} layout="none"><Sfx name="whip" volume={0.4} /></Sequence>
       <Sequence from={15} layout="none"><Sfx name="ding" volume={0.35} /></Sequence>
+    </AbsoluteFill>
+  );
+};
+
+// ============================================================================
+// TEMPLATE 4: Newspaper & Legal Document Spotlight Scene (with Stamp Option)
+// ============================================================================
+export const NewspaperSpotlightScene = ({
+  durationInFrames,
+  docSrc,
+  highlightBox,
+  stampText = "ĐÃ THẨM ĐỊNH",
+  punchLines,
+  hero,
+}) => {
+  return (
+    <AbsoluteFill name="NewspaperSpotlightScene">
+      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames}>
+        <SceneBackground />
+
+        <Sequence from={0} layout="none">
+          <NewspaperSpotlight src={docSrc} width={680} x="50%" y={360} delay={10} highlightBox={highlightBox} />
+        </Sequence>
+
+        {/* Vintage Ink Stamp Landing */}
+        {stampText && (
+          <Sequence from={28} layout="none">
+            <DocumentStamp text={stampText} x="68%" y={480} delay={28} rot={-14} />
+          </Sequence>
+        )}
+
+        {hero && (
+          <Sequence from={25} layout="none">
+            <Hero name={hero.name} src={hero.src} width={hero.width || 420} x={hero.x || "78%"} y={hero.y || 960} variant="grow" visibleFor={durationInFrames - 25} />
+          </Sequence>
+        )}
+      </CameraGroup>
+      <BottomBar />
+      {punchLines && (
+        <Sequence from={45} layout="none">
+          <PunchPhrase lines={punchLines} top={120} stagger />
+        </Sequence>
+      )}
+      <Sequence from={0} layout="none"><Sfx name="pageTurn" volume={0.45} /></Sequence>
+      <Sequence from={28} layout="none"><Sfx name="switchClick" volume={0.5} /></Sequence>
+    </AbsoluteFill>
+  );
+};
+
+// ============================================================================
+// TEMPLATE 5: Dialogue Quote Bubble Scene
+// ============================================================================
+export const QuoteBubbleScene = ({
+  durationInFrames,
+  quoteText,
+  highlight,
+  hero,
+}) => {
+  return (
+    <AbsoluteFill name="QuoteBubbleScene">
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
+        <SceneBackground />
+
+        {/* Vintage Speech Quote Card */}
+        <Sequence from={0} layout="none">
+          <SpeechBubbleQuote text={quoteText} highlight={highlight} top={150} delay={10} />
+        </Sequence>
+
+        {/* Hero Cutout Below Quote */}
+        {hero && (
+          <Sequence from={20} layout="none">
+            <Hero name={hero.name} src={hero.src} width={hero.width || 640} x={hero.x || "50%"} y={hero.y || 480} variant={hero.variant || "rise"} visibleFor={durationInFrames - 20} />
+          </Sequence>
+        )}
+      </CameraGroup>
+      <BottomBar />
+      <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
+      <Sequence from={15} layout="none"><Sfx name="ding" volume={0.35} /></Sequence>
+    </AbsoluteFill>
+  );
+};
+
+// ============================================================================
+// TEMPLATE 6: Flow Diagram Workflow Scene (Arrow connected elements)
+// ============================================================================
+export const FlowDiagramScene = ({
+  durationInFrames,
+  leftHero,
+  rightHero,
+  arrowPath = "M 320 600 Q 540 500 760 600",
+  punchLines,
+}) => {
+  return (
+    <AbsoluteFill name="FlowDiagramScene">
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
+        <SceneBackground />
+
+        {/* Left Hero Element */}
+        <Sequence from={0} layout="none">
+          <Hero name={leftHero.name} src={leftHero.src} width={leftHero.width || 360} x={leftHero.x || "25%"} y={leftHero.y || 400} variant="rise" visibleFor={durationInFrames} />
+        </Sequence>
+
+        {/* Right Hero Element */}
+        <Sequence from={25} layout="none">
+          <Hero name={rightHero.name} src={rightHero.src} width={rightHero.width || 360} x={rightHero.x || "75%"} y={rightHero.y || 400} variant="grow" visibleFor={durationInFrames - 25} />
+        </Sequence>
+
+        {/* Flow Arrow Connecting them */}
+        <Sequence from={40} layout="none">
+          <FlowArrow d={arrowPath} delay={40} length={700} />
+        </Sequence>
+      </CameraGroup>
+      <BottomBar />
+      {punchLines && (
+        <Sequence from={60} layout="none">
+          <PunchPhrase lines={punchLines} top={120} stagger />
+        </Sequence>
+      )}
+      <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
+      <Sequence from={40} layout="none"><Sfx name="whip" volume={0.35} /></Sequence>
+    </AbsoluteFill>
+  );
+};
+
+// ============================================================================
+// TEMPLATE 7: Map Geographic Location Callout Scene
+// ============================================================================
+export const MapLocationScene = ({
+  durationInFrames,
+  locationName = "VIỆT NAM",
+  hero,
+  punchLines,
+}) => {
+  return (
+    <AbsoluteFill name="MapLocationScene">
+      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames}>
+        <SceneBackground />
+
+        {/* Geographic Pin Callout */}
+        <Sequence from={10} layout="none">
+          <VoxMapPin locationName={locationName} x="50%" y={380} delay={10} />
+        </Sequence>
+
+        {/* Main Hero Cutout */}
+        {hero && (
+          <Sequence from={0} layout="none">
+            <Hero name={hero.name} src={hero.src} width={hero.width || 680} x={hero.x || "50%"} y={hero.y || 480} variant={hero.variant || "rise"} visibleFor={durationInFrames} />
+          </Sequence>
+        )}
+      </CameraGroup>
+      <BottomBar />
+      {punchLines && (
+        <Sequence from={45} layout="none">
+          <PunchPhrase lines={punchLines} top={120} stagger />
+        </Sequence>
+      )}
+      <Sequence from={0} layout="none"><Sfx name="whip" volume={0.4} /></Sequence>
+      <Sequence from={10} layout="none"><Sfx name="ding" volume={0.35} /></Sequence>
     </AbsoluteFill>
   );
 };

@@ -1,43 +1,21 @@
-import { StatCalloutScene } from "./SceneTemplates";
+import { QuoteBubbleScene } from "./SceneTemplates";
 
 export const V3SCENE3_DURATION = 340;
 
 export const V3Scene3 = () => {
   return (
-    <StatCalloutScene
+    <QuoteBubbleScene
       durationInFrames={V3SCENE3_DURATION}
-      fromValue={1}
-      toValue={3}
-      suffix=" CÂU HỎI LỚN"
-      label="GIÀU? RỦI RO? VỊ THẾ?"
+      quoteText="Liệu nghề luật sư ở Việt Nam có giàu như thiên hạ đồn?"
+      highlight="giàu"
       hero={{
         name: "Hero-Scales",
         src: "el_scales.png",
-        width: 680,
+        width: 620,
         x: "50%",
-        y: 440,
+        y: 450,
         variant: "grow",
       }}
-      supports={[
-        {
-          name: "Support-Globe",
-          src: "el_globe.png",
-          width: 320,
-          x: 630,
-          y: 980,
-          delay: 20,
-          idle: "sway",
-        },
-        {
-          name: "Support-Certificate",
-          src: "el_certificate.png",
-          width: 300,
-          x: 90,
-          y: 1040,
-          delay: 40,
-          idle: "tremble",
-        },
-      ]}
     />
   );
 };
