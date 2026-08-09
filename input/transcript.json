@@ -1,0 +1,594 @@
+{
+  "text": " Đầu tiên, hãy nói về thực trạng nghe luật sư ở nước ta hiện nay, tính đến nay cả nước có khoảng hơn 18,000-19,000 luật sư có thể hàng nghề. Nghe số lượng thì có vẻ đông đấy, nhưng nếu chia ra cho Quymô dân số 100 triệu người, thì tỉ lệ luật sư trên dân số của Việt Nam vẫn còn khá mỏng so với thế giới.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 8.94,
+      "text": " Đầu tiên, hãy nói về thực trạng nghe luật sư ở nước ta hiện nay, tính đến nay cả nước có khoảng hơn 18,000-19,000 luật sư có thể hàng nghề.",
+      "tokens": [
+        50364,
+        13055,
+        23582,
+        8757,
+        5050,
+        11,
+        276,
+        49205,
+        27508,
+        25652,
+        50183,
+        504,
+        5890,
+        872,
+        6415,
+        675,
+        10438,
+        25296,
+        262,
+        4228,
+        19272,
+        30728,
+        1846,
+        48079,
+        34227,
+        11,
+        256,
+        26994,
+        26353,
+        34227,
+        22227,
+        30728,
+        6333,
+        49627,
+        45815,
+        34335,
+        2443,
+        11,
+        1360,
+        12,
+        3405,
+        11,
+        1360,
+        10438,
+        25296,
+        262,
+        4228,
+        6333,
+        24491,
+        48373,
+        29338,
+        9602,
+        13,
+        50852
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.2286055451732571,
+      "compression_ratio": 1.4134275618374559,
+      "no_speech_prob": 0.009079687297344208,
+      "words": [
+        {
+          "word": " Đầu",
+          "start": 0.0,
+          "end": 0.38,
+          "probability": 0.8901969194412231
+        },
+        {
+          "word": " tiên,",
+          "start": 0.38,
+          "end": 0.66,
+          "probability": 0.9778351187705994
+        },
+        {
+          "word": " hãy",
+          "start": 1.14,
+          "end": 1.36,
+          "probability": 0.9515211880207062
+        },
+        {
+          "word": " nói",
+          "start": 1.36,
+          "end": 1.54,
+          "probability": 0.994321346282959
+        },
+        {
+          "word": " về",
+          "start": 1.54,
+          "end": 1.78,
+          "probability": 0.9927247762680054
+        },
+        {
+          "word": " thực",
+          "start": 1.78,
+          "end": 1.98,
+          "probability": 0.9576966762542725
+        },
+        {
+          "word": " trạng",
+          "start": 1.98,
+          "end": 2.3,
+          "probability": 0.8754814068476359
+        },
+        {
+          "word": " nghe",
+          "start": 2.3,
+          "end": 2.46,
+          "probability": 0.7379807829856873
+        },
+        {
+          "word": " luật",
+          "start": 2.46,
+          "end": 2.68,
+          "probability": 0.7843017578125
+        },
+        {
+          "word": " sư",
+          "start": 2.68,
+          "end": 2.92,
+          "probability": 0.8443069756031036
+        },
+        {
+          "word": " ở",
+          "start": 2.92,
+          "end": 3.2,
+          "probability": 0.9828189015388489
+        },
+        {
+          "word": " nước",
+          "start": 3.2,
+          "end": 3.38,
+          "probability": 0.9778234958648682
+        },
+        {
+          "word": " ta",
+          "start": 3.38,
+          "end": 3.62,
+          "probability": 0.8257104754447937
+        },
+        {
+          "word": " hiện",
+          "start": 3.62,
+          "end": 3.78,
+          "probability": 0.974077582359314
+        },
+        {
+          "word": " nay,",
+          "start": 3.78,
+          "end": 4.08,
+          "probability": 0.9805835485458374
+        },
+        {
+          "word": " tính",
+          "start": 4.58,
+          "end": 4.68,
+          "probability": 0.8188599050045013
+        },
+        {
+          "word": " đến",
+          "start": 4.68,
+          "end": 4.74,
+          "probability": 0.9082574844360352
+        },
+        {
+          "word": " nay",
+          "start": 4.74,
+          "end": 4.98,
+          "probability": 0.9792189002037048
+        },
+        {
+          "word": " cả",
+          "start": 4.98,
+          "end": 5.14,
+          "probability": 0.9695457816123962
+        },
+        {
+          "word": " nước",
+          "start": 5.14,
+          "end": 5.32,
+          "probability": 0.9942708015441895
+        },
+        {
+          "word": " có",
+          "start": 5.32,
+          "end": 5.58,
+          "probability": 0.9872083067893982
+        },
+        {
+          "word": " khoảng",
+          "start": 5.58,
+          "end": 5.8,
+          "probability": 0.9732198417186737
+        },
+        {
+          "word": " hơn",
+          "start": 5.8,
+          "end": 6.02,
+          "probability": 0.8793936371803284
+        },
+        {
+          "word": " 18",
+          "start": 6.02,
+          "end": 6.44,
+          "probability": 0.9279582500457764
+        },
+        {
+          "word": ",000",
+          "start": 6.44,
+          "end": 6.68,
+          "probability": 0.5133825540542603
+        },
+        {
+          "word": "-19",
+          "start": 6.68,
+          "end": 7.1,
+          "probability": 0.692251667380333
+        },
+        {
+          "word": ",000",
+          "start": 7.1,
+          "end": 7.46,
+          "probability": 0.9362089335918427
+        },
+        {
+          "word": " luật",
+          "start": 7.46,
+          "end": 7.76,
+          "probability": 0.8329384326934814
+        },
+        {
+          "word": " sư",
+          "start": 7.76,
+          "end": 8.0,
+          "probability": 0.9943072497844696
+        },
+        {
+          "word": " có",
+          "start": 8.0,
+          "end": 8.2,
+          "probability": 0.997998058795929
+        },
+        {
+          "word": " thể",
+          "start": 8.2,
+          "end": 8.44,
+          "probability": 0.9971234202384949
+        },
+        {
+          "word": " hàng",
+          "start": 8.44,
+          "end": 8.62,
+          "probability": 0.32868146896362305
+        },
+        {
+          "word": " nghề.",
+          "start": 8.62,
+          "end": 8.94,
+          "probability": 0.7566460371017456
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 9.92,
+      "end": 14.58,
+      "text": " Nghe số lượng thì có vẻ đông đấy, nhưng nếu chia ra cho Quymô dân số 100 triệu người,",
+      "tokens": [
+        50852,
+        21198,
+        675,
+        44983,
+        287,
+        47001,
+        17510,
+        6333,
+        371,
+        40956,
+        2934,
+        8217,
+        39370,
+        11,
+        37504,
+        297,
+        30568,
+        45793,
+        3342,
+        1586,
+        2326,
+        4199,
+        2851,
+        274,
+        9667,
+        44983,
+        2319,
+        1376,
+        43562,
+        15898,
+        11,
+        51110
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.2286055451732571,
+      "compression_ratio": 1.4134275618374559,
+      "no_speech_prob": 0.009079687297344208,
+      "words": [
+        {
+          "word": " Nghe",
+          "start": 9.92,
+          "end": 10.16,
+          "probability": 0.9221587479114532
+        },
+        {
+          "word": " số",
+          "start": 10.16,
+          "end": 10.32,
+          "probability": 0.9726928472518921
+        },
+        {
+          "word": " lượng",
+          "start": 10.32,
+          "end": 10.56,
+          "probability": 0.9322429001331329
+        },
+        {
+          "word": " thì",
+          "start": 10.56,
+          "end": 10.74,
+          "probability": 0.910452127456665
+        },
+        {
+          "word": " có",
+          "start": 10.74,
+          "end": 10.92,
+          "probability": 0.9941887855529785
+        },
+        {
+          "word": " vẻ",
+          "start": 10.92,
+          "end": 11.08,
+          "probability": 0.8833085894584656
+        },
+        {
+          "word": " đông",
+          "start": 11.08,
+          "end": 11.26,
+          "probability": 0.9566225707530975
+        },
+        {
+          "word": " đấy,",
+          "start": 11.26,
+          "end": 11.44,
+          "probability": 0.8948396444320679
+        },
+        {
+          "word": " nhưng",
+          "start": 12.0,
+          "end": 12.08,
+          "probability": 0.9899253845214844
+        },
+        {
+          "word": " nếu",
+          "start": 12.08,
+          "end": 12.32,
+          "probability": 0.9630676507949829
+        },
+        {
+          "word": " chia",
+          "start": 12.32,
+          "end": 12.5,
+          "probability": 0.924492597579956
+        },
+        {
+          "word": " ra",
+          "start": 12.5,
+          "end": 12.72,
+          "probability": 0.7478482127189636
+        },
+        {
+          "word": " cho",
+          "start": 12.72,
+          "end": 12.92,
+          "probability": 0.9861488342285156
+        },
+        {
+          "word": " Quymô",
+          "start": 12.92,
+          "end": 13.3,
+          "probability": 0.3152522345383962
+        },
+        {
+          "word": " dân",
+          "start": 13.3,
+          "end": 13.52,
+          "probability": 0.7752585411071777
+        },
+        {
+          "word": " số",
+          "start": 13.52,
+          "end": 13.72,
+          "probability": 0.992831826210022
+        },
+        {
+          "word": " 100",
+          "start": 13.72,
+          "end": 14.04,
+          "probability": 0.9343453645706177
+        },
+        {
+          "word": " triệu",
+          "start": 14.04,
+          "end": 14.32,
+          "probability": 0.7536344230175018
+        },
+        {
+          "word": " người,",
+          "start": 14.32,
+          "end": 14.58,
+          "probability": 0.9913744330406189
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 15.1,
+      "end": 19.22,
+      "text": " thì tỉ lệ luật sư trên dân số của Việt Nam vẫn còn khá mỏng so với thế giới.",
+      "tokens": [
+        51110,
+        17510,
+        256,
+        43325,
+        287,
+        8471,
+        10438,
+        25296,
+        262,
+        4228,
+        33187,
+        274,
+        9667,
+        44983,
+        11990,
+        32936,
+        10684,
+        49004,
+        31394,
+        7168,
+        842,
+        275,
+        21920,
+        872,
+        370,
+        18916,
+        27100,
+        1735,
+        12242,
+        13,
+        51344
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.2286055451732571,
+      "compression_ratio": 1.4134275618374559,
+      "no_speech_prob": 0.009079687297344208,
+      "words": [
+        {
+          "word": " thì",
+          "start": 15.1,
+          "end": 15.22,
+          "probability": 0.9779539108276367
+        },
+        {
+          "word": " tỉ",
+          "start": 15.22,
+          "end": 15.46,
+          "probability": 0.6377944499254227
+        },
+        {
+          "word": " lệ",
+          "start": 15.46,
+          "end": 15.56,
+          "probability": 0.9267406165599823
+        },
+        {
+          "word": " luật",
+          "start": 15.56,
+          "end": 15.84,
+          "probability": 0.9930787980556488
+        },
+        {
+          "word": " sư",
+          "start": 15.84,
+          "end": 16.06,
+          "probability": 0.9941481351852417
+        },
+        {
+          "word": " trên",
+          "start": 16.06,
+          "end": 16.24,
+          "probability": 0.9929388761520386
+        },
+        {
+          "word": " dân",
+          "start": 16.24,
+          "end": 16.44,
+          "probability": 0.9463969767093658
+        },
+        {
+          "word": " số",
+          "start": 16.44,
+          "end": 16.64,
+          "probability": 0.9963725805282593
+        },
+        {
+          "word": " của",
+          "start": 16.64,
+          "end": 16.8,
+          "probability": 0.9916892051696777
+        },
+        {
+          "word": " Việt",
+          "start": 16.8,
+          "end": 16.94,
+          "probability": 0.9883634448051453
+        },
+        {
+          "word": " Nam",
+          "start": 16.94,
+          "end": 17.22,
+          "probability": 0.9976346492767334
+        },
+        {
+          "word": " vẫn",
+          "start": 17.22,
+          "end": 17.56,
+          "probability": 0.9453086853027344
+        },
+        {
+          "word": " còn",
+          "start": 17.56,
+          "end": 17.82,
+          "probability": 0.9981603026390076
+        },
+        {
+          "word": " khá",
+          "start": 17.82,
+          "end": 18.12,
+          "probability": 0.955284833908081
+        },
+        {
+          "word": " mỏng",
+          "start": 18.12,
+          "end": 18.42,
+          "probability": 0.7565723061561584
+        },
+        {
+          "word": " so",
+          "start": 18.42,
+          "end": 18.6,
+          "probability": 0.7365971207618713
+        },
+        {
+          "word": " với",
+          "start": 18.6,
+          "end": 18.74,
+          "probability": 0.9867397546768188
+        },
+        {
+          "word": " thế",
+          "start": 18.74,
+          "end": 18.9,
+          "probability": 0.9830083847045898
+        },
+        {
+          "word": " giới.",
+          "start": 18.9,
+          "end": 19.22,
+          "probability": 0.9903155863285065
+        }
+      ]
+    }
+  ],
+  "language": "vi"
+}

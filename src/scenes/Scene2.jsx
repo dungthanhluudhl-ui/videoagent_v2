@@ -1,30 +1,29 @@
 import { AbsoluteFill } from "remotion";
-import { BottomBar, CameraGroup, Hero, ImpactFlash, PunchPhrase, SceneBackground, Sequence, Sfx, Support } from "./shared";
+import { BottomBar, CameraGroup, Hero, PunchPhrase, SceneBackground, Sequence, Sfx, Support } from "./shared";
 
-export const SCENE2_DURATION = 199;
-const STRIKE_LANDING_FRAME = 9;
+export const SCENE2_DURATION = 150;
 
 export const Scene2 = () => {
   return (
     <AbsoluteFill name="Scene2">
-      <CameraGroup zoom={{ from: 1.03, to: 1 }} shake={{ at: STRIKE_LANDING_FRAME, len: 10, mag: 6 }} durationInFrames={SCENE2_DURATION}>
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} pan={{ from: { x: 0, y: 0 }, to: { x: 18, y: -10 } }} durationInFrames={SCENE2_DURATION}>
         <SceneBackground />
         <Sequence from={0} layout="none">
-          <Hero name="Hero-Gavel" src="el_s2_hero.png" width={700} x="50%" y={420} variant="strike" visibleFor={SCENE2_DURATION} />
+          <Hero name="Hero-Lawyer2" src="el_lawyer2.png" width={660} x="50%" y={340} variant="grow" visibleFor={SCENE2_DURATION} />
         </Sequence>
-        <Sequence from={0} layout="none">
-          <ImpactFlash x={540} y={520} delay={STRIKE_LANDING_FRAME} />
+        <Sequence from={20} layout="none">
+          <Support name="Support-Books" src="el_books.png" width={320} x={630} y={980} phase={10} idle="sway" visibleFor={SCENE2_DURATION - 20} />
         </Sequence>
-        <Sequence from={30} layout="none">
-          <Support name="Support-Scale" src="el_s2_sup_scale.png" width={300} x={730} y={1030} phase={10} visibleFor={SCENE2_DURATION - 30} />
+        <Sequence from={40} layout="none">
+          <Support name="Support-Certificate" src="el_certificate.png" width={300} x={90} y={1040} phase={30} idle="tremble" visibleFor={SCENE2_DURATION - 40} />
         </Sequence>
       </CameraGroup>
       <BottomBar />
-      <Sequence from={155} layout="none">
-        <PunchPhrase text="NHIỀU YẾU TỐ KHÁC" top={110} />
+      <Sequence from={45} layout="none">
+        <PunchPhrase lines={["18.000 - 19.000", "LUẬT SƯ"]} top={120} stagger />
       </Sequence>
-      <Sequence from={0} layout="none"><Sfx name="whip" volume={0.45} /></Sequence>
-      <Sequence from={STRIKE_LANDING_FRAME} layout="none"><Sfx name="mouseClick" volume={0.5} /></Sequence>
+      <Sequence from={0} layout="none"><Sfx name="whip" volume={0.4} /></Sequence>
+      <Sequence from={45} layout="none"><Sfx name="ding" volume={0.35} /></Sequence>
     </AbsoluteFill>
   );
 };

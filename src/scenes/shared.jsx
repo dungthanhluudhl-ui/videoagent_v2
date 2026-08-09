@@ -305,9 +305,19 @@ export const Shimmer = ({ src, width, x, y, delay = 0 }) => {
 // Mount inside <Sequence from={appearAt}>. `top` must be chosen per-scene
 // to land on empty grid space, not over the hero. `stagger` reveals it
 // word-by-word (kinetic typography) instead of the whole block popping in
-// at once.
-export const PunchPhrase = ({ text, top, stagger = false }) => {
+// at once. Supports explicit `lines` array or `\n` to prevent orphan words on new lines.
+export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize = 70, lineHeight = 1.22 }) => {
   const frame = useCurrentFrame();
+  const phraseLines = lines || (typeof text === "string" ? text.split("\n") : [text]);
+
+  let finalLines = phraseLines;
+  if (!lines && phraseLines.length === 1 && typeof text === "string") {
+    const words = text.split(" ");
+    if (words.length >= 4) {
+      const mid = Math.ceil(words.length / 2);
+      finalLines = [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+    }
+  }
 
   if (!stagger) {
     return (
@@ -323,30 +333,40 @@ export const PunchPhrase = ({ text, top, stagger = false }) => {
           opacity: interpolate(frame, [0, 6], [0, 1], { extrapolateRight: "clamp" }),
           fontFamily,
           fontWeight: 900,
-          fontSize: 74,
-          lineHeight: 1.05,
+          fontSize,
+          lineHeight,
           color: INK,
         }}
       >
-        {text}
+        {finalLines.map((lineStr, lineIdx) => (
+          <div key={lineIdx}>{lineStr}</div>
+        ))}
       </Interactive.Div>
     );
   }
 
-  const words = text.split(" ");
+  let globalWordIndex = 0;
   return (
     <Interactive.Div
       name="PunchPhrase"
-      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize: 74, lineHeight: 1.05, color: INK }}
+      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize, lineHeight, color: INK }}
     >
-      {words.map((w, i) => {
-        const lf = frame - i * 4;
-        const op = interpolate(lf, [0, 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-        const ty = interpolate(lf, [0, 9], [26, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.spring({ damping: 12 }) });
+      {finalLines.map((lineStr, lineIdx) => {
+        const lineWords = lineStr.split(" ");
         return (
-          <span key={i} style={{ display: "inline-block", opacity: op, translate: `0px ${ty}px`, marginRight: "0.28em" }}>
-            {w}
-          </span>
+          <div key={lineIdx} style={{ display: "block" }}>
+            {lineWords.map((w, wIdx) => {
+              const currentIdx = globalWordIndex++;
+              const lf = frame - currentIdx * 4;
+              const op = interpolate(lf, [0, 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+              const ty = interpolate(lf, [0, 9], [26, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.spring({ damping: 12 }) });
+              return (
+                <span key={wIdx} style={{ display: "inline-block", opacity: op, translate: `0px ${ty}px`, marginRight: "0.28em" }}>
+                  {w}
+                </span>
+              );
+            })}
+          </div>
         );
       })}
     </Interactive.Div>
@@ -436,16 +456,17 @@ export const Sfx = ({ name, volume = 0.4 }) => <Audio src={SFX_URL[name]} volume
 // sibling AFTER the TransitionSeries — using absolute frame numbers
 // (not scene-local), so it keeps reading correctly straight through
 // scene cuts/transitions instead of fading or resetting with them.
+// Set to bottom: 440 (safe zone ~1/3 from bottom for TikTok/Reels/Shorts UI).
 export const Captions = () => {
   const frame = useCurrentFrame();
   const line = CAPTION_LINES.find((l) => frame >= l[0].startFrame - 2 && frame <= l[l.length - 1].endFrame + 5);
   if (!line) return null;
   const op = interpolate(frame, [line[0].startFrame - 2, line[0].startFrame + 2], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <div style={{ position: "absolute", left: 60, right: 60, bottom: 58, display: "flex", justifyContent: "center", opacity: op }}>
+    <div style={{ position: "absolute", left: 60, right: 60, bottom: 440, display: "flex", justifyContent: "center", opacity: op, zIndex: 100 }}>
       <div
         style={{
-          background: "rgba(10,10,10,0.72)",
+          background: "rgba(10,10,10,0.8)",
           borderRadius: 14,
           padding: "12px 24px",
           display: "flex",
@@ -453,6 +474,7 @@ export const Captions = () => {
           justifyContent: "center",
           gap: "0 0.32em",
           maxWidth: "100%",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
         }}
       >
         {line.map((w, i) => {

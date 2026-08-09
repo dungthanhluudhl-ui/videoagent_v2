@@ -341,6 +341,9 @@ exported file, or stills genuinely can't show what's being debugged
 
 ## Things earlier attempts got wrong (so you don't repeat them)
 
+- Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_image` on solid white background for 100% crisp studio cutouts.
+- PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "18.000 - 19.000 LUẬT \n SƯ"). Always use explicit `lines` array or `\n` to balance lines, and set `lineHeight: 1.22`.
+- Captions placed too low near the bottom margin (`bottom: 58`), getting covered by TikTok/Reels UI. Always position `Captions` at `bottom: 440` (~1/3 from bottom) and elevate hero elements (`y: 340-350`) so they never overlap.
 - Placing hero/support coordinates by eye instead of measuring real
   pixel overlap — led to a support visibly covering part of a hero (a
   gavel drawn over a hand) that read as a real editing bug, not style.

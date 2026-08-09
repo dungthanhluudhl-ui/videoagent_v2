@@ -4,17 +4,15 @@ import { Scene1, SCENE1_DURATION } from "./scenes/Scene1";
 import { Scene2, SCENE2_DURATION } from "./scenes/Scene2";
 import { Scene3, SCENE3_DURATION } from "./scenes/Scene3";
 import { Scene4, SCENE4_DURATION } from "./scenes/Scene4";
-import { Scene5, SCENE5_DURATION } from "./scenes/Scene5";
 
 export const RemotionRoot = () => {
   return (
     <>
-      <Folder name="LuatSuDaoDuc-Scenes">
+      <Folder name="LuatSu-Scenes">
         <Composition id="Scene1" component={Scene1} durationInFrames={SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="Scene2" component={Scene2} durationInFrames={SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="Scene3" component={Scene3} durationInFrames={SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="Scene4" component={Scene4} durationInFrames={SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="Scene5" component={Scene5} durationInFrames={SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       </Folder>
       <Composition
         id="LuatSuDaoDuc"
