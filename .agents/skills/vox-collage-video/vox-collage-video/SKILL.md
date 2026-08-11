@@ -1,6 +1,6 @@
 ---
 name: vox-collage-video
-description: Build a Vox-style grayscale-collage motion-graphics short in this Remotion project from just an audio file + script — no further style questions needed. Use this whenever the user hands over a voiceover/narration audio file (mp3/wav) plus its script and asks for a video, or says things like "make me a video from this audio", "dựng video từ audio này", "same style as before", "another Vox-style clip", or references a prior grayscale/collage video in this project. Covers the full pipeline end to end: Whisper transcription, scene segmentation, sourcing stock photos from the Pexels API (with an AI-image-prompt fallback list for anything Pexels doesn't have), turning them into grayscale/color cutouts with a pixel-verified layout, a multi-scene Remotion build with TransitionSeries transitions, word-synced burned-in captions, and registering + previewing it.
+description: Build a Vox-style grayscale-collage motion-graphics short in this Remotion project from just an audio file + script — no further style questions needed. Use this whenever the user hands over a voiceover/narration audio file (mp3/wav) plus its script and asks for a video, or says things like "make me a video from this audio", "dựng video từ audio này", "same style as before", "another Vox-style clip", or references a prior grayscale/collage video in this project. Covers the full pipeline end to end: Whisper transcription, scene segmentation, sourcing images via AI generation (Gemini through OpenRouter, with the Pexels API as a fallback for real-world-specific photos), turning them into grayscale/color cutouts with a pixel-verified layout, a multi-scene Remotion build with TransitionSeries transitions, word-synced burned-in captions, and registering + previewing it.
 ---
 
 # Vox-collage video pipeline (grayscale + orange, 9:16)
@@ -51,8 +51,10 @@ Confirm `py -3 -c "import whisper, rembg, scipy, PIL, numpy, requests"`
 succeeds; if anything's missing, `py -3 -m pip install rembg onnxruntime
 scipy openai-whisper pillow numpy requests`.
 
-Pexels needs no browser: `PEXELS_API_KEY` lives in the project's `.env`
-file (already gitignored). `scripts/fetch_pexels.py` reads it automatically.
+Neither sourcing path needs a browser: `OPENROUTER_API_KEY` and
+`PEXELS_API_KEY` live in the project's `.env` file (already gitignored).
+`scripts/generate_image.py` and `scripts/fetch_pexels.py` read them
+automatically.
 
 ## 1. Transcribe the audio
 
@@ -121,45 +123,64 @@ sourced), variant. Only proceed to sourcing/building after they approve
 or adjust it. Skip this checkpoint only if the user has explicitly said
 to run a video end-to-end without review.
 
-For topics with culturally-specific subject matter Pexels' generic
-Western stock library won't have (a specific country's court system, a
-local slang term, a specific institution) — plan from the start to use
-universal symbolic imagery for the Pexels-sourced elements (scales of
-justice, a gavel, a handshake in shadow, an envelope of cash) and route
-anything genuinely specific to the step-3 AI-image-prompt fallback.
+For topics with culturally-specific subject matter generic Western
+stock imagery wouldn't capture (a specific country's court system, a
+local slang term, a specific institution), lean on AI generation's
+strength here — the step-3 prompt can specify the exact cultural detail
+directly (e.g. "a Vietnamese courtroom nameplate", "an áo dài") instead
+of settling for a universal symbol (scales of justice, a gavel, a
+handshake in shadow) the way Pexels sourcing had to.
 
 ## 3. Source the photos
 
-`scripts/fetch_pexels.py` calls the Pexels REST API directly — no
-browser needed:
+**Default to AI-generated images** — `scripts/generate_image.py` calls
+Gemini (`google/gemini-3.1-flash-lite-image`) via the OpenRouter API, no
+browser needed. This replaced Pexels as the primary source: Pexels'
+generic stock library was too low-quality/limited/inconsistent for
+subject-specific scenes, and a generated image can be tailored exactly
+to what the scene needs (right subject, right pose, right prop) instead
+of settling for whatever stock happens to exist.
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/generate_image.py gen \
+  "a gavel, studio product photo on a solid plain white background, sharp focus, high detail" \
+  input/raw_cache/gavel.png
+```
+
+Always prompt for **"studio product photo on a solid plain white
+background"** (or equivalent) regardless of the subject — that's what
+gives rembg a clean, crisp cutout edge. Describe the subject specifically
+enough to match the scene's exact content (a specific prop, a specific
+pose/angle, a specific cultural context) — this is the actual advantage
+over stock: don't settle for a generic result when the prompt can be
+made precise. Save outputs under `input/raw_cache/` like any other raw
+source image (keeping them means a later re-process doesn't need a
+fresh API round-trip), then run them through step 4's cutout pipeline
+exactly like a Pexels download — `generate_image.py` output is a
+drop-in replacement, not a separate pipeline.
+
+**Preview before committing** — Read the generated PNG at thumbnail
+scale before running it through rembg, same discipline as screening a
+Pexels candidate. If a generation comes out with a cluttered scene, a
+non-white background, or the wrong subject, regenerate with a more
+specific prompt rather than fighting it in the cutout step.
+
+`scripts/fetch_pexels.py` (Pexels REST API) is kept as a fallback for
+when a specific real-world photo (an actual news photo, a real
+recognizable place) is genuinely what the scene needs instead of a
+generated image:
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py list "gavel" --orientation portrait
 py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py get "gavel" input/raw_cache/gavel.jpg --orientation portrait --index 0
 ```
 
-Save raw downloads under `input/raw_cache/` (not a throwaway temp dir) —
-keeping them means a later re-process (a fixed shadow rule, a better
-edge threshold) doesn't need a fresh API round-trip.
-
-**Picking which result to use matters more than it looks — check with
-the Read tool before committing, at thumbnail scale** (the `list`
-command prints a `src.medium` preview URL — download and view THAT, not
-the full-res original, to screen candidates cheaply). rembg does great
-on a subject shot against a plain color backdrop or a clearly-separated
-scene, and does *badly* on: a busy/cluttered composition, a subject
-resting ON or AMONG a similarly-detailed surface (money on top of a
-pile of money — the classic failure, confirmed twice), large-scale
-architecture/building photos, and flat-lay top-down document shots.
-Route anything matching those patterns to a plain-background candidate
-or a different query before running the cutout script — don't retry the
-same busy photo through rembg hoping the mask cleanup fixes it, it won't.
-
-If a search genuinely turns up nothing usable, add a line to an AI-image
-prompt list instead of continuing to search Pexels — save it to
-`assets/ai-image-prompts.txt` at the project root (one prompt per line,
-no bullet, so the user can paste the block into a batch generator), and
-tell the user the exact filename to save the result as.
+If using the Pexels path, the same rembg failure modes apply: it does
+badly on a busy/cluttered composition, a subject resting ON or AMONG a
+similarly-detailed surface (money on top of a pile of money — the
+classic failure, confirmed twice), large-scale architecture/building
+photos, and flat-lay top-down document shots — route around those at
+the sourcing stage rather than fighting the mask after the fact.
 
 ## 4. Turn photos into cutouts, then verify placement with real pixels
 

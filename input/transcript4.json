@@ -1,0 +1,804 @@
+{
+  "text": " làm lột sử án hình sự ở Việt Nam, cực kỳ nguy hiểm. Bảo vệ cho bị cáo thì bị dư luận trởi là tiếp tay cho kẻ ác. Bảo vệ cho thân chủ thì đôi khi dính vào răng dưới mong mỏng giữa từ vấn pháp lột và hướng dẫn khai gian rô itil hủy chứng cứ. Đã có không ít lột sử vì vướng vào chuyện này, mà từ người bảo trữ biến thành bị cáo đứng trung toa với thân chủ luôn. Ác chưa?",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.96,
+      "text": " làm lột sử án hình sự ở Việt Nam, cực kỳ nguy hiểm.",
+      "tokens": [
+        50364,
+        22319,
+        287,
+        13737,
+        262,
+        27801,
+        7352,
+        77,
+        276,
+        10116,
+        33602,
+        19272,
+        32936,
+        10684,
+        11,
+        9613,
+        109,
+        66,
+        350,
+        1297,
+        111,
+        297,
+        39344,
+        4879,
+        47119,
+        13,
+        50526
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " làm",
+          "start": 0.0,
+          "end": 0.4,
+          "probability": 0.31952181458473206
+        },
+        {
+          "word": " lột",
+          "start": 0.4,
+          "end": 0.58,
+          "probability": 0.4893709719181061
+        },
+        {
+          "word": " sử",
+          "start": 0.58,
+          "end": 0.74,
+          "probability": 0.5148985385894775
+        },
+        {
+          "word": " án",
+          "start": 0.74,
+          "end": 0.92,
+          "probability": 0.7780850231647491
+        },
+        {
+          "word": " hình",
+          "start": 0.92,
+          "end": 1.0,
+          "probability": 0.8753882050514221
+        },
+        {
+          "word": " sự",
+          "start": 1.0,
+          "end": 1.18,
+          "probability": 0.8467205762863159
+        },
+        {
+          "word": " ở",
+          "start": 1.18,
+          "end": 1.34,
+          "probability": 0.9801639914512634
+        },
+        {
+          "word": " Việt",
+          "start": 1.34,
+          "end": 1.46,
+          "probability": 0.9617708921432495
+        },
+        {
+          "word": " Nam,",
+          "start": 1.46,
+          "end": 1.74,
+          "probability": 0.9979263544082642
+        },
+        {
+          "word": " cực",
+          "start": 2.2,
+          "end": 2.28,
+          "probability": 0.8690341114997864
+        },
+        {
+          "word": " kỳ",
+          "start": 2.28,
+          "end": 2.44,
+          "probability": 0.7936818997065226
+        },
+        {
+          "word": " nguy",
+          "start": 2.44,
+          "end": 2.66,
+          "probability": 0.772495299577713
+        },
+        {
+          "word": " hiểm.",
+          "start": 2.66,
+          "end": 2.96,
+          "probability": 0.8945198357105255
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 3.52,
+      "end": 7.22,
+      "text": " Bảo vệ cho bị cáo thì bị dư luận trởi là tiếp tay cho kẻ ác.",
+      "tokens": [
+        50526,
+        363,
+        40657,
+        371,
+        8471,
+        1586,
+        32113,
+        6476,
+        78,
+        17510,
+        32113,
+        274,
+        4228,
+        10438,
+        27410,
+        504,
+        13755,
+        72,
+        3684,
+        48667,
+        39224,
+        1586,
+        350,
+        40956,
+        7352,
+        66,
+        13,
+        50746
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " Bảo",
+          "start": 3.52,
+          "end": 3.64,
+          "probability": 0.9289259016513824
+        },
+        {
+          "word": " vệ",
+          "start": 3.64,
+          "end": 3.82,
+          "probability": 0.9451310336589813
+        },
+        {
+          "word": " cho",
+          "start": 3.82,
+          "end": 3.96,
+          "probability": 0.9883126616477966
+        },
+        {
+          "word": " bị",
+          "start": 3.96,
+          "end": 4.1,
+          "probability": 0.9670737981796265
+        },
+        {
+          "word": " cáo",
+          "start": 4.1,
+          "end": 4.48,
+          "probability": 0.757201611995697
+        },
+        {
+          "word": " thì",
+          "start": 4.48,
+          "end": 4.82,
+          "probability": 0.7527626752853394
+        },
+        {
+          "word": " bị",
+          "start": 4.82,
+          "end": 4.96,
+          "probability": 0.9981750249862671
+        },
+        {
+          "word": " dư",
+          "start": 4.96,
+          "end": 5.22,
+          "probability": 0.6527902632951736
+        },
+        {
+          "word": " luận",
+          "start": 5.22,
+          "end": 5.4,
+          "probability": 0.8426968157291412
+        },
+        {
+          "word": " trởi",
+          "start": 5.4,
+          "end": 5.8,
+          "probability": 0.720144122838974
+        },
+        {
+          "word": " là",
+          "start": 5.8,
+          "end": 6.16,
+          "probability": 0.8719984889030457
+        },
+        {
+          "word": " tiếp",
+          "start": 6.16,
+          "end": 6.34,
+          "probability": 0.9379738569259644
+        },
+        {
+          "word": " tay",
+          "start": 6.34,
+          "end": 6.58,
+          "probability": 0.7244262099266052
+        },
+        {
+          "word": " cho",
+          "start": 6.58,
+          "end": 6.74,
+          "probability": 0.990034282207489
+        },
+        {
+          "word": " kẻ",
+          "start": 6.74,
+          "end": 6.96,
+          "probability": 0.7840395569801331
+        },
+        {
+          "word": " ác.",
+          "start": 6.96,
+          "end": 7.22,
+          "probability": 0.9170788526535034
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 7.74,
+      "end": 11.54,
+      "text": " Bảo vệ cho thân chủ thì đôi khi dính vào răng dưới mong mỏng giữa từ vấn pháp lột",
+      "tokens": [
+        50746,
+        363,
+        40657,
+        371,
+        8471,
+        1586,
+        258,
+        9667,
+        23579,
+        100,
+        17510,
+        2934,
+        12213,
+        23526,
+        274,
+        26994,
+        24995,
+        367,
+        34705,
+        274,
+        5829,
+        8971,
+        275,
+        556,
+        275,
+        21920,
+        872,
+        1735,
+        26606,
+        26834,
+        371,
+        43975,
+        903,
+        15059,
+        287,
+        13737,
+        50952
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " Bảo",
+          "start": 7.74,
+          "end": 8.06,
+          "probability": 0.9854000508785248
+        },
+        {
+          "word": " vệ",
+          "start": 8.06,
+          "end": 8.18,
+          "probability": 0.9970750510692596
+        },
+        {
+          "word": " cho",
+          "start": 8.18,
+          "end": 8.32,
+          "probability": 0.998420000076294
+        },
+        {
+          "word": " thân",
+          "start": 8.32,
+          "end": 8.5,
+          "probability": 0.784673422574997
+        },
+        {
+          "word": " chủ",
+          "start": 8.5,
+          "end": 8.68,
+          "probability": 0.9548354148864746
+        },
+        {
+          "word": " thì",
+          "start": 8.68,
+          "end": 8.9,
+          "probability": 0.8994572162628174
+        },
+        {
+          "word": " đôi",
+          "start": 8.9,
+          "end": 9.04,
+          "probability": 0.8011849224567413
+        },
+        {
+          "word": " khi",
+          "start": 9.04,
+          "end": 9.2,
+          "probability": 0.9888567328453064
+        },
+        {
+          "word": " dính",
+          "start": 9.2,
+          "end": 9.52,
+          "probability": 0.8281806707382202
+        },
+        {
+          "word": " vào",
+          "start": 9.52,
+          "end": 9.66,
+          "probability": 0.9586817026138306
+        },
+        {
+          "word": " răng",
+          "start": 9.66,
+          "end": 9.96,
+          "probability": 0.45657090842723846
+        },
+        {
+          "word": " dưới",
+          "start": 9.96,
+          "end": 10.18,
+          "probability": 0.6817190249760946
+        },
+        {
+          "word": " mong",
+          "start": 10.18,
+          "end": 10.4,
+          "probability": 0.8061443269252777
+        },
+        {
+          "word": " mỏng",
+          "start": 10.4,
+          "end": 10.64,
+          "probability": 0.8695845206578573
+        },
+        {
+          "word": " giữa",
+          "start": 10.64,
+          "end": 10.84,
+          "probability": 0.7776970267295837
+        },
+        {
+          "word": " từ",
+          "start": 10.84,
+          "end": 10.96,
+          "probability": 0.6722008585929871
+        },
+        {
+          "word": " vấn",
+          "start": 10.96,
+          "end": 11.14,
+          "probability": 0.7495197057723999
+        },
+        {
+          "word": " pháp",
+          "start": 11.14,
+          "end": 11.34,
+          "probability": 0.9175968170166016
+        },
+        {
+          "word": " lột",
+          "start": 11.34,
+          "end": 11.54,
+          "probability": 0.667158454656601
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "seek": 0,
+      "start": 11.54,
+      "end": 14.26,
+      "text": " và hướng dẫn khai gian rô itil hủy chứng cứ.",
+      "tokens": [
+        50952,
+        10274,
+        276,
+        17059,
+        872,
+        274,
+        35400,
+        7168,
+        1301,
+        290,
+        952,
+        367,
+        2851,
+        220,
+        270,
+        388,
+        276,
+        28903,
+        88,
+        417,
+        44555,
+        46619,
+        13,
+        51104
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " và",
+          "start": 11.54,
+          "end": 12.1,
+          "probability": 0.919059693813324
+        },
+        {
+          "word": " hướng",
+          "start": 12.1,
+          "end": 12.42,
+          "probability": 0.9692445000012716
+        },
+        {
+          "word": " dẫn",
+          "start": 12.42,
+          "end": 12.6,
+          "probability": 0.8988733887672424
+        },
+        {
+          "word": " khai",
+          "start": 12.6,
+          "end": 12.84,
+          "probability": 0.9078822433948517
+        },
+        {
+          "word": " gian",
+          "start": 12.84,
+          "end": 13.06,
+          "probability": 0.661983072757721
+        },
+        {
+          "word": " rô",
+          "start": 13.06,
+          "end": 13.26,
+          "probability": 0.46062248945236206
+        },
+        {
+          "word": " itil",
+          "start": 13.26,
+          "end": 13.62,
+          "probability": 0.21517369896173477
+        },
+        {
+          "word": " hủy",
+          "start": 13.62,
+          "end": 13.84,
+          "probability": 0.724905381600062
+        },
+        {
+          "word": " chứng",
+          "start": 13.84,
+          "end": 14.06,
+          "probability": 0.7415188848972321
+        },
+        {
+          "word": " cứ.",
+          "start": 14.06,
+          "end": 14.26,
+          "probability": 0.7345101237297058
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "seek": 0,
+      "start": 14.78,
+      "end": 17.32,
+      "text": " Đã có không ít lột sử vì vướng vào chuyện này,",
+      "tokens": [
+        51104,
+        13055,
+        1046,
+        6333,
+        11415,
+        18645,
+        83,
+        287,
+        13737,
+        262,
+        27801,
+        37902,
+        371,
+        17059,
+        872,
+        24995,
+        35522,
+        19679,
+        12542,
+        11,
+        51244
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " Đã",
+          "start": 14.78,
+          "end": 15.12,
+          "probability": 0.7754506766796112
+        },
+        {
+          "word": " có",
+          "start": 15.12,
+          "end": 15.26,
+          "probability": 0.9764784574508667
+        },
+        {
+          "word": " không",
+          "start": 15.26,
+          "end": 15.5,
+          "probability": 0.910642683506012
+        },
+        {
+          "word": " ít",
+          "start": 15.5,
+          "end": 15.7,
+          "probability": 0.9381442070007324
+        },
+        {
+          "word": " lột",
+          "start": 15.7,
+          "end": 15.86,
+          "probability": 0.9595523178577423
+        },
+        {
+          "word": " sử",
+          "start": 15.86,
+          "end": 16.08,
+          "probability": 0.719061404466629
+        },
+        {
+          "word": " vì",
+          "start": 16.08,
+          "end": 16.32,
+          "probability": 0.6769105792045593
+        },
+        {
+          "word": " vướng",
+          "start": 16.32,
+          "end": 16.66,
+          "probability": 0.8990380565325419
+        },
+        {
+          "word": " vào",
+          "start": 16.66,
+          "end": 16.82,
+          "probability": 0.9295151829719543
+        },
+        {
+          "word": " chuyện",
+          "start": 16.82,
+          "end": 17.08,
+          "probability": 0.9790412187576294
+        },
+        {
+          "word": " này,",
+          "start": 17.08,
+          "end": 17.32,
+          "probability": 0.9955452680587769
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "seek": 0,
+      "start": 17.74,
+      "end": 21.14,
+      "text": " mà từ người bảo trữ biến thành bị cáo đứng trung toa với thân chủ luôn.",
+      "tokens": [
+        51244,
+        13901,
+        26834,
+        15898,
+        272,
+        40657,
+        504,
+        12225,
+        3228,
+        16240,
+        39953,
+        32113,
+        6476,
+        78,
+        2934,
+        44555,
+        504,
+        1063,
+        281,
+        64,
+        18916,
+        258,
+        9667,
+        23579,
+        100,
+        35690,
+        13,
+        51444
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " mà",
+          "start": 17.74,
+          "end": 17.82,
+          "probability": 0.8879274725914001
+        },
+        {
+          "word": " từ",
+          "start": 17.82,
+          "end": 17.98,
+          "probability": 0.9607874155044556
+        },
+        {
+          "word": " người",
+          "start": 17.98,
+          "end": 18.18,
+          "probability": 0.8219383955001831
+        },
+        {
+          "word": " bảo",
+          "start": 18.18,
+          "end": 18.4,
+          "probability": 0.7513850927352905
+        },
+        {
+          "word": " trữ",
+          "start": 18.4,
+          "end": 18.62,
+          "probability": 0.47961394488811493
+        },
+        {
+          "word": " biến",
+          "start": 18.62,
+          "end": 18.98,
+          "probability": 0.7877228260040283
+        },
+        {
+          "word": " thành",
+          "start": 18.98,
+          "end": 19.12,
+          "probability": 0.8082682490348816
+        },
+        {
+          "word": " bị",
+          "start": 19.12,
+          "end": 19.3,
+          "probability": 0.9985585808753967
+        },
+        {
+          "word": " cáo",
+          "start": 19.3,
+          "end": 19.68,
+          "probability": 0.9994005262851715
+        },
+        {
+          "word": " đứng",
+          "start": 19.68,
+          "end": 19.9,
+          "probability": 0.8504560589790344
+        },
+        {
+          "word": " trung",
+          "start": 19.9,
+          "end": 20.12,
+          "probability": 0.7565338015556335
+        },
+        {
+          "word": " toa",
+          "start": 20.12,
+          "end": 20.46,
+          "probability": 0.7024750709533691
+        },
+        {
+          "word": " với",
+          "start": 20.46,
+          "end": 20.56,
+          "probability": 0.9700998663902283
+        },
+        {
+          "word": " thân",
+          "start": 20.56,
+          "end": 20.76,
+          "probability": 0.9933528006076813
+        },
+        {
+          "word": " chủ",
+          "start": 20.76,
+          "end": 20.94,
+          "probability": 0.9886043667793274
+        },
+        {
+          "word": " luôn.",
+          "start": 20.94,
+          "end": 21.14,
+          "probability": 0.8960923552513123
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "seek": 0,
+      "start": 21.76,
+      "end": 22.14,
+      "text": " Ác chưa?",
+      "tokens": [
+        51444,
+        24205,
+        66,
+        46575,
+        30,
+        51504
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.3248461789863054,
+      "compression_ratio": 1.4878787878787878,
+      "no_speech_prob": 0.023761263117194176,
+      "words": [
+        {
+          "word": " Ác",
+          "start": 21.76,
+          "end": 22.0,
+          "probability": 0.7892945408821106
+        },
+        {
+          "word": " chưa?",
+          "start": 22.0,
+          "end": 22.14,
+          "probability": 0.9459913969039917
+        }
+      ]
+    }
+  ],
+  "language": "vi"
+}
