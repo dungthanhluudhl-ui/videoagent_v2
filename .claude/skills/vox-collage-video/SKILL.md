@@ -100,12 +100,25 @@ For each scene decide:
   later and it read as a broken edit.
 - **hero image** — the single most visually central subject of the
   sentence.
-- **2-3 support elements** — smaller cutouts reinforcing the sentence's
-  specific content. In the reference, a support is almost always
-  touching/overlapping the hero (at its feet, on its shoulder, stacked
-  on top) forming ONE cluster — never floated off in a far corner with
-  the hero isolated in the middle. See step 4's placement-verification
-  step; this is checked with real numbers now, not eyeballed.
+- **2-3+ support elements, each pinned to the exact word/phrase it
+  illustrates** — don't just list "2-3 supports" for the scene as a
+  whole and space their entrances out for pacing. If a scene's narration
+  covers more than one idea (very common — a scene is often 2 sentences
+  long), a support illustrating the SECOND idea must not appear until
+  that idea is actually being spoken. Write down, per support, the exact
+  phrase (verbatim from the aligned transcript) it's keyed to — this is
+  what `scripts/beat_sync.py` will look up in step 6 to compute its real
+  entrance frame. A scene with 3 distinct emphasis points in its
+  narration should have 3 supports timed to those 3 points, not 2
+  supports both front-loaded into the first 2 seconds while the scene's
+  back half plays out with nothing new happening on screen. Caught a
+  real case (`VayTinChap` Scene1): a support illustrating "sập bẫy" (the
+  trap) was set to appear at frame 55 while the words "sập bẫy" aren't
+  spoken until frame ~224 — nearly 6s of the wrong picture on screen
+  before the narration caught up to it. A support that never gets a
+  real semantic hook to its own phrase (pure mood/texture, nothing the
+  narration specifically names) can stay on the hero's own entrance
+  timing — don't force a fake phrase-match for it.
 - **variant** — an entrance animation (see `references/animation-
   variants.md`); no two consecutive scenes repeat one.
 
@@ -118,10 +131,11 @@ content that doesn't have the same kind of content (no numbers, no
 geography) as the original reference video.
 
 **Present this shot list to the user as text before moving on** — punch
-phrase + which word it's keyed to, hero + supports (named, not yet
-sourced), variant. Only proceed to sourcing/building after they approve
-or adjust it. Skip this checkpoint only if the user has explicitly said
-to run a video end-to-end without review.
+phrase + which word it's keyed to, hero + each support (named, not yet
+sourced, each with its anchor phrase), variant. Only proceed to
+sourcing/building after they approve or adjust it. Skip this checkpoint
+only if the user has explicitly said to run a video end-to-end without
+review.
 
 For topics with culturally-specific subject matter generic Western
 stock imagery wouldn't capture (a specific country's court system, a
@@ -218,6 +232,18 @@ pale-subject-on-white-background failure, same rembg limitation already
 documented for Pexels sourcing — not a board-specific bug). Easy to miss
 when batch-writing several cell prompts at once, so double-check each
 one individually, not just the board prompt as a whole.
+
+**A clean "detected count matches requested count" result can still be
+silently WRONG** — caught a real case where a 3-cell board with a
+top-row/bottom-row layout printed no warning at all, but two of the
+three saved files had their names swapped (the credit-card photo landed
+in the file meant for the rejected-loan-document photo). The bug was in
+the script's row-banding logic (fixed — see `generate_board.py`'s
+`detect_panels` docstring for the real cause), but the lesson for using
+it stands regardless of the current code: a mismatch warning is not the
+only failure mode to watch for. Always open each individual cropped
+file (not just the raw board) before wiring it into a scene — a correct
+panel count proves nothing about the name<->image mapping being right.
 
 **Preview before committing** — Read both the raw board (to confirm the
 model actually followed the layout) and each cropped cell at thumbnail
@@ -344,6 +370,43 @@ and was removed; see `references/README.md`). It currently has:
   7. `MapLocationScene`: Geographic location pin callout (`VoxMapPin`) + hero element.
 - `Captions` — see step 8.
 
+**Compute each support's `delay` / `Sequence from`, don't type a round
+number by feel.** For every support with a phrase anchor from step 2,
+run:
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/beat_sync.py frame \
+  input/words6_aligned.json --scene-start <this scene's real Whisper \
+  start time in seconds, same number used for the master-timeline gap> \
+  --scene-end <this scene's end time> --phrase "sập bẫy"
+```
+
+**Always pass `--scene-end` too** — a short phrase (or even a single word
+like "trả chậm") often repeats verbatim at an unrelated point elsewhere
+in the transcript; without a bound, the lookup silently returns the
+FIRST occurrence anywhere, which can belong to an earlier scene entirely
+(caught live while building this exact anchor set: "trả chậm" matched a
+mention 5 scenes earlier before `--scene-end` was added). Use the printed local frame as that support's `delay` (add ~4-6
+frames of lead-in if you want the pop-in to *land* right on the word
+rather than *begin* on it — a purely visual judgment call, the anchor
+frame is the floor, not something to override by more than that). The
+hero and the scene's first support can still default to an early
+in/near-0 delay (they're establishing the scene, not illustrating a
+specific later word). After wiring up a scene, run `beat_sync.py verify`
+once with every support's name/phrase/assigned-delay to catch a
+mismatch before rendering:
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/beat_sync.py verify \
+  input/words6_aligned.json --scene-start 0.0 \
+  --anchor "Hero-Worried=Mượn tiền ngân hàng=0" \
+  --anchor "Support-Warning=sập bẫy=224"
+```
+
+A support with no real phrase anchor (pure mood/texture) is exempt —
+don't force one through this check just to make the table look
+complete.
+
 ## 7. Assemble the master timeline with real transitions
 
 Don't just stack scenes with plain back-to-back `<Sequence>`s — use
@@ -426,10 +489,12 @@ exported file, or stills genuinely can't show what's being debugged
 ## Things earlier attempts got wrong (so you don't repeat them)
 
 - `Hero` / `Support` percentage coordinates (`x="25%"`, `x="75%"`) failing to center — earlier code only calculated `marginLeft = -width / 2` for `x === "50%"`, leaving other percentage values using top-left anchor (`marginLeft = 0`). This pushed the right column cutout out of the 1080px canvas by ~78px, cutting off the right elbow/arm. ALWAYS use `marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0` to center percentage coordinates.
-- PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "BÓC TÁCH NGHỀ LUẬT \n SƯ"). ALWAYS enforce `whiteSpace: "nowrap"` & `flexWrap: "nowrap"` on line containers, use explicit `lines` array, and auto-scale `fontSize` with `maxCharCount` so lines never break mid-sentence.
+- PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "BÓC TÁCH NGHỀ LUẬT \n SƯ"). ALWAYS enforce `whiteSpace: "nowrap"` & `flexWrap: "nowrap"` on line containers, and auto-scale `fontSize` with `maxCharCount` so lines never break mid-sentence.
+- **This rule used to end with "...and use explicit `lines` array" — that clause was itself a bug, and it silently reproduced the exact defect it was meant to fix, across multiple later videos.** `PunchPhrase` already auto-splits a line only when it's genuinely >15 chars (see `shared.jsx`'s `finalLines` logic). But every `SceneTemplates.jsx` template only forwards a `punchLines` array straight into that `lines` prop — there's no separate "let it decide" passthrough — so a later video (`VayTinChap`) hand-split short headlines into 2-entry arrays (e.g. `["CƠ HỘI HAY", "BẪY?"]` — 15 chars combined, fits ONE line) simply because the old instruction said to always use an explicit array. Result: needless line breaks with a large empty gap on the right of the shorter line, on nearly every scene. **Fix: default to ONE array entry containing the whole phrase** (e.g. `punchLines={["CƠ HỘI HAY BẪY?"]}`) and let the >15-char auto-breaker decide whether/where to split — don't pre-split into multiple entries by feel. Only write more than one entry for two genuinely separate clauses that must not visually run together (rare — count the combined length first; a lot of headlines that read as "obviously two lines" fit one line fine once you count).
 - `SplitCompareScene` column width & positioning — place Left Column at `x="25%"` and Right Column at `x="75%"` with `width <= 360px` to guarantee 90px symmetrical safety margins on both left and right canvas edges.
 - Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_board.py` on solid white background for 100% crisp studio cutouts.
 - Trusting the requested rows x cols as pixel-crop math for a multi-cell board — checked head-to-head, the model rendered 6 uneven panels instead of the requested 2x2, and blind proportional cropping sliced across a panel boundary. `generate_board.py` now auto-detects real panel boundaries via connected-component analysis instead, and refuses to guess a name mapping on a count mismatch (saves generic `panel_N.png` + warns instead).
+- Trusting a board's "detected count matches requested count, no warning" as proof the crop is right — grouping panels into rows by raw bbox-range overlap (instead of center proximity) silently merged two real rows into one whenever padding pushed their edges to within ~1px of touching, and produced a wrong name<->image mapping with zero warning. Fixed by banding on vertical center proximity instead. Always open each individually-named cropped file before use regardless — a matching count doesn't guarantee a correct mapping.
 - Captions placed too low near the bottom margin (`bottom: 58`), getting covered by TikTok/Reels UI. Always position `Captions` at `bottom: 440` (~1/3 from bottom) and elevate hero elements (`y: 340-350`) so they never overlap.
 - Placing hero/support coordinates by eye instead of measuring real
   pixel overlap — led to a support visibly covering part of a hero (a
@@ -446,12 +511,42 @@ exported file, or stills genuinely can't show what's being debugged
   crop, not asserted.
 - Reusing one entrance animation for every scene, or the same 1-2 SFX
   everywhere, reads as flat — vary both deliberately scene to scene.
+- Choosing `PunchPhrase`'s `top` and the hero/supports' `y` independently
+  per template default, with no regard for each other — produced scenes
+  where the headline sat isolated near the top of the canvas and the
+  hero cluster sat isolated in the middle, with a big dead gap between
+  them and to the side, instead of reading as one composed frame. When
+  wiring up a scene, look at where the hero+supports cluster actually
+  lands (their real rendered bbox, not the nominal `y`) and place the
+  headline to sit close above or beside that cluster, not at a fixed
+  `top` that ignores it.
+- All of a scene's visual elements bunched into the first ~2 seconds of
+  entrance timing, then nothing new for the remaining 5-10s of the
+  scene's audio — reads as the video going quiet/dead mid-sentence even
+  though narration is still actively describing something. See step 2's
+  per-support phrase-anchor requirement and `beat_sync.py` — this is now
+  a mechanical check, not a "remember to vary the pacing" reminder.
 - A cutout that's static after its entrance finishes looks frozen/dead —
   layer continuous low-amplitude idle motion (vary the TYPE — sway vs.
   tremble vs. bob — not just the phase).
 - rembg does badly on busy/complex-background photos, large architecture,
   and flat-lay documents — route around this at the sourcing stage
   (step 3), not by fighting the mask after the fact.
+- **Double-delay bug**: `DocumentStamp`, `FlowArrow`, and `VoxMapPin`
+  each take their own `delay` prop and internally compute
+  `local = frame - delay`. Wrapping one in `<Sequence from={X}>` AND
+  also passing `delay={X}` to the component double-subtracts X — the
+  element needs the LOCAL (already-shifted) frame to reach X a SECOND
+  time before it animates in at all. Invisible at a small X (the
+  original hardcoded 28/40/10 just added a trivial extra wait, easy to
+  miss on a quick check) but became a real bug the moment a real
+  word-anchored delay (165+) made the doubled wait exceed the scene's
+  own length — a `DocumentStamp` and a `FlowArrow` both silently never
+  appeared at all, caught only by rendering a still and seeing nothing
+  there, not by any error. `Hero`/`Support` don't have this problem —
+  they take no `delay` prop at all and rely purely on the wrapping
+  `Sequence` for their local frame. Fix: when one of these three is
+  inside a `Sequence`, always pass `delay={0}` to the component itself.
 - Trusting a "official skill doc" code example without checking it
   against the actually-installed package — caught a real
   doc/package mismatch (step 5's sfx note). Verify, don't assume

@@ -758,7 +758,7 @@ export const DocumentStamp = ({
           borderRadius: 14,
           padding: "8px 24px",
           color,
-          fontFamily: "BeVietnamPro",
+          fontFamily,
           fontWeight: 900,
           fontSize: size,
           letterSpacing: "0.12em",
@@ -814,7 +814,7 @@ export const VoxMapPin = ({
         style={{
           backgroundColor: INK,
           color: ORANGE,
-          fontFamily: "BeVietnamPro",
+          fontFamily,
           fontWeight: 900,
           fontSize: 30,
           padding: "8px 22px",

@@ -25,6 +25,7 @@ export const CollageScene = ({
   supports = [],
   punchLines,
   punchTop = 120,
+  punchFrom = 60,
 }) => {
   return (
     <AbsoluteFill name="CollageScene">
@@ -61,7 +62,7 @@ export const CollageScene = ({
       </CameraGroup>
       <BottomBar />
       {punchLines && (
-        <Sequence from={60} layout="none">
+        <Sequence from={punchFrom} layout="none">
           <PunchPhrase lines={punchLines} top={punchTop} stagger />
         </Sequence>
       )}
@@ -81,6 +82,7 @@ export const SplitCompareScene = ({
   leftLabel,
   rightLabel,
   punchLines,
+  punchFrom = 45,
 }) => {
   return (
     <AbsoluteFill name="SplitCompareScene" style={{ overflow: "hidden" }}>
@@ -114,7 +116,7 @@ export const SplitCompareScene = ({
       </CameraGroup>
       <BottomBar />
       {punchLines && (
-        <Sequence from={45} layout="none">
+        <Sequence from={punchFrom} layout="none">
           <PunchPhrase lines={punchLines} top={120} stagger />
         </Sequence>
       )}
@@ -136,14 +138,15 @@ export const StatCalloutScene = ({
   label = "",
   hero,
   supports = [],
+  counterDelay = 10,
 }) => {
   return (
     <AbsoluteFill name="StatCalloutScene">
       <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames}>
         <SceneBackground />
-        
+
         {/* Animated Stat Counter Header */}
-        <StatCounter fromValue={fromValue} toValue={toValue} prefix={prefix} suffix={suffix} label={label} top={120} delay={10} duration={35} />
+        <StatCounter fromValue={fromValue} toValue={toValue} prefix={prefix} suffix={suffix} label={label} top={120} delay={counterDelay} duration={35} />
 
         {/* Main Hero Asset */}
         {hero && (
@@ -174,6 +177,10 @@ export const NewspaperSpotlightScene = ({
   docSrc,
   highlightBox,
   stampText = "ĐÃ THẨM ĐỊNH",
+  stampX,
+  stampY,
+  stampSize,
+  stampDelay = 28,
   punchLines,
   hero,
 }) => {
@@ -188,8 +195,16 @@ export const NewspaperSpotlightScene = ({
 
         {/* Vintage Ink Stamp Landing */}
         {stampText && (
-          <Sequence from={28} layout="none">
-            <DocumentStamp text={stampText} x="68%" y={480} delay={28} rot={-14} />
+          <Sequence from={stampDelay} layout="none">
+            {/* delay=0, not stampDelay: the Sequence above already shifts
+                useCurrentFrame() to be local — passing stampDelay again here
+                double-subtracts it, so DocumentStamp's own internal
+                `frame - delay` needed the local frame to reach stampDelay a
+                SECOND time before animating in. Invisible at the small
+                default (28) since the extra wait was trivial; became a real
+                bug once a real word-anchored delay (165) made the required
+                wait exceed the scene's own length. */}
+            <DocumentStamp text={stampText} x={stampX || "68%"} y={stampY || 480} delay={0} rot={-14} size={stampSize || 42} />
           </Sequence>
         )}
 
@@ -206,7 +221,7 @@ export const NewspaperSpotlightScene = ({
         </Sequence>
       )}
       <Sequence from={0} layout="none"><Sfx name="pageTurn" volume={0.45} /></Sequence>
-      <Sequence from={28} layout="none"><Sfx name="switchClick" volume={0.5} /></Sequence>
+      <Sequence from={stampDelay} layout="none"><Sfx name="switchClick" volume={0.5} /></Sequence>
     </AbsoluteFill>
   );
 };
@@ -252,36 +267,45 @@ export const FlowDiagramScene = ({
   leftHero,
   rightHero,
   arrowPath = "M 320 600 Q 540 500 760 600",
+  arrowDelay,
   punchLines,
+  punchFrom = 60,
 }) => {
+  const leftDelay = leftHero.delay ?? 0;
+  const rightDelay = rightHero.delay ?? 25;
+  const realArrowDelay = arrowDelay ?? rightDelay + 15;
   return (
     <AbsoluteFill name="FlowDiagramScene">
       <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
         <SceneBackground />
 
         {/* Left Hero Element */}
-        <Sequence from={0} layout="none">
-          <Hero name={leftHero.name} src={leftHero.src} width={leftHero.width || 360} x={leftHero.x || "25%"} y={leftHero.y || 400} variant="rise" visibleFor={durationInFrames} />
+        <Sequence from={leftDelay} layout="none">
+          <Hero name={leftHero.name} src={leftHero.src} width={leftHero.width || 360} x={leftHero.x || "25%"} y={leftHero.y || 400} variant="rise" visibleFor={durationInFrames - leftDelay} />
         </Sequence>
 
         {/* Right Hero Element */}
-        <Sequence from={25} layout="none">
-          <Hero name={rightHero.name} src={rightHero.src} width={rightHero.width || 360} x={rightHero.x || "75%"} y={rightHero.y || 400} variant="grow" visibleFor={durationInFrames - 25} />
+        <Sequence from={rightDelay} layout="none">
+          <Hero name={rightHero.name} src={rightHero.src} width={rightHero.width || 360} x={rightHero.x || "75%"} y={rightHero.y || 400} variant="grow" visibleFor={durationInFrames - rightDelay} />
         </Sequence>
 
         {/* Flow Arrow Connecting them */}
-        <Sequence from={40} layout="none">
-          <FlowArrow d={arrowPath} delay={40} length={700} />
+        <Sequence from={realArrowDelay} layout="none">
+          {/* delay=0: the Sequence already localizes the frame — see the
+              DocumentStamp fix above for why passing realArrowDelay again
+              here would double it and stall the draw-on far past the scene's
+              own length. */}
+          <FlowArrow d={arrowPath} delay={0} length={700} />
         </Sequence>
       </CameraGroup>
       <BottomBar />
       {punchLines && (
-        <Sequence from={60} layout="none">
+        <Sequence from={punchFrom} layout="none">
           <PunchPhrase lines={punchLines} top={120} stagger />
         </Sequence>
       )}
-      <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
-      <Sequence from={40} layout="none"><Sfx name="whip" volume={0.35} /></Sequence>
+      <Sequence from={leftDelay} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
+      <Sequence from={realArrowDelay} layout="none"><Sfx name="whip" volume={0.35} /></Sequence>
     </AbsoluteFill>
   );
 };
@@ -302,7 +326,8 @@ export const MapLocationScene = ({
 
         {/* Geographic Pin Callout */}
         <Sequence from={10} layout="none">
-          <VoxMapPin locationName={locationName} x="50%" y={380} delay={10} />
+          {/* delay=0 — see DocumentStamp fix note; same double-delay pattern */}
+          <VoxMapPin locationName={locationName} x="50%" y={380} delay={0} />
         </Sequence>
 
         {/* Main Hero Cutout */}

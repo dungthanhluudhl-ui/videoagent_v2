@@ -27,6 +27,15 @@ import { V5Scene4, V5SCENE4_DURATION } from "./scenes/V5Scene4";
 import { V5Scene5, V5SCENE5_DURATION } from "./scenes/V5Scene5";
 import { V5Scene6, V5SCENE6_DURATION } from "./scenes/V5Scene6";
 
+import { VayTinChap, MASTER6_DURATION } from "./VayTinChap";
+import { V6Scene1, V6SCENE1_DURATION } from "./scenes/V6Scene1";
+import { V6Scene2, V6SCENE2_DURATION } from "./scenes/V6Scene2";
+import { V6Scene3, V6SCENE3_DURATION } from "./scenes/V6Scene3";
+import { V6Scene4, V6SCENE4_DURATION } from "./scenes/V6Scene4";
+import { V6Scene5, V6SCENE5_DURATION } from "./scenes/V6Scene5";
+import { V6Scene6, V6SCENE6_DURATION } from "./scenes/V6Scene6";
+import { V6Scene7, V6SCENE7_DURATION } from "./scenes/V6Scene7";
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -92,6 +101,25 @@ export const RemotionRoot = () => {
         id="LuongGrossNet"
         component={LuongGrossNet}
         durationInFrames={MASTER5_DURATION}
+        fps={LUATSU_CANVAS.fps}
+        width={LUATSU_CANVAS.width}
+        height={LUATSU_CANVAS.height}
+      />
+
+      <Folder name="VayTinChap-Scenes">
+        <Composition id="V6Scene1" component={V6Scene1} durationInFrames={V6SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V6Scene2" component={V6Scene2} durationInFrames={V6SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V6Scene3" component={V6Scene3} durationInFrames={V6SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V6Scene4" component={V6Scene4} durationInFrames={V6SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V6Scene5" component={V6Scene5} durationInFrames={V6SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V6Scene6" component={V6Scene6} durationInFrames={V6SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V6Scene7" component={V6Scene7} durationInFrames={V6SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+
+      <Composition
+        id="VayTinChap"
+        component={VayTinChap}
+        durationInFrames={MASTER6_DURATION}
         fps={LUATSU_CANVAS.fps}
         width={LUATSU_CANVAS.width}
         height={LUATSU_CANVAS.height}

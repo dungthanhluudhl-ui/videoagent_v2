@@ -27,6 +27,17 @@ matches the requested count. On a mismatch it saves every detected panel
 under a generic name and prints a warning - inspect the contact sheet
 and re-map/rename by hand rather than trust an automatic guess.
 
+Row-banding is by vertical CENTER proximity, not raw bbox-range overlap -
+checked head-to-head on a real 3-cell board, range-overlap grouping
+silently merged a genuine top-row/bottom-row layout into one band
+whenever padding pushed a top panel's bottom edge to within ~1px of a
+bottom panel's top edge, which then sorted the whole thing by x and
+produced a WRONG name<->image mapping with NO warning printed (unlike
+the count-mismatch case, this one looks completely successful and
+requires actually looking at the cropped image to catch). Center-based
+banding doesn't have that edge case - verified against every board
+generated so far, including the one that broke range-overlap.
+
 Reads OPENROUTER_API_KEY from a .env file (searched upward from this
 script's location) or from the environment. No browser automation needed.
 
@@ -206,18 +217,26 @@ def detect_panels(im, min_area=500, rel_size_floor=0.15, pad_frac=0.015):
         x0, x1 = sl[1].start, sl[1].stop
         boxes.append((max(0, x0 - pad_x), max(0, y0 - pad_y), min(w, x1 + pad_x), min(h, y1 + pad_y)))
 
-    boxes.sort(key=lambda b: b[1])
+    # Band into rows by vertical CENTER proximity, not by raw bbox-range
+    # overlap - checked head-to-head, range-overlap grouping silently
+    # merged a genuine 2-row layout into one row and produced a WRONG
+    # name<->image mapping (not just a warning) whenever the padding
+    # pushed one row's bottom edge to within ~1px of the next row's top
+    # edge. Center proximity relative to typical panel height doesn't
+    # have that edge case.
+    if not boxes:
+        return []
+    heights = sorted(b[3] - b[1] for b in boxes)
+    median_h = heights[len(heights) // 2]
+    centered = sorted(((b[1] + b[3]) / 2, b) for b in boxes)
     bands = []
-    for b in boxes:
-        for band in bands:
-            if not (b[3] < band["y0"] or b[1] > band["y1"]):  # vertical overlap with band
-                band["items"].append(b)
-                band["y0"] = min(band["y0"], b[1])
-                band["y1"] = max(band["y1"], b[3])
-                break
+    for cy, b in centered:
+        if bands and abs(cy - bands[-1]["cy"]) < median_h * 0.5:
+            band = bands[-1]
+            band["items"].append(b)
+            band["cy"] = (band["cy"] * (len(band["items"]) - 1) + cy) / len(band["items"])
         else:
-            bands.append({"y0": b[1], "y1": b[3], "items": [b]})
-    bands.sort(key=lambda bd: bd["y0"])
+            bands.append({"cy": cy, "items": [b]})
 
     ordered = []
     for band in bands:
