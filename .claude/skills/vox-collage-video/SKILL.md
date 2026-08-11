@@ -53,7 +53,7 @@ scipy openai-whisper pillow numpy requests`.
 
 Neither sourcing path needs a browser: `OPENROUTER_API_KEY` and
 `PEXELS_API_KEY` live in the project's `.env` file (already gitignored).
-`scripts/generate_image.py` and `scripts/fetch_pexels.py` read them
+`scripts/generate_board.py` and `scripts/fetch_pexels.py` read them
 automatically.
 
 ## 1. Transcribe the audio
@@ -133,37 +133,99 @@ handshake in shadow) the way Pexels sourcing had to.
 
 ## 3. Source the photos
 
-**Default to AI-generated images** — `scripts/generate_image.py` calls
-Gemini (`google/gemini-3.1-flash-lite-image`) via the OpenRouter API, no
-browser needed. This replaced Pexels as the primary source: Pexels'
-generic stock library was too low-quality/limited/inconsistent for
-subject-specific scenes, and a generated image can be tailored exactly
-to what the scene needs (right subject, right pose, right prop) instead
-of settling for whatever stock happens to exist.
+**Default to AI-generated images via `scripts/generate_board.py`** — it
+calls Gemini (`google/gemini-3.1-flash-lite-image`) via the OpenRouter
+API, no browser needed. This replaced Pexels as the primary source:
+Pexels' generic stock library was too low-quality/limited/inconsistent
+for subject-specific scenes, and a generated image can be tailored
+exactly to what the scene needs (right subject, right pose, right prop)
+instead of settling for whatever stock happens to exist.
+
+**One script, one command, for both a single image and a "board" of
+several at once** — pass one `--cell name=prompt` for a single bespoke
+image (behaves exactly like the old one-image-per-call approach, no
+grid overhead), or several `--cell` for a batch:
 
 ```bash
-py -3 .claude/skills/vox-collage-video/scripts/generate_image.py gen \
-  "a gavel, studio product photo on a solid plain white background, sharp focus, high detail" \
-  input/raw_cache/gavel.png
+# single image
+py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
+  --cell "gavel=a gavel, studio product photo on a solid plain white background, sharp focus, high detail" \
+  --out-dir input/raw_cache
+
+# object board: several distinct small props for one video in ONE API call
+py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
+  --cell "shield=a glossy blue shield icon with a checkmark, studio product photo on a solid plain white background" \
+  --cell "calculator=a handheld electronic calculator, studio product photo on a solid plain white background" \
+  --cell "cash=a stack of banknotes, studio product photo on a solid plain white background" \
+  --out-dir input/raw_cache
+
+# character sheet: the SAME recurring hero, several poses, guaranteed-consistent face/outfit
+py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
+  --consistent-subject "a young Vietnamese male office worker in his mid-20s, short black hair, light blue collared shirt" \
+  --cell "shocked=wide-eyed shocked expression, looking down at a phone in his hand" \
+  --cell "mathcalc=smiling, one hand raised doing a finger-counting mental math gesture" \
+  --cell "advice=looking straight at camera, one hand raised pointing forward giving friendly advice" \
+  --out-dir input/raw_cache --cols 2
 ```
+
+Use the board (2+ cells) form by default whenever a video needs 2+ small
+object/prop cutouts, or a recurring hero character needs multiple
+poses/expressions across scenes — it costs one API round-trip instead of
+N, and for a recurring character it gives real face/outfit consistency
+across scenes instead of hoping N independent generations happen to
+match (checked head-to-head: 3 independent single-image hero calls in an
+earlier video came out only "close enough" by luck of a very detailed
+shared prompt; a character sheet guarantees it because the model sees
+every pose together in one generation). Fall back to a single cell only
+for one genuinely bespoke image that has no other cells to batch with.
+
+**Cropping does not trust the requested grid as pixel math.** Checked
+head-to-head on a real 4-cell character-sheet request: the model
+rendered 6 uneven panels (4 across the top row, 2 wider ones on the
+bottom) instead of the requested clean 2x2 — blind proportional cropping
+sliced straight across a panel boundary as a result. The script instead
+auto-detects real panel boundaries via connected-component analysis on
+non-white pixels (the white gaps between panels are what separates
+them) and sorts them into reading order. When the detected panel count
+matches the requested cell count, it maps 1:1 onto your `--cell` names
+automatically. **When it doesn't match** (the model added/merged a
+pose), it saves every detected panel under a generic `panel_N.png` name
+and prints a warning instead of guessing a mapping — inspect the raw
+`_board_*.png` it also saves and rename the panels you actually want by
+hand. Real cost from that same test: a 4-cell request landed at 1,726
+total tokens (240 prompt + 1,486 completion) for 6 usable panels — the
+main win is round-trips + consistency, not a dramatic raw token savings,
+so don't over-batch a board just to save a few hundred tokens at the
+cost of a messier count-mismatch to sort out.
 
 Always prompt for **"studio product photo on a solid plain white
 background"** (or equivalent) regardless of the subject — that's what
-gives rembg a clean, crisp cutout edge. Describe the subject specifically
+gives rembg a clean, crisp cutout edge. Describe each cell specifically
 enough to match the scene's exact content (a specific prop, a specific
 pose/angle, a specific cultural context) — this is the actual advantage
 over stock: don't settle for a generic result when the prompt can be
 made precise. Save outputs under `input/raw_cache/` like any other raw
 source image (keeping them means a later re-process doesn't need a
 fresh API round-trip), then run them through step 4's cutout pipeline
-exactly like a Pexels download — `generate_image.py` output is a
+exactly like a Pexels download — `generate_board.py` output is a
 drop-in replacement, not a separate pipeline.
 
-**Preview before committing** — Read the generated PNG at thumbnail
-scale before running it through rembg, same discipline as screening a
-Pexels candidate. If a generation comes out with a cluttered scene, a
-non-white background, or the wrong subject, regenerate with a more
-specific prompt rather than fighting it in the cutout step.
+**Never describe a cell's own subject as white/cream/pale** — checked
+head-to-head, a cell prompted as "a sealed **white** envelope" on the
+mandatory white background came back from rembg with the whole envelope
+stripped out, keeping only its small red wax seal (the classic
+pale-subject-on-white-background failure, same rembg limitation already
+documented for Pexels sourcing — not a board-specific bug). Easy to miss
+when batch-writing several cell prompts at once, so double-check each
+one individually, not just the board prompt as a whole.
+
+**Preview before committing** — Read both the raw board (to confirm the
+model actually followed the layout) and each cropped cell at thumbnail
+scale before running anything through rembg, same discipline as
+screening a Pexels candidate. If a generation comes out with a cluttered
+scene, a non-white background, the wrong subject, or a panel count that
+doesn't map cleanly, regenerate with a more specific prompt (or fewer
+cells) rather than fighting it in the cutout step.
 
 `scripts/fetch_pexels.py` (Pexels REST API) is kept as a fallback for
 when a specific real-world photo (an actual news photo, a real
@@ -366,7 +428,8 @@ exported file, or stills genuinely can't show what's being debugged
 - `Hero` / `Support` percentage coordinates (`x="25%"`, `x="75%"`) failing to center — earlier code only calculated `marginLeft = -width / 2` for `x === "50%"`, leaving other percentage values using top-left anchor (`marginLeft = 0`). This pushed the right column cutout out of the 1080px canvas by ~78px, cutting off the right elbow/arm. ALWAYS use `marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0` to center percentage coordinates.
 - PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "BÓC TÁCH NGHỀ LUẬT \n SƯ"). ALWAYS enforce `whiteSpace: "nowrap"` & `flexWrap: "nowrap"` on line containers, use explicit `lines` array, and auto-scale `fontSize` with `maxCharCount` so lines never break mid-sentence.
 - `SplitCompareScene` column width & positioning — place Left Column at `x="25%"` and Right Column at `x="75%"` with `width <= 360px` to guarantee 90px symmetrical safety margins on both left and right canvas edges.
-- Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_image` on solid white background for 100% crisp studio cutouts.
+- Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_board.py` on solid white background for 100% crisp studio cutouts.
+- Trusting the requested rows x cols as pixel-crop math for a multi-cell board — checked head-to-head, the model rendered 6 uneven panels instead of the requested 2x2, and blind proportional cropping sliced across a panel boundary. `generate_board.py` now auto-detects real panel boundaries via connected-component analysis instead, and refuses to guess a name mapping on a count mismatch (saves generic `panel_N.png` + warns instead).
 - Captions placed too low near the bottom margin (`bottom: 58`), getting covered by TikTok/Reels UI. Always position `Captions` at `bottom: 440` (~1/3 from bottom) and elevate hero elements (`y: 340-350`) so they never overlap.
 - Placing hero/support coordinates by eye instead of measuring real
   pixel overlap — led to a support visibly covering part of a hero (a
