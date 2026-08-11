@@ -36,6 +36,15 @@ import { V6Scene5, V6SCENE5_DURATION } from "./scenes/V6Scene5";
 import { V6Scene6, V6SCENE6_DURATION } from "./scenes/V6Scene6";
 import { V6Scene7, V6SCENE7_DURATION } from "./scenes/V6Scene7";
 
+import { XangTyGiaBatPho, MASTER8_DURATION } from "./XangTyGiaBatPho";
+import { V8Scene1, V8SCENE1_DURATION } from "./scenes/V8Scene1";
+import { V8Scene2, V8SCENE2_DURATION } from "./scenes/V8Scene2";
+import { V8Scene3, V8SCENE3_DURATION } from "./scenes/V8Scene3";
+import { V8Scene4, V8SCENE4_DURATION } from "./scenes/V8Scene4";
+import { V8Scene5, V8SCENE5_DURATION } from "./scenes/V8Scene5";
+import { V8Scene6, V8SCENE6_DURATION } from "./scenes/V8Scene6";
+import { V8Scene7, V8SCENE7_DURATION } from "./scenes/V8Scene7";
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -120,6 +129,25 @@ export const RemotionRoot = () => {
         id="VayTinChap"
         component={VayTinChap}
         durationInFrames={MASTER6_DURATION}
+        fps={LUATSU_CANVAS.fps}
+        width={LUATSU_CANVAS.width}
+        height={LUATSU_CANVAS.height}
+      />
+
+      <Folder name="XangTyGiaBatPho-Scenes">
+        <Composition id="V8Scene1" component={V8Scene1} durationInFrames={V8SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V8Scene2" component={V8Scene2} durationInFrames={V8SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V8Scene3" component={V8Scene3} durationInFrames={V8SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V8Scene4" component={V8Scene4} durationInFrames={V8SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V8Scene5" component={V8Scene5} durationInFrames={V8SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V8Scene6" component={V8Scene6} durationInFrames={V8SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V8Scene7" component={V8Scene7} durationInFrames={V8SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+
+      <Composition
+        id="XangTyGiaBatPho"
+        component={XangTyGiaBatPho}
+        durationInFrames={MASTER8_DURATION}
         fps={LUATSU_CANVAS.fps}
         width={LUATSU_CANVAS.width}
         height={LUATSU_CANVAS.height}

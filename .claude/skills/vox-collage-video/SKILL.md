@@ -163,15 +163,15 @@ grid overhead), or several `--cell` for a batch:
 ```bash
 # single image
 py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
-  --cell "gavel=a gavel, studio product photo on a solid plain white background, sharp focus, high detail" \
+  --cell "gavel=a gavel, sharp focus, high detail" \
   --out-dir input/raw_cache
 
 # object board: several distinct small props for one video in ONE API call
 py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
-  --cell "shield=a glossy blue shield icon with a checkmark, studio product photo on a solid plain white background" \
-  --cell "calculator=a handheld electronic calculator, studio product photo on a solid plain white background" \
-  --cell "cash=a stack of banknotes, studio product photo on a solid plain white background" \
-  --out-dir input/raw_cache
+  --cell "shield=a glossy blue shield icon with a checkmark" \
+  --cell "calculator=a handheld electronic calculator" \
+  --cell "cash=a stack of banknotes" \
+  --out-dir input/raw_cache --bg magenta
 
 # character sheet: the SAME recurring hero, several poses, guaranteed-consistent face/outfit
 py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
@@ -181,6 +181,8 @@ py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
   --cell "advice=looking straight at camera, one hand raised pointing forward giving friendly advice" \
   --out-dir input/raw_cache --cols 2
 ```
+
+Note what's NOT in these prompts anymore: no "studio product photo on a solid plain white background" wording. **Background is a chroma-key screen color, injected automatically by the script** (see the next section) — only describe the SUBJECT in `--cell`/`--consistent-subject`. Typing background wording by hand into prompts is exactly the kind of prose convention that drifts across sessions; it's now enforced in code instead.
 
 Use the board (2+ cells) form by default whenever a video needs 2+ small
 object/prop cutouts, or a recurring hero character needs multiple
@@ -212,26 +214,50 @@ main win is round-trips + consistency, not a dramatic raw token savings,
 so don't over-batch a board just to save a few hundred tokens at the
 cost of a messier count-mismatch to sort out.
 
-Always prompt for **"studio product photo on a solid plain white
-background"** (or equivalent) regardless of the subject — that's what
-gives rembg a clean, crisp cutout edge. Describe each cell specifically
-enough to match the scene's exact content (a specific prop, a specific
-pose/angle, a specific cultural context) — this is the actual advantage
-over stock: don't settle for a generic result when the prompt can be
-made precise. Save outputs under `input/raw_cache/` like any other raw
-source image (keeping them means a later re-process doesn't need a
-fresh API round-trip), then run them through step 4's cutout pipeline
-exactly like a Pexels download — `generate_board.py` output is a
-drop-in replacement, not a separate pipeline.
+**Background is always a chroma-key screen, chosen per subject — pick the
+`--bg` color, don't describe background in the prompt text.**
+`generate_board.py` appends the actual background wording itself (see
+`CHROMA_SPECS` in that script); typing your own background phrase into
+`--cell` text is redundant at best and conflicting at worst. Pick `--bg`
+using this rule, in order:
 
-**Never describe a cell's own subject as white/cream/pale** — checked
-head-to-head, a cell prompted as "a sealed **white** envelope" on the
-mandatory white background came back from rembg with the whole envelope
-stripped out, keeping only its small red wax seal (the classic
-pale-subject-on-white-background failure, same rembg limitation already
-documented for Pexels sourcing — not a board-specific bug). Easy to miss
-when batch-writing several cell prompts at once, so double-check each
-one individually, not just the board prompt as a whole.
+1. `--bg green` (the default, omit the flag) — safe for most objects,
+   documents, and people.
+2. `--bg magenta` — use whenever the SUBJECT ITSELF contains green:
+   cash/banknotes (VND and USD notes both read as green-toned), plants,
+   herbs/vegetables (rau thơm, basil), green branding/packaging. A green
+   screen behind a green subject keys out part of the subject — the
+   exact failure mode this whole scheme exists to avoid, just recolored.
+3. `--bg white` — legacy plain white, only when a subject conflicts with
+   BOTH chroma colors at once (rare — e.g. something magenta AND green,
+   like a watermelon slice).
+
+Root cause this replaces: `process_cutout.py`'s removal isn't a literal
+"erase white pixels" operation — the rembg fallback path is an ML
+salient-object segmentation model that finds the subject by CONTRAST
+against the background, regardless of color. A plain white background
+gives near-zero contrast against a pale/white/cream subject, so the
+model can't find a boundary and erases the subject along with the
+background (confirmed case: "a sealed **white** envelope" prompted on
+the old mandatory white background came back with the whole envelope
+stripped out, keeping only its small red wax seal). A saturated chroma
+color that doesn't appear in the subject restores real contrast for ANY
+subject color, white included — and pairs with step 4's real chroma-key
+algorithm to remove the model's confidence-based failure mode entirely
+for every image this script generates. You can still describe a subject
+as white/cream/pale in the prompt now (an earlier version of this rule
+said not to, back when white was the only background option) — the
+chroma screen makes that safe again.
+
+Describe each cell specifically enough to match the scene's exact
+content (a specific prop, a specific pose/angle, a specific cultural
+context) — this is the actual advantage over stock: don't settle for a
+generic result when the prompt can be made precise. Save outputs under
+`input/raw_cache/` like any other raw source image (keeping them means a
+later re-process doesn't need a fresh API round-trip), then run them
+through step 4's cutout pipeline exactly like a Pexels download —
+`generate_board.py` output is a drop-in replacement, not a separate
+pipeline.
 
 **A clean "detected count matches requested count" result can still be
 silently WRONG** — caught a real case where a 3-cell board with a
@@ -247,11 +273,19 @@ panel count proves nothing about the name<->image mapping being right.
 
 **Preview before committing** — Read both the raw board (to confirm the
 model actually followed the layout) and each cropped cell at thumbnail
-scale before running anything through rembg, same discipline as
-screening a Pexels candidate. If a generation comes out with a cluttered
-scene, a non-white background, the wrong subject, or a panel count that
-doesn't map cleanly, regenerate with a more specific prompt (or fewer
-cells) rather than fighting it in the cutout step.
+scale before running anything through step 4, same discipline as
+screening a Pexels candidate. Specifically check the background is
+actually a clean flat chroma color edge-to-edge, not just present —
+Gemini has ignored background instructions before (a stray border/frame
+rendered around a whole cell despite no border being requested). If a
+generation comes out with a cluttered scene, a background that isn't
+flat/uniform, the wrong subject, or a panel count that doesn't map
+cleanly, regenerate with a more specific prompt (or fewer cells) rather
+than fighting it in the cutout step — `process_cutout.py` will silently
+fall back to the (weaker) rembg path for any image whose corners don't
+sample as a clean match anyway, so a bad screen just quietly loses the
+chroma-key advantage instead of erroring, and it's easy to miss unless
+you look at the "removal:" line it prints per image.
 
 `scripts/fetch_pexels.py` (Pexels REST API) is kept as a fallback for
 when a specific real-world photo (an actual news photo, a real
@@ -263,28 +297,59 @@ py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py list "gavel" --or
 py -3 .claude/skills/vox-collage-video/scripts/fetch_pexels.py get "gavel" input/raw_cache/gavel.jpg --orientation portrait --index 0
 ```
 
-If using the Pexels path, the same rembg failure modes apply: it does
-badly on a busy/cluttered composition, a subject resting ON or AMONG a
-similarly-detailed surface (money on top of a pile of money — the
-classic failure, confirmed twice), large-scale architecture/building
-photos, and flat-lay top-down document shots — route around those at
-the sourcing stage rather than fighting the mask after the fact.
+Pexels photos are real, uncontrolled photography — you can't re-shoot
+them on a chroma screen, so **this path always uses the rembg fallback**
+(pass `--bg-mode rembg` explicitly in step 4 to skip auto-detection's
+sampling step for these — it would correctly fall back on its own, but
+being explicit documents intent and saves a wasted sampling pass). The
+same rembg failure modes apply: it does badly on a busy/cluttered
+composition, a subject resting ON or AMONG a similarly-detailed surface
+(money on top of a pile of money — the classic failure, confirmed
+twice), large-scale architecture/building photos, and flat-lay top-down
+document shots — route around those at the sourcing stage rather than
+fighting the mask after the fact.
 
 ## 4. Turn photos into cutouts, then verify placement with real pixels
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
-  input/raw_cache/gavel.jpg public/el_gavel.png \
-  input/raw_cache/envelope.jpg public/el_envelope.png \
+  input/raw_cache/gavel.png public/el_gavel.png \
+  input/raw_cache/envelope.png public/el_envelope.png \
   --color
 # (run person/hero subjects in a separate call WITHOUT --color — that's
 # the grayscale + drop-shadow path, the default when --color is omitted)
+
+# a real photo from fetch_pexels.py: force the rembg path explicitly
+py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
+  input/raw_cache/gavel.jpg public/el_gavel.png \
+  --color --bg-mode rembg
 ```
 
-rembg (`isnet-general-use` model — checked head-to-head against the
-default `u2net`, isnet gives a visibly crisper edge), a connected-
-component mask cleanup, an alpha-curve edge-tightening pass (kills the
-soft "smoke" fringe rembg leaves on a blurred/shadowed edge — this was a
+Two removal methods, picked **automatically per image** (`--bg-mode
+auto`, the default) by sampling each source's corner pixels:
+
+1. **Chroma-key removal** (color-distance threshold + spill suppression)
+   — used when the corners cleanly match the green/magenta screen step 3
+   generates. This is deterministic color math, not a model, so it
+   doesn't have rembg's contrast-confidence failure mode at all — this
+   is the path that actually fixes the white-envelope-style failure
+   documented in step 3, not just a background-color change on top of
+   the same weak method.
+2. **rembg fallback** (`isnet-general-use` model — checked head-to-head
+   against the default `u2net`, isnet gives a visibly crisper edge) —
+   used for Pexels photos, or any generated image whose corners DON'T
+   sample as a clean flat chroma color (the model ignored the background
+   instruction — see step 3's preview note). The script prints which
+   method it used for every image (`removal: chroma-key (...)` or
+   `removal: rembg ...`) — actually read that line, don't assume.
+
+Force a method with `--bg-mode {green,magenta,rembg}` if auto-detection
+ever picks wrong for a specific source (e.g. a subject that fills the
+entire frame with no visible background corner to sample).
+
+Both paths feed the same rest of the pipeline: a connected-component
+mask cleanup, an alpha-curve edge-tightening pass (kills the soft
+"smoke" fringe a soft/blurred source edge leaves behind — this was a
 real visible defect in an earlier pass, fixed by steepening the alpha
 curve, not by re-picking photos), a tight content crop, then either
 grayscale+shadow or `--color` (no shadow unless `--shadow` is also
@@ -492,7 +557,7 @@ exported file, or stills genuinely can't show what's being debugged
 - PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "BÓC TÁCH NGHỀ LUẬT \n SƯ"). ALWAYS enforce `whiteSpace: "nowrap"` & `flexWrap: "nowrap"` on line containers, and auto-scale `fontSize` with `maxCharCount` so lines never break mid-sentence.
 - **This rule used to end with "...and use explicit `lines` array" — that clause was itself a bug, and it silently reproduced the exact defect it was meant to fix, across multiple later videos.** `PunchPhrase` already auto-splits a line only when it's genuinely >15 chars (see `shared.jsx`'s `finalLines` logic). But every `SceneTemplates.jsx` template only forwards a `punchLines` array straight into that `lines` prop — there's no separate "let it decide" passthrough — so a later video (`VayTinChap`) hand-split short headlines into 2-entry arrays (e.g. `["CƠ HỘI HAY", "BẪY?"]` — 15 chars combined, fits ONE line) simply because the old instruction said to always use an explicit array. Result: needless line breaks with a large empty gap on the right of the shorter line, on nearly every scene. **Fix: default to ONE array entry containing the whole phrase** (e.g. `punchLines={["CƠ HỘI HAY BẪY?"]}`) and let the >15-char auto-breaker decide whether/where to split — don't pre-split into multiple entries by feel. Only write more than one entry for two genuinely separate clauses that must not visually run together (rare — count the combined length first; a lot of headlines that read as "obviously two lines" fit one line fine once you count).
 - `SplitCompareScene` column width & positioning — place Left Column at `x="25%"` and Right Column at `x="75%"` with `width <= 360px` to guarantee 90px symmetrical safety margins on both left and right canvas edges.
-- Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_board.py` on solid white background for 100% crisp studio cutouts.
+- Sourcing complex Pexels photos with messy backgrounds — led to fuzzy, glitchy rembg cutouts. Always use Gemini AI `generate_board.py` for crisp studio cutouts. (Superseded: the background color itself moved from white to a chroma-key green/magenta screen — see the entry below and step 3/4 — because plain white still failed on pale subjects.)
 - Trusting the requested rows x cols as pixel-crop math for a multi-cell board — checked head-to-head, the model rendered 6 uneven panels instead of the requested 2x2, and blind proportional cropping sliced across a panel boundary. `generate_board.py` now auto-detects real panel boundaries via connected-component analysis instead, and refuses to guess a name mapping on a count mismatch (saves generic `panel_N.png` + warns instead).
 - Trusting a board's "detected count matches requested count, no warning" as proof the crop is right — grouping panels into rows by raw bbox-range overlap (instead of center proximity) silently merged two real rows into one whenever padding pushed their edges to within ~1px of touching, and produced a wrong name<->image mapping with zero warning. Fixed by banding on vertical center proximity instead. Always open each individually-named cropped file before use regardless — a matching count doesn't guarantee a correct mapping.
 - Captions placed too low near the bottom margin (`bottom: 58`), getting covered by TikTok/Reels UI. Always position `Captions` at `bottom: 440` (~1/3 from bottom) and elevate hero elements (`y: 340-350`) so they never overlap.
@@ -506,6 +571,32 @@ exported file, or stills genuinely can't show what's being debugged
 - A punch-phrase timed to appear right as the line ends, with the next
   scene's cut only ~20 frames later — reads as the text being cut off
   mid-read. Give it real dwell time before the cut (step 2).
+- **White background as the default source color was itself the bug, not
+  just individual "pale subject" cases of it.** `process_cutout.py`'s
+  removal (rembg) is ML salient-object segmentation, not a literal
+  color-key — it finds the subject by contrast against the background,
+  regardless of color. A plain white background gives near-zero contrast
+  against ANY pale/white/cream subject (a document, an envelope, a light
+  card, a white t-shirt), so the model erases the subject along with the
+  background instead of just failing to find a crisp edge. The
+  "don't describe a subject as white" rule that used to be here was
+  treating the SYMPTOM (don't mention the color) instead of the CAUSE
+  (the background itself has no contrast to key against). Fix: step 3
+  now defaults every generated source to a chroma-key screen
+  (`--bg green`, or `--bg magenta` when the subject itself contains
+  green — cash, plants, herbs), and step 4's `process_cutout.py` runs a
+  real color-distance chroma-key removal (with spill suppression) as the
+  PRIMARY method for these, auto-detected per image by sampling its
+  corners, falling back to rembg only when the corners don't sample as a
+  clean flat chroma color (a real Pexels photo, or a generation that
+  ignored the background instruction). Validated on synthetic test
+  images reproducing the exact failure (a white shape on a noisy green
+  background, and a green shape on a noisy magenta background — both
+  survived correctly, auto-detection picked the right method for each)
+  — NOT yet confirmed against a real Gemini-generated chroma image
+  (OpenRouter credits ran out mid-session); treat the first real board
+  generated under this scheme as the actual validation and watch its
+  `removal:` log line + a pixel preview before trusting it blindly.
 - Background grid contrast too subtle (0.07 alpha) to actually read —
   needs real contrast (0.32-ish), verified against a zoomed reference
   crop, not asserted.

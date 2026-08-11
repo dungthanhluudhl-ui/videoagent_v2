@@ -26,6 +26,7 @@ export const CollageScene = ({
   punchLines,
   punchTop = 120,
   punchFrom = 60,
+  punchLineHeight = 1.22,
 }) => {
   return (
     <AbsoluteFill name="CollageScene">
@@ -63,7 +64,7 @@ export const CollageScene = ({
       <BottomBar />
       {punchLines && (
         <Sequence from={punchFrom} layout="none">
-          <PunchPhrase lines={punchLines} top={punchTop} stagger />
+          <PunchPhrase lines={punchLines} top={punchTop} lineHeight={punchLineHeight} stagger />
         </Sequence>
       )}
       <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
@@ -139,6 +140,9 @@ export const StatCalloutScene = ({
   hero,
   supports = [],
   counterDelay = 10,
+  punchLines,
+  punchFrom = 60,
+  punchTop = 300,
 }) => {
   return (
     <AbsoluteFill name="StatCalloutScene">
@@ -163,6 +167,11 @@ export const StatCalloutScene = ({
         ))}
       </CameraGroup>
       <BottomBar />
+      {punchLines && (
+        <Sequence from={punchFrom} layout="none">
+          <PunchPhrase lines={punchLines} top={punchTop} stagger />
+        </Sequence>
+      )}
       <Sequence from={0} layout="none"><Sfx name="whip" volume={0.4} /></Sequence>
       <Sequence from={15} layout="none"><Sfx name="ding" volume={0.35} /></Sequence>
     </AbsoluteFill>
@@ -182,6 +191,7 @@ export const NewspaperSpotlightScene = ({
   stampSize,
   stampDelay = 28,
   punchLines,
+  punchFrom = 45,
   hero,
 }) => {
   return (
@@ -216,7 +226,7 @@ export const NewspaperSpotlightScene = ({
       </CameraGroup>
       <BottomBar />
       {punchLines && (
-        <Sequence from={45} layout="none">
+        <Sequence from={punchFrom} layout="none">
           <PunchPhrase lines={punchLines} top={120} stagger />
         </Sequence>
       )}
