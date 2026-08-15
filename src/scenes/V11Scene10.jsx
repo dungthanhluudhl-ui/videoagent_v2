@@ -34,6 +34,8 @@ export const V11Scene10 = () => (
       {/* vạch chia hai nửa, kẻ xuống khi nửa kia sắp xuất hiện */}
       <DrawnPath d="M 770 20 L 770 900" delay={100} drawFrames={20} length={880}
                  strokeWidth={5} dashed />
+      <DrawnPath d="M 90 300 L 700 300 L 700 560 L 90 560 Z" delay={20} drawFrames={18}
+                 length={1740} strokeWidth={5} fill="rgba(194,65,12,0.16)" />
 
       <DrawnText delay={100} x={900} y={410} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
@@ -43,12 +45,12 @@ export const V11Scene10 = () => (
       {/* dải nhà thấp vẽ tay ở nửa dưới bên trái - "trông như một ngôi làng" */}
       <DrawnPath d="M 70 780 L 700 780" delay={104} drawFrames={16} length={630}
                  strokeWidth={6} />
-      <DrawnPath d="M 110 780 L 110 700 L 210 656 L 310 700 L 310 780" delay={108}
-                 drawFrames={14} length={420} strokeWidth={5} />
-      <DrawnPath d="M 340 780 L 340 716 L 430 678 L 520 716 L 520 780" delay={114}
-                 drawFrames={14} length={400} strokeWidth={5} />
-      <DrawnPath d="M 550 780 L 550 724 L 630 690 L 710 724 L 710 780" delay={120}
-                 drawFrames={14} length={380} strokeWidth={5} />
+      <DrawnPath d="M 110 780 L 110 700 L 210 656 L 310 700 L 310 780 Z" delay={108}
+                 drawFrames={14} length={460} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
+      <DrawnPath d="M 340 780 L 340 716 L 430 678 L 520 716 L 520 780 Z" delay={114}
+                 drawFrames={14} length={440} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
+      <DrawnPath d="M 550 780 L 550 724 L 630 690 L 710 724 L 710 780 Z" delay={120}
+                 drawFrames={14} length={420} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <DrawnText delay={124} x={390} y={848} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
         nhà thấp, ngõ nhỏ

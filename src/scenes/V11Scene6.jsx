@@ -48,6 +48,11 @@ export const V11Scene6 = () => (
     </Sequence>
 
     {/* mũi tên nối cổng gác sang phía Itaewon - "ngay sát bên cạnh" */}
+    <DiagramCanvas y={380} height={240}>
+      <DrawnPath d="M 70 20 L 1010 20 L 1010 200 L 70 200 Z" delay={0} drawFrames={18}
+                 length={2240} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
+    </DiagramCanvas>
+
     <DiagramCanvas y={940} height={310}>
       <DrawnPath d="M 540 130 L 900 130 M 866 110 L 900 130 L 866 150"
                  delay={150} drawFrames={12} length={430} stroke="#C2410C" strokeWidth={8} />

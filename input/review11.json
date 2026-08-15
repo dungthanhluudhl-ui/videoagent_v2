@@ -50,10 +50,10 @@
       "id": "S6",
       "frame": "input/review_frames/V11Scene6_f163.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Do day 52% duoi san 55%, khoang trong lien tuc 173px: dai giua truc thoi gian va ban do con hong."
+      "note": "Da them mang dat sau truc thoi gian; do day 63%, dat san. Do day 63%, khoang trong 173px."
     },
     {
       "id": "S7",
@@ -68,10 +68,10 @@
       "id": "S8",
       "frame": "input/review_frames/V11Scene8_f87.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Do day 21% - mong nhat ca video. Mang boi den chi la khung net dut, gan nhu khong co muc."
+      "note": "Da cho ba dong ten mot mang nen va noi cao khoi muc; do day 100%. Do day 100%, khoang trong 0px."
     },
     {
       "id": "S9",
@@ -86,10 +86,10 @@
       "id": "S10",
       "frame": "input/review_frames/V11Scene10_f98.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Khoang trong lien tuc 303px vuot tran 300px: dai giua ho chieu va day nha ve tay con hong."
+      "note": "Da to day day nha ve tay va them mang cam nua tren; do day 68%. Do day 68%, khoang trong 168px."
     },
     {
       "id": "S11",
@@ -102,12 +102,12 @@
     },
     {
       "id": "S12",
-      "frame": "input/review_frames/V11Scene12_f172.png",
+      "frame": "input/review_frames/V11Scene12_f215.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Do day 34%, khoang trong 456px. Ba tang deu la net mong tren nen luoi - can khoi dac."
+      "note": "Do o khung f215 - sau nhip 192 khi tang doc hien ra; ba tang deu co mang dat. Do day 79%, khoang trong 82px."
     },
     {
       "id": "S13",
@@ -122,10 +122,10 @@
       "id": "S14",
       "frame": "input/review_frames/V11Scene14_f129.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Do day 36%: luoi cham thua qua nen do duoc la nen, khong phai muc."
+      "note": "Da them mang nen sau luoi cham va sau dai moc nam; do day 70%. Do day 70%, khoang trong 85px."
     },
     {
       "id": "S15",
@@ -158,10 +158,10 @@
       "id": "S18",
       "frame": "input/review_frames/V11Scene18_f114.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Do day 41%: mat dong ho va mat cat loi di deu chi la net vien, khong co mang."
+      "note": "Da to day mat dong ho va hai vach loi di; do day 56%. Do day 56%, khoang trong 97px."
     },
     {
       "id": "S19",

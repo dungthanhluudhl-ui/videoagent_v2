@@ -25,6 +25,8 @@ export const V11Scene14 = () => (
     </Sequence>
 
     <DiagramCanvas y={392} height={480}>
+      <DrawnPath d="M 90 10 L 990 10 L 990 360 L 90 360 Z" delay={0} drawFrames={18}
+                 length={2500} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <DensityGrid x={100} y={20} width={880} height={330} cols={25} rows={10}
                    fillCount={250} delay={0} fillFrames={80} />
       <DrawnPath d="M 100 386 L 980 386" delay={70} drawFrames={16} length={880}
@@ -37,6 +39,8 @@ export const V11Scene14 = () => (
 
     {/* mốc năm lật sang 2022 - chuyển sang vế sau của câu */}
     <DiagramCanvas y={900} height={350}>
+      <DrawnPath d="M 90 30 L 990 30 L 990 260 L 90 260 Z" delay={116} drawFrames={16}
+                 length={2260} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <DrawnText delay={116} x={250} y={110} textAnchor="middle" fill="#1A1A1A" opacity={0.45}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 78, fontWeight: 900 }}>
         2019

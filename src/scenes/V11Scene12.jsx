@@ -24,9 +24,9 @@ export const V11Scene12 = () => (
     {/* tầng 1 - hai dãy nhà và khoảng hở giữa chúng co lại */}
     <DiagramCanvas y={300} height={340}>
       <DrawnPath d="M 70 40 L 400 40 L 400 300 L 70 300 Z" delay={0} drawFrames={16}
-                 length={1180} strokeWidth={6} />
+                 length={1180} strokeWidth={6} fill="rgba(26,26,26,0.19)" />
       <DrawnPath d="M 680 40 L 1010 40 L 1010 300 L 680 300 Z" delay={8} drawFrames={16}
-                 length={1180} strokeWidth={6} />
+                 length={1180} strokeWidth={6} fill="rgba(26,26,26,0.19)" />
       <DrawnPath d="M 120 90 L 180 90 M 120 150 L 180 150 M 120 210 L 180 210"
                  delay={20} drawFrames={12} length={180} strokeWidth={4} opacity={0.5} />
       <DrawnPath d="M 900 90 L 960 90 M 900 150 L 960 150 M 900 210 L 960 210"
@@ -40,9 +40,11 @@ export const V11Scene12 = () => (
     </DiagramCanvas>
 
     {/* tầng 2 - mặt đất phẳng bị gạch bỏ */}
-    <DiagramCanvas y={660} height={260}>
-      <DrawnPath d="M 90 130 L 990 130" delay={118} drawFrames={18} length={900}
-                 strokeWidth={7} />
+    <DiagramCanvas y={620} height={300}>
+      <DrawnPath d="M 90 10 L 990 10 L 990 60 L 90 60 Z" delay={110} drawFrames={14}
+                 length={1900} strokeWidth={4} fill="rgba(26,26,26,0.19)" />
+      <DrawnPath d="M 90 130 L 990 130 L 990 250 L 90 250 Z" delay={118} drawFrames={18}
+                 length={2040} strokeWidth={7} fill="rgba(26,26,26,0.19)" />
       <DrawnText delay={118} x={540} y={90} textAnchor="middle" fill="#1A1A1A" opacity={0.55}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 800 }}>
         KHÔNG HỀ BẰNG PHẲNG
@@ -53,14 +55,15 @@ export const V11Scene12 = () => (
 
     {/* tầng 3 - mặt đất nghiêng, nhà dựng ngay trên dốc */}
     <DiagramCanvas y={880} height={370}>
-      <DrawnPath d="M 90 280 L 990 80" delay={192} drawFrames={20} length={922} strokeWidth={9} />
+      <DrawnPath d="M 90 280 L 990 80 L 990 330 L 90 330 Z" delay={192} drawFrames={20}
+                 length={2200} strokeWidth={9} fill="rgba(26,26,26,0.19)" />
       <SlopeIndicator x1={90} y1={280} x2={990} y2={80} label="DỐC" delay={196} />
       <DrawnPath d="M 250 236 L 250 156 L 360 132 L 360 212 Z" delay={202} drawFrames={12}
-                 length={420} strokeWidth={5} />
+                 length={420} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <DrawnPath d="M 500 180 L 500 100 L 610 76 L 610 156 Z" delay={210} drawFrames={12}
-                 length={420} strokeWidth={5} />
+                 length={420} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <DrawnPath d="M 750 124 L 750 44 L 860 20 L 860 100 Z" delay={218} drawFrames={12}
-                 length={420} strokeWidth={5} />
+                 length={420} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
     </DiagramCanvas>
 
     <Sequence from={192} layout="none">

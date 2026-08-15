@@ -37,6 +37,8 @@ export const V11Scene8 = () => (
     </Sequence>
 
     <DiagramCanvas y={380} height={430}>
+      <DrawnPath d="M 80 20 L 1000 20 L 1000 400 L 80 400 Z" delay={44} drawFrames={18}
+                 length={2600} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <StruckName y={90} text="DỊ THÁI VIỆN" delay={51} />
       <StruckName y={216} text="NƠI LY TÁN" delay={63} />
       <StruckName y={342} text="KÝ ỨC BUỒN" delay={75} />
@@ -44,8 +46,8 @@ export const V11Scene8 = () => (
 
     {/* mảng bôi đen phủ lên phần giấy còn lại - động tác "xoá bỏ" thành hình */}
     <DiagramCanvas y={840} height={410}>
-      <DrawnPath d="M 110 40 L 970 40 L 970 250 L 110 250 Z" delay={84} drawFrames={16}
-                 length={2140} strokeWidth={5} dashed />
+      <DrawnPath d="M 110 20 L 970 20 L 970 300 L 110 300 Z" delay={84} drawFrames={16}
+                 length={2140} strokeWidth={5} fill="rgba(26,26,26,0.72)" />
       <DrawnPath d="M 130 70 L 950 70 M 130 118 L 950 118 M 130 166 L 950 166 M 130 214 L 950 214"
                  delay={90} drawFrames={20} length={3300} stroke="#1A1A1A" strokeWidth={22}
                  opacity={0.82} />
