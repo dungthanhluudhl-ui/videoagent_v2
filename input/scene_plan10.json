@@ -4,7 +4,7 @@
   "fps": 30,
   "audio": "audio10.mp3",
   "wordsFile": "input/words10_aligned.json",
-  "status": "active",
+  "status": "shipped",
   "scenes": [
     {
       "id": "S1",

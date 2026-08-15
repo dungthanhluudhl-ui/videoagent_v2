@@ -1,0 +1,1731 @@
+{
+  "video": "V11",
+  "fps": 30,
+  "wordsFile": "input/words11_aligned.json",
+  "status": "active",
+  "continuationOf": "V10 (Itaewon phần 1) - xem input/scene_plan10.json",
+  "scenes": [
+    {
+      "id": "S1",
+      "startSec": 0.0,
+      "endSec": 3.4,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Ai đã lập ra nơi này, và để làm gì?",
+      "visualTransformation": "tờ chiếu chỉ cổ mở ra, vị trí khu tạm cư sáng lên trên bản đồ bên dưới",
+      "contrastWithPrevious": "mở phần 2 bằng tài liệu chứ không phải bằng hiện trường như phần 1",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "template": "bespoke: royal decree over a located map",
+      "backdrop": "card",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Decree",
+          "describes": [
+            "lập ra một khu tạm cư"
+          ],
+          "delay": 0,
+          "visibleFor": 102,
+          "src": "el10_historical_doc.png"
+        },
+        {
+          "role": "map",
+          "name": "Map-Site",
+          "describes": [
+            "tại đây"
+          ],
+          "delay": 64,
+          "visibleFor": 38,
+          "width": 1080,
+          "x": "50%",
+          "y": 620
+        }
+      ],
+      "punch": {
+        "lines": [
+          "TRIỀU ĐÌNH",
+          "LẬP KHU TẠM CƯ"
+        ],
+        "anchorPhrase": "lập ra một khu tạm cư",
+        "top": null,
+        "from": 34,
+        "describes": [
+          "lập ra một khu tạm cư"
+        ],
+        "visibleFor": 68
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Decree enters"
+        },
+        {
+          "frame": 34,
+          "what": "punch phrase + Map-Site enters"
+        }
+      ],
+      "durationInFrames": 102,
+      "status": "planned"
+    },
+    {
+      "id": "S2",
+      "startSec": 3.4,
+      "endSec": 6.92,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Khu tạm cư đó dành cho ai?",
+      "visualTransformation": "mẹ mang thai và đứa trẻ tách khỏi tờ chiếu chỉ, thành người thật",
+      "contrastWithPrevious": "từ văn bản sang con người",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "cutout",
+      "template": "bespoke: mother and child stepping out of the document",
+      "backdrop": "grid",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-Mother",
+          "describes": [
+            "người phụ nữ mang thai"
+          ],
+          "delay": 0,
+          "visibleFor": 106,
+          "src": "el11_mother_child.png",
+          "width": 780,
+          "x": "50%",
+          "y": 320
+        },
+        {
+          "role": "support",
+          "name": "Sup-Child",
+          "describes": [
+            "những đứa trẻ lai"
+          ],
+          "delay": 41,
+          "visibleFor": 65,
+          "src": "el11_child_pair.png",
+          "width": 430,
+          "x": 610,
+          "y": 880
+        }
+      ],
+      "punch": {
+        "lines": [
+          "NHỮNG ĐỨA TRẺ LAI"
+        ],
+        "anchorPhrase": "những đứa trẻ",
+        "top": null,
+        "from": 41,
+        "describes": [
+          "những đứa trẻ"
+        ],
+        "visibleFor": 65
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hero-Mother enters"
+        },
+        {
+          "frame": 41,
+          "what": "Sup-Child + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 106,
+      "status": "planned"
+    },
+    {
+      "id": "S3",
+      "startSec": 6.92,
+      "endSec": 10.32,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Dân thời đó gọi nơi này là gì?",
+      "visualTransformation": "ba chữ Dị Thái Viện được viết ra rồi đóng khung như một tấm biển",
+      "contrastWithPrevious": "từ người sang cái tên",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "template": "bespoke: the old name written out and framed",
+      "backdrop": "spotlight",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-OldName",
+          "describes": [
+            "gọi nơi này là Dị Thái Viện"
+          ],
+          "delay": 0,
+          "visibleFor": 102,
+          "width": 940,
+          "x": "50%",
+          "y": 340
+        },
+        {
+          "role": "support",
+          "name": "Sup-Paper",
+          "describes": [
+            "người dân thời bấy giờ"
+          ],
+          "delay": 18,
+          "visibleFor": 84,
+          "src": "el10_archive_paper.png",
+          "width": 620,
+          "x": 240,
+          "y": 900
+        }
+      ],
+      "punch": {
+        "lines": [
+          "DỊ THÁI VIỆN"
+        ],
+        "anchorPhrase": "Dị Thái Viện",
+        "top": null,
+        "from": 68,
+        "describes": [
+          "Dị Thái Viện"
+        ],
+        "visibleFor": 34
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Doc-OldName + Sup-Paper enters"
+        },
+        {
+          "frame": 68,
+          "what": "punch phrase enters"
+        }
+      ],
+      "durationInFrames": 102,
+      "status": "planned"
+    },
+    {
+      "id": "S4",
+      "startSec": 10.32,
+      "endSec": 15.3,
+      "narrativeFunction": "paradox",
+      "viewerQuestion": "Chỉ có một cách giải thích tên gọi thôi sao?",
+      "visualTransformation": "khung hình tách đôi, hai cách viết tên đứng đối diện nhau",
+      "contrastWithPrevious": "một tên gọi tách thành hai giả thuyết",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "split",
+      "template": "bespoke: two competing etymologies mirrored",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Split-Names",
+          "describes": [
+            "một giả thuyết khác"
+          ],
+          "delay": 0,
+          "visibleFor": 149,
+          "width": 1000,
+          "x": "50%",
+          "y": 320
+        },
+        {
+          "role": "support",
+          "name": "Sup-Pear",
+          "describes": [
+            "Lê Thái Viện"
+          ],
+          "delay": 70,
+          "visibleFor": 79,
+          "src": "el10_pear_name.png",
+          "width": 600,
+          "x": 250,
+          "y": 820
+        }
+      ],
+      "punch": {
+        "lines": [
+          "MỘT TÊN",
+          "HAI GIẢ THUYẾT"
+        ],
+        "anchorPhrase": "một giả thuyết",
+        "top": null,
+        "from": 8,
+        "describes": [
+          "một giả thuyết"
+        ],
+        "visibleFor": 141
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Split-Names + punch phrase enters"
+        },
+        {
+          "frame": 70,
+          "what": "Sup-Pear enters"
+        }
+      ],
+      "durationInFrames": 149,
+      "status": "planned"
+    },
+    {
+      "id": "S5",
+      "startSec": 15.3,
+      "endSec": 20.28,
+      "narrativeFunction": "causal-chain",
+      "viewerQuestion": "Vì sao lại có nghĩa ly tán?",
+      "visualTransformation": "chuỗi mũi tên đưa người lính từ chiến tranh sang đầu hàng rồi sang ly hương",
+      "contrastWithPrevious": "từ hai cái tên tĩnh sang một chuỗi biến cố",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "flow",
+      "template": "bespoke: surrender-to-exile chain over war texture",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-War",
+          "describes": [
+            "chiến tranh kết"
+          ],
+          "delay": 0,
+          "visibleFor": 149,
+          "src": "el10_war_texture.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Flow-Exile",
+          "describes": [
+            "binh lính Nhật đầu hàng"
+          ],
+          "delay": 33,
+          "visibleFor": 116,
+          "width": 1000,
+          "x": "50%",
+          "y": 320
+        },
+        {
+          "role": "support",
+          "name": "Sup-Soldier",
+          "describes": [
+            "sống ly hương"
+          ],
+          "delay": 80,
+          "visibleFor": 69,
+          "src": "el11_surrendered_soldier.png",
+          "width": 420,
+          "x": 620,
+          "y": 880
+        }
+      ],
+      "punch": {
+        "lines": [
+          "SỐNG LY HƯƠNG"
+        ],
+        "anchorPhrase": "sống ly hương",
+        "top": null,
+        "from": 80,
+        "describes": [
+          "sống ly hương"
+        ],
+        "visibleFor": 69
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-War enters"
+        },
+        {
+          "frame": 33,
+          "what": "Flow-Exile enters"
+        },
+        {
+          "frame": 80,
+          "what": "Sup-Soldier + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 149,
+      "status": "planned"
+    },
+    {
+      "id": "S6",
+      "startSec": 20.28,
+      "endSec": 27.56,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Rồi thế kỷ 20 mang gì đến đây?",
+      "visualTransformation": "trục thời gian nhảy 400 năm, rồi vùng căn cứ Yongsan hiện ra áp sát Itaewon",
+      "contrastWithPrevious": "nhảy 400 năm rồi rơi thẳng vào không gian thật",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "timeline",
+      "template": "bespoke: four-century jump landing on the base footprint",
+      "backdrop": "chart",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "timeline",
+          "name": "Tl-Jump",
+          "describes": [
+            "Đến thế kỷ 20"
+          ],
+          "delay": 0,
+          "visibleFor": 218,
+          "width": 960,
+          "x": "50%",
+          "y": 400
+        },
+        {
+          "role": "map",
+          "name": "Map-Base",
+          "describes": [
+            "căn cứ quân sự Yongsan"
+          ],
+          "delay": 97,
+          "visibleFor": 121,
+          "width": 1080,
+          "x": "50%",
+          "y": 700
+        },
+        {
+          "role": "support",
+          "name": "Sup-Base",
+          "describes": [
+            "quân đội Mỹ"
+          ],
+          "delay": 134,
+          "visibleFor": 84,
+          "src": "el11_us_base_gate.png",
+          "width": 430,
+          "x": 90,
+          "y": 960
+        }
+      ],
+      "punch": {
+        "lines": [
+          "CĂN CỨ MỸ",
+          "NGAY SÁT BÊN"
+        ],
+        "anchorPhrase": "căn cứ quân sự",
+        "top": null,
+        "from": 97,
+        "describes": [
+          "căn cứ quân sự"
+        ],
+        "visibleFor": 121
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Tl-Jump enters"
+        },
+        {
+          "frame": 97,
+          "what": "Map-Base + punch phrase enters"
+        },
+        {
+          "frame": 134,
+          "what": "Sup-Base enters"
+        }
+      ],
+      "durationInFrames": 218,
+      "status": "planned"
+    },
+    {
+      "id": "S7",
+      "startSec": 27.56,
+      "endSec": 32.72,
+      "narrativeFunction": "causal-chain",
+      "viewerQuestion": "Sự có mặt đó kéo theo cái gì?",
+      "visualTransformation": "chuỗi nhân quả chạy từ căn cứ quân sự sang dịch vụ giải trí rồi thành khu phố Tây",
+      "contrastWithPrevious": "từ vị trí trên bản đồ sang chuỗi hệ quả",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "flow",
+      "template": "bespoke: base to nightlife to western quarter",
+      "backdrop": "photo",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Neon",
+          "describes": [
+            "dịch vụ giải trí"
+          ],
+          "delay": 0,
+          "visibleFor": 155,
+          "src": "el10_neon_night.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Flow-Nightlife",
+          "describes": [
+            "hộp đêm phát triển mạnh mẽ"
+          ],
+          "delay": 36,
+          "visibleFor": 119,
+          "width": 1000,
+          "x": "50%",
+          "y": 330
+        },
+        {
+          "role": "support",
+          "name": "Sup-Bar",
+          "describes": [
+            "khu phố Tây"
+          ],
+          "delay": 104,
+          "visibleFor": 51,
+          "src": "el10_bar_neon.png",
+          "width": 380,
+          "x": 640,
+          "y": 880
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KHU PHỐ TÂY"
+        ],
+        "anchorPhrase": "khu phố Tây",
+        "top": null,
+        "from": 104,
+        "describes": [
+          "khu phố Tây"
+        ],
+        "visibleFor": 51
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Neon enters"
+        },
+        {
+          "frame": 36,
+          "what": "Flow-Nightlife enters"
+        },
+        {
+          "frame": 104,
+          "what": "Sup-Bar + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 155,
+      "status": "planned"
+    },
+    {
+      "id": "S8",
+      "startSec": 32.72,
+      "endSec": 36.6,
+      "narrativeFunction": "reversal",
+      "viewerQuestion": "Vì sao lại phải đổi tên?",
+      "visualTransformation": "những tên gọi cũ bị gạch bỏ từng cái một trên mặt giấy",
+      "contrastWithPrevious": "từ khẳng định sang phủ định quá khứ",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "template": "bespoke: old names struck out one by one",
+      "backdrop": "card",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Erase",
+          "describes": [
+            "những ký ức buồn"
+          ],
+          "delay": 0,
+          "visibleFor": 116,
+          "src": "el10_archive_paper.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Strike-Names",
+          "describes": [
+            "tên gọi không mấy nhã nhặn,"
+          ],
+          "delay": 51,
+          "visibleFor": 65,
+          "width": 960,
+          "x": "50%",
+          "y": 400
+        }
+      ],
+      "punch": {
+        "lines": [
+          "XOÁ KÝ ỨC CŨ"
+        ],
+        "anchorPhrase": "những ký ức buồn",
+        "top": null,
+        "from": 16,
+        "describes": [
+          "những ký ức buồn"
+        ],
+        "visibleFor": 100
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Erase enters"
+        },
+        {
+          "frame": 16,
+          "what": "punch phrase enters"
+        },
+        {
+          "frame": 51,
+          "what": "Strike-Names enters"
+        }
+      ],
+      "durationInFrames": 116,
+      "status": "planned"
+    },
+    {
+      "id": "S9",
+      "startSec": 36.6,
+      "endSec": 43.04,
+      "narrativeFunction": "mechanism",
+      "viewerQuestion": "Đổi tên bằng cách nào mà vẫn giữ được âm đọc?",
+      "visualTransformation": "từng chữ Hán cũ được thay bằng chữ đồng âm, chữ đổi nhưng âm đọc giữ nguyên",
+      "contrastWithPrevious": "từ xoá bỏ sang thay thế có kỹ thuật",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: homophone substitution, character by character",
+      "backdrop": "chart",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Diag-Homophone",
+          "describes": [
+            "sử dụng các từ đồng âm"
+          ],
+          "delay": 0,
+          "visibleFor": 193,
+          "width": 1000,
+          "x": "50%",
+          "y": 320
+        },
+        {
+          "role": "support",
+          "name": "Sup-PearName",
+          "describes": [
+            "đổi tên chính thức thành Lê Thái Viện"
+          ],
+          "delay": 92,
+          "visibleFor": 101,
+          "src": "el10_pear_name.png",
+          "width": 540,
+          "x": 270,
+          "y": 880
+        }
+      ],
+      "punch": {
+        "lines": [
+          "ĐỔI CHỮ",
+          "GIỮ NGUYÊN ÂM"
+        ],
+        "anchorPhrase": "các từ đồng âm",
+        "top": null,
+        "from": 44,
+        "describes": [
+          "các từ đồng âm"
+        ],
+        "visibleFor": 149
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Diag-Homophone enters"
+        },
+        {
+          "frame": 44,
+          "what": "punch phrase enters"
+        },
+        {
+          "frame": 92,
+          "what": "Sup-PearName enters"
+        }
+      ],
+      "durationInFrames": 193,
+      "status": "planned"
+    },
+    {
+      "id": "S10",
+      "startSec": 43.04,
+      "endSec": 47.4,
+      "narrativeFunction": "paradox",
+      "viewerQuestion": "Quốc tế nhất, vậy trông nó ra sao?",
+      "visualTransformation": "hộ chiếu nhiều nước xoè ra rồi bị nửa khung ngôi làng đẩy lấn sang",
+      "contrastWithPrevious": "kỳ vọng quốc tế bị hình ảnh làng quê đẩy lại",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "split",
+      "template": "bespoke: passports against a village half",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-Passports",
+          "describes": [
+            "quốc tế nhất"
+          ],
+          "delay": 0,
+          "visibleFor": 131,
+          "src": "el10_passport_flags.png",
+          "width": 720,
+          "x": 60,
+          "y": 330
+        },
+        {
+          "role": "support",
+          "name": "Sup-Village",
+          "describes": [
+            "một ngôi làng"
+          ],
+          "delay": 113,
+          "visibleFor": 18,
+          "src": "el10_commerce_day.png",
+          "width": 560,
+          "x": 480,
+          "y": 830
+        }
+      ],
+      "punch": {
+        "lines": [
+          "LÀNG TRONG PHỐ"
+        ],
+        "anchorPhrase": "một ngôi làng",
+        "top": null,
+        "from": 113,
+        "describes": [
+          "một ngôi làng"
+        ],
+        "visibleFor": 18
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hero-Passports enters"
+        },
+        {
+          "frame": 113,
+          "what": "Sup-Village + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 131,
+      "status": "planned"
+    },
+    {
+      "id": "S11",
+      "startSec": 47.4,
+      "endSec": 51.82,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Cụ thể là lộn xộn thế nào?",
+      "visualTransformation": "các đường chỉ dẫn chỉ vào từng công trình cơi nới trên ảnh khu nhà",
+      "contrastWithPrevious": "từ ẩn dụ hai nửa sang bằng chứng cụ thể trên ảnh",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "annotated",
+      "template": "bespoke: leader lines onto illegal add-ons",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Houses",
+          "describes": [
+            "công trình xây dựng"
+          ],
+          "delay": 0,
+          "visibleFor": 133,
+          "src": "el11_hillside_houses.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Anno-Illegal",
+          "describes": [
+            "cơi nới trái phép xuất hiện ở nhiều nơi"
+          ],
+          "delay": 58,
+          "visibleFor": 75,
+          "width": 1000,
+          "x": "50%",
+          "y": 300
+        }
+      ],
+      "punch": {
+        "lines": [
+          "XÂY TRÁI PHÉP"
+        ],
+        "anchorPhrase": "cơi nới",
+        "top": null,
+        "from": 58,
+        "describes": [
+          "cơi nới"
+        ],
+        "visibleFor": 75
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Houses enters"
+        },
+        {
+          "frame": 58,
+          "what": "Anno-Illegal + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 133,
+      "status": "planned"
+    },
+    {
+      "id": "S12",
+      "startSec": 51.82,
+      "endSec": 59.5,
+      "narrativeFunction": "mechanism",
+      "viewerQuestion": "Địa hình ở đây có gì đặc biệt?",
+      "visualTransformation": "khoảng cách giữa hai dãy nhà co lại, rồi cả mặt đất nghiêng đi và nhà mọc trên dốc",
+      "contrastWithPrevious": "từ chi tiết trên ảnh sang mặt cắt vẽ tay",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: gap narrowing then the ground tilting",
+      "backdrop": "grid",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Diag-Gap",
+          "describes": [
+            "ngày càng thu hẹp"
+          ],
+          "delay": 0,
+          "visibleFor": 230,
+          "width": 1000,
+          "x": "50%",
+          "y": 300
+        },
+        {
+          "role": "diagram",
+          "name": "Diag-Flat",
+          "describes": [
+            "không hề bằng phẳng"
+          ],
+          "delay": 118,
+          "visibleFor": 112,
+          "width": 940,
+          "x": "50%",
+          "y": 640
+        },
+        {
+          "role": "diagram",
+          "name": "Diag-Slope",
+          "describes": [
+            "xây dựng ngay trên dốc"
+          ],
+          "delay": 192,
+          "visibleFor": 38,
+          "width": 1000,
+          "x": "50%",
+          "y": 860
+        }
+      ],
+      "punch": {
+        "lines": [
+          "HẸP DẦN",
+          "VÀ DỐC"
+        ],
+        "anchorPhrase": "trên dốc",
+        "top": null,
+        "from": 192,
+        "describes": [
+          "trên dốc"
+        ],
+        "visibleFor": 38
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Diag-Gap enters"
+        },
+        {
+          "frame": 118,
+          "what": "Diag-Flat enters"
+        },
+        {
+          "frame": 192,
+          "what": "Diag-Slope + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 230,
+      "status": "planned"
+    },
+    {
+      "id": "S13",
+      "startSec": 59.5,
+      "endSec": 63.84,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Halloween ở đây trước giờ ra sao?",
+      "visualTransformation": "ảnh đám đông đêm hội hiện lên rồi dày đặc dần",
+      "contrastWithPrevious": "từ bản vẽ sang người thật",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: halloween crowd filling the frame",
+      "backdrop": "photo",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Halloween",
+          "describes": [
+            "Halloween các năm trước"
+          ],
+          "delay": 0,
+          "visibleFor": 130,
+          "src": "el10_crowd_night.png"
+        },
+        {
+          "role": "support",
+          "name": "Sup-Crowd",
+          "describes": [
+            "tập trung rất đông người"
+          ],
+          "delay": 115,
+          "visibleFor": 15,
+          "src": "el10_crowd_behind.png",
+          "width": 920,
+          "x": 80,
+          "y": 800
+        }
+      ],
+      "punch": {
+        "lines": [
+          "TÂM ĐIỂM HALLOWEEN"
+        ],
+        "anchorPhrase": "tâm điểm",
+        "top": null,
+        "from": 91,
+        "describes": [
+          "tâm điểm"
+        ],
+        "visibleFor": 39
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Halloween enters"
+        },
+        {
+          "frame": 91,
+          "what": "punch phrase enters"
+        },
+        {
+          "frame": 115,
+          "what": "Sup-Crowd enters"
+        }
+      ],
+      "durationInFrames": 130,
+      "status": "planned"
+    },
+    {
+      "id": "S14",
+      "startSec": 63.84,
+      "endSec": 69.6,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Đông tới mức nào, và năm nào?",
+      "visualTransformation": "con số 100.000 đếm lên cùng khối chấm người lấp dần, rồi mốc năm lật sang 2022",
+      "contrastWithPrevious": "từ cảm giác đông sang con số đếm được",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "data",
+      "template": "bespoke: counter to 100,000 then the year turning over",
+      "backdrop": "chart",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Data-100k",
+          "describes": [
+            "gần 100.000 người"
+          ],
+          "delay": 0,
+          "visibleFor": 173,
+          "width": 1000,
+          "x": "50%",
+          "y": 300
+        },
+        {
+          "role": "diagram",
+          "name": "Year-Turn",
+          "describes": [
+            "Halloween năm 2022"
+          ],
+          "delay": 116,
+          "visibleFor": 57,
+          "width": 900,
+          "x": "50%",
+          "y": 900
+        }
+      ],
+      "punch": {
+        "lines": [
+          "100.000 NGƯỜI",
+          "NĂM 2019"
+        ],
+        "anchorPhrase": "100.000 người",
+        "top": null,
+        "from": 22,
+        "describes": [
+          "100.000 người"
+        ],
+        "visibleFor": 151
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Data-100k enters"
+        },
+        {
+          "frame": 22,
+          "what": "punch phrase enters"
+        },
+        {
+          "frame": 116,
+          "what": "Year-Turn enters"
+        }
+      ],
+      "durationInFrames": 173,
+      "status": "planned"
+    },
+    {
+      "id": "S15",
+      "startSec": 69.6,
+      "endSec": 73.32,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Điều kiện nào vừa thay đổi?",
+      "visualTransformation": "màn hình điện thoại hiện tin dỡ bỏ phòng dịch, chiếc khẩu trang bị gạch đi",
+      "contrastWithPrevious": "từ con số sang một tin tức cụ thể",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "mockup",
+      "template": "bespoke: phone headline lifting the mask rule",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "mockup",
+          "name": "Mock-News",
+          "describes": [
+            "dỡ bỏ hoàn toàn các biện pháp phòng dịch"
+          ],
+          "delay": 0,
+          "visibleFor": 112,
+          "width": 540,
+          "x": "50%",
+          "y": 320
+        },
+        {
+          "role": "diagram",
+          "name": "Mask-Struck",
+          "describes": [
+            "quy định đeo khẩu trang"
+          ],
+          "delay": 83,
+          "visibleFor": 29,
+          "width": 720,
+          "x": "50%",
+          "y": 1030
+        }
+      ],
+      "punch": {
+        "lines": [
+          "BỎ KHẨU TRANG"
+        ],
+        "anchorPhrase": "đeo khẩu trang",
+        "top": null,
+        "from": 83,
+        "describes": [
+          "đeo khẩu trang"
+        ],
+        "visibleFor": 29
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Mock-News enters"
+        },
+        {
+          "frame": 83,
+          "what": "Mask-Struck + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 112,
+      "status": "planned"
+    },
+    {
+      "id": "S16",
+      "startSec": 73.32,
+      "endSec": 78.98,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Con số năm đó là bao nhiêu?",
+      "visualTransformation": "cột 100.000 của 2019 bị cột 130.000 của 2022 vượt qua",
+      "contrastWithPrevious": "hai con số lần đầu đứng cạnh nhau để so",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "data",
+      "template": "bespoke: 100k bar overtaken by 130k",
+      "backdrop": "chart",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Data-Compare",
+          "describes": [
+            "mức kỷ lục khoảng 130.000 người"
+          ],
+          "delay": 0,
+          "visibleFor": 170,
+          "width": 1000,
+          "x": "50%",
+          "y": 310
+        },
+        {
+          "role": "support",
+          "name": "Sup-Surge",
+          "describes": [
+            "đột ngột tăng vọt"
+          ],
+          "delay": 31,
+          "visibleFor": 139,
+          "src": "el10_crowd_night.png",
+          "width": 520,
+          "x": 280,
+          "y": 900
+        }
+      ],
+      "punch": {
+        "lines": [
+          "130.000 NGƯỜI",
+          "KỶ LỤC"
+        ],
+        "anchorPhrase": "130.000 người",
+        "top": null,
+        "from": 79,
+        "describes": [
+          "130.000 người"
+        ],
+        "visibleFor": 91
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Data-Compare enters"
+        },
+        {
+          "frame": 31,
+          "what": "Sup-Surge enters"
+        },
+        {
+          "frame": 79,
+          "what": "punch phrase enters"
+        }
+      ],
+      "durationInFrames": 170,
+      "status": "planned"
+    },
+    {
+      "id": "S17",
+      "startSec": 78.98,
+      "endSec": 82.84,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Buổi tối hôm đó bắt đầu thế nào?",
+      "visualTransformation": "ảnh phố lúc chiều muộn đã dày người, dòng người vẫn chảy vào không dứt",
+      "contrastWithPrevious": "từ biểu đồ sang hiện trường buổi chiều",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: late-afternoon street already dense",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Afternoon",
+          "describes": [
+            "vô cùng đông đúc"
+          ],
+          "delay": 0,
+          "visibleFor": 116,
+          "src": "el10_commerce_day.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Flow-In",
+          "describes": [
+            "vẫn tiếp tục đổ về"
+          ],
+          "delay": 74,
+          "visibleFor": 42,
+          "width": 900,
+          "x": "50%",
+          "y": 980
+        }
+      ],
+      "punch": {
+        "lines": [
+          "MỚI GIỮA CHIỀU"
+        ],
+        "anchorPhrase": "vô cùng đông đúc",
+        "top": null,
+        "from": 5,
+        "describes": [
+          "vô cùng đông đúc"
+        ],
+        "visibleFor": 111
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Afternoon + punch phrase enters"
+        },
+        {
+          "frame": 74,
+          "what": "Flow-In enters"
+        }
+      ],
+      "durationInFrames": 116,
+      "status": "planned"
+    },
+    {
+      "id": "S18",
+      "startSec": 82.84,
+      "endSec": 87.9,
+      "narrativeFunction": "mechanism",
+      "viewerQuestion": "Đến mấy giờ thì bắt đầu nguy hiểm?",
+      "visualTransformation": "đồng hồ chỉ 8 giờ tối, mặt cắt lối đi hẹp lại và các mũi tên bắt đầu chèn nhau",
+      "contrastWithPrevious": "lần đầu thời gian và không gian ghép vào một khung",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: 20:00 clock over a narrowing walkway",
+      "backdrop": "chart",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Diag-2000h",
+          "describes": [
+            "Đến khoảng 8 giờ tối"
+          ],
+          "delay": 0,
+          "visibleFor": 152,
+          "width": 1000,
+          "x": "50%",
+          "y": 300
+        },
+        {
+          "role": "diagram",
+          "name": "Diag-Squeeze",
+          "describes": [
+            "tình trạng chen chúc,"
+          ],
+          "delay": 80,
+          "visibleFor": 72,
+          "width": 1000,
+          "x": "50%",
+          "y": 780
+        }
+      ],
+      "punch": {
+        "lines": [
+          "8 GIỜ TỐI",
+          "BẮT ĐẦU CHEN"
+        ],
+        "anchorPhrase": "8 giờ tối",
+        "top": null,
+        "from": 19,
+        "describes": [
+          "8 giờ tối"
+        ],
+        "visibleFor": 133
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Diag-2000h enters"
+        },
+        {
+          "frame": 19,
+          "what": "punch phrase enters"
+        },
+        {
+          "frame": 80,
+          "what": "Diag-Squeeze enters"
+        }
+      ],
+      "durationInFrames": 152,
+      "status": "planned"
+    },
+    {
+      "id": "S19",
+      "startSec": 87.9,
+      "endSec": 91.46,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Không khí lúc đó thế nào?",
+      "visualTransformation": "các chú thích trang phục hóa trang chỉ vào từng người trong đám đông",
+      "contrastWithPrevious": "từ sơ đồ lạnh sang không khí lễ hội",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "annotated",
+      "template": "bespoke: costume callouts across the crowd",
+      "backdrop": "photo",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Costume",
+          "describes": [
+            "trang phục hóa trang"
+          ],
+          "delay": 0,
+          "visibleFor": 107,
+          "src": "el11_costume_crowd.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Anno-Costume",
+          "describes": [
+            "không khí cuồng"
+          ],
+          "delay": 68,
+          "visibleFor": 39,
+          "width": 1000,
+          "x": "50%",
+          "y": 320
+        }
+      ],
+      "punch": {
+        "lines": [
+          "HOÁ TRANG"
+        ],
+        "anchorPhrase": "trang phục hóa trang",
+        "top": null,
+        "from": 20,
+        "describes": [
+          "trang phục hóa trang"
+        ],
+        "visibleFor": 87
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Costume + punch phrase enters"
+        },
+        {
+          "frame": 68,
+          "what": "Anno-Costume enters"
+        }
+      ],
+      "durationInFrames": 107,
+      "status": "planned"
+    },
+    {
+      "id": "S20",
+      "startSec": 91.46,
+      "endSec": 97.4,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Họ kéo đến đây để đi đâu?",
+      "visualTransformation": "bản đồ hiện phố ẩm thực ở phía Bắc và đo ra đúng 302m",
+      "contrastWithPrevious": "lần đầu nêu đích đến của cả dòng người",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "map",
+      "template": "bespoke: north food street measured at 302m",
+      "backdrop": "grid",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "map",
+          "name": "Map-FoodSt",
+          "describes": [
+            "phố ẩm thực thế giới ở phía Bắc"
+          ],
+          "delay": 0,
+          "visibleFor": 178,
+          "width": 1080,
+          "x": "50%",
+          "y": 0
+        },
+        {
+          "role": "diagram",
+          "name": "Ruler-North",
+          "describes": [
+            "tổng chiều dài"
+          ],
+          "delay": 106,
+          "visibleFor": 72,
+          "width": 900,
+          "x": "50%",
+          "y": 700
+        },
+        {
+          "role": "diagram",
+          "name": "Dim-302",
+          "describes": [
+            "302m"
+          ],
+          "delay": 154,
+          "visibleFor": 24,
+          "width": 920,
+          "x": "50%",
+          "y": 880
+        }
+      ],
+      "punch": {
+        "lines": [
+          "302 MÉT"
+        ],
+        "anchorPhrase": "302m",
+        "top": null,
+        "from": 154,
+        "describes": [
+          "302m"
+        ],
+        "visibleFor": 24
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Map-FoodSt enters"
+        },
+        {
+          "frame": 106,
+          "what": "Ruler-North enters"
+        },
+        {
+          "frame": 154,
+          "what": "Dim-302 + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 178,
+      "status": "planned"
+    },
+    {
+      "id": "S21",
+      "startSec": 97.4,
+      "endSec": 104.88,
+      "narrativeFunction": "paradox",
+      "viewerQuestion": "Vậy họ vào từ đâu?",
+      "visualTransformation": "sơ đồ Bắc - Nam dựng lên: đích đến ở đầu Bắc, ga tàu và bến xe ở đầu Nam",
+      "contrastWithPrevious": "đích đến và lối vào nằm ở hai đầu đối nhau",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: north-south axis, destination against entrance",
+      "backdrop": "chart",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Diag-Axis",
+          "describes": [
+            "ga tàu điện ngầm Itaewon"
+          ],
+          "delay": 0,
+          "visibleFor": 224,
+          "width": 1000,
+          "x": "50%",
+          "y": 300
+        },
+        {
+          "role": "support",
+          "name": "Sup-Station",
+          "describes": [
+            "các trạm xe buýt"
+          ],
+          "delay": 85,
+          "visibleFor": 139,
+          "src": "el11_subway_entrance.png",
+          "width": 400,
+          "x": 80,
+          "y": 960
+        }
+      ],
+      "punch": {
+        "lines": [
+          "ĐÍCH Ở BẮC",
+          "GA Ở NAM"
+        ],
+        "anchorPhrase": "trục đường chính",
+        "top": null,
+        "from": 115,
+        "describes": [
+          "trục đường chính"
+        ],
+        "visibleFor": 109
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Diag-Axis enters"
+        },
+        {
+          "frame": 85,
+          "what": "Sup-Station enters"
+        },
+        {
+          "frame": 115,
+          "what": "punch phrase enters"
+        }
+      ],
+      "durationInFrames": 224,
+      "status": "planned"
+    },
+    {
+      "id": "S22",
+      "startSec": 104.88,
+      "endSec": 109.06,
+      "narrativeFunction": "causal-chain",
+      "viewerQuestion": "Từ ga lên phố ẩm thực đi bằng đường nào?",
+      "visualTransformation": "dòng người từ đầu Nam bị dồn vào những con hẻm ngang nhỏ",
+      "contrastWithPrevious": "từ hai đầu tĩnh sang chuyển động bắt buộc giữa chúng",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "flow",
+      "template": "bespoke: flow forced into the cross alleys",
+      "backdrop": "grid",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Flow-Alleys",
+          "describes": [
+            "di chuyển qua các con hẻm"
+          ],
+          "delay": 0,
+          "visibleFor": 125,
+          "width": 1000,
+          "x": "50%",
+          "y": 310
+        },
+        {
+          "role": "diagram",
+          "name": "Flow-Forced",
+          "describes": [
+            "buộc phải"
+          ],
+          "delay": 23,
+          "visibleFor": 102,
+          "width": 920,
+          "x": "50%",
+          "y": 880
+        }
+      ],
+      "punch": {
+        "lines": [
+          "BUỘC QUA HẺM NGANG"
+        ],
+        "anchorPhrase": "các con hẻm",
+        "top": null,
+        "from": 52,
+        "describes": [
+          "các con hẻm"
+        ],
+        "visibleFor": 73
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Flow-Alleys + Flow-Forced enters"
+        },
+        {
+          "frame": 52,
+          "what": "punch phrase enters"
+        }
+      ],
+      "durationInFrames": 125,
+      "status": "planned"
+    },
+    {
+      "id": "S23",
+      "startSec": 109.06,
+      "endSec": 114.0,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Con hẻm xảy ra chuyện nằm ở đâu?",
+      "visualTransformation": "bản đồ phóng vào đúng con hẻm, đầu Nam của nó chạm ngay lối ra số 1",
+      "contrastWithPrevious": "từ nhiều hẻm thu về đúng một con hẻm",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "map",
+      "template": "bespoke: zoom to the alley meeting Exit 1",
+      "backdrop": "photo",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "map",
+          "name": "Map-Alley",
+          "describes": [
+            "đầu phía Nam"
+          ],
+          "delay": 0,
+          "visibleFor": 148,
+          "width": 1080,
+          "x": "50%",
+          "y": 0
+        },
+        {
+          "role": "support",
+          "name": "Sup-Exit1",
+          "describes": [
+            "lối ra số 1"
+          ],
+          "delay": 59,
+          "visibleFor": 89,
+          "src": "el11_subway_exit1.png",
+          "width": 420,
+          "x": 620,
+          "y": 920
+        }
+      ],
+      "punch": {
+        "lines": [
+          "SÁT LỐI RA SỐ 1"
+        ],
+        "anchorPhrase": "lối ra số 1",
+        "top": null,
+        "from": 59,
+        "describes": [
+          "lối ra số 1"
+        ],
+        "visibleFor": 89
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Map-Alley enters"
+        },
+        {
+          "frame": 59,
+          "what": "Sup-Exit1 + punch phrase enters"
+        }
+      ],
+      "durationInFrames": 148,
+      "status": "planned"
+    },
+    {
+      "id": "S24",
+      "startSec": 114.0,
+      "endSec": 123.54,
+      "narrativeFunction": "mechanism",
+      "viewerQuestion": "Con hẻm đó lớn cỡ nào, và kích thước đó gây ra chuyện gì?",
+      "visualTransformation": "mặt bằng con hẻm được vẽ ra, đo chiều dài 41-45m, rồi chỗ thắt 3,2m siết lại và hai dòng người từ hai đầu đâm vào nhau",
+      "contrastWithPrevious": "từ vị trí sang kích thước thật, rồi kích thước tĩnh biến thành cái bẫy động",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: alley plan measured, then the two flows jamming at the neck",
+      "backdrop": "grid",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-AlleyNight",
+          "describes": [
+            "đông nhất"
+          ],
+          "delay": 0,
+          "visibleFor": 286,
+          "src": "el10_alley_night.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Plan-Alley",
+          "describes": [
+            "dài khoảng 41-45m"
+          ],
+          "delay": 97,
+          "visibleFor": 189,
+          "width": 1000,
+          "x": "50%",
+          "y": 260
+        },
+        {
+          "role": "diagram",
+          "name": "Dim-Neck",
+          "describes": [
+            "chiều rộng thắt nút"
+          ],
+          "delay": 141,
+          "visibleFor": 145,
+          "width": 1000,
+          "x": "50%",
+          "y": 640
+        },
+        {
+          "role": "diagram",
+          "name": "Funnel-Jam",
+          "describes": [
+            "một chiếc phễu thắt nghẹt"
+          ],
+          "delay": 211,
+          "visibleFor": 75,
+          "width": 1000,
+          "x": "50%",
+          "y": 880
+        },
+        {
+          "role": "diagram",
+          "name": "Flow-Opposed",
+          "describes": [
+            "2 hướng đối đầu"
+          ],
+          "delay": 260,
+          "visibleFor": 26,
+          "width": 1000,
+          "x": "50%",
+          "y": 1080
+        }
+      ],
+      "punch": {
+        "lines": [
+          "3,2M CHỖ THẮT",
+          "HAI DÒNG ĐÂM NHAU"
+        ],
+        "anchorPhrase": "chiếc phễu",
+        "top": null,
+        "from": 211,
+        "describes": [
+          "chiếc phễu"
+        ],
+        "visibleFor": 75
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-AlleyNight enters"
+        },
+        {
+          "frame": 97,
+          "what": "Plan-Alley enters"
+        },
+        {
+          "frame": 141,
+          "what": "Dim-Neck enters"
+        },
+        {
+          "frame": 211,
+          "what": "Funnel-Jam + punch phrase enters"
+        },
+        {
+          "frame": 260,
+          "what": "Flow-Opposed enters"
+        }
+      ],
+      "durationInFrames": 286,
+      "status": "planned"
+    }
+  ]
+}

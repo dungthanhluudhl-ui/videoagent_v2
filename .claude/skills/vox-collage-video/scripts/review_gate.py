@@ -132,6 +132,20 @@ def main():
     review_path = pathlib.Path(args.review) if args.review else pathlib.Path(
         str(plan_path).replace("scene_plan", "review"))
 
+    # A video that has not been BUILT yet has nothing to look at. build_gate
+    # already skips scenes whose status is "planned"; this gate had no notion
+    # of phase at all, so it demanded a review pass the moment a plan went
+    # active - which made it impossible to end a turn at the shot-list
+    # approval checkpoint that SKILL.md step 2 itself mandates.
+    #
+    # This is a phase check, NOT an opt-out: the requirement returns the
+    # instant any scene reports a status past "planned".
+    built = [s for s in scenes if s.get("status") not in (None, "planned")]
+    if not built and not review_path.exists():
+        print(f"OK   {len(scenes)} scene(s) still at plan stage - nothing built to review yet")
+        print("\nPASSED (0 problem(s))")
+        sys.exit(0)
+
     problems, measured, unmeasured = [], 0, 0
     if not review_path.exists():
         problems.append(

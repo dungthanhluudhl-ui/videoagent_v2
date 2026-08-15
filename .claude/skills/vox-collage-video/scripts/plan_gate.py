@@ -477,6 +477,29 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
     median = sorted(durations)[len(durations) // 2]
     frame = 1.0 / fps
 
+    # The bar a complex scene has to clear is the median EASY scene, not the
+    # median scene overall.
+    #
+    # The overall median was the first version and it is provably broken. If
+    # complex scenes are more than half the video, the median IS a complex
+    # duration, so the shortest complex scene is below it by definition -
+    # unless every complex scene is exactly the same length, which the
+    # uniform-run check below then fails. The two rules are jointly
+    # unsatisfiable for any explainer whose scenes are mostly hard, no matter
+    # how well its time is allocated.
+    #
+    # V10 passed only because 10 of its 26 scenes were complex, so its median
+    # happened to land on an easy scene. V11 (Itaewon part 2 - dense with
+    # measurements) is 54% complex and could not be made to pass at all. The
+    # rule was right by accident, not by construction.
+    #
+    # What the rule is actually for is unchanged: hard scenes must not be the
+    # SHORT ones. "At least as long as the typical easy scene" says that
+    # directly, and stays satisfiable at any complex/easy ratio.
+    easy = sorted(d for s, d in zip(scenes, durations)
+                  if s.get("comprehensionLoad") != "complex")
+    easy_median = easy[len(easy) // 2] if easy else 0.0
+
     for scene, duration in zip(scenes, durations):
         sid = scene.get("id")
         declared = scene.get("comprehensionLoad")
@@ -507,9 +530,9 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
                      f"{declared!r} scene - hard content shown briefly is content the viewer "
                      f"does not get.")
             bad = True
-        if declared == "complex" and duration < median - frame:
-            rep.fail(f"{sid}: a complex scene at {duration:.1f}s is SHORTER than the video's "
-                     f"median scene ({median:.1f}s) - the video is spending its time on what "
+        if declared == "complex" and easy and duration < easy_median - frame:
+            rep.fail(f"{sid}: a complex scene at {duration:.1f}s is SHORTER than the typical "
+                     f"easy scene ({easy_median:.1f}s) - the video is spending its time on what "
                      f"is easy to look at instead of what is hard to understand.")
             bad = True
 

@@ -151,6 +151,17 @@ def regress_below_baseline(plan):
     return plan
 
 
+def mark_every_scene_built(plan):
+    """A built video with no review file must still be blocked.
+
+    The phase check added to review_gate lets a PLAN-ONLY video through, so
+    this case exists to prove the exemption cannot be widened: flip the scenes
+    to "built" and the review requirement has to come straight back."""
+    for s in plan["scenes"]:
+        s["status"] = "built"
+    return plan
+
+
 def unexplained_pass_on_empty_frame(review):
     """The mis-review that shipped twice in one session."""
     for e in review["scenes"]:
@@ -171,6 +182,8 @@ CASES = [
          args=lambda p: ["check", str(p)]),
     Case("review_gate: chấm 'pass' cho khung đo được là trống, không nêu lý do",
          "review_gate.py", None, review=unexplained_pass_on_empty_frame),
+    Case("review_gate: video đã dựng nhưng thiếu file review", "review_gate.py",
+         mark_every_scene_built, review=lambda r: {"video": "x", "scenes": []}),
     # The reference itself must survive all four. A gate that cannot pass is a
     # wall, and a wall gets removed.
     Case("plan_gate: V10 thật phải PASS", "plan_gate.py", None, expect_fail=False),
