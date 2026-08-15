@@ -8,6 +8,7 @@
   "dependencies": {
     "@remotion/cli": "4.0.507",
     "@remotion/google-fonts": "^4.0.507",
+    "@remotion/layout-utils": "^4.0.507",
     "@remotion/lottie": "^4.0.507",
     "@remotion/media": "4.0.507",
     "@remotion/noise": "^4.0.507",

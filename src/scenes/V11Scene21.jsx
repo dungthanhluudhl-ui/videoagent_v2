@@ -27,35 +27,40 @@ export const V11Scene21 = () => (
       <DrawnPath d="M 540 40 L 510 96 M 540 40 L 570 96" delay={22} drawFrames={8}
                  length={130} stroke="#C2410C" strokeWidth={8} />
       <DrawnText delay={22} x={600} y={64} fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         BẮC
       </DrawnText>
-      <DrawnText delay={22} x={600} y={556} fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
+      <DrawnText delay={22} x={600} y={596} fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         NAM
       </DrawnText>
 
       {/* đầu Bắc: đích đến */}
-      <DrawnPath d="M 80 100 L 470 100 L 470 200 L 80 200 Z" delay={30} drawFrames={16}
-                 length={980} stroke="#C2410C" strokeWidth={7} />
-      <DrawnText delay={30} x={275} y={148} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
+      {/* Ô cao 100px chứa hai dòng 34px và 28px - vừa đủ khi chữ nhỏ đến mức
+          không đọc được. Ở cỡ đọc được, hai dòng chồng lên nhau và lên cả đáy
+          ô. Ô cao lên 128px, hai dòng giãn ra. */}
+      <DrawnPath d="M 80 96 L 470 96 L 470 224 L 80 224 Z" delay={30} drawFrames={16}
+                 length={1036} stroke="#C2410C" strokeWidth={7} />
+      <DrawnText delay={30} x={275} y={150} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         PHỐ ẨM THỰC
       </DrawnText>
-      <DrawnText delay={38} x={275} y={186} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 28, fontWeight: 700 }}>
+      <DrawnText delay={38} x={275} y={206} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 700 }}>
         họ muốn tới đây
       </DrawnText>
 
       {/* đầu Nam: lối vào */}
-      <DrawnPath d="M 610 400 L 1000 400 L 1000 500 L 610 500 Z" delay={60} drawFrames={16}
-                 length={980} strokeWidth={7} />
-      <DrawnText delay={60} x={805} y={448} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
-        GA TÀU · BẾN XE
+      <DrawnPath d="M 610 396 L 1000 396 L 1000 524 L 610 524 Z" delay={60} drawFrames={16}
+                 length={1036} strokeWidth={7} />
+      {/* "GA TÀU · BẾN XE" ở cỡ đọc được rộng 440px, tràn khỏi ô 390px. Ảnh
+          cửa ga ngay bên dưới đã nói phần "bến xe" là thừa. */}
+      <DrawnText delay={60} x={805} y={450} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
+        GA TÀU
       </DrawnText>
-      <DrawnText delay={68} x={805} y={486} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 28, fontWeight: 700 }}>
+      <DrawnText delay={68} x={805} y={506} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 700 }}>
         họ xuống ở đây
       </DrawnText>
     </DiagramCanvas>
@@ -70,11 +75,11 @@ export const V11Scene21 = () => (
       <DrawnPath d="M 540 240 L 540 60 M 516 96 L 540 60 L 564 96" delay={130}
                  drawFrames={14} length={230} stroke="#C2410C" strokeWidth={9} />
       <DrawnText delay={130} x={790} y={140} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 900 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         PHẢI ĐI LÊN
       </DrawnText>
       <DrawnText delay={138} x={790} y={196} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 700 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 700 }}>
         NAM → BẮC
       </DrawnText>
     </DiagramCanvas>

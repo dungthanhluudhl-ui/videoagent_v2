@@ -325,6 +325,53 @@ CASES = [
                      "KHỐI NGƯỜI BỊ KHOÁ CHẶT",
                      "khối người bị khoá chặt không ai rút ra nổi dù kéo mạnh đến đâu"),
          expect_fail=True),
+    # The four rules added after a second viewing of V11 found four defects
+    # that the gate above had passed. Each one exists because a human saw it
+    # first; each case here is that human's report, frozen.
+    Case("text_gate: chữ nhỏ đến mức không đọc nổi trên điện thoại", "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx", "fontSize: 44, fontWeight: 800",
+                     "fontSize: 26, fontWeight: 800"),
+         expect_message=["Minimum is 44px"]),
+    Case("text_gate: nét vẽ chạy xuyên qua chữ", "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx", 'd="M 840 862 L 840 998"', 'd="M 300 812 L 800 812"'),
+         expect_message=["runs through the label"]),
+    Case("text_gate: hai ký hiệu vẽ chồng lên nhau", "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx", '<DrawnPath d="M 840 862 L 840 998"',
+                     '<IconCrowd x={540} y={300} size={220} delay={0} />'
+                     '<IconRise x={560} y={320} size={220} delay={0} />'
+                     '<DrawnPath d="M 840 862 L 840 998"'),
+         expect_message=["overlap each other"]),
+    Case("text_gate: primitive dùng chung tự chôn một cỡ chữ nhỏ", "text_gate.py", None,
+         scene_edit=("visualLanguage.jsx",
+                     "fontSize: LABEL_SIZE, fontWeight: 800 }}\n          opacity={appear}",
+                     "fontSize: 30, fontWeight: 800 }}\n          opacity={appear}"),
+         expect_message=["hardcoded fontSize 30"]),
+    # Helper components were a hole big enough to hide whole scenes in: on V11
+    # every label in four scenes went in as a prop, and the gate reported those
+    # scenes clean because it had found nothing in them.
+    Case("text_gate: chữ truyền qua prop của component phụ vẫn phải bị soi",
+         "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx",
+                     "export const V10Scene5 = () => (\n"
+                     "  <AbsoluteFill name=\"V10Scene5\">\n"
+                     "      <SceneBackground variant=\"chart\" />\n"
+                     "      <DiagramCanvas y={280} height={1000}>",
+                     "const Probe = ({ x, label, delay }) => (\n"
+                     "  <DrawnText delay={delay} x={x} y={200} textAnchor=\"middle\" fill=\"#1A1A1A\"\n"
+                     "        style={{ fontFamily: \"Be Vietnam Pro\", fontSize: 44, fontWeight: 800 }}>\n"
+                     "    {label}\n"
+                     "  </DrawnText>\n"
+                     ");\n\n"
+                     "export const V10Scene5 = () => (\n"
+                     "  <AbsoluteFill name=\"V10Scene5\">\n"
+                     "      <SceneBackground variant=\"chart\" />\n"
+                     "      <DiagramCanvas y={280} height={1000}>\n"
+                     "        <Probe x={540} label=\"mot cau dai khong the goi la nhan duoc nua\" delay={0} />"),
+         expect_message=["mot cau dai"]),
+    Case("text_gate: câu punch mực đen nằm trên ảnh nền đã làm tối", "text_gate.py", None,
+         scene_edit=("V10Scene19.jsx", '"NHIỀU QUỐC TỊCH"]} top={230} onDark',
+                     '"NHIỀU QUỐC TỊCH"]} top={230}'),
+         expect_message=["has no onDark"]),
     Case("plan_gate: nhồi quá nhiều nhịp vào một cảnh", "plan_gate.py", crammed_scene),
     Case("plan_gate: 4 cảnh dày liên tiếp, không có cảnh nghỉ nào",
          "plan_gate.py", dense_run_no_breath,

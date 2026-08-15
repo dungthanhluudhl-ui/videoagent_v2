@@ -48,23 +48,27 @@ export const V11Scene3 = () => (
                visibleFor={102} idle="bob" />
     </Sequence>
 
-    {/* cột niên đại bên phải, cân lại khối giấy lệch trái */}
+    {/* Cột niên đại bên phải, cân lại khối giấy lệch trái.
+        Vạch dọc đứng ở x=890 trong khi các nhãn canh giữa x=950: ở cỡ chữ cũ
+        (30-34px) chúng vừa lọt bên phải vạch, nhưng đó là sự may mắn của một
+        cỡ chữ quá nhỏ để đọc. Ở cỡ đọc được, chữ trùm qua vạch. Vạch lùi về
+        x=760 - khoảng trống thật giữa tập giấy (hết ở x=720) và mép phải. */}
     <DiagramCanvas y={860} height={390}>
-      <DrawnPath d="M 890 20 L 890 330" delay={40} drawFrames={18} length={320} strokeWidth={6} />
-      <DrawnText delay={40} x={950} y={120} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
+      <DrawnPath d="M 760 20 L 760 330" delay={40} drawFrames={18} length={320} strokeWidth={6} />
+      <DrawnText delay={40} x={912} y={120} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         DÂN
       </DrawnText>
-      <DrawnText delay={46} x={950} y={172} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
+      <DrawnText delay={46} x={912} y={182} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         GỌI
       </DrawnText>
-      <DrawnText delay={52} x={950} y={236} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 900 }}>
+      <DrawnText delay={52} x={912} y={252} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         THẾ KỶ
       </DrawnText>
-      <DrawnText delay={58} x={950} y={282} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
+      <DrawnText delay={58} x={912} y={318} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 56, fontWeight: 900 }}>
         16
       </DrawnText>
     </DiagramCanvas>

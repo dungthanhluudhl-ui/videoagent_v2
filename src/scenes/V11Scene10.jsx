@@ -29,10 +29,11 @@ export const V11Scene10 = () => (
           ảnh hộ chiếu - nên nó nằm trên ảnh, có nền để đọc được, và khai báo
           overlayOn để nói rõ đây là chủ ý chứ không phải va chạm bỏ sót. */}
       <DrawnText delay={0} x={70} y={40} fill="#1A1A1A" overlayOn="Hero-Passports" plate
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900, letterSpacing: 3 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900, letterSpacing: 3 }}>
         QUỐC TẾ NHẤT
       </DrawnText>
-      <DrawnPath d="M 70 60 L 620 60" delay={8} drawFrames={12} length={550}
+      {/* gạch chân hạ từ y=60 xuống y=84 để không cắt ngang chân chữ ở cỡ mới */}
+      <DrawnPath d="M 70 84 L 620 84" delay={8} drawFrames={12} length={550}
                  stroke="#C2410C" strokeWidth={6} />
 
       {/* vạch chia hai nửa, kẻ xuống khi nửa kia sắp xuất hiện */}
@@ -42,7 +43,7 @@ export const V11Scene10 = () => (
                  length={1740} strokeWidth={5} fill="rgba(194,65,12,0.16)" />
 
       <DrawnText delay={100} x={900} y={410} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         NHƯNG
       </DrawnText>
 
@@ -56,7 +57,7 @@ export const V11Scene10 = () => (
       <DrawnPath d="M 550 780 L 550 724 L 630 690 L 710 724 L 710 780 Z" delay={120}
                  drawFrames={14} length={420} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
       <DrawnText delay={124} x={390} y={848} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         nhà thấp, ngõ nhỏ
       </DrawnText>
     </DiagramCanvas>

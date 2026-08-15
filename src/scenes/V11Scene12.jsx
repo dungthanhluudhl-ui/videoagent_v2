@@ -21,8 +21,11 @@ export const V11Scene12 = () => (
   <AbsoluteFill name="V11Scene12">
     <SceneBackground variant="grid" />
 
-    {/* tầng 1 - hai dãy nhà và khoảng hở giữa chúng co lại */}
-    <DiagramCanvas y={300} height={340}>
+    {/* tầng 1 - hai dãy nhà và khoảng hở giữa chúng co lại.
+        y 300 -> 330: mép trên của hai khối nhà nằm ở y=340 tuyệt đối, còn câu
+        punch hai dòng kết thúc ở y=342 - nét khung cắt ngang chân dòng thứ
+        hai. Hạ cả tầng xuống thay vì thu nhỏ câu punch. */}
+    <DiagramCanvas y={330} height={340}>
       <DrawnPath d="M 70 40 L 400 40 L 400 300 L 70 300 Z" delay={0} drawFrames={16}
                  length={1180} strokeWidth={6} fill="rgba(26,26,26,0.19)" />
       <DrawnPath d="M 680 40 L 1010 40 L 1010 300 L 680 300 Z" delay={8} drawFrames={16}
@@ -43,14 +46,19 @@ export const V11Scene12 = () => (
     <DiagramCanvas y={620} height={300}>
       <DrawnPath d="M 90 10 L 990 10 L 990 60 L 90 60 Z" delay={110} drawFrames={14}
                  length={1900} strokeWidth={4} fill="rgba(26,26,26,0.19)" />
-      <DrawnPath d="M 90 130 L 990 130 L 990 250 L 90 250 Z" delay={118} drawFrames={18}
+      {/* khối 130..250 -> 150..270: mép trên của nó chỉ cách chân dòng chữ 8px,
+          đủ gần để đọc thành nét cắt qua chữ */}
+      <DrawnPath d="M 90 150 L 990 150 L 990 270 L 90 270 Z" delay={118} drawFrames={18}
                  length={2040} strokeWidth={7} fill="rgba(26,26,26,0.19)" />
-      <DrawnText delay={118} x={540} y={90} textAnchor="middle" fill="#1A1A1A" opacity={0.55}
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 800 }}>
+      {/* Vạch cam gạch NGANG DẢI ĐẤT PHẲNG (y=35, giữa khối 10..60) - đó là
+          thứ đang bị phủ nhận. Trước đây nó nằm ở y=74, tức ngay trên đầu
+          dòng chữ, nên đọc ra thành một nét cắt qua chữ. */}
+      <DrawnPath d="M 250 35 L 830 35" delay={148} drawFrames={10} length={580}
+                 stroke="#C2410C" strokeWidth={9} />
+      <DrawnText delay={118} x={540} y={112} textAnchor="middle" fill="#1A1A1A" opacity={0.55}
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         KHÔNG HỀ BẰNG PHẲNG
       </DrawnText>
-      <DrawnPath d="M 250 74 L 830 74" delay={148} drawFrames={10} length={580}
-                 stroke="#C2410C" strokeWidth={9} />
     </DiagramCanvas>
 
     {/* tầng 3 - mặt đất nghiêng, nhà dựng ngay trên dốc */}

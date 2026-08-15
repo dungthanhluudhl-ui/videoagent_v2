@@ -18,7 +18,8 @@ export const V11SCENE9_DURATION = 193;
 
 const Swap = ({ cx, oldText, newText, delay }) => (
   <g>
-    <DrawnText delay={Math.max(0, delay - 6)} x={cx} y={60} textAnchor="middle" fill="#1A1A1A" opacity={0.45}
+    {/* `struck`: chữ cũ bị gạch ngang - đó là toàn bộ ý của cảnh này */}
+    <DrawnText delay={Math.max(0, delay - 6)} x={cx} y={60} textAnchor="middle" fill="#1A1A1A" opacity={0.45} struck
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 46, fontWeight: 800 }}>
       {oldText}
     </DrawnText>
@@ -53,10 +54,8 @@ export const V11Scene9 = () => (
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 58, fontWeight: 900, letterSpacing: 6 }}>
         I · TAE · WON
       </DrawnText>
-      <DrawnText delay={66} x={540} y={412} textAnchor="middle" fill="#1A1A1A" opacity={0.7}
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
-        âm đọc không đổi
-      </DrawnText>
+      {/* Đã bỏ "âm đọc không đổi": câu punch của chính cảnh này là "GIỮ
+          NGUYÊN ÂM" - cùng một ý, viết hai lần, cách nhau 300px. */}
     </DiagramCanvas>
 
     <Sequence from={92} layout="none">

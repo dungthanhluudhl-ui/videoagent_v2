@@ -19,7 +19,7 @@ const Node = ({ y, label, delay }) => (
     <DrawnPath d={`M 70 ${y} L 640 ${y} L 640 ${y + 96} L 70 ${y + 96} Z`}
                delay={delay} drawFrames={14} length={1330} stroke="#F2EFE7" strokeWidth={6} />
     <DrawnText delay={delay + 6} x={355} y={y + 64} textAnchor="middle" fill="#F2EFE7"
-          style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
+          style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
       {label}
     </DrawnText>
   </g>
@@ -52,10 +52,13 @@ export const V11Scene7 = () => (
     <DiagramCanvas y={800} height={450}>
       <DrawnPath d="M 355 20 L 355 120 M 335 100 L 355 120 L 375 100"
                  delay={104} drawFrames={10} length={140} stroke="#C2410C" strokeWidth={8} />
-      <DrawnPath d="M 70 140 L 600 140 L 600 250 L 70 250 Z" delay={112} drawFrames={14}
-                 length={1320} stroke="#C2410C" strokeWidth={7} />
+      {/* Khung nới từ 70..600 ra 50..620: ở cỡ chữ đọc được nhãn rộng 520px,
+          khung cũ chỉ rộng 530px nên chữ chạm hai vách. Nới khung, không thu
+          chữ - chữ là thứ người xem phải đọc được. */}
+      <DrawnPath d="M 50 140 L 620 140 L 620 250 L 50 250 Z" delay={112} drawFrames={14}
+                 length={1380} stroke="#C2410C" strokeWidth={7} />
       <DrawnText delay={112} x={335} y={210} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         SÔI ĐỘNG BẬC NHẤT
       </DrawnText>
       {/* "người nước ngoài đổ về" - lời thoại đã nói câu này rồi, viết lại là

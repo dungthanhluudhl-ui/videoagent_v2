@@ -46,6 +46,7 @@ import {
 import { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { BG, INK, ORANGE, fontFamily } from "./shared";
+import { LABEL_SIZE, SUBLABEL_SIZE } from "./visualLanguage";
 
 // Free, key-less raster style, fetched live. Prefer LOCAL_RASTER_STYLE below
 // for anything that gets rendered more than once.
@@ -297,7 +298,7 @@ export const MapGraphic = ({
               color: ORANGE,
               fontFamily,
               fontWeight: 900,
-              fontSize: 34,
+              fontSize: LABEL_SIZE,
               padding: "10px 26px",
               borderRadius: 26,
               border: `3px solid ${ORANGE}`,
@@ -315,7 +316,7 @@ export const MapGraphic = ({
                 color: BG,
                 fontFamily,
                 fontWeight: 700,
-                fontSize: 26,
+                fontSize: SUBLABEL_SIZE,
                 padding: "6px 18px",
                 borderRadius: 16,
                 whiteSpace: "nowrap",
@@ -359,7 +360,18 @@ export const MapPanel = ({
   canvasH = 1920,
   radius = 18,
   ...mapProps
-}) => (
+}) => {
+  // MapGraphic anchors its pin at the CENTRE of a full 1080x1920 canvas and
+  // grows the label stack upward from there. MapPanel then crops that canvas
+  // to `height` - so in a short panel the stack grows straight out of the top
+  // edge and gets clipped. On S6 that ate the whole "CĂN CỨ YONGSAN" chip: the
+  // panel rendered, the map rendered, the pin rendered, and the one word the
+  // scene existed to say was cut off. Nudging the inner canvas down keeps the
+  // stack inside the crop; the pin sits lower in the panel instead of being
+  // beheaded.
+  const stackH = 190;                       // chip + sublabel + pin + gaps
+  const shift = Math.max(0, stackH - height / 2);
+  return (
   <div
     style={{
       position: "absolute",
@@ -377,7 +389,7 @@ export const MapPanel = ({
       style={{
         position: "absolute",
         left: (width - canvasW) / 2,
-        top: (height - canvasH) / 2,
+        top: (height - canvasH) / 2 + shift,
         width: canvasW,
         height: canvasH,
       }}
@@ -385,4 +397,5 @@ export const MapPanel = ({
       <MapGraphic {...mapProps} />
     </div>
   </div>
-);
+  );
+};

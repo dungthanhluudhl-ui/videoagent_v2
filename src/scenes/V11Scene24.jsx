@@ -47,19 +47,22 @@ export const V11Scene24 = () => (
       <DimensionLine x1={430} y1={110} x2={650} y2={110} label="3,2m" delay={162}
                      offset={0} fontSize={44} />
       <DrawnText delay={147} x={200} y={120} textAnchor="middle" fill="#F2EFE7"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 800 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         chỗ thắt nút
       </DrawnText>
     </DiagramCanvas>
 
-    {/* tầng 3 (211) - hai vách bóp lại thành cái phễu */}
-    <DiagramCanvas y={880} height={220}>
-      <DrawnPath d="M 70 20 L 430 100 L 430 130 L 70 200" delay={211} drawFrames={18}
+    {/* tầng 3 (211) - hai vách bóp lại thành cái phễu.
+        Nhãn trước đây nằm ngay trong họng phễu: hai nét cam 9px sượt qua chân
+        chữ, cách đúng 4px - đủ để hình render ra thành đường kẻ đè chữ. Phễu
+        kéo lên trên (kết thúc ở y=180), nhãn hạ xuống dưới hẳn phễu. */}
+    <DiagramCanvas y={880} height={280}>
+      <DrawnPath d="M 70 10 L 430 80 L 430 110 L 70 180" delay={211} drawFrames={18}
                  length={860} stroke="#C2410C" strokeWidth={9} />
-      <DrawnPath d="M 1010 20 L 650 100 L 650 130 L 1010 200" delay={217} drawFrames={18}
+      <DrawnPath d="M 1010 10 L 650 80 L 650 110 L 1010 180" delay={217} drawFrames={18}
                  length={860} stroke="#C2410C" strokeWidth={9} />
-      <DrawnText delay={217} x={540} y={196} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
+      <DrawnText delay={217} x={540} y={250} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         PHỄU THẮT NGHẸT
       </DrawnText>
     </DiagramCanvas>

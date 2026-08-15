@@ -176,6 +176,11 @@ def main():
         # Rule 1 - the one that reaches a session which has never read this file.
         labels = parse_labels(src, int(scene.get("durationInFrames") or 0))
         for lab in labels:
+            # text_gate now REPORTS labels whose string is computed rather than
+            # silently dropping them, so `text` can be None. There is nothing
+            # to match a trigger word against in that case.
+            if not lab.get("text"):
+                continue
             hay = lab["text"].lower()
             hay_plain = strip_accents(lab["text"])
             for name, meta in sorted(registry.items()):

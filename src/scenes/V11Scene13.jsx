@@ -31,13 +31,13 @@ export const V11Scene13 = () => (
                      delay={10 + i * 8} drawFrames={6} length={44}
                      stroke="#C2410C" strokeWidth={7} />
           <DrawnText delay={10 + i * 8} x={150 + i * 260} y={106} textAnchor="middle" fill="#F2EFE7"
-                style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
+                style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
             {2016 + i}
           </DrawnText>
         </g>
       ))}
       <DrawnText delay={40} x={540} y={240} textAnchor="middle" fill="#F2EFE7" opacity={0.85}
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 700 }}>
         năm nào cũng đông
       </DrawnText>
     </DiagramCanvas>

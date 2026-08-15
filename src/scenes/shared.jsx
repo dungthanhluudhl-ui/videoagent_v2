@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
 } from "remotion";
 import * as sfx from "@remotion/sfx";
+import { fitText, measureText } from "@remotion/layout-utils";
 import { loadFont } from "@remotion/google-fonts/BeVietnamPro";
 import { CAPTION_LINES } from "../captionData";
 
@@ -395,32 +396,68 @@ export const Shimmer = ({ src, width, x, y, delay = 0 }) => {
 // INK (#141414) headline is invisible against a darkened photo - caught by
 // rendering a still of the first BackgroundPhoto demo and finding the
 // headline had effectively vanished into the crowd behind it.
-export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize = 70, lineHeight = 1.22, onDark = false }) => {
+export const PunchPhrase = ({
+  text,
+  lines,
+  top = 120,
+  stagger = false,
+  fontSize = 70,
+  // 1.22 clipped the SECOND tier of a stacked Vietnamese diacritic. "CHỖ
+  // THẮT" rendered as "CHÔ THÂT": the circumflex survived, the tone mark
+  // above it did not. Two causes stacked - a line box too short to contain
+  // an accent that rises above cap height, and `overflow: "hidden"` on each
+  // line, which cropped whatever spilled instead of letting it show. Both are
+  // fixed here; the raised default costs a few px of height and buys back
+  // every Ắ Ỗ Ậ Ấ in the video.
+  lineHeight = 1.34,
+  onDark = false,
+  // The headline used to be pinned at left:56 / right:56 with no way to move
+  // it. A scene that draws a frame, a scroll or a panel and wants the
+  // headline INSIDE it had no option but to let the text hang out of the box
+  // - which is exactly what S1 shipped: the drawn scroll starts at x=96 and
+  // the headline started at x=56, sticking out over the rod.
+  left = 56,
+  right = 56,
+}) => {
   const frame = useCurrentFrame();
   const rawLines = lines || (typeof text === "string" ? text.split("\n") : [text]);
   const inkColor = onDark ? "#F7F4EC" : INK;
   const textShadow = onDark ? "0 3px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.9)" : undefined;
+  const withinWidth = 1080 - left - right;
 
-  // Smart line-breaker: if any line > 15 chars, balance into multi-lines
-  let finalLines = [];
+  // Break and scale by MEASUREMENT, not by counting characters.
+  //
+  // The old rule was "if a line is longer than 15 characters, split it in
+  // half", then "if longer than 12 characters, shrink to 920/(chars*0.62)".
+  // Neither number knows anything about the actual glyphs: "302 MÉT" and
+  // "MMMMMMM" counted the same. So the breaker fired on lines that fit
+  // comfortably (turning one clean line into two) and the scaler undershot on
+  // wide uppercase, which is how a headline ends up both too small and still
+  // touching the edge. measureText/fitText read the real font that is already
+  // loaded, so both decisions become facts instead of guesses.
+  const measure = (t, size) =>
+    measureText({ text: t, fontFamily, fontWeight: 900, fontSize: size }).width;
+  const finalLines = [];
   rawLines.forEach((l) => {
-    if (l && l.length > 15) {
-      const words = l.split(" ");
-      if (words.length >= 3) {
-        const mid = Math.ceil(words.length / 2);
-        finalLines.push(words.slice(0, mid).join(" "));
-        finalLines.push(words.slice(mid).join(" "));
-      } else {
-        finalLines.push(l);
-      }
-    } else if (l) {
+    if (!l) return;
+    const words = l.split(" ");
+    // Only split when the line genuinely does not fit, and only when there is
+    // somewhere to split it.
+    if (measure(l, fontSize) > withinWidth && words.length >= 3) {
+      const mid = Math.ceil(words.length / 2);
+      finalLines.push(words.slice(0, mid).join(" "));
+      finalLines.push(words.slice(mid).join(" "));
+    } else {
       finalLines.push(l);
     }
   });
 
-  // Dynamically auto-scale fontSize if any line is long so it fits within 920px width
-  const maxCharCount = Math.max(...finalLines.map((l) => l.length), 1);
-  const effectiveFontSize = maxCharCount > 12 ? Math.min(fontSize, Math.floor(920 / (maxCharCount * 0.62))) : fontSize;
+  const effectiveFontSize = Math.min(
+    fontSize,
+    ...finalLines.map(
+      (l) => fitText({ text: l, withinWidth, fontFamily, fontWeight: 900 }).fontSize,
+    ),
+  );
 
   if (!stagger) {
     return (
@@ -428,8 +465,8 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
         name="PunchPhrase"
         style={{
           position: "absolute",
-          left: 56,
-          right: 56,
+          left,
+          right,
           top,
           transformOrigin: "left top",
           scale: interpolate(frame, [0, 10], [0.7, 1], { extrapolateRight: "clamp", easing: Easing.spring({ damping: 10, stiffness: 140 }), output: "perceptual-scale" }),
@@ -443,7 +480,7 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
         }}
       >
         {finalLines.map((lineStr, lineIdx) => (
-          <div key={lineIdx} style={{ whiteSpace: "nowrap", overflow: "hidden" }}>{lineStr}</div>
+          <div key={lineIdx} style={{ whiteSpace: "nowrap" }}>{lineStr}</div>
         ))}
       </Interactive.Div>
     );
@@ -453,7 +490,7 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
   return (
     <Interactive.Div
       name="PunchPhrase"
-      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize: effectiveFontSize, lineHeight, color: inkColor, textShadow }}
+      style={{ position: "absolute", left, right, top, fontFamily, fontWeight: 900, fontSize: effectiveFontSize, lineHeight, color: inkColor, textShadow }}
     >
       {finalLines.map((lineStr, lineIdx) => {
         const lineWords = lineStr.split(" ");

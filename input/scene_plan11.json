@@ -239,7 +239,7 @@
           "visibleFor": 79,
           "src": "el10_pear_name.png",
           "width": 600,
-          "x": 250,
+          "x": 170,
           "y": 820
         }
       ],
@@ -386,7 +386,7 @@
           "visibleFor": 121,
           "width": 1080,
           "x": "50%",
-          "y": 700
+          "y": 690
         },
         {
           "role": "support",
@@ -399,7 +399,7 @@
           "src": "el11_us_base_gate.png",
           "width": 430,
           "x": 90,
-          "y": 960
+          "y": 1010
         }
       ],
       "punch": {

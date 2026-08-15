@@ -37,10 +37,14 @@ export const V11Scene15 = () => (
 
     {/* quy định khẩu trang bị gạch đi */}
     <DiagramCanvas y={1058} height={200}>
-      <DrawnPath d="M 300 96 L 780 96 L 780 40 L 300 40 Z" delay={83} drawFrames={12}
-                 length={1080} strokeWidth={6} />
-      <DrawnText delay={83} x={540} y={84} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 900 }}>
+      {/* Khung nới ra 290..790 x 30..106: ở 44px dòng chữ cao 44 và mép dưới
+          khung cũ (y=96) cắt ngang chân chữ. */}
+      <DrawnPath d="M 290 106 L 790 106 L 790 30 L 290 30 Z" delay={83} drawFrames={12}
+                 length={1160} strokeWidth={6} />
+      {/* `struck`: vạch cam BÊN DƯỚI là gạch bỏ đúng quy định này - đây là chủ
+          ý, không phải nét vẽ đi lạc vào chữ. */}
+      <DrawnText delay={83} x={540} y={84} textAnchor="middle" fill="#1A1A1A" struck
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         ĐEO KHẨU TRANG
       </DrawnText>
       <DrawnPath d="M 286 68 L 794 68" delay={92} drawFrames={9} length={510}

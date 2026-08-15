@@ -3,6 +3,7 @@ import { LuatSuDaoDuc, LUATSU_CANVAS, LUATSU_TOTAL_FRAMES } from "./LuatSuDaoDuc
 import { LuatSuDaoDuc3, MASTER3_DURATION } from "./LuatSuDaoDuc3";
 
 import { IconVocabularySheet, ICON_SHEET_DURATION } from "./scenes/IconVocabularySheet";
+import { FontMetricsProbe } from "./FontMetricsProbe";
 
 import { Scene1, SCENE1_DURATION } from "./scenes/Scene1";
 import { Scene2, SCENE2_DURATION } from "./scenes/Scene2";
@@ -344,6 +345,18 @@ export const RemotionRoot = () => {
         id="IconVocabularySheet"
         component={IconVocabularySheet}
         durationInFrames={ICON_SHEET_DURATION}
+        fps={LUATSU_CANVAS.fps}
+        width={LUATSU_CANVAS.width}
+        height={LUATSU_CANVAS.height}
+      />
+
+      {/* Not a picture - a measuring instrument. Rendering it prints the real
+          per-character advance widths of the project font so the Python gates
+          can stop estimating them. See scripts/measure_font.py. */}
+      <Composition
+        id="FontMetricsProbe"
+        component={FontMetricsProbe}
+        durationInFrames={1}
         fps={LUATSU_CANVAS.fps}
         width={LUATSU_CANVAS.width}
         height={LUATSU_CANVAS.height}

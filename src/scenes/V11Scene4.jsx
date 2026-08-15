@@ -27,7 +27,7 @@ const Half = ({ cx, title, gloss, delay, accent }) => (
     <DrawnPath d={`M ${cx - 150} 168 L ${cx + 150} 168`} delay={delay + 14} drawFrames={10}
                length={300} stroke={accent} strokeWidth={6} />
     <DrawnText delay={delay + 18} x={cx} y={236} textAnchor="middle" fill="#1A1A1A"
-          style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 700 }}>
+          style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 700 }}>
       {gloss}
     </DrawnText>
   </g>
@@ -50,7 +50,10 @@ export const V11Scene4 = () => (
     </DiagramCanvas>
 
     <Sequence from={70} layout="none">
-      <Support name="Sup-Pear" src="el10_pear_name.png" width={600} x={250} y={820}
+      {/* x 250 -> 170: ở cỡ chữ đọc được, nhãn "CHỮ LÊ" bên phải rộng gấp rưỡi
+          nhãn cũ và chạm vào mép ảnh. Dời ảnh sang trái trả lại chỗ cho chú
+          thích, thay vì thu nhỏ chú thích lại cho vừa. */}
+      <Support name="Sup-Pear" src="el10_pear_name.png" width={600} x={170} y={820}
                visibleFor={79} />
     </Sequence>
 
@@ -58,15 +61,16 @@ export const V11Scene4 = () => (
       {/* Hai nhãn này nằm đè lên ảnh quả lê (x 250..850): chú thích chỉ vào một
           vật thì phải nằm CẠNH vật đó, không nằm trên nó. Dời sang x=920, đường
           dẫn kéo dài theo. */}
-      <DrawnPath d="M 920 70 L 920 30 L 560 30" delay={80} drawFrames={14} length={400}
+      {/* Đường dẫn cũ chạy từ y=70 lên y=30, còn nhãn 34px có mép trên ở
+          y=65 - tức đường vẽ cắm thẳng vào chữ. Đường dừng sớm ở y=46, nhãn
+          hạ xuống y=118 ở cỡ đọc được.
+          Dòng "(quả lê)" đã bỏ: ngay dưới nó là ẢNH quả lê. Chú thích lặp lại
+          đúng cái mà bức ảnh đang cho xem là lượt đọc thừa. */}
+      <DrawnPath d="M 920 46 L 920 30 L 560 30" delay={80} drawFrames={14} length={400}
                  stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={80} x={920} y={92} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
+      <DrawnText delay={80} x={912} y={118} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         CHỮ LÊ
-      </DrawnText>
-      <DrawnText delay={88} x={920} y={140} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 700 }}>
-        (quả lê)
       </DrawnText>
     </DiagramCanvas>
 

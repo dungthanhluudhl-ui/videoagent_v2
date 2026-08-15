@@ -8,7 +8,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Bản đồ full-bleed + ghim; kín 100%, không khoảng trống nào."
+      "note": "Câu punch dời vào TRONG cuộn chiếu (left/right=140) - hết cảnh chữ đè trục cuộn. Dấu tiếng Việt hiện đủ sau khi bỏ overflow:hidden. 100%."
     },
     {
       "id": "S2",
@@ -26,7 +26,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ba tấm biển + tập giấy + cột niên đại. Đã bỏ hẳn dòng câu ở lề dưới. 70%."
+      "note": "Cột niên đại lùi vạch về x=760, bốn nhãn lên 44-56px, hết cảnh nét dọc cắt 'THẾ KỶ'. 70%."
     },
     {
       "id": "S4",
@@ -35,16 +35,16 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Hai nửa giả thuyết + cành lê. 'CHỮ LÊ/(quả lê)' dời sang x=920, hết đè ảnh. 73%."
+      "note": "Ảnh quả lê dời sang trái (x=170) nhường chỗ cho 'CHỮ LÊ' 44px; bỏ chú thích '(quả lê)' vì bức ảnh đã nói. 73%."
     },
     {
       "id": "S5",
-      "frame": "input/review_frames/V11Scene5_f143.png",
+      "frame": "input/review_frames/V11Scene5_f90.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Nền chiến tranh full-bleed, mũi tên ly hương vào cùng nhịp mở cảnh. 100%."
+      "note": "Ba ô chuỗi nay hai dòng/ô để đạt 44px mà vẫn giữ hàng ngang. 100%."
     },
     {
       "id": "S6",
@@ -53,7 +53,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mốc thời gian + bản đồ căn cứ. 62%, khoảng trống lớn nhất 176px, dưới trần 300px."
+      "note": "Dải thời gian giãn ra, tấm nền cao 350-670, bản đồ lùi xuống 690 - chip 'CĂN CỨ YONGSAN' hết bị khung cắt cụt. 62%."
     },
     {
       "id": "S7",
@@ -62,7 +62,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Chuỗi ba nút trên nền neon; câu 5 từ thay bằng IconCrowd. 100%."
+      "note": "Khung nới 50..620 cho nhãn 44px; câu 5 từ vẫn là IconCrowd. 100%."
     },
     {
       "id": "S8",
@@ -71,7 +71,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Tên cũ bị gạch + 'CẦN TÊN KHÁC' (3 từ). Đã bỏ câu 11 từ ở lề dưới. 100%."
+      "note": "Ba tên bị gạch khai `struck`; 'CẦN TÊN KHÁC' 44px, hạ khỏi mép mảng bôi đen. 100%."
     },
     {
       "id": "S9",
@@ -80,7 +80,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ba cột đổi chữ + hàng âm đọc + cành hoa. 59%, sát sàn nhưng bố cục cân."
+      "note": "Bỏ 'âm đọc không đổi' - trùng ý với chính câu punch 'GIỮ NGUYÊN ÂM'. 59%."
     },
     {
       "id": "S10",
@@ -98,7 +98,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ảnh khu nhà bám dốc + bốn đường chỉ dẫn. 92%."
+      "note": "Bốn chú thích lên 44px; nhãn nay nằm phía ĐỐI DIỆN hướng đường dẫn nên hết cảnh đường vẽ xuyên chữ. 92%."
     },
     {
       "id": "S12",
@@ -107,7 +107,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Sơ đồ dốc ba tầng; nhịp cuối dời về frame 163, còn 2,2s trước cắt. 100%."
+      "note": "Tầng 1 hạ xuống y=330 để không cắt chân câu punch; vạch cam gạch đúng dải đất phẳng thay vì lướt qua đầu chữ. 100%."
     },
     {
       "id": "S13",
@@ -125,16 +125,16 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Lưới chấm + dải 2019→2022. Nhãn rút còn 3 từ. 69%."
+      "note": "'Halloween năm ấy' rút thành 'đêm Halloween' cho lọt trong khung. 69%."
     },
     {
       "id": "S15",
-      "frame": "input/review_frames/V11Scene15_f10.png",
+      "frame": "input/review_frames/V11Scene15_f106.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Khung điện thoại + ô khẩu trang bị gạch. Đã bỏ câu 9 từ. 100%."
+      "note": "Khung quy định nới rộng; nhãn khai `struck` vì vạch cam là gạch bỏ có chủ ý. 100%."
     },
     {
       "id": "S16",
@@ -143,7 +143,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Hai cột số + IconRise ở cột phải - hướng đọc được ngay, không cần chữ. 87%."
+      "note": "Nhãn năm hạ xuống khỏi trục; bỏ 'mức 2019' vì ở cỡ đọc được nó cắt ngang cột 2022. 87%."
     },
     {
       "id": "S17",
@@ -161,7 +161,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Đồng hồ nay là IconClock nên kim neo đúng tâm (lỗi kim lệch đã hết); ô lưới đặt trong khe hẹp giữa hai vách, hai mũi tên ép vào. 62%."
+      "note": "IconClock thu còn 240px và hạ xuống - hết chồng lên câu punch lẫn dòng '20:00'. 62%."
     },
     {
       "id": "S19",
@@ -170,7 +170,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ảnh đám đông hoá trang full-bleed + bốn nhãn ngắn. 100%."
+      "note": "Bốn thẻ lên 44px, đặt phía đối diện đường dẫn. 100%."
     },
     {
       "id": "S20",
@@ -189,7 +189,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Trục Bắc-Nam + hai ô đầu + ảnh ga tàu; nhãn rút còn 'NAM → BẮC'. 59%, trống 192px."
+      "note": "Hai ô đầu cao thêm cho hai dòng 44px; 'GA TÀU · BẾN XE' rút còn 'GA TÀU' cho vừa ô. 59%."
     },
     {
       "id": "S22",
@@ -198,16 +198,16 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Hai trục đường + hẻm ngang; hai câu dài thay bằng 'CHỈ CÓ HẺM NHỎ'. 73%."
+      "note": "'CHỈ CÓ HẺM NHỎ' có nền chữ nên bốn nét hẻm dọc dừng ở mép nhãn; 'không còn lối khác' rút gọn. 73%."
     },
     {
       "id": "S23",
-      "frame": "input/review_frames/V11Scene23_f69.png",
+      "frame": "input/review_frames/V11Scene23_f142.png",
       "illustrated": "pass",
       "composed": "fail",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "ĐO ĐƯỢC 47% số hàng có mực, khoảng trống liền 492px - DƯỚI SÀN, cùng nguyên nhân với S20. Cảnh mỏng đi một phần vì câu 6 từ được thay bằng IconCrowd nhỏ hơn; đổi lại người xem bớt một lượt đọc. Cần thêm một phần tử thật (không phải chữ) ở dải y 300-780 - chưa làm vì mọi phương án đều phải bịa thêm vị trí trên bản đồ.",
+      "note": "'ĐẦU NAM CỦA HẺM' 44px, nhấc khỏi đầu mũi tên. 47% - vẫn dưới sàn, xem ghi chú cũ.",
       "resolved": true
     },
     {
@@ -217,7 +217,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ảnh hẻm full-bleed + bốn tầng độ; nhịp cuối dời về 219, còn 2,2s. 100%."
+      "note": "Phễu kéo lên, 'PHỄU THẮT NGHẸT' hạ xuống dưới hẳn hai nét cam. Dấu tiếng Việt ở 'CHỖ THẮT' hiện đủ. 100%."
     }
   ]
 }

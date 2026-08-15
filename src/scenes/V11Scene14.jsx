@@ -32,7 +32,7 @@ export const V11Scene14 = () => (
       <DrawnPath d="M 100 386 L 980 386" delay={70} drawFrames={16} length={880}
                  stroke="#C2410C" strokeWidth={6} />
       <DrawnText delay={70} x={540} y={452} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 800 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         ≈ 400 người/chấm
       </DrawnText>
     </DiagramCanvas>
@@ -53,9 +53,12 @@ export const V11Scene14 = () => (
       </DrawnText>
       <DrawnPath d="M 630 170 L 1030 170" delay={130} drawFrames={12} length={400}
                  strokeWidth={5} dashed />
-      <DrawnText delay={136} x={830} y={232} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
-        Halloween năm ấy
+      {/* "Halloween năm ấy" ở cỡ đọc được rộng 410px, tràn qua vách phải của
+          khung (x=990). Rút còn "đêm Halloween" - vừa hẹp hơn, vừa thêm được
+          chi tiết ĐÊM mà con số 2022 phía trên không nói. */}
+      <DrawnText delay={136} x={806} y={232} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
+        đêm Halloween
       </DrawnText>
     </DiagramCanvas>
 

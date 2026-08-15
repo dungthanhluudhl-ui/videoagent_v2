@@ -35,8 +35,8 @@ export const V11Scene23 = () => (
     <DiagramCanvas y={940} height={310}>
       <DrawnPath d="M 120 120 L 560 120 M 526 96 L 560 120 L 526 144" delay={70}
                  drawFrames={14} length={480} stroke="#C2410C" strokeWidth={9} />
-      <DrawnText delay={70} x={330} y={88} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 900 }}>
+      <DrawnText delay={70} x={330} y={74} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         ĐẦU NAM CỦA HẺM
       </DrawnText>
       <DrawnPath d="M 856 30 L 916 30 L 916 118 L 856 118 Z" delay={86} drawFrames={12}

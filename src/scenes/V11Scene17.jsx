@@ -49,7 +49,7 @@ export const V11Scene17 = () => (
       <DrawnPath d="M 90 210 L 500 210 M 466 186 L 500 210 L 466 234" delay={84}
                  drawFrames={14} length={480} stroke="#C2410C" strokeWidth={8} opacity={0.8} />
       <DrawnText delay={84} x={840} y={176} textAnchor="middle" fill="#F2EFE7"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 900 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         VẪN ĐỔ VỀ
       </DrawnText>
     </DiagramCanvas>

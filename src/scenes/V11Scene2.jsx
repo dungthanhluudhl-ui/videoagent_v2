@@ -27,7 +27,7 @@ export const V11Scene2 = () => (
       <DrawnPath d="M 60 44 L 60 78 M 1020 44 L 1020 78" delay={20} drawFrames={8}
                  length={80} strokeWidth={5} />
       <DrawnText delay={20} x={540} y={140} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 800, letterSpacing: 2 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800, letterSpacing: 2 }}>
         TRIỀU ĐÌNH NUÔI
       </DrawnText>
       <DrawnPath d="M 300 176 L 780 176" delay={26} drawFrames={14} length={480}

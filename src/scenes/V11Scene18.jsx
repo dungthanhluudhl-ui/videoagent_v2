@@ -27,13 +27,17 @@ export const V11Scene18 = () => (
           MÉP DƯỚI của vòng tròn, nên kim treo lơ lửng ngoài mặt đồng hồ. Đó là
           lỗi sinh ra khi hình học được gõ lại ở từng cảnh. IconClock tính kim
           từ chính tâm nó, nên lỗi này không thể lặp lại. */}
-      <IconClock x={540} y={150} size={300} delay={0} hourAngle={240} minuteAngle={0} />
-      <DrawnText delay={32} x={540} y={330} textAnchor="middle" fill="#1A1A1A"
+      {/* size 300 -> 240, y 150 -> 170: mặt đồng hồ cũ trải từ y=330 đến
+          y=630 tuyệt đối, chồng lên cả chân câu punch (kết thúc ở 331) lẫn
+          đầu dòng "20:00" (bắt đầu ở 608). Một ký hiệu chiếm chỗ như một bức
+          ảnh nhỏ và phải được đo như một bức ảnh nhỏ. */}
+      <IconClock x={540} y={170} size={240} delay={0} hourAngle={240} minuteAngle={0} />
+      <DrawnText delay={32} x={540} y={352} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 66, fontWeight: 900, letterSpacing: 6 }}>
         20:00
       </DrawnText>
-      <DrawnText delay={40} x={540} y={390} textAnchor="middle" fill="#1A1A1A" opacity={0.7}
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
+      <DrawnText delay={40} x={540} y={414} textAnchor="middle" fill="#1A1A1A" opacity={0.7}
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 700 }}>
         trên các lối đi
       </DrawnText>
     </DiagramCanvas>

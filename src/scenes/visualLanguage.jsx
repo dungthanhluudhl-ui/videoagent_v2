@@ -26,6 +26,7 @@ import {
   staticFile,
   useCurrentFrame,
 } from "remotion";
+import { fitText, measureText } from "@remotion/layout-utils";
 import { BG, INK, ORANGE, fontFamily } from "./shared";
 
 /** Width of one character, in ems, for Be Vietnam Pro at the weights used
@@ -33,6 +34,21 @@ import { BG, INK, ORANGE, fontFamily } from "./shared";
  *  gate reconstructs these boxes from source it cannot execute, so the two
  *  constants have to be kept equal by hand. Change one, change both. */
 export const DRAWN_CHAR_EM = 0.5;
+
+/** The only two type sizes a shared primitive may draw text at.
+ *
+ *  Scene files are checked label by label by `text_gate.py`; the primitives
+ *  are not, because the gate reads scene sources and these components live one
+ *  file away. That gap is exactly where "chữ quá nhỏ" survived: 44px labels in
+ *  the scenes sat next to 26px and 32px labels baked into the components
+ *  drawing beside them, and nothing compared the two. Sizes are named here so
+ *  the gate can assert that no primitive hardcodes a number at all - a rule a
+ *  script can check, instead of a convention that drifts.
+ *
+ *  LABEL_SIZE must equal MIN_FONT_SIZE in text_gate.py. */
+export const LABEL_SIZE = 44;
+/** For a line that qualifies a label above it and is never read on its own. */
+export const SUBLABEL_SIZE = 36;
 
 /* ========================================================================
  * BackgroundPhoto - full-bleed photographic backdrop
@@ -337,7 +353,7 @@ export const SlopeIndicator = ({
       </g>
       {label && (
         <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 22} textAnchor="middle"
-              fontFamily={fontFamily} fontWeight={900} fontSize={32}
+              fontFamily={fontFamily} fontWeight={900} fontSize={LABEL_SIZE}
               fill={INK} opacity={p}>
           {label}
         </text>
@@ -405,12 +421,12 @@ export const Timeline = ({
               <line x1={cx} y1={y} x2={cx} y2={up ? y - 30 : y + 30}
                     stroke={color} strokeWidth={3} opacity={0.8} />
               <text x={cx} y={labelY} textAnchor="middle" fontFamily={fontFamily}
-                    fontWeight={900} fontSize={40} fill={INK}>
+                    fontWeight={900} fontSize={LABEL_SIZE} fill={INK}>
                 {ev.label}
               </text>
               {ev.sub && (
-                <text x={cx} y={labelY + (up ? -42 : 40)} textAnchor="middle"
-                      fontFamily={fontFamily} fontWeight={700} fontSize={26}
+                <text x={cx} y={labelY + (up ? -56 : 54)} textAnchor="middle"
+                      fontFamily={fontFamily} fontWeight={700} fontSize={SUBLABEL_SIZE}
                       fill={INK} opacity={0.65}>
                   {ev.sub}
                 </text>
@@ -493,7 +509,7 @@ export const AnnotatedPhoto = ({
                         width={textW} height={52} rx={10} fill={INK} />
                   <text x={left ? endX - textW / 2 : endX + textW / 2} y={py + 10}
                         textAnchor="middle" fontFamily={fontFamily} fontWeight={800}
-                        fontSize={30} fill={BG}>
+                        fontSize={LABEL_SIZE} fill={BG}>
                     {a.label}
                   </text>
                 </g>
@@ -661,7 +677,7 @@ export const ForceArrow = ({
           y={y - thickness - 18}
           textAnchor="middle"
           fill={INK}
-          style={{ fontFamily, fontSize: 34, fontWeight: 800 }}
+          style={{ fontFamily, fontSize: LABEL_SIZE, fontWeight: 800 }}
           opacity={appear}
         >
           {label}
@@ -835,7 +851,7 @@ export const ChainBreak = ({
                 y={vertical ? cy + 14 : cy + ry + 52}
                 textAnchor={vertical ? "start" : "middle"}
                 fill={broken && snap > 0.1 ? breakColor : INK}
-                style={{ fontFamily, fontSize: 40, fontWeight: 800 }}
+                style={{ fontFamily, fontSize: LABEL_SIZE, fontWeight: 800 }}
                 opacity={0.92}
               >
                 {labels[i]}
@@ -984,7 +1000,7 @@ export const StreetElevation = ({
                 // "THỜI TRANG" past its own shopfront at 7 shops across 1000px.
                 style={{
                   fontFamily,
-                  fontSize: Math.min(26, (sw - 12) / (shop.label.length * 0.56)),
+                  fontSize: Math.min(SUBLABEL_SIZE, (sw - 12) / (shop.label.length * 0.56)),
                   fontWeight: 800,
                 }}
               >
@@ -1024,6 +1040,18 @@ export const DrawnText = ({
   platePad = 14,
   plateColor = BG,
   plateRadius = 8,
+  // Hard ceiling on how wide this label may draw. When the text measures
+  // wider, the font shrinks until it fits instead of running out of its box.
+  // This is the "tràn chữ" defect solved at the source: a caller declares the
+  // space it owns, and the label is guaranteed to stay inside it.
+  maxWidth = null,
+  // Declares that a stroke is SUPPOSED to cross this label - a rule struck
+  // through a regulation that no longer applies, a name crossed out. Without
+  // it the collision check has to choose between missing every real
+  // "đường vẽ đè chữ" and failing every deliberate strike-through. It names
+  // the intent instead of switching the check off: an unstruck label in the
+  // same scene still fails. Draws nothing itself.
+  struck = false,
   children,
   style,
   ...rest
@@ -1040,8 +1068,27 @@ export const DrawnText = ({
     easing: Easing.out(Easing.cubic),
   });
 
+  // Real measurement, not an em estimate.
+  //
+  // Both this plate and text_gate.py used to model a label as
+  // `len(text) * fontSize * 0.50`. That number is wrong for the text this
+  // project actually draws: Vietnamese uppercase at weight 800-900 runs far
+  // wider than half an em, so every reconstructed box was narrower than the
+  // glyphs on screen. A plate sized that way leaves the ends of the word
+  // uncovered, and - worse - the gate cleared collisions that were really
+  // happening. measureText reads the font that is already loaded, so the
+  // number is the number.
+  const requested = Number(style?.fontSize ?? rest.fontSize ?? 34);
+  const weight = Number(style?.fontWeight ?? rest.fontWeight ?? 700);
+  const str = String(children ?? "");
+  const natural = measureText({ text: str, fontFamily, fontSize: requested, fontWeight: weight }).width;
+  const size =
+    maxWidth && natural > maxWidth
+      ? fitText({ text: str, withinWidth: maxWidth, fontFamily, fontWeight: weight }).fontSize
+      : requested;
   const label = (
-    <text {...rest} opacity={(rest.opacity ?? 1) * opacity} style={style}>
+    <text {...rest} opacity={(rest.opacity ?? 1) * opacity}
+          style={size === requested ? style : { ...style, fontSize: size }}>
       {children}
     </text>
   );
@@ -1049,12 +1096,7 @@ export const DrawnText = ({
     return <g transform={`translate(0 ${dy})`}>{label}</g>;
   }
 
-  // Width is ESTIMATED at the same 0.50 em per character that text_gate.py
-  // uses to reconstruct these boxes. The two numbers must stay equal: if the
-  // plate were drawn wider than the gate believes the label to be, a plate
-  // could cover an image the gate had just declared clear.
-  const size = Number(style?.fontSize ?? rest.fontSize ?? 34);
-  const w = String(children ?? "").length * size * DRAWN_CHAR_EM;
+  const w = measureText({ text: str, fontFamily, fontSize: size, fontWeight: weight }).width;
   const anchor = rest.textAnchor || "start";
   const left = anchor === "middle" ? rest.x - w / 2 : anchor === "end" ? rest.x - w : rest.x;
   return (

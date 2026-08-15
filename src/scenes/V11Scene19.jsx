@@ -21,8 +21,12 @@ const Tag = ({ ax, ay, lx, ly, text, anchor, delay }) => (
     <DrawnPath d={`M ${ax} ${ay} L ${lx} ${ly}`} delay={delay} drawFrames={8}
                length={420} stroke="#C2410C" strokeWidth={5} />
     <circle cx={ax} cy={ay} r={12} fill="none" stroke="#C2410C" strokeWidth={5} />
-    <DrawnText delay={delay + 4} x={lx} y={ly - 16} textAnchor={anchor} fill="#F2EFE7"
-          style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
+    {/* Nhãn đặt PHÍA ĐỐI DIỆN với hướng đường dẫn đi tới: đường dẫn từ trên
+        xuống thì chữ nằm dưới điểm neo, và ngược lại. Trước đây chữ luôn nằm
+        phía trên, nên hai trong bốn đường dẫn chạy xuyên qua chính dòng chữ
+        chúng dẫn tới. */}
+    <DrawnText delay={delay + 4} x={lx} y={ay < ly ? ly + 46 : ly - 26} textAnchor={anchor} fill="#F2EFE7"
+          style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
       {text}
     </DrawnText>
   </g>

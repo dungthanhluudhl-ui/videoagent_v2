@@ -24,7 +24,7 @@ export const V11Scene6 = () => (
     <SceneBackground variant="chart" />
 
     <Timeline
-      y={486}
+      y={500}
       x={70}
       width={940}
       events={[
@@ -36,32 +36,35 @@ export const V11Scene6 = () => (
 
     <Sequence from={97} layout="none">
       <PunchPhrase lines={["CĂN CỨ MỸ", "NGAY SÁT BÊN"]} top={168} fontSize={56} />
-      <MapPanel x={60} y={618} width={960} height={330}
+      <MapPanel x={60} y={690} width={960} height={300}
                 center={[126.9800, 37.5335]} zoom={14} style={LOCAL_RASTER_STYLE}
                 label="CĂN CỨ YONGSAN" sublabel="sát cạnh Itaewon"
                 delay={0} pinDelay={14} tint={0.16} />
     </Sequence>
 
     <Sequence from={134} layout="none">
-      <Support name="Sup-Base" src="el11_us_base_gate.png" width={430} x={90} y={960}
+      <Support name="Sup-Base" src="el11_us_base_gate.png" width={430} x={90} y={1010}
                visibleFor={84} idle="bob" />
     </Sequence>
 
-    {/* mũi tên nối cổng gác sang phía Itaewon - "ngay sát bên cạnh" */}
-    <DiagramCanvas y={380} height={240}>
-      <DrawnPath d="M 70 20 L 1010 20 L 1010 200 L 70 200 Z" delay={0} drawFrames={18}
-                 length={2240} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
+    {/* Tấm nền của dải thời gian. Ở cỡ chữ đọc được, mốc quay xuống mang
+        thêm hai dòng cao 90px: nhãn cũ chạm đúng mép dưới tấm nền (y=580) và
+        dòng phụ rơi hẳn ra ngoài, xuống thẳng chỗ bản đồ. Tấm nền cao lên
+        350->670, bản đồ lùi xuống 700 và thấp bớt để không đè ảnh cổng gác. */}
+    <DiagramCanvas y={340} height={340}>
+      <DrawnPath d="M 70 10 L 1010 10 L 1010 330 L 70 330 Z" delay={0} drawFrames={18}
+                 length={2520} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
     </DiagramCanvas>
 
     <DiagramCanvas y={940} height={310}>
-      <DrawnPath d="M 540 130 L 900 130 M 866 110 L 900 130 L 866 150"
+      <DrawnPath d="M 540 150 L 900 150 M 866 130 L 900 150 L 866 170"
                  delay={150} drawFrames={12} length={430} stroke="#C2410C" strokeWidth={8} />
-      <DrawnText delay={150} x={730} y={94} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
+      <DrawnText delay={150} x={730} y={86} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         SÁT VÁCH
       </DrawnText>
       <DrawnText delay={158} x={730} y={198} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 800 }}>
         ITAEWON
       </DrawnText>
     </DiagramCanvas>
