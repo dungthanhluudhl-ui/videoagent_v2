@@ -11,6 +11,7 @@
     "@remotion/lottie": "^4.0.507",
     "@remotion/media": "4.0.507",
     "@remotion/noise": "^4.0.507",
+    "@remotion/paths": "^4.0.507",
     "@remotion/sfx": "4.0.507",
     "@remotion/shapes": "^4.0.507",
     "@remotion/transitions": "^4.0.507",

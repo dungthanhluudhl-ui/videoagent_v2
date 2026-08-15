@@ -28,6 +28,12 @@ import {
 } from "remotion";
 import { BG, INK, ORANGE, fontFamily } from "./shared";
 
+/** Width of one character, in ems, for Be Vietnam Pro at the weights used
+ *  here. Deliberately duplicated in `scripts/text_gate.py` as CHAR_EM - the
+ *  gate reconstructs these boxes from source it cannot execute, so the two
+ *  constants have to be kept equal by hand. Change one, change both. */
+export const DRAWN_CHAR_EM = 0.5;
+
 /* ========================================================================
  * BackgroundPhoto - full-bleed photographic backdrop
  * ======================================================================== */
@@ -1005,7 +1011,23 @@ export const StreetElevation = ({
  *
  * Same props as <text>, plus `delay` and `rise`.
  */
-export const DrawnText = ({ delay = 0, rise = 14, children, style, ...rest }) => {
+export const DrawnText = ({
+  delay = 0,
+  rise = 14,
+  // A solid slab behind the glyphs. Pass it whenever the label sits over a
+  // BackgroundPhoto or over a cutout: ink text on grid paper is legible, and
+  // the identical ink text over a dark doorway is a smudge. The viewer
+  // reported exactly this - "chữ bị chìm khi phân cảnh có ảnh nền" - and no
+  // gate could ever see it, because the text is present, correctly placed and
+  // the right colour. It is only invisible.
+  plate = false,
+  platePad = 14,
+  plateColor = BG,
+  plateRadius = 8,
+  children,
+  style,
+  ...rest
+}) => {
   const frame = useCurrentFrame();
   const local = frame - delay;
   const opacity = interpolate(local, [0, 10], [0, 1], {
@@ -1017,10 +1039,30 @@ export const DrawnText = ({ delay = 0, rise = 14, children, style, ...rest }) =>
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
-  return (
-    <text {...rest} opacity={(rest.opacity ?? 1) * opacity}
-          transform={`translate(0 ${dy})`} style={style}>
+
+  const label = (
+    <text {...rest} opacity={(rest.opacity ?? 1) * opacity} style={style}>
       {children}
     </text>
+  );
+  if (!plate) {
+    return <g transform={`translate(0 ${dy})`}>{label}</g>;
+  }
+
+  // Width is ESTIMATED at the same 0.50 em per character that text_gate.py
+  // uses to reconstruct these boxes. The two numbers must stay equal: if the
+  // plate were drawn wider than the gate believes the label to be, a plate
+  // could cover an image the gate had just declared clear.
+  const size = Number(style?.fontSize ?? rest.fontSize ?? 34);
+  const w = String(children ?? "").length * size * DRAWN_CHAR_EM;
+  const anchor = rest.textAnchor || "start";
+  const left = anchor === "middle" ? rest.x - w / 2 : anchor === "end" ? rest.x - w : rest.x;
+  return (
+    <g transform={`translate(0 ${dy})`} opacity={opacity}>
+      <rect x={left - platePad} y={rest.y - size * 0.78 - platePad * 0.5}
+            width={w + platePad * 2} height={size + platePad}
+            rx={plateRadius} fill={plateColor} opacity={0.92} />
+      {label}
+    </g>
   );
 };

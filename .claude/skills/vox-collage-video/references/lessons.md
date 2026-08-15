@@ -450,3 +450,64 @@ good video followed by worse ones.
 They are written here rather than in a commit message because a commit message
 is read once, by whoever wrote it. This file is read at the start of the next
 build, which is when these patterns can still be avoided.
+
+## An installed package is not an available one
+
+`@remotion/shapes` and `@remotion/paths` were installed for eleven videos and
+imported by zero files. `primitives.md` listed them the whole time, marked
+"installed, unused" — a line that was read, understood, and acted on by nobody,
+including the sessions that wrote it.
+
+Nothing was wrong with the documentation. The problem is structural: a session
+reads a reference file when it happens to, and builds a scene under time
+pressure using whatever it already has to hand. Typing a sentence is always
+the cheapest way to get a concept on screen, so the sentence wins every time
+the choice is left to judgement.
+
+Two things had to change together:
+
+* the drawn form had to become the cheap one — `iconVocabulary.jsx`, where
+  every symbol is `<IconX x={} y={} delay={} />` and takes less typing than the
+  label it replaces
+* forgetting had to become impossible — `icon_gate.py`, which names the icon at
+  the moment the label is being written
+
+The registry is parsed out of the component file itself rather than kept as a
+manifest, and an entry with no component (or a component with no entry) is a
+failure. A generated manifest would have been the fourth thing in this project
+to fail open: stale, silent, and still passing.
+
+## The V10 debt, written down rather than hidden
+
+Two rules were written after V10 shipped, and V10 breaks both:
+
+* **element lifetime** — 12 violations. Elements that appear and are gone
+  before they can be read.
+* **symbol floor** — V10 uses no icons at all; the vocabulary did not exist.
+
+The selftest asserts V10 must PASS, because a gate that cannot pass is a wall
+and a wall gets removed. So those two cases run with `--skip-lifetime` and
+`--skip-floor` — used by exactly one selftest case each, never by `hook_gate`,
+so the ACTIVE plan can never reach them.
+
+This is the honest form of the compromise. The dishonest form — lowering the
+threshold until V10 passes — was available, would have taken one character,
+and would have quietly repealed the rule for every future video to spare one
+already-shipped one.
+
+## The selftest case that tested nothing
+
+Both breathing cases went green on the first two attempts while never reaching
+the rule they were named after: the mutation put three beats at frames 0/40/80,
+and a beat with no asset behind it is *already* illegal, so the gate failed on
+`unbacked event` and the case counted that as success.
+
+A non-zero exit only proves the gate objected to something. `Case` now takes
+`expect_message`, and any case worth trusting says which failure it expects.
+
+The second attempt failed the same way for a different reason: three beats need
+4.5s under the 1.5s-per-beat floor, and V10's scenes run about 4s — so V10
+*cannot* hold a dense run, while V11 at 5.15s per scene could and did. The
+mutation has to stretch the scenes to reproduce it. Two rules interacting is
+not a bug in either; it is why the mutation has to be built against the real
+rule set rather than against an idea of it.

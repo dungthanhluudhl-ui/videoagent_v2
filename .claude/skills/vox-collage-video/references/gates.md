@@ -53,6 +53,10 @@ py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/scene_plan10.j
 | `declares no describes` | An asset can't say what it illustrates | Either name the phrase it illustrates, or remove it — it's filler |
 | `visualEvent … is not backed by anything in the plan` | An event was typed with no asset entrance/exit or punch behind it | Add the beat it describes, or drop the event. `visualEvents` is authored by the same model the pacing gate constrains, so it is only worth anything cross-checked |
 | `describes '<p>', which is never spoken in this scene` | Anchor points at the wrong scene | Re-check with `beat_sync.py frame --scene-start --scene-end` |
+| `N scenes in a row carrying more than 2 beats` | Nowhere for the viewer to rest | Thin one scene in the run to 2 beats |
+| `declared density "low" but carries N beats` | The label says calm, the scene behaves densely | Thin the scene, or stop calling it low — the label is not the escape |
+| `visibleFor=N frames … below the 1.5s a viewer needs` | An element flashes and is gone | Raise `visibleFor`; the floor covers both fades, not just the readable stretch |
+| `last beat at frame X … leaves only Ys before the cut` | The beat lands as the scene ends | Move it earlier — the legal window is 75 frames wide |
 
 **Coverage is measured in seconds of runtime, not keyword hits.** A second
 counts as covered when a visual is on screen AND declares a phrase spoken
@@ -196,6 +200,35 @@ saying why it is acceptable. This gate cannot judge quality — it makes
 *skipping the look* impossible, which is the failure that actually happened:
 V10 passed every automated check and the first person to watch it found four
 defects in the first minute.
+
+## text_gate.py / icon_gate.py — what the drawn text does
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/text_gate.py input/scene_plan11.json
+py -3 .claude/skills/vox-collage-video/scripts/icon_gate.py input/scene_plan11.json
+```
+
+These read the built `.jsx`, not the plan, because a label's real problem —
+where it lands, what it covers, how much of it there is — exists only in the
+markup. `review_gate` cannot see any of it: it measures how much of the band
+carries ink, and text laid *on top of* an image produces ink just as well as
+text laid beside it. That is not hypothetical; it is how "fill the empty
+band" got satisfied by writing over the pictures on ten scenes while the
+metric went green.
+
+| Failure | Fix |
+|---|---|
+| `label … is N words` | Cut to ≤4 words, or replace it with a symbol. The caption bar is already running the narration underneath |
+| `label … restates what the narration says` | Delete it. Three channels, one message, none of them a picture |
+| `label … overlaps image X while both are on screen` | Move it. Filling a gap by writing over the picture is not filling the gap |
+| `label … reaches y=N, inside the caption strip` | Move it up; the strip starts at y=1420 |
+| `label … spells out 'X', which the vocabulary already draws` | Render the named icon and cut the word |
+| `symbol floor: N/M scenes carry a drawn symbol` | Use the vocabulary. This floor exists because the word rule alone is satisfiable by never typing a trigger word |
+| `iconVocabulary.jsx: X is exported but missing from VOX_ICONS` | Register it. An unregistered icon is invisible to the word rule |
+
+`overlayOn="AssetName"` declares an overlay that is *meant* to be there — an
+exit number written across a deliberately blank sign. It names its target, so
+an overlay on anything else still fails: a declaration, not an escape hatch.
 
 ## Adjusting a threshold
 

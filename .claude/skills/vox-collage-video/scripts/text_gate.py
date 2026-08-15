@@ -46,7 +46,12 @@ import unicodedata
 
 CANVAS_W, CANVAS_H = 1080, 1920
 CAPTION_TOP = 1420          # captions mount at bottom:440 -> top edge ~1420
-CHAR_EM = 0.50              # width per character, in ems
+CHAR_EM = 0.50              # width per character, in ems - MUST equal
+                            # DRAWN_CHAR_EM in src/scenes/visualLanguage.jsx,
+                            # which sizes the optional background plate. A
+                            # plate wider than the gate's idea of the label
+                            # would cover an image the gate had just cleared.
+PLATE_PAD = 14              # DrawnText's default platePad
 MAX_LABEL_WORDS = 4         # a label is looked at; a sentence is read
 MIN_NARRATION_RUN = 4       # this many consecutive narration words = a restatement
 EDGE = 24                   # keep-out from the canvas edge
@@ -115,6 +120,14 @@ def parse_labels(text, scene_duration):
             # names its target, so an overlay on anything else still fails.
             om = re.search(r'overlayOn="([A-Za-z0-9_-]+)"', rest)
             box = text_box(int(xm.group(1)), cy + int(ym.group(1)), size, anchor, content)
+            # A plated label occupies its slab, not just its glyphs. Measuring
+            # the glyphs alone would let a plate quietly cover the very image
+            # the plate was added to sit clear of.
+            if re.search(r"(?<![A-Za-z])plate(?![A-Za-z])(?!=\{false\})", rest):
+                pm = re.search(r"platePad=\{(\d+)\}", rest)
+                pad = int(pm.group(1)) if pm else PLATE_PAD
+                box = (box[0] - pad, box[1] - pad * 0.5,
+                       box[2] + pad, box[3] + pad * 0.5)
             labels.append({"text": content, "box": box, "from": delay,
                            "to": scene_duration, "size": size,
                            "overlay_on": om.group(1) if om else None})

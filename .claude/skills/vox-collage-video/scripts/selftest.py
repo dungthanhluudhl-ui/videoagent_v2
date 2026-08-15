@@ -43,7 +43,7 @@ class Case:
     """One (mutation, gate, expected outcome) triple."""
 
     def __init__(self, name, gate, mutate=None, expect_fail=True, args=None, review=None,
-                 scene_edit=None):
+                 scene_edit=None, sandbox_hook=None, expect_message=()):
         self.name = name
         self.gate = gate
         self.mutate = mutate
@@ -54,6 +54,16 @@ class Case:
         # text_gate reads the BUILT .jsx, not the plan - a defect that only
         # exists in drawn markup cannot be expressed as a plan mutation.
         self.scene_edit = scene_edit
+        # Called with the sandbox root once it is built. For defects that live
+        # in neither the plan nor a scene file - a deleted shared module, say.
+        self.sandbox_hook = sandbox_hook
+        # Substrings the gate's output MUST contain. A non-zero exit only
+        # proves the gate objected to something; it does not prove it objected
+        # to the thing the case is named after. Both breathing cases were green
+        # for two rounds while failing on an unrelated rule and never reaching
+        # the rule under test - a passing test that tested nothing, which is
+        # worse than a failing one.
+        self.expect_message = tuple(expect_message)
 
 
 def run_gate(gate, argv, cwd):
@@ -183,6 +193,99 @@ def crammed_scene(plan):
     return plan
 
 
+def reflow(plan, fps=30):
+    """Re-lay every scene end-to-end after a duration change, so the plan stays
+    internally consistent and the timeline gate has nothing to say about it."""
+    t = plan["scenes"][0]["startSec"]
+    for s in plan["scenes"]:
+        span = s["durationInFrames"] / fps
+        s["startSec"], s["endSec"] = round(t, 2), round(t + span, 2)
+        t += span
+    return plan
+
+
+def make_three_beat(scene):
+    """Give one scene three beats that every OTHER rule accepts.
+
+    Written the naive way first - three events at frames 0/40/80 - and both
+    breathing cases went green while never reaching the breathing rule at all:
+    they died on `unbacked event`, because a beat with no asset behind it is
+    already illegal. The cases passed, the gate was untested, and that is the
+    precise failure mode this file exists to prevent. So the beats are backed
+    by real assets, spaced inside the dead-air limit, and the last one is left
+    clear of the cut by more than min_clear_frames.
+    """
+    dur = scene["durationInFrames"]
+    # 100 frames is the shortest scene that can hold three beats legally: the
+    # last one lands 50 frames before the cut, clear of the 45-frame floor.
+    if dur < 100 or not scene.get("assets"):
+        return False
+    frames = [0, (dur - 50) // 2, dur - 50]
+    template = copy.deepcopy(scene["assets"][0])
+    assets = []
+    for i, f in enumerate(frames):
+        a = copy.deepcopy(template)
+        a["delay"] = f
+        a["visibleFor"] = max(90, dur - f)
+        a["name"] = f"{a.get('name', 'a')}_{i}"
+        assets.append(a)
+    scene["assets"] = assets
+    scene["visualEvents"] = [{"frame": f, "what": "beat"} for f in frames]
+    return True
+
+
+def dense_run_no_breath(plan):
+    """Enough demanding scenes back to back that there is nowhere to rest.
+
+    Marked `complex` on purpose, which raises the per-scene beat cap to 3 - so
+    this cannot pass by tripping the cap instead. What it tests is the RUN:
+    every scene is individually legal and the sequence still never lets up,
+    which is exactly what V11 did across S5-S9 while V10 never put two such
+    scenes side by side."""
+    # The scenes are STRETCHED to 5.5s first. Not padding to make the test
+    # work: under the existing 1.5s-per-beat floor a three-beat scene cannot be
+    # shorter than 4.5s, and V10's scenes run about 4s - so V10 physically
+    # cannot hold a dense run, while V11 at 5.15s per scene could and did. The
+    # mutation has to reproduce that, which means reproducing the length too.
+    scenes = plan["scenes"]
+    for s in scenes[:4]:
+        s["durationInFrames"] = 165
+        s["comprehensionLoad"] = "complex"
+        s["density"] = "high"
+    reflow(plan)
+    for s in scenes[:4]:
+        if not make_three_beat(s):
+            raise AssertionError("could not densify a stretched scene")
+    return plan
+
+
+def calm_in_name_only(plan):
+    """`density: "low"` typed onto a scene that behaves densely.
+
+    Without this, the breathing rule is satisfiable by editing a label instead
+    of editing the scene - the same way `"status": "shipped"` was once the
+    cheapest way out of a failing gate. A measured rule with a self-declared
+    escape hatch is a prose rule wearing a number."""
+    s = plan["scenes"][0]
+    s["durationInFrames"] = 165
+    s["comprehensionLoad"] = "complex"
+    s["density"] = "low"
+    reflow(plan)
+    if not make_three_beat(s):
+        raise AssertionError("could not densify the stretched scene")
+    return plan
+
+
+def delete_icon_vocabulary(tmp):
+    """The vocabulary module removed from the sandbox.
+
+    Deleting the file is the most direct way to make icon_gate's rules
+    unenforceable, so it has to be a failure rather than a quiet skip - the
+    same lesson REQUIRED_GATES learned when a deleted gate script turned the
+    Stop hook green."""
+    (tmp / "src" / "scenes" / "iconVocabulary.jsx").unlink()
+
+
 def mark_every_scene_built(plan):
     """A built video with no review file must still be blocked.
 
@@ -223,6 +326,24 @@ CASES = [
                      "khối người bị khoá chặt không ai rút ra nổi dù kéo mạnh đến đâu"),
          expect_fail=True),
     Case("plan_gate: nhồi quá nhiều nhịp vào một cảnh", "plan_gate.py", crammed_scene),
+    Case("plan_gate: 4 cảnh dày liên tiếp, không có cảnh nghỉ nào",
+         "plan_gate.py", dense_run_no_breath,
+         expect_message=["scenes in a row carrying more than 2 beats"]),
+    Case("plan_gate: khai density 'low' cho cảnh mang 3 nhịp",
+         "plan_gate.py", calm_in_name_only,
+         expect_message=["declared density \"low\" but carries 3 beats"]),
+    # The vocabulary rules. Rule 1 is the one that reaches a session which has
+    # never heard of iconVocabulary.jsx, so it is the one that must not rot.
+    Case("icon_gate: viết chữ cho khái niệm đã có ký hiệu vẽ sẵn", "icon_gate.py", None,
+         scene_edit=("V10Scene5.jsx", "KHỐI NGƯỜI BỊ KHOÁ CHẶT", "MẬT ĐỘ TĂNG"),
+         args=lambda p: [str(p), "--skip-floor"],
+         expect_message=["<IconDensity>"]),
+    Case("icon_gate: video dựng xong mà không dùng ký hiệu nào", "icon_gate.py", None,
+         expect_message=["symbol floor"]),
+    Case("icon_gate: xoá luôn file vốn từ ký hiệu", "icon_gate.py", None,
+         sandbox_hook=delete_icon_vocabulary,
+         args=lambda p: [str(p), "--skip-floor"],
+         expect_message=["iconVocabulary.jsx is missing"]),
     Case("baseline_gate: tụt so với video mốc", "baseline_gate.py", regress_below_baseline,
          args=lambda p: ["check", str(p)]),
     Case("review_gate: chấm 'pass' cho khung đo được là trống, không nêu lý do",
@@ -238,13 +359,19 @@ CASES = [
     Case("plan_gate: V10 thật phải PASS (trừ luật mới sau khi V10 ship)", "plan_gate.py",
          None, expect_fail=False, args=lambda p: [str(p), "--skip-lifetime"]),
     Case("build_gate: V10 thật phải PASS", "build_gate.py", None, expect_fail=False),
+    # V10 predates the vocabulary and uses none of it, so the FLOOR is skipped
+    # here for the same reason --skip-lifetime is above. Rules 1, 3 and 4 still
+    # apply: V10's 31 drawn words must not name anything the vocabulary draws.
+    Case("icon_gate: V10 thật phải PASS (trừ sàn ký hiệu ra đời sau V10)",
+         "icon_gate.py", None, expect_fail=False,
+         args=lambda p: [str(p), "--skip-floor"]),
     Case("review_gate: V10 thật phải PASS", "review_gate.py", None, expect_fail=False),
     Case("baseline_gate: V10 thật phải PASS", "baseline_gate.py", None, expect_fail=False,
          args=lambda p: ["check", str(p)]),
 ]
 
 
-def build_sandbox(tmp, plan_mut, review_mut, scene_edit=None):
+def build_sandbox(tmp, plan_mut, review_mut, scene_edit=None, sandbox_hook=None):
     """A throwaway copy of input/ so no case can touch the real files.
 
     src/ and the baseline are symlink-free copies too - build_gate and
@@ -284,6 +411,8 @@ def build_sandbox(tmp, plan_mut, review_mut, scene_edit=None):
         if old not in s:
             raise AssertionError(f"scene_edit: {old!r} not in {fn}")
         f.write_text(s.replace(old, new, 1), encoding="utf-8")
+    if sandbox_hook:
+        sandbox_hook(tmp)
     return plan_path
 
 
@@ -303,7 +432,8 @@ def main():
         with tempfile.TemporaryDirectory(prefix="voxgate-") as td:
             tmp = pathlib.Path(td)
             try:
-                plan_path = build_sandbox(tmp, case.mutate, case.review, case.scene_edit)
+                plan_path = build_sandbox(tmp, case.mutate, case.review, case.scene_edit,
+                                          case.sandbox_hook)
                 code, out = run_gate(case.gate, case.args(plan_path), tmp)
             except Exception as exc:                          # noqa: BLE001
                 results.append((case.name, False, f"selftest crashed: {exc}"))
@@ -312,6 +442,12 @@ def main():
         ok = (failed == case.expect_fail)
         want = "phải FAIL" if case.expect_fail else "phải PASS"
         detail = "" if ok else f"{want} nhưng exit={code}\n{out.strip()[:400]}"
+        if ok and case.expect_message:
+            missing = [m for m in case.expect_message if m not in out]
+            if missing:
+                ok = False
+                detail = ("gate có fail, nhưng KHÔNG vì lý do đang được kiểm: thiếu "
+                          + "; ".join(repr(m) for m in missing))
         results.append((case.name, ok, detail))
         if args.verbose:
             print(f"\n===== {case.name}\n{out.strip()[:900]}")

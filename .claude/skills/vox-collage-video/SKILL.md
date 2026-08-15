@@ -114,6 +114,22 @@ in the whole video (see `gates.md`).
 default to `cutout` for content that isn't a physical object. Most strong
 scenes **layer two languages** (e.g. `background-photo` + `diagram`).
 
+**2b-1 — Symbols, not sentences.** The caption bar already runs the narration
+word-by-word along the bottom of every frame. Anything else you write on
+screen is a second text competing with it while the voice says the same thing
+a third time — measured: V10, which the viewer liked, carried **31** drawn
+words across 26 scenes; V11, which they found exhausting, carried **265**
+across 24.
+
+So a drawn label is capped at **4 words** and may not restate the narration
+(`text_gate.py`), and a concept the vocabulary already draws must be drawn
+(`icon_gate.py`). Fifteen symbols exist in `src/scenes/iconVocabulary.jsx` —
+look at them before writing a label:
+
+```bash
+npx remotion still IconVocabularySheet input/icon_vocabulary.png --scale=0.5
+```
+
 **2b — Motion Implementer.** `template` · `backdrop` · `variant` · assets ·
 punch phrase.
 
@@ -204,6 +220,12 @@ Remotion's own `<Audio>`. Wire each to the beat it belongs to, volume
 One file per scene (`src/scenes/V<N>Scene<i>.jsx`). Use the primitives in
 `references/primitives.md`; compose bespoke arrangements freely — the seven
 named templates are starting points, not a menu.
+
+Reach for `iconVocabulary.jsx` before typing a label — every icon takes the
+same `x, y, size, delay` props, so swapping one for another is a one-word
+edit. Give `DrawnText` `plate` whenever it sits over a photo or a cutout;
+ink text on grid paper is legible and the same text over a dark doorway is a
+smudge.
 
 **Size heroes by rendered height, not a guessed width.** Target 45–55% of the
 usable band (y≈160→1460); check with:

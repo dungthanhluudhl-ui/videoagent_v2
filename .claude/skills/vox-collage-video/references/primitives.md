@@ -45,11 +45,37 @@ never touched: at the time of the V10 review only **3 of 12** available
 | `MemorialDots` | One mark per person, counted up. Not `DensityGrid` — that answers "how packed", this answers "how many" |
 | `ChainBreak` | A sequence that draws itself, then one link snaps. **Vertical by default** — a horizontal row is a thin strip on a 9:16 frame |
 | `StreetElevation` | A row of labelled shopfronts. Illustrates *density*, where a single cocktail glass illustrates only the category |
+| `DrawnText` | A label that arrives on its beat. **Always use this, never a bare `<text>`** — a bare one is painted from frame 0, which put 67 V11 labels on screen before their beat. Pass `plate` when it sits over a photo or cutout |
 
 `DiagramCanvas` coordinates are **screen pixels within the canvas**: its
 viewBox tracks the `height` you pass. Draw across the full width and height
 you asked for — content sized for a smaller box floats in the middle of a
 bigger one.
+
+### `src/scenes/iconVocabulary.jsx` — the symbol vocabulary
+
+Fifteen drawn symbols on `@remotion/shapes` + `@remotion/paths`, all taking
+the same `x, y, size, delay, color, accent` props and all drawn
+progressively like the rest of the diagram language. See them:
+
+```bash
+npx remotion still IconVocabularySheet input/icon_vocabulary.png --scale=0.5
+```
+
+`IconBan` · `IconCheck` · `IconClock` · `IconCrowd` · `IconDensity` ·
+`IconDoc` · `IconFall` · `IconMoney` · `IconPerson` · `IconPhone` ·
+`IconPin` · `IconQuestion` · `IconRise` · `IconScale` · `IconWarning`
+
+**This one is enforced, not suggested.** `icon_gate.py` parses the `VOX_ICONS`
+registry out of the file itself and fails a scene whose drawn label spells out
+a concept an icon already draws, and a finished video that carries symbols in
+under a fifth of its scenes. Adding an icon means adding **both** the
+`export const` and the registry entry — either one alone is a failure, so the
+list above cannot drift out of date.
+
+`IconScale` tilts toward the heavier side and `IconDensity` takes a real
+`fill` ratio: pass the actual values, so the drawing carries the claim instead
+of a caption repeating it.
 
 ### `src/scenes/MapGraphic.jsx` — real maps
 
@@ -91,8 +117,8 @@ half of V10's scenes were bespoke and that was correct.
 | `@remotion/transitions` | in use | Scene transitions |
 | `@remotion/sfx` | in use | One-shot sounds (URL constants, **not** an `<Audio>` component) |
 | `@remotion/google-fonts` | in use | Be Vietnam Pro |
-| `@remotion/shapes` | installed, unused | Ready-made geometry for diagrams |
-| `@remotion/paths` | installed, unused | Path length/interpolation for draw-on effects |
+| `@remotion/shapes` | in use by `iconVocabulary.jsx` | Ready-made geometry for diagrams |
+| `@remotion/paths` | in use by `iconVocabulary.jsx` | Exact path length for draw-on effects |
 | `@remotion/noise` | installed, unused | Organic jitter, texture |
 | `@remotion/lottie` | installed, unused | Vector icon animation |
 | `@remotion/media` | installed | Video/audio primitives |

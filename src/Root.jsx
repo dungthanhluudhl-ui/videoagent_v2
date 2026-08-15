@@ -2,6 +2,8 @@ import { Composition, Folder } from "remotion";
 import { LuatSuDaoDuc, LUATSU_CANVAS, LUATSU_TOTAL_FRAMES } from "./LuatSuDaoDuc";
 import { LuatSuDaoDuc3, MASTER3_DURATION } from "./LuatSuDaoDuc3";
 
+import { IconVocabularySheet, ICON_SHEET_DURATION } from "./scenes/IconVocabularySheet";
+
 import { Scene1, SCENE1_DURATION } from "./scenes/Scene1";
 import { Scene2, SCENE2_DURATION } from "./scenes/Scene2";
 import { Scene3, SCENE3_DURATION } from "./scenes/Scene3";
@@ -331,6 +333,17 @@ export const RemotionRoot = () => {
         id="ItaewonRemDap"
         component={ItaewonRemDap}
         durationInFrames={MASTER10_DURATION}
+        fps={LUATSU_CANVAS.fps}
+        width={LUATSU_CANVAS.width}
+        height={LUATSU_CANVAS.height}
+      />
+
+      {/* The symbol vocabulary, rendered. Kept next to the videos rather than
+          in a scratch file so it cannot be tidied away and lost. */}
+      <Composition
+        id="IconVocabularySheet"
+        component={IconVocabularySheet}
+        durationInFrames={ICON_SHEET_DURATION}
         fps={LUATSU_CANVAS.fps}
         width={LUATSU_CANVAS.width}
         height={LUATSU_CANVAS.height}

@@ -70,7 +70,7 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 # gate that CRASHES (a bug in the gate should not brick the repo); it must not
 # protect against a gate that has VANISHED, which is a broken install.
 REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
-                  "baseline_gate.py", "text_gate.py", "selftest.py")
+                  "baseline_gate.py", "text_gate.py", "icon_gate.py", "selftest.py")
 
 
 def find_active_plan(root):
@@ -192,6 +192,7 @@ def guard_premature_shipped(payload, root):
                          ("build_gate.py", [str(path)]),
                          ("review_gate.py", [str(path)]),
                          ("text_gate.py", [str(path)]),
+                         ("icon_gate.py", [str(path)]),
                          ("baseline_gate.py", ["check", str(path)])):
         if not (SCRIPTS / script).exists():
             failures.append(f"{script}: MISSING")
@@ -242,13 +243,30 @@ def post_edit(payload, root, plan):
         return 0            # a scene file from a different video - not ours to police
 
     code, out = run("build_gate.py", str(plan_path), "--scene", sid)
-    if code == 0:
-        return 0
-    print(f"[vox-gate] {sid} no longer matches the approved plan ({plan_path.name}):\n"
-          f"{out.strip()}\n"
-          f"Fix the scene, or update the plan deliberately if the change is intended - "
-          f"do not leave the build and the plan disagreeing.", file=sys.stderr)
-    return 2
+    if code != 0:
+        print(f"[vox-gate] {sid} no longer matches the approved plan ({plan_path.name}):\n"
+              f"{out.strip()}\n"
+              f"Fix the scene, or update the plan deliberately if the change is intended - "
+              f"do not leave the build and the plan disagreeing.", file=sys.stderr)
+        return 2
+
+    # The two gates that read the MARKUP rather than the plan, run here rather
+    # than only at Stop, because both catch things about a label at the one
+    # moment the label is being written. Waiting until the end of the turn
+    # meant a whole video's worth of them arrived at once - which is how V11
+    # accumulated 36 text failures and 265 drawn words before anything said so.
+    scene_failures = []
+    for script, label in (("text_gate.py", "chữ vẽ"), ("icon_gate.py", "ký hiệu vẽ")):
+        if not (SCRIPTS / script).exists():
+            continue                  # the Stop hook reports a missing gate properly
+        code, out = run(script, str(plan_path), "--scene", sid)
+        if code != 0:
+            scene_failures.append(f"### {label} ({script})\n{out.strip()}")
+    if scene_failures:
+        print(f"[vox-gate] {sid} is built, but what it DRAWS does not pass:\n\n"
+              + "\n\n".join(scene_failures), file=sys.stderr)
+        return 2
+    return 0
 
 
 def stop(root, plan):
@@ -260,6 +278,12 @@ def stop(root, plan):
         ("build_gate.py", [str(plan_path)], "built scenes vs plan"),
         ("review_gate.py", [str(plan_path)], "self-review pass"),
         ("text_gate.py", [str(plan_path)], "chữ vẽ: va chạm, độ dài, lặp narration"),
+        # The half of the symbol vocabulary that survives a fresh context
+        # window. @remotion/shapes sat installed and unused through eleven
+        # videos while references/primitives.md listed it the whole time -
+        # documentation is what a session reads if it happens to; this is what
+        # runs whether it read anything or not.
+        ("icon_gate.py", [str(plan_path)], "ký hiệu vẽ: dùng vốn từ thay vì viết chữ"),
         # Compares this video against the FROZEN profile of one already judged
         # good, not against an absolute floor. Every gate above accepts a video
         # that sits just over the minimum; this is the one that notices the

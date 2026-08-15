@@ -174,6 +174,20 @@ DEFAULTS = {
     "max_punch_top_repeat": 2,    # headline can't sit at the same Y on >2 scenes
     "max_consecutive_high": 3,    # after this many dense scenes the viewer needs a breath
     "breath_window": 10,          # every N consecutive scenes must contain one low-density scene
+
+    # --- breathing, MEASURED ----------------------------------------------
+    # `density` above is a self-declared label, and the two videos prove how
+    # little that is worth: by declared density V10 and V11 are identical -
+    # both go at most 9 scenes without a "low" - while the viewer described
+    # V10 as having room and V11 as relentless. The difference is entirely in
+    # what the scenes actually DO. Counted from visualEvents:
+    #
+    #     V10: 25 of 26 scenes carry 2 beats; never 2 dense scenes in a row
+    #     V11: 11 of 24; a run of FIVE dense scenes with no let-up
+    #
+    # So breathing is measured here, not read off a field the author types.
+    "breath_max_beats": 2,        # a scene at or under this is a breathing scene
+    "max_dense_run": 3,           # consecutive scenes above it before one is required
     "uniform_run": 4,             # this many consecutive scenes of near-equal length = metronome
     "uniform_tolerance": 0.15,    # "near-equal" means within +/-15% of the run's mean
 
@@ -603,6 +617,68 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
                "and the cutting rhythm varies with the content")
 
 
+def gate_breathing(scenes, rep, thresholds):
+    """Room to think, counted rather than claimed.
+
+    The viewer's words about V11 were "không có khoảng nghỉ như V10 vì scene
+    chuyển cảnh liên tục". The scene LENGTHS said otherwise - V11's scenes are
+    the longer of the two (5.15s vs 3.88s) - and so did the declared `density`
+    column, which is identical across both videos on every measure. What had
+    actually changed was how much each scene asks of the viewer while it is up:
+    V10 hands over two things per scene, V11 three, with a run of five such
+    scenes back to back and nothing in between.
+
+    Two rules, both read off visualEvents:
+
+      * a run of dense scenes must be broken by a calm one
+      * a scene may not be DECLARED calm while behaving densely - otherwise the
+        first rule is satisfiable by typing "low", which is how a measured gate
+        quietly turns back into prose
+
+    Does not fight the beat caps: a scene at the 2-beat cap already IS a
+    breathing scene, so the two rules point the same way. Nor the dead-air
+    rule - a 2-beat scene stays inside 4s-per-gap up to about 8s long, and the
+    longest scene either video has ever shipped is well under that.
+    """
+    cap = thresholds["breath_max_beats"]
+    run_cap = thresholds["max_dense_run"]
+    beats = [len({int(e.get("frame") or 0) for e in (s.get("visualEvents") or [])})
+             for s in scenes]
+    bad = False
+
+    # Report each run ONCE, when it ends - reporting it on every scene that
+    # extends it turns one problem into four lines that look like four.
+    start = None
+    for i in range(len(scenes) + 1):
+        dense = i < len(scenes) and beats[i] > cap
+        if dense and start is None:
+            start = i
+        elif not dense and start is not None:
+            length = i - start
+            if length > run_cap:
+                rep.fail(f"{scenes[start].get('id')}..{scenes[i - 1].get('id')}: {length} "
+                         f"scenes in a row carrying more than {cap} beats, with no calm "
+                         f"scene between them. The viewer is asked to take in something new "
+                         f"every couple of seconds for {length} scenes straight. Thin one of "
+                         f"them to {cap} beats.")
+                bad = True
+            start = None
+
+    for scene, n in zip(scenes, beats):
+        if scene.get("density") == "low" and n > cap:
+            rep.fail(f"{scene.get('id')}: declared density \"low\" but carries {n} beats. "
+                     f"The label is what the breathing rule would count; the beats are what "
+                     f"the viewer would feel. Either thin the scene or stop calling it low.")
+            bad = True
+
+    calm = sum(1 for n in beats if n <= cap)
+    rep.info(f"breathing: {calm}/{len(scenes)} scenes at <= {cap} beats "
+             f"(avg {sum(beats) / max(len(beats), 1):.2f} beats/scene)")
+    if not bad:
+        rep.ok(f"never more than {run_cap} demanding scenes in a row, and every scene "
+               f"called calm actually is")
+
+
 def gate_dead_air(scenes, rep, thresholds, fps):
     """Serves the user's #1 criterion: 'audio nói đến đâu có minh họa đến đó'.
 
@@ -954,6 +1030,7 @@ def main():
         gate_diversity(scenes, rep, thresholds)
         gate_dead_air(scenes, rep, thresholds, fps)
         gate_pacing(scenes, words, rep, thresholds, fps)
+        gate_breathing(scenes, rep, thresholds)
         if not args.skip_lifetime:
             gate_element_lifetime(scenes, rep, thresholds, fps)
         gate_anchors(scenes, words, rep)
