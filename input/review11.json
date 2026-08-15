@@ -5,10 +5,10 @@
       "id": "S1",
       "frame": "input/review_frames/V11Scene1_f76.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ban do trong MapPanel trong nhu kinh mo, nhin xuyen thay thu phap phia sau; khung chu nhat ve them khong them nghia so voi anh tai lieu. Da ha tint 0.16->0.04, can render lai de cham."
+      "note": "Mo o co that. Anh tai lieu full-bleed + ban do co ghim; do day 93%, khong co khoang trong nao qua 32px."
     },
     {
       "id": "S2",
@@ -17,205 +17,205 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Hai cum nguoi dung tren cung mot nen dat ve, dai 300-1050 kin, nhan trai het be ngang."
+      "note": "Mo o co that. Hai cum nguoi dung tren cung mot nen dat ve; do day 79%."
     },
     {
       "id": "S3",
       "frame": "input/review_frames/V11Scene3_f76.png",
       "illustrated": "pass",
-      "composed": "fail",
+      "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Dai 900-1250 gan nhu rong: chi mot tap giay nho lech trai va mot cot chu manh ben phai."
+      "note": "Mo o co that sau khi them tang 3. Ba tam bien + tap giay + cot nien dai + dong chu duoi; do day 70%."
     },
     {
       "id": "S4",
-      "frame": "input/review_frames/V11Scene4_f74.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S5",
-      "frame": "input/review_frames/V11Scene5_f74.png",
-      "illustrated": "pass",
-      "composed": "fail",
-      "varied": "pass",
-      "purposeful": "pass",
-      "note": "Chu CHIEN TRANH tran qua vien hop 250px. Da noi hop len 296px + font 34, can render lai."
-    },
-    {
-      "id": "S6",
-      "frame": "input/review_frames/V11Scene6_f54.png",
+      "frame": "input/review_frames/V11Scene4_f111.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Sau khi ha truc thoi gian xuong 486 va punch con 56px thi het chong chu; ba tang xep ro."
+      "note": "Hai nua doi nhau + canh hoa le + dong ket duoi; do day 73%."
+    },
+    {
+      "id": "S5",
+      "frame": "input/review_frames/V11Scene5_f111.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Mo o co that. Hop da noi len 296px, chu CHIEN TRANH khong con tran vien; do day 100%."
+    },
+    {
+      "id": "S6",
+      "frame": "input/review_frames/V11Scene6_f163.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Do day 52% duoi san 55%, khoang trong lien tuc 173px: dai giua truc thoi gian va ban do con hong."
     },
     {
       "id": "S7",
-      "frame": "input/review_frames/V11Scene7_f77.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
+      "frame": "input/review_frames/V11Scene7_f116.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Chuoi nhan qua tren nen neon + khoi chu da tach khoi anh ly; do day 100%."
     },
     {
       "id": "S8",
       "frame": "input/review_frames/V11Scene8_f87.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Do day 21% - mong nhat ca video. Mang boi den chi la khung net dut, gan nhu khong co muc."
     },
     {
       "id": "S9",
-      "frame": "input/review_frames/V11Scene9_f96.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S10",
-      "frame": "input/review_frames/V11Scene10_f98.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S11",
-      "frame": "input/review_frames/V11Scene11_f99.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S12",
-      "frame": "input/review_frames/V11Scene12_f57.png",
-      "illustrated": "pass",
-      "composed": "fail",
-      "varied": "pass",
-      "purposeful": "pass",
-      "note": "SlopeIndicator chi ve net dut manh gan nhu vo hinh tren nen luoi; dai 900-1250 rong."
-    },
-    {
-      "id": "S13",
-      "frame": "input/review_frames/V11Scene13_f97.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S14",
-      "frame": "input/review_frames/V11Scene14_f86.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S15",
-      "frame": "input/review_frames/V11Scene15_f84.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S16",
-      "frame": "input/review_frames/V11Scene16_f85.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S17",
-      "frame": "input/review_frames/V11Scene17_f87.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S18",
-      "frame": "input/review_frames/V11Scene18_f76.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S19",
-      "frame": "input/review_frames/V11Scene19_f80.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S20",
-      "frame": "input/review_frames/V11Scene20_f89.png",
-      "illustrated": "pass",
-      "composed": "fail",
-      "varied": "pass",
-      "purposeful": "pass",
-      "note": "Ban do zoom 17 phang li, thuoc do cat ngang nhan ghim. Da ha zoom 16 + doi thuoc xuong 880."
-    },
-    {
-      "id": "S21",
-      "frame": "input/review_frames/V11Scene21_f56.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S22",
-      "frame": "input/review_frames/V11Scene22_f93.png",
-      "illustrated": "",
-      "composed": "",
-      "varied": "",
-      "purposeful": "",
-      "note": "CHUA MO O CO THAT - khong cham khi chua nhin"
-    },
-    {
-      "id": "S23",
-      "frame": "input/review_frames/V11Scene23_f74.png",
-      "illustrated": "pass",
-      "composed": "fail",
-      "varied": "pass",
-      "purposeful": "pass",
-      "note": "Nhan DAU NAM CUA HEM dam vao nhan phu cua ghim. Da doi khoi chu thich xuong 940."
-    },
-    {
-      "id": "S24",
-      "frame": "input/review_frames/V11Scene24_f71.png",
+      "frame": "input/review_frames/V11Scene9_f144.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Anh hem + duong kich thuoc 41-45m va 3,2m doc ro tren nen toi; bon tang vao dung nhip."
+      "note": "Ba cot doi chu + hang am doc + canh hoa + dong ket; do day 55%, dung bang san."
+    },
+    {
+      "id": "S10",
+      "frame": "input/review_frames/V11Scene10_f98.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Khoang trong lien tuc 303px vuot tran 300px: dai giua ho chieu va day nha ve tay con hong."
+    },
+    {
+      "id": "S11",
+      "frame": "input/review_frames/V11Scene11_f99.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Anh khu nha bam doc + bon duong chi dan; do day 100%."
+    },
+    {
+      "id": "S12",
+      "frame": "input/review_frames/V11Scene12_f172.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Do day 34%, khoang trong 456px. Ba tang deu la net mong tren nen luoi - can khoi dac."
+    },
+    {
+      "id": "S13",
+      "frame": "input/review_frames/V11Scene13_f97.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Anh dam dong full-bleed + dai nam; do day 100%."
+    },
+    {
+      "id": "S14",
+      "frame": "input/review_frames/V11Scene14_f129.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Do day 36%: luoi cham thua qua nen do duoc la nen, khong phai muc."
+    },
+    {
+      "id": "S15",
+      "frame": "input/review_frames/V11Scene15_f84.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Khung dien thoai + o khau trang bi gach; do day 100%."
+    },
+    {
+      "id": "S16",
+      "frame": "input/review_frames/V11Scene16_f127.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Hai cot so + duong muc + anh dam dong + dong ket; do day 80%."
+    },
+    {
+      "id": "S17",
+      "frame": "input/review_frames/V11Scene17_f87.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Anh pho chieu + o nen muc cho 16:00 + hai mui ten; do day 100%."
+    },
+    {
+      "id": "S18",
+      "frame": "input/review_frames/V11Scene18_f114.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Do day 41%: mat dong ho va mat cat loi di deu chi la net vien, khong co mang."
+    },
+    {
+      "id": "S19",
+      "frame": "input/review_frames/V11Scene19_f80.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Anh dam dong hoa trang + bon nhan; do day 100%."
+    },
+    {
+      "id": "S20",
+      "frame": "input/review_frames/V11Scene20_f133.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Ban do full-bleed do duoc 23% la DUNG - tile carto-light gan nhu don sac nen phan lon hang doc thanh nen. Da mo o co that: duong pho, o nha, thuoc do va nhan deu ro."
+    },
+    {
+      "id": "S21",
+      "frame": "input/review_frames/V11Scene21_f168.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Truc Bac-Nam + hai o dau + anh ga tau + dong ket; do day 60%."
+    },
+    {
+      "id": "S22",
+      "frame": "input/review_frames/V11Scene22_f93.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Mo o co that. Hai truc duong + hem ngang + hai mui ten + loi khac bi gach; do day 70%."
+    },
+    {
+      "id": "S23",
+      "frame": "input/review_frames/V11Scene23_f111.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Ban do full-bleed do duoc 46% cung vi ly do nhu S20. Da mo o co that: chu thich khong con dam vao nhan ghim."
+    },
+    {
+      "id": "S24",
+      "frame": "input/review_frames/V11Scene24_f214.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Mo o co that. Anh hem + bon tang do kich thuoc; do day 100%."
     }
   ]
 }
