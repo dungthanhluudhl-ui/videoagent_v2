@@ -324,3 +324,53 @@ export const MapGraphic = ({
     </AbsoluteFill>
   );
 };
+
+/**
+ * MapPanel - a MapGraphic windowed into part of the canvas.
+ *
+ * MapGraphic is deliberately full-bleed and anchors its pin + label at 50%/50%
+ * of the WHOLE canvas. That is right when the map is the scene, and wrong when
+ * the map is one band of a layered scene: clipping it to a box with
+ * `overflow: hidden` leaves the pin somewhere off in the hidden area, which
+ * reads as a map with no marker on it.
+ *
+ * So the window is offset instead of cropped - the inner layer is shifted by
+ * exactly the difference between the canvas centre and the window centre, which
+ * puts the pin back in the middle of what the viewer can actually see.
+ */
+export const MapPanel = ({
+  x = 0,
+  y = 620,
+  width = 1080,
+  height = 620,
+  canvasW = 1080,
+  canvasH = 1920,
+  radius = 18,
+  ...mapProps
+}) => (
+  <div
+    style={{
+      position: "absolute",
+      left: x,
+      top: y,
+      width,
+      height,
+      overflow: "hidden",
+      borderRadius: radius,
+      border: `3px solid rgba(20,20,20,0.25)`,
+      boxShadow: "0 18px 44px rgba(0,0,0,0.22)",
+    }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        left: (width - canvasW) / 2,
+        top: (height - canvasH) / 2,
+        width: canvasW,
+        height: canvasH,
+      }}
+    >
+      <MapGraphic {...mapProps} />
+    </div>
+  </div>
+);

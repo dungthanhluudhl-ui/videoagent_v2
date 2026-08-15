@@ -118,7 +118,9 @@ def _element_block(text, hit):
 # real illustration, and the "renders NO image at all" check must not treat a
 # map or a diagram as an empty scene - which it did, failing 8 correct scenes.
 CODE_DRAWN_COMPONENTS = {
-    "map": ("MapGraphic",),
+    # MapPanel is MapGraphic windowed into a band of the canvas - same
+    # illustration, different framing - so it satisfies a planned `map` too.
+    "map": ("MapGraphic", "MapPanel"),
     "diagram": ("DiagramCanvas", "DensityGrid", "DimensionLine", "DrawnPath",
                 "ForceArrow", "MemorialDots", "ChainBreak", "StreetElevation",
                 "SlopeIndicator", "AnnotatedPhoto"),

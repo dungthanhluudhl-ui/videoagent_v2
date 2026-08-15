@@ -1,0 +1,66 @@
+/**
+ * S10 - Quốc tế nhất, vậy trông nó ra sao?
+ *
+ * hộ chiếu nhiều nước xoè ra rồi bị nửa khung ngôi làng đẩy lấn sang
+ *
+ * comprehensionLoad: moderate - 131 frames (4.4s)
+ * Generated from input/scene_plan11.json; check with build_gate.py.
+ */
+
+import { AbsoluteFill, Sequence } from "remotion";
+import { BottomBar, Hero, PunchPhrase, SceneBackground, Support } from "./shared";
+import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+
+export const V11SCENE10_DURATION = 131;
+
+export const V11Scene10 = () => (
+  <AbsoluteFill name="V11Scene10">
+    <SceneBackground variant="card" />
+
+    <Sequence from={0} layout="none">
+      <Hero name="Hero-Passports" src="el10_passport_flags.png" width={720} x={60} y={330}
+            variant="flip" visibleFor={131} />
+    </Sequence>
+
+    <DiagramCanvas y={300} height={950}>
+      {/* nhãn nửa trái: kỳ vọng */}
+      <text x={70} y={40} fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900, letterSpacing: 3 }}>
+        QUỐC TẾ NHẤT HÀN QUỐC
+      </text>
+      <DrawnPath d="M 70 60 L 620 60" delay={8} drawFrames={12} length={550}
+                 stroke="#C2410C" strokeWidth={6} />
+
+      {/* vạch chia hai nửa, kẻ xuống khi nửa kia sắp xuất hiện */}
+      <DrawnPath d="M 770 20 L 770 900" delay={100} drawFrames={20} length={880}
+                 strokeWidth={5} dashed />
+
+      <text x={900} y={410} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
+        NHƯNG
+      </text>
+
+      {/* dải nhà thấp vẽ tay ở nửa dưới bên trái - "trông như một ngôi làng" */}
+      <DrawnPath d="M 70 780 L 700 780" delay={104} drawFrames={16} length={630}
+                 strokeWidth={6} />
+      <DrawnPath d="M 110 780 L 110 700 L 210 656 L 310 700 L 310 780" delay={108}
+                 drawFrames={14} length={420} strokeWidth={5} />
+      <DrawnPath d="M 340 780 L 340 716 L 430 678 L 520 716 L 520 780" delay={114}
+                 drawFrames={14} length={400} strokeWidth={5} />
+      <DrawnPath d="M 550 780 L 550 724 L 630 690 L 710 724 L 710 780" delay={120}
+                 drawFrames={14} length={380} strokeWidth={5} />
+      <text x={390} y={848} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
+        nhà thấp, ngõ nhỏ
+      </text>
+    </DiagramCanvas>
+
+    <Sequence from={113} layout="none">
+      <Support name="Sup-Village" src="el10_commerce_day.png" width={230} x={810} y={740}
+               visibleFor={18} />
+      <PunchPhrase lines={["LÀNG TRONG PHỐ"]} top={186} fontSize={66} />
+    </Sequence>
+
+    <BottomBar />
+  </AbsoluteFill>
+);
