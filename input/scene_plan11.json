@@ -2,7 +2,7 @@
   "video": "V11",
   "fps": 30,
   "wordsFile": "input/words11_aligned.json",
-  "status": "active",
+  "status": "shipped",
   "continuationOf": "V10 (Itaewon phần 1) - xem input/scene_plan10.json",
   "scenes": [
     {
