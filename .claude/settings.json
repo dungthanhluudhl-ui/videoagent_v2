@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py -3 \".claude/skills/vox-collage-video/scripts/hook_gate.py\" post-edit"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py -3 \".claude/skills/vox-collage-video/scripts/hook_gate.py\" stop"
+          }
+        ]
+      }
+    ]
+  }
+}

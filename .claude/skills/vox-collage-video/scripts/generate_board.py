@@ -5,6 +5,16 @@ identically to the old one-image-per-call script (no grid wrapping, no
 crop, raw prompt sent as-is) - so this is a strict superset, not a
 separate tool to choose between.
 
+DEFAULT MODE IS PLAN-ONLY, NOT A LIVE API CALL. Without --live, `board`
+only prints the final prompt text (and appends it to --prompts-out if
+given) - no OpenRouter credit is spent. The user generates the actual
+image themselves in their own tool (Google AI Studio / Nano Banana Pro,
+run under their own quota) and hands the file back; `crop-file` then
+crops it locally with the same panel-detection logic, no API call
+involved. This is a standing cost-saving preference, not just an
+out-of-credit fallback - pass --live only when the user has explicitly
+asked to spend OpenRouter credit for a direct generation instead.
+
 For N>1 cells, all cells are requested in ONE API call as a grid ("board")
 on a single image, then cropped apart locally. This is the default
 whenever a scene needs 2+ small object/prop cutouts, or a recurring
@@ -129,30 +139,61 @@ DEFAULT_MODEL = "google/gemini-3.1-flash-lite-image"
 # Single source of truth for chroma-key background wording/color, shared
 # with process_cutout.py's auto-detection (keep the RGB values identical
 # in both scripts - process_cutout.py's docstring repeats this pairing).
+#
+# This wording was rewritten after a real head-to-head comparison: an
+# earlier, shorter version ("no gradient, no vignette, no shadow, and no
+# other {color} anywhere") produced clean chroma compliance on only 1 of 7
+# real boards generated through Nano Banana Pro - the other 6 came back on
+# white/black/gray realistic photography backdrops with baked-in captions
+# and AI watermark sparkles the prompt never asked for. The user supplied
+# their OWN working prompts (from a different, already-successful video)
+# using this much more exhaustive negative-constraint list plus a stated
+# REASON for the color choice ("...because the assets contain no {color}
+# details") and a single consistent photographic register - swapping to
+# this wording is the fix, not a model-capability limitation.
+NEGATIVE_CONSTRAINTS = (
+    "no gradient, no checkerboard, no floor, no horizon, no contact "
+    "shadows on the chroma, no chroma spill, no frames, no dividers, no "
+    "labels, no text, no readable letters, no logo, no watermark, no "
+    "extra objects, no flat vector, no generic iconography, no cartoon "
+    "look, no glossy plastic 3D"
+)
+
 CHROMA_SPECS = {
     "green": {
         "rgb": (0, 255, 0),
+        "reason": "the assets contain no green details",
         "desc": (
-            "a solid flat chroma-key green screen background, pure "
-            "#00FF00, evenly lit edge-to-edge with no gradient, no "
-            "vignette, no shadow, and no other green anywhere in the "
-            "frame except the background itself"
+            f"a perfectly uniform pure chroma-key green background, "
+            f"exactly #00FF00, because the assets contain no green "
+            f"details, {NEGATIVE_CONSTRAINTS}"
         ),
     },
     "magenta": {
         "rgb": (255, 0, 255),
+        "reason": "the assets contain green details (cash, plants, herbs) that a green screen would destroy",
         "desc": (
-            "a solid flat chroma-key magenta screen background, pure "
-            "#FF00FF, evenly lit edge-to-edge with no gradient, no "
-            "vignette, no shadow, and no other magenta/pink anywhere in "
-            "the frame except the background itself"
+            f"a perfectly uniform pure chroma-key magenta background, "
+            f"exactly #FF00FF, because the assets contain green details "
+            f"(cash, plants, herbs) that a green screen would destroy, "
+            f"{NEGATIVE_CONSTRAINTS}"
+        ),
+    },
+    "blue": {
+        "rgb": (0, 0, 255),
+        "reason": "the assets contain both green and magenta/pink details",
+        "desc": (
+            f"a perfectly uniform pure chroma-key blue background, "
+            f"exactly #0000FF, because the assets contain both green and "
+            f"magenta/pink details, {NEGATIVE_CONSTRAINTS}"
         ),
     },
     "white": {
         "rgb": (255, 255, 255),
+        "reason": "legacy plain white, only when a subject conflicts with every chroma color at once",
         "desc": (
-            "a solid plain white studio background, evenly lit "
-            "edge-to-edge with no gradient, no vignette, no shadow"
+            f"a solid plain white studio background, evenly lit "
+            f"edge-to-edge, {NEGATIVE_CONSTRAINTS}"
         ),
     },
 }
@@ -160,6 +201,24 @@ CHROMA_SPECS = {
 
 def bg_clause(bg):
     return f"Background: {CHROMA_SPECS[bg]['desc']}."
+
+
+# A full-bleed BackgroundPhoto is never cut out, so a chroma screen is exactly
+# wrong for it - it would produce a subject floating on green that fills the
+# frame with green. This clause replaces the chroma one for those assets.
+#
+# Added when the visual-language upgrade made background-photo a first-class
+# language: 9 of V10's 19 sourced images are full-frame backdrops, and this
+# script could only ever describe cutout subjects. Asking for a cutout prompt
+# and then using the result full-bleed is how you get a scene that looks like
+# a sticker instead of a place.
+FULL_BLEED_CLAUSE = (
+    "Full-frame vertical 9:16 photograph, 1080x1920, composed to fill the "
+    "entire frame edge to edge with no border, no chroma screen, no cut-out "
+    "subject, no text, no watermark, no logo. Leave the upper third and the "
+    "lower quarter visually calm so a headline and captions can sit over the "
+    "image without fighting it."
+)
 
 
 def load_api_key():
@@ -215,23 +274,45 @@ def generate(prompt, model):
     return base64.b64decode(b64data)
 
 
-def build_grid_prompt(cells, cols, rows, consistent_subject, bg):
+# Shared quality register for both the grid path and the N=1 single-cell
+# path - keeping ONE consistent photographic register (never mixed with
+# "flat vector"/"cartoon"/"3D render" language in the same prompt) is part
+# of what made the user's own working prompts reliable; NEGATIVE_CONSTRAINTS
+# explicitly bans every competing register instead of just omitting them.
+QUALITY_REGISTER = (
+    "documentary editorial photography with tactile realistic detail, "
+    "matching realistic scale and lighting, large high-resolution detail"
+)
+
+
+def build_grid_prompt(cells, cols, rows, consistent_subject, bg, context=None):
     n = len(cells)
-    lines = [
-        f"Create ONE single image containing a {rows}x{cols} grid of exactly {n} "
-        "separate panels, arranged in reading order (left to right, top to bottom). "
-        f"Each panel is an equal-size square area on {CHROMA_SPECS[bg]['desc']}, "
-        "separated from its neighbors by a clear uniform gap of that same empty "
-        "background so panels never touch or overlap. Each panel is a complete, "
-        "isolated studio photo composition - nothing crosses a panel boundary.",
-    ]
+    ctx = f" for {context}" if context else ""
     if consistent_subject:
-        lines.append(
-            f"The SAME subject appears in every panel: {consistent_subject}. "
-            "Keep its identity (face, hairstyle, outfit, proportions) perfectly "
-            "identical across all panels - only what each panel's own description "
-            "below says should change (pose, expression, action, camera angle)."
-        )
+        items = ", ".join(f"one pose of {consistent_subject.split(',')[0]}" for _ in cells)
+        lines = [
+            f"Grouped character pose sheet containing exactly {n} coordinated "
+            f"poses of the SAME subject{ctx}: {consistent_subject}. Keep its "
+            "identity (face, hairstyle, outfit, proportions) perfectly "
+            "identical across all poses - only what each pose's own "
+            "description below says should change (pose, expression, action, "
+            "camera angle).",
+        ]
+    else:
+        items = "; ".join(prompt for _name, prompt in cells)
+        lines = [
+            f"Grouped isolated production asset sheet containing exactly {n} "
+            f"coordinated elements{ctx}: {items}.",
+        ]
+    lines.append(
+        f"Arrange all {n} assets in a tight balanced {rows}x{cols} grid, "
+        "reading order left to right top to bottom, prominently scaled to "
+        "fill the canvas area efficiently with minimal clean margins just "
+        "enough to keep elements separated without touching or overlapping, "
+        f"consistent directional lighting from camera-left, {QUALITY_REGISTER}, "
+        "every asset fully visible and suitable for independent extraction."
+    )
+    lines.append(f"Background: {CHROMA_SPECS[bg]['desc']}.")
     for i, (name, prompt) in enumerate(cells, 1):
         lines.append(f"Panel {i}: {prompt}")
     return "\n".join(lines)
@@ -333,6 +414,14 @@ def crop_board(board_bytes, cells, out_dir, bg):
         print(f"Cropped {dest} bbox={box}")
 
 
+def flatten_prompt(text):
+    """Collapse a (possibly multi-line) prompt to ONE line - a board's grid
+    prompt is built with '\\n' between panel lines for API readability, but
+    a batch-paste tool (one text-area line = one generation) needs the whole
+    board, panels included, on a single line."""
+    return " ".join(line.strip() for line in text.splitlines() if line.strip())
+
+
 def cmd_board(args):
     cells = []
     for raw in args.cell:
@@ -345,12 +434,37 @@ def cmd_board(args):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     n = len(cells)
+
+    if not args.live:
+        # No API call - print the exact final prompt text (same wording the
+        # API path would have sent) as ONE line, for pasting into an
+        # external image tool (e.g. Nano Banana Pro / Google AI Studio) run
+        # under the user's own quota. A board's several panels still count
+        # as ONE prompt/ONE generation here, matching the API path's single
+        # grid call - only the delivery mechanism changes.
+        if n == 1:
+            name, prompt = cells[0]
+            tail = FULL_BLEED_CLAUSE if args.full_bleed else bg_clause(args.bg)
+            full_prompt = flatten_prompt(f"{prompt}, {QUALITY_REGISTER}.\n{tail}")
+        else:
+            cols = args.cols or math.ceil(math.sqrt(n))
+            rows = math.ceil(n / cols)
+            name = f"_board_{cells[0][0]}"
+            full_prompt = flatten_prompt(build_grid_prompt(cells, cols, rows, args.consistent_subject, args.bg, args.context))
+        print(f"# save the resulting image as: {out_dir / (name + '.png')}")
+        print(full_prompt)
+        if args.prompts_out:
+            with open(args.prompts_out, "a", encoding="utf-8") as f:
+                f.write(full_prompt + "\n")
+            print(f"(appended to {args.prompts_out})", file=sys.stderr)
+        return
+
     if n == 1:
         # No grid wrapping, no crop - but the chroma background clause is
         # still always appended (see module docstring): only the subject
         # text is the caller's responsibility now.
         name, prompt = cells[0]
-        full_prompt = f"{prompt}\n{bg_clause(args.bg)}"
+        full_prompt = f"{prompt}, {QUALITY_REGISTER}.\n{FULL_BLEED_CLAUSE if args.full_bleed else bg_clause(args.bg)}"
         image_bytes = generate(full_prompt, args.model)
         dest = out_dir / f"{name}.png"
         dest.write_bytes(image_bytes)
@@ -359,8 +473,31 @@ def cmd_board(args):
 
     cols = args.cols or math.ceil(math.sqrt(n))
     rows = math.ceil(n / cols)
-    prompt = build_grid_prompt(cells, cols, rows, args.consistent_subject, args.bg)
+    prompt = build_grid_prompt(cells, cols, rows, args.consistent_subject, args.bg, args.context)
     board_bytes = generate(prompt, args.model)
+    crop_board(board_bytes, cells, out_dir, args.bg)
+
+
+def cmd_crop(args):
+    cells = []
+    for raw in args.cell:
+        if "=" not in raw:
+            sys.exit(f"--cell must be in 'name=prompt' form, got: {raw!r}")
+        name, prompt = raw.split("=", 1)
+        cells.append((name.strip(), prompt.strip()))
+
+    out_dir = pathlib.Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    board_bytes = pathlib.Path(args.board_file).read_bytes()
+    if len(cells) == 1:
+        # N=1 was never a grid - the user's downloaded file IS the final
+        # image, just save it under the expected name directly.
+        name, _prompt = cells[0]
+        dest = out_dir / f"{name}.png"
+        dest.write_bytes(board_bytes)
+        print(f"Saved {dest} ({len(board_bytes)} bytes) - single cell, no crop needed")
+        return
     crop_board(board_bytes, cells, out_dir, args.bg)
 
 
@@ -373,12 +510,50 @@ if __name__ == "__main__":
     p_board.add_argument("--out-dir", required=True)
     p_board.add_argument("--cols", type=int, default=None)
     p_board.add_argument("--consistent-subject", default=None)
+    p_board.add_argument("--context", default=None,
+                          help="Short thematic framing folded into the grid prompt, e.g. "
+                               "'a Vietnamese loan-trap explainer' - grounds subject "
+                               "relevance for the model, matches the proven working "
+                               "prompt pattern. Omit for a generic asset sheet.")
     p_board.add_argument("--model", default=DEFAULT_MODEL)
+    p_board.add_argument("--full-bleed", action="store_true",
+                          help="this asset is a full-frame BackgroundPhoto, not a cutout: "
+                               "ask for an edge-to-edge 9:16 photograph with NO chroma "
+                               "screen. Single cell only - a full-bleed backdrop cannot "
+                               "be cropped out of a shared board.")
     p_board.add_argument("--bg", choices=list(CHROMA_SPECS), default="green",
                           help="chroma-key background color baked into the prompt "
                                "(default green; use magenta when the subject itself "
                                "contains green - cash, plants/herbs, green branding)")
+    p_board.add_argument("--live", action="store_true",
+                          help="Actually call the OpenRouter API and generate/crop the "
+                               "image now. DEFAULT BEHAVIOR (this flag omitted) is "
+                               "plan-only: print the final prompt (flattened to ONE "
+                               "line) instead of calling the API - no image is "
+                               "generated or cropped, no credit spent. Paste the "
+                               "printed line(s) into the user's own image tool (Google "
+                               "AI Studio / Nano Banana Pro) under their own quota, save "
+                               "the result(s), then crop boards with the 'crop-file' "
+                               "subcommand. Pass --live only when the user has "
+                               "explicitly said to spend OpenRouter credit instead.")
+    p_board.add_argument("--prompts-out", default=None,
+                          help="With --plan-only, also append the flattened prompt line "
+                               "to this file (creates it if missing) - call once per "
+                               "cell/board across a whole video to build one batch-paste "
+                               "list.")
     p_board.set_defaults(func=cmd_board)
+
+    p_crop = sub.add_parser("crop-file", help="Crop an externally-generated board image "
+                             "(no API call) using the same panel-detection logic as 'board'")
+    p_crop.add_argument("--board-file", required=True,
+                         help="Path to the board image you downloaded from the external tool")
+    p_crop.add_argument("--cell", action="append", required=True,
+                         help="'name=prompt' - same cells/order as the original --plan-only "
+                              "call (prompt text is ignored here, only names+order matter)")
+    p_crop.add_argument("--out-dir", required=True)
+    p_crop.add_argument("--bg", choices=list(CHROMA_SPECS), default="green",
+                         help="chroma-key color actually used when the prompt was generated")
+    p_crop.set_defaults(func=cmd_crop)
 
     args = parser.parse_args()
     args.func(args)

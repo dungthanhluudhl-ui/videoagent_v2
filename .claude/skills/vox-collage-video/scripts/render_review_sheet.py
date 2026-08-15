@@ -1,0 +1,132 @@
+"""
+render_review_sheet.py - render every scene, build a contact sheet, and open a
+blank review file for review_gate.py to check.
+
+This is the "look at it" half of the self-review pass. It renders each scene
+at a few points across its own length (not just frame 0 - most defects live
+after the entrances settle), stitches everything into one image, and writes
+the review skeleton with the frame paths already filled in so a verdict can't
+be recorded without a frame behind it.
+
+Rendering at --scale=0.25 keeps this cheap enough to run repeatedly; one
+contact sheet costs far less to look at than N separate stills.
+
+Usage:
+    py -3 render_review_sheet.py input/scene_plan10.json
+    py -3 render_review_sheet.py input/scene_plan10.json --scale 0.3 --per-scene 3
+"""
+
+import argparse
+import json
+import pathlib
+import subprocess
+import sys
+
+try:
+    from PIL import Image, ImageDraw
+except ImportError:
+    sys.exit("Pillow is required: py -3 -m pip install pillow")
+
+
+def render_still(comp_id, frame, out_path, scale, extra_args):
+    cmd = ["npx", "remotion", "still", comp_id, f"--scale={scale}",
+           f"--frame={frame}", str(out_path), *extra_args]
+    proc = subprocess.run(cmd, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace", shell=(sys.platform == "win32"))
+    return proc.returncode == 0, (proc.stdout or "") + (proc.stderr or "")
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("plan")
+    ap.add_argument("--out-dir", default=None,
+                    help="where stills go; defaults to <plan dir>/review_frames")
+    ap.add_argument("--scale", default="0.25")
+    ap.add_argument("--per-scene", type=int, default=2,
+                    help="frames sampled per scene (spread across its length)")
+    ap.add_argument("--gl", default=None, help="pass through to remotion, e.g. angle for maps")
+    ap.add_argument("--keep-review", action="store_true",
+                    help="do not overwrite an existing review file")
+    args = ap.parse_args()
+
+    plan_path = pathlib.Path(args.plan)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    video = plan.get("video", "V")
+    fps = plan.get("fps", 30)
+    scenes = plan.get("scenes", [])
+
+    out_dir = pathlib.Path(args.out_dir) if args.out_dir else plan_path.parent / "review_frames"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    extra = [f"--gl={args.gl}"] if args.gl else []
+
+    thumbs, review_entries, failures = [], [], []
+    for scene in scenes:
+        sid = scene.get("id", "")
+        comp = f"{video}Scene{sid.lstrip('S')}"
+        total = int(round((scene.get("endSec", 0) - scene.get("startSec", 0)) * fps))
+        if total <= 0:
+            continue
+        # Sample inside the scene, never frame 0 - entrances are mid-flight there
+        # and everything looks half-drawn.
+        picks = [int(total * (i + 1) / (args.per_scene + 1)) for i in range(args.per_scene)]
+        scene_frames = []
+        for f in picks:
+            dest = out_dir / f"{comp}_f{f}.png"
+            ok, log = render_still(comp, f, dest, args.scale, extra)
+            if ok:
+                scene_frames.append(dest)
+                thumbs.append((f"{sid}@{f}", dest))
+            else:
+                failures.append(f"{comp} frame {f}: {log.strip().splitlines()[-1] if log.strip() else 'render failed'}")
+        review_entries.append({
+            "id": sid,
+            "frame": str(scene_frames[0]) if scene_frames else "",
+            "illustrated": "", "composed": "", "varied": "", "purposeful": "",
+            "note": "",
+        })
+
+    # Contact sheet - one image beats N separate reads.
+    if thumbs:
+        images = [(label, Image.open(p).convert("RGB")) for label, p in thumbs]
+        w, h = images[0][1].size
+        cols = min(6, len(images))
+        rows = (len(images) + cols - 1) // cols
+        cw, ch = w + 10, h + 30
+        sheet = Image.new("RGB", (cols * cw, rows * ch), (255, 255, 255))
+        draw = ImageDraw.Draw(sheet)
+        for i, (label, im) in enumerate(images):
+            x, y = (i % cols) * cw, (i // cols) * ch
+            sheet.paste(im, (x + 5, y + 5))
+            draw.text((x + 5, y + h + 10), label, fill=(0, 0, 0))
+        sheet_path = out_dir / "contact_sheet.jpg"
+        sheet.save(sheet_path, quality=88)
+        print(f"contact sheet: {sheet_path}  ({len(images)} frames)")
+
+    review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    if review_path.exists() and args.keep_review:
+        print(f"kept existing {review_path}")
+    else:
+        review_path.write_text(json.dumps(
+            {"video": video,
+             "howToFill": ("For each scene put 'pass' / 'fail' / 'n/a' against the four "
+                           "criteria after LOOKING at its frame. A 'fail' blocks until fixed, "
+                           "or until \"resolved\": true is set with a note explaining why it "
+                           "is acceptable."),
+             "criteria": {
+                 "illustrated": "narration is shown, not left to the viewer's imagination",
+                 "composed": "balanced, everything inside the frame and legible",
+                 "varied": "not the same visual formula as its neighbours",
+                 "purposeful": "every element is there for a reason, not filler",
+             },
+             "scenes": review_entries},
+            ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"review skeleton: {review_path}  ({len(review_entries)} scenes to judge)")
+
+    for f in failures:
+        print(f"RENDER FAILED  {f}")
+    sys.exit(1 if failures else 0)
+
+
+if __name__ == "__main__":
+    main()

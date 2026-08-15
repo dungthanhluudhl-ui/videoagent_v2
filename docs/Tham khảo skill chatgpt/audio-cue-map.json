@@ -1,0 +1,958 @@
+{
+  "version": 1,
+  "audioPath": "../upload/Audiotest8(1).wav",
+  "scriptPath": "transcript.txt",
+  "fps": 30,
+  "durationMs": 81480,
+  "alignment": {
+    "method": "forced-alignment",
+    "source": "Echogarden DTW word timeline + waveform pause verification",
+    "status": "verified",
+    "evidencePath": "qa/forced-alignment.json"
+  },
+  "tolerances": {
+    "maxSyncErrorMs": 100,
+    "maxSceneBoundaryErrorMs": 100,
+    "maxAudioDurationErrorMs": 34,
+    "defaultLeadMs": 90,
+    "minimumConfidence": 0.75
+  },
+  "scenes": [
+    {
+      "sceneId": "S01",
+      "startMs": 0,
+      "endMs": 12230,
+      "transitionCueId": "S01-CUE-HOOK"
+    },
+    {
+      "sceneId": "S02",
+      "startMs": 12230,
+      "endMs": 22210,
+      "transitionCueId": "S02-CUE-PHO"
+    },
+    {
+      "sceneId": "S03",
+      "startMs": 22210,
+      "endMs": 28600,
+      "transitionCueId": "S03-CUE-RATE"
+    },
+    {
+      "sceneId": "S04",
+      "startMs": 28600,
+      "endMs": 42300,
+      "transitionCueId": "S04-CUE-LINK"
+    },
+    {
+      "sceneId": "S05",
+      "startMs": 42300,
+      "endMs": 55480,
+      "transitionCueId": "S05-CUE-LINK"
+    },
+    {
+      "sceneId": "S06",
+      "startMs": 55480,
+      "endMs": 63630,
+      "transitionCueId": "S06-CUE-QUESTION"
+    },
+    {
+      "sceneId": "S07",
+      "startMs": 63630,
+      "endMs": 72270,
+      "transitionCueId": "S07-CUE-COSTS"
+    },
+    {
+      "sceneId": "S08",
+      "startMs": 72270,
+      "endMs": 81480,
+      "transitionCueId": "S08-CUE-INFLATION"
+    }
+  ],
+  "cues": [
+    {
+      "id": "S01-CUE-HOOK",
+      "sceneId": "S01",
+      "text": "Có bao giờ bạn thắc mắc",
+      "kind": "phrase",
+      "startMs": 220,
+      "endMs": 1250,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S01-CUE-XANG-TANG",
+      "sceneId": "S01",
+      "text": "giá xăng tăng một nghìn đồng",
+      "kind": "phrase",
+      "startMs": 2420,
+      "endMs": 3780,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S01-CUE-PHO-TANG",
+      "sceneId": "S01",
+      "text": "bát phở đầu ngõ tăng hẳn",
+      "kind": "phrase",
+      "startMs": 4450,
+      "endMs": 5850,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S01-CUE-XANG-GIAM",
+      "sceneId": "S01",
+      "text": "khi giá xăng giảm",
+      "kind": "phrase",
+      "startMs": 7710,
+      "endMs": 8820,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S01-CUE-DUNG-YEN",
+      "sceneId": "S01",
+      "text": "giá phở lại đứng yên",
+      "kind": "phrase",
+      "startMs": 9270,
+      "endMs": 11490,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S02-CUE-PHO",
+      "sceneId": "S02",
+      "text": "Thực ra bát phở buổi sáng",
+      "kind": "phrase",
+      "startMs": 12230,
+      "endMs": 13730,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S02-CUE-TWO-CHAINS",
+      "sceneId": "S02",
+      "text": "hai chuỗi hiệu ứng gợn sóng",
+      "kind": "phrase",
+      "startMs": 15090,
+      "endMs": 16330,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S02-CUE-USD",
+      "sceneId": "S02",
+      "text": "Tỷ giá USD",
+      "kind": "phrase",
+      "startMs": 16440,
+      "endMs": 17330,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S02-CUE-OIL",
+      "sceneId": "S02",
+      "text": "Giá xăng dầu",
+      "kind": "phrase",
+      "startMs": 17810,
+      "endMs": 18470,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S02-CUE-IMPORT",
+      "sceneId": "S02",
+      "text": "Xăng dầu nhập khẩu",
+      "kind": "phrase",
+      "startMs": 19270,
+      "endMs": 20120,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S02-CUE-DOLLAR",
+      "sceneId": "S02",
+      "text": "định giá bằng đô la Mỹ",
+      "kind": "phrase",
+      "startMs": 20520,
+      "endMs": 21780,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S03-CUE-RATE",
+      "sceneId": "S03",
+      "text": "tỷ giá nhích nhẹ",
+      "kind": "phrase",
+      "startMs": 22780,
+      "endMs": 23700,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S03-CUE-WORLD-OIL",
+      "sceneId": "S03",
+      "text": "giá dầu thế giới biến động",
+      "kind": "phrase",
+      "startMs": 24160,
+      "endMs": 25310,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S03-CUE-TRANSPORT",
+      "sceneId": "S03",
+      "text": "chi phí đầu vào của ngành vận tải",
+      "kind": "phrase",
+      "startMs": 25860,
+      "endMs": 27210,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S03-CUE-SURGE",
+      "sceneId": "S03",
+      "text": "lập tức vọt lên",
+      "kind": "phrase",
+      "startMs": 27210,
+      "endMs": 28030,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-LINK",
+      "sceneId": "S04",
+      "text": "Mắt xích đầu tiên",
+      "kind": "phrase",
+      "startMs": 28600,
+      "endMs": 29400,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-NOODLES",
+      "sceneId": "S04",
+      "text": "bánh phở",
+      "kind": "phrase",
+      "startMs": 31680,
+      "endMs": 32160,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-BEEF",
+      "sceneId": "S04",
+      "text": "thịt bò",
+      "kind": "phrase",
+      "startMs": 32360,
+      "endMs": 32880,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-HERBS",
+      "sceneId": "S04",
+      "text": "rau thơm",
+      "kind": "phrase",
+      "startMs": 33000,
+      "endMs": 33440,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-TRUCK",
+      "sceneId": "S04",
+      "text": "đều phải đi xe tải",
+      "kind": "phrase",
+      "startMs": 34080,
+      "endMs": 35380,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-FREIGHT",
+      "sceneId": "S04",
+      "text": "Xăng tăng làm tiền cước tăng",
+      "kind": "phrase",
+      "startMs": 37070,
+      "endMs": 38360,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S04-CUE-MARKET",
+      "sceneId": "S04",
+      "text": "giá nguyên liệu ở chợ đầu mối",
+      "kind": "phrase",
+      "startMs": 39310,
+      "endMs": 40590,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-LINK",
+      "sceneId": "S05",
+      "text": "Mắt xích thứ hai",
+      "kind": "phrase",
+      "startMs": 42300,
+      "endMs": 43100,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-ELECTRIC",
+      "sceneId": "S05",
+      "text": "Tiền điện",
+      "kind": "phrase",
+      "startMs": 44720,
+      "endMs": 45120,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-GAS",
+      "sceneId": "S05",
+      "text": "tiền gas hầm xương",
+      "kind": "phrase",
+      "startMs": 45310,
+      "endMs": 46260,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-RENT",
+      "sceneId": "S05",
+      "text": "tiền thuê mặt bằng",
+      "kind": "phrase",
+      "startMs": 46860,
+      "endMs": 47770,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-LABOR",
+      "sceneId": "S05",
+      "text": "tiền công người làm",
+      "kind": "phrase",
+      "startMs": 47990,
+      "endMs": 48910,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-RISE",
+      "sceneId": "S05",
+      "text": "đều âm thầm tăng theo",
+      "kind": "phrase",
+      "startMs": 48930,
+      "endMs": 49970,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-SELLER",
+      "sceneId": "S05",
+      "text": "Người bán phở gánh không nổi nữa",
+      "kind": "phrase",
+      "startMs": 50660,
+      "endMs": 52110,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S05-CUE-ADJUST",
+      "sceneId": "S05",
+      "text": "điều chỉnh giá bán",
+      "kind": "phrase",
+      "startMs": 53310,
+      "endMs": 54150,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S06-CUE-QUESTION",
+      "sceneId": "S06",
+      "text": "Nhưng tại sao xăng giảm",
+      "kind": "phrase",
+      "startMs": 55480,
+      "endMs": 56480,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S06-CUE-STICKY",
+      "sceneId": "S06",
+      "text": "tính cứng của giá cả",
+      "kind": "phrase",
+      "startMs": 59720,
+      "endMs": 60380,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S07-CUE-NEW-LEVEL",
+      "sceneId": "S06",
+      "text": "giá phở đã tăng lên một mức mới",
+      "kind": "phrase",
+      "startMs": 61460,
+      "endMs": 63140,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S07-CUE-COSTS",
+      "sceneId": "S07",
+      "text": "các chi phí như tiền nhà hay tiền nhân công",
+      "kind": "phrase",
+      "startMs": 63630,
+      "endMs": 65870,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S07-CUE-NOT-DROP",
+      "sceneId": "S07",
+      "text": "không hề giảm theo giá xăng",
+      "kind": "phrase",
+      "startMs": 65890,
+      "endMs": 67290,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S07-CUE-PRICE-LEVEL",
+      "sceneId": "S07",
+      "text": "mặt bằng giá mới",
+      "kind": "phrase",
+      "startMs": 69210,
+      "endMs": 70010,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S07-CUE-BLOCKED",
+      "sceneId": "S07",
+      "text": "rất khó quay về giá cũ",
+      "kind": "phrase",
+      "startMs": 70430,
+      "endMs": 71770,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S08-CUE-INFLATION",
+      "sceneId": "S08",
+      "text": "lạm phát âm thầm bào mòn túi tiền",
+      "kind": "phrase",
+      "startMs": 72920,
+      "endMs": 74800,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S08-CUE-CTA",
+      "sceneId": "S08",
+      "text": "Chỗ bạn bát phở dạo này",
+      "kind": "phrase",
+      "startMs": 76510,
+      "endMs": 77960,
+      "confidence": 0.9,
+      "verified": true
+    },
+    {
+      "id": "S08-CUE-COMMENT",
+      "sceneId": "S08",
+      "text": "Comment chia sẻ",
+      "kind": "phrase",
+      "startMs": 79810,
+      "endMs": 80410,
+      "confidence": 0.9,
+      "verified": true
+    }
+  ],
+  "bindings": [
+    {
+      "id": "S01-BIND-BG-PHO-ECONOMY",
+      "sceneId": "S01",
+      "targetId": "BG-PHO-ECONOMY",
+      "cueId": "S01-CUE-HOOK",
+      "role": "scene-bed",
+      "trigger": "hold",
+      "offsetMs": 0,
+      "durationMs": 0,
+      "consumerToken": "S01-CUE-HOOK"
+    },
+    {
+      "id": "S01-BIND-TXT-HOOK-QUESTION",
+      "sceneId": "S01",
+      "targetId": "TXT-HOOK-QUESTION",
+      "cueId": "S01-CUE-HOOK",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S01-CUE-HOOK"
+    },
+    {
+      "id": "S01-BIND-TRANSITION",
+      "sceneId": "S01",
+      "targetId": "TRANSITION-S01",
+      "cueId": "S01-CUE-HOOK",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S01"
+    },
+    {
+      "id": "S02-BIND-CUT-PHO",
+      "sceneId": "S02",
+      "targetId": "CUT-PHO",
+      "cueId": "S02-CUE-PHO",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-PHO"
+    },
+    {
+      "id": "S02-BIND-CUT-OIL-BARREL",
+      "sceneId": "S02",
+      "targetId": "CUT-OIL-BARREL",
+      "cueId": "S02-CUE-OIL",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-OIL"
+    },
+    {
+      "id": "S02-BIND-CUT-USD",
+      "sceneId": "S02",
+      "targetId": "CUT-USD",
+      "cueId": "S02-CUE-USD",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-USD"
+    },
+    {
+      "id": "S02-BIND-CUT-VND",
+      "sceneId": "S02",
+      "targetId": "CUT-VND",
+      "cueId": "S02-CUE-USD",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-USD"
+    },
+    {
+      "id": "S02-BIND-CUT-NEWS",
+      "sceneId": "S02",
+      "targetId": "CUT-NEWS",
+      "cueId": "S02-CUE-IMPORT",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-IMPORT"
+    },
+    {
+      "id": "S02-BIND-TXT-TWO-CHAINS",
+      "sceneId": "S02",
+      "targetId": "TXT-TWO-CHAINS",
+      "cueId": "S02-CUE-TWO-CHAINS",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-TWO-CHAINS"
+    },
+    {
+      "id": "S02-BIND-ANN-CHAIN-LINES",
+      "sceneId": "S02",
+      "targetId": "ANN-CHAIN-LINES",
+      "cueId": "S02-CUE-DOLLAR",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S02-CUE-DOLLAR"
+    },
+    {
+      "id": "S02-BIND-TRANSITION",
+      "sceneId": "S02",
+      "targetId": "TRANSITION-S02",
+      "cueId": "S02-CUE-PHO",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S02"
+    },
+    {
+      "id": "S03-BIND-BG-HIGHWAY",
+      "sceneId": "S03",
+      "targetId": "BG-HIGHWAY",
+      "cueId": "S03-CUE-RATE",
+      "role": "scene-bed",
+      "trigger": "hold",
+      "offsetMs": 0,
+      "durationMs": 0,
+      "consumerToken": "S03-CUE-RATE"
+    },
+    {
+      "id": "S03-BIND-CUT-FUEL-NOZZLE",
+      "sceneId": "S03",
+      "targetId": "CUT-FUEL-NOZZLE",
+      "cueId": "S03-CUE-WORLD-OIL",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S03-CUE-WORLD-OIL"
+    },
+    {
+      "id": "S03-BIND-CUT-TRUCK",
+      "sceneId": "S03",
+      "targetId": "CUT-TRUCK",
+      "cueId": "S03-CUE-TRANSPORT",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S03-CUE-TRANSPORT"
+    },
+    {
+      "id": "S03-BIND-ANN-UPWARD-CHAIN",
+      "sceneId": "S03",
+      "targetId": "ANN-UPWARD-CHAIN",
+      "cueId": "S03-CUE-TRANSPORT",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S03-CUE-TRANSPORT"
+    },
+    {
+      "id": "S03-BIND-TRANSITION",
+      "sceneId": "S03",
+      "targetId": "TRANSITION-S03",
+      "cueId": "S03-CUE-RATE",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S03"
+    },
+    {
+      "id": "S04-BIND-CUT-TRUCK",
+      "sceneId": "S04",
+      "targetId": "CUT-TRUCK",
+      "cueId": "S04-CUE-TRUCK",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S04-CUE-TRUCK"
+    },
+    {
+      "id": "S04-BIND-CUT-HERBS",
+      "sceneId": "S04",
+      "targetId": "CUT-HERBS",
+      "cueId": "S04-CUE-HERBS",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S04-CUE-HERBS"
+    },
+    {
+      "id": "S04-BIND-CUT-NOODLES",
+      "sceneId": "S04",
+      "targetId": "CUT-NOODLES",
+      "cueId": "S04-CUE-NOODLES",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S04-CUE-NOODLES"
+    },
+    {
+      "id": "S04-BIND-CUT-BEEF",
+      "sceneId": "S04",
+      "targetId": "CUT-BEEF",
+      "cueId": "S04-CUE-BEEF",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S04-CUE-BEEF"
+    },
+    {
+      "id": "S04-BIND-ANN-SUPPLY-ROUTE",
+      "sceneId": "S04",
+      "targetId": "ANN-SUPPLY-ROUTE",
+      "cueId": "S04-CUE-LINK",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S04-CUE-LINK"
+    },
+    {
+      "id": "S04-BIND-TXT-LINK-01",
+      "sceneId": "S04",
+      "targetId": "TXT-LINK-01",
+      "cueId": "S04-CUE-LINK",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S04-CUE-LINK"
+    },
+    {
+      "id": "S04-BIND-TRANSITION",
+      "sceneId": "S04",
+      "targetId": "TRANSITION-S04",
+      "cueId": "S04-CUE-LINK",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S04"
+    },
+    {
+      "id": "S05-BIND-BG-KITCHEN",
+      "sceneId": "S05",
+      "targetId": "BG-KITCHEN",
+      "cueId": "S05-CUE-LINK",
+      "role": "scene-bed",
+      "trigger": "hold",
+      "offsetMs": 0,
+      "durationMs": 0,
+      "consumerToken": "S05-CUE-LINK"
+    },
+    {
+      "id": "S05-BIND-CUT-GAS",
+      "sceneId": "S05",
+      "targetId": "CUT-GAS",
+      "cueId": "S05-CUE-GAS",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S05-CUE-GAS"
+    },
+    {
+      "id": "S05-BIND-CUT-METER",
+      "sceneId": "S05",
+      "targetId": "CUT-METER",
+      "cueId": "S05-CUE-ELECTRIC",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S05-CUE-ELECTRIC"
+    },
+    {
+      "id": "S05-BIND-CUT-NOTEBOOK",
+      "sceneId": "S05",
+      "targetId": "CUT-NOTEBOOK",
+      "cueId": "S05-CUE-RENT",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S05-CUE-RENT"
+    },
+    {
+      "id": "S05-BIND-CUT-WALLET",
+      "sceneId": "S05",
+      "targetId": "CUT-WALLET",
+      "cueId": "S05-CUE-LABOR",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S05-CUE-LABOR"
+    },
+    {
+      "id": "S05-BIND-TXT-LINK-02",
+      "sceneId": "S05",
+      "targetId": "TXT-LINK-02",
+      "cueId": "S05-CUE-LINK",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S05-CUE-LINK"
+    },
+    {
+      "id": "S05-BIND-ANN-COST-LABELS",
+      "sceneId": "S05",
+      "targetId": "ANN-COST-LABELS",
+      "cueId": "S05-CUE-RISE",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S05-CUE-RISE"
+    },
+    {
+      "id": "S05-BIND-TRANSITION",
+      "sceneId": "S05",
+      "targetId": "TRANSITION-S05",
+      "cueId": "S05-CUE-LINK",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S05"
+    },
+    {
+      "id": "S06-BIND-BG-LOCKED-PRICE",
+      "sceneId": "S06",
+      "targetId": "BG-LOCKED-PRICE",
+      "cueId": "S06-CUE-QUESTION",
+      "role": "scene-bed",
+      "trigger": "hold",
+      "offsetMs": 0,
+      "durationMs": 0,
+      "consumerToken": "S06-CUE-QUESTION"
+    },
+    {
+      "id": "S06-BIND-TXT-STICKY-PRICES",
+      "sceneId": "S06",
+      "targetId": "TXT-STICKY-PRICES",
+      "cueId": "S06-CUE-STICKY",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S06-CUE-STICKY"
+    },
+    {
+      "id": "S06-BIND-TRANSITION",
+      "sceneId": "S06",
+      "targetId": "TRANSITION-S06",
+      "cueId": "S06-CUE-QUESTION",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S06"
+    },
+    {
+      "id": "S07-BIND-CUT-PADLOCK",
+      "sceneId": "S07",
+      "targetId": "CUT-PADLOCK",
+      "cueId": "S07-CUE-NOT-DROP",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S07-CUE-NOT-DROP"
+    },
+    {
+      "id": "S07-BIND-CUT-GEAR",
+      "sceneId": "S07",
+      "targetId": "CUT-GEAR",
+      "cueId": "S07-CUE-NOT-DROP",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S07-CUE-NOT-DROP"
+    },
+    {
+      "id": "S07-BIND-CUT-PRICE-BOARD",
+      "sceneId": "S07",
+      "targetId": "CUT-PRICE-BOARD",
+      "cueId": "S07-CUE-PRICE-LEVEL",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S07-CUE-PRICE-LEVEL"
+    },
+    {
+      "id": "S07-BIND-CUT-STAMP",
+      "sceneId": "S07",
+      "targetId": "CUT-STAMP",
+      "cueId": "S07-CUE-PRICE-LEVEL",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S07-CUE-PRICE-LEVEL"
+    },
+    {
+      "id": "S07-BIND-ANN-BLOCKED-DOWNWARD-PATH",
+      "sceneId": "S07",
+      "targetId": "ANN-BLOCKED-DOWNWARD-PATH",
+      "cueId": "S07-CUE-BLOCKED",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S07-CUE-BLOCKED"
+    },
+    {
+      "id": "S07-BIND-TRANSITION",
+      "sceneId": "S07",
+      "targetId": "TRANSITION-S07",
+      "cueId": "S07-CUE-COSTS",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S07"
+    },
+    {
+      "id": "S08-BIND-BG-RESTAURANT",
+      "sceneId": "S08",
+      "targetId": "BG-RESTAURANT",
+      "cueId": "S08-CUE-INFLATION",
+      "role": "scene-bed",
+      "trigger": "hold",
+      "offsetMs": 0,
+      "durationMs": 0,
+      "consumerToken": "S08-CUE-INFLATION"
+    },
+    {
+      "id": "S08-BIND-TXT-INFLATION-CONCLUSION",
+      "sceneId": "S08",
+      "targetId": "TXT-INFLATION-CONCLUSION",
+      "cueId": "S08-CUE-INFLATION",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S08-CUE-INFLATION"
+    },
+    {
+      "id": "S08-BIND-TXT-COMMENT-CTA",
+      "sceneId": "S08",
+      "targetId": "TXT-COMMENT-CTA",
+      "cueId": "S08-CUE-CTA",
+      "role": "semantic",
+      "trigger": "enter",
+      "offsetMs": -90,
+      "durationMs": 900,
+      "consumerToken": "S08-CUE-CTA"
+    },
+    {
+      "id": "S08-BIND-TRANSITION",
+      "sceneId": "S08",
+      "targetId": "TRANSITION-S08",
+      "cueId": "S08-CUE-INFLATION",
+      "role": "transition",
+      "trigger": "transition",
+      "offsetMs": 0,
+      "durationMs": 600,
+      "consumerToken": "TRANSITION-S08"
+    }
+  ]
+}

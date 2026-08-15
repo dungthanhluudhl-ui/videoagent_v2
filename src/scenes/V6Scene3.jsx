@@ -24,6 +24,7 @@ export const V6Scene3 = () => {
       // anchor: "vay dễ không" @ local frame 382 (scene-start 22.96) — was
       // fixed at 45 (~1.5s in), ~11s before the line is actually spoken
       punchFrom={367}
+      punchTop={160}
     />
   );
 };

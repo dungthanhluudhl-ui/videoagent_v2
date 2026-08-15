@@ -27,12 +27,14 @@ export const CollageScene = ({
   punchTop = 120,
   punchFrom = 60,
   punchLineHeight = 1.22,
+  backdrop = "grid",
+  shake,
 }) => {
   return (
     <AbsoluteFill name="CollageScene">
-      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
-        
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
+
         {/* Main Hero Asset */}
         <Sequence from={0} layout="none">
           <Hero
@@ -46,7 +48,10 @@ export const CollageScene = ({
           />
         </Sequence>
 
-        {/* Supports */}
+        {/* Supports - visibleFor defaults to "stays till scene end" (old
+            behavior) unless a support sets its own visibleFor, e.g. to exit
+            before the NEXT beat's anchor so it doesn't just pile up on
+            screen - see SKILL.md step 2's beat-density guidance. */}
         {supports.map((sup, idx) => (
           <Sequence key={idx} from={sup.delay || 30 + idx * 25} layout="none">
             <Support
@@ -56,7 +61,7 @@ export const CollageScene = ({
               x={sup.x}
               y={sup.y || 1000}
               idle={sup.idle || "sway"}
-              visibleFor={durationInFrames - (sup.delay || 30)}
+              visibleFor={sup.visibleFor ?? (durationInFrames - (sup.delay || 30))}
             />
           </Sequence>
         ))}
@@ -84,11 +89,14 @@ export const SplitCompareScene = ({
   rightLabel,
   punchLines,
   punchFrom = 45,
+  punchTop = 120,
+  backdrop = "grid",
+  shake,
 }) => {
   return (
     <AbsoluteFill name="SplitCompareScene" style={{ overflow: "hidden" }}>
-      <CameraGroup zoom={{ from: 1, to: 1.04 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
+      <CameraGroup zoom={{ from: 1, to: 1.04 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
         
         {/* Vertical Center Dividing Line */}
         <svg style={{ position: "absolute", inset: 0, pointerEvents: "none" }} width="100%" height="100%">
@@ -118,7 +126,7 @@ export const SplitCompareScene = ({
       <BottomBar />
       {punchLines && (
         <Sequence from={punchFrom} layout="none">
-          <PunchPhrase lines={punchLines} top={120} stagger />
+          <PunchPhrase lines={punchLines} top={punchTop} stagger />
         </Sequence>
       )}
       <Sequence from={0} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
@@ -143,11 +151,13 @@ export const StatCalloutScene = ({
   punchLines,
   punchFrom = 60,
   punchTop = 300,
+  backdrop = "grid",
+  shake,
 }) => {
   return (
     <AbsoluteFill name="StatCalloutScene">
-      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
+      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
 
         {/* Animated Stat Counter Header */}
         <StatCounter fromValue={fromValue} toValue={toValue} prefix={prefix} suffix={suffix} label={label} top={120} delay={counterDelay} duration={35} />
@@ -162,7 +172,7 @@ export const StatCalloutScene = ({
         {/* Support Cutouts */}
         {supports.map((sup, idx) => (
           <Sequence key={idx} from={sup.delay || 30 + idx * 15} layout="none">
-            <Support name={sup.name} src={sup.src} width={sup.width || 320} x={sup.x} y={sup.y} idle={sup.idle || "sway"} visibleFor={durationInFrames - (sup.delay || 30)} />
+            <Support name={sup.name} src={sup.src} width={sup.width || 320} x={sup.x} y={sup.y} idle={sup.idle || "sway"} visibleFor={sup.visibleFor ?? (durationInFrames - (sup.delay || 30))} />
           </Sequence>
         ))}
       </CameraGroup>
@@ -192,12 +202,16 @@ export const NewspaperSpotlightScene = ({
   stampDelay = 28,
   punchLines,
   punchFrom = 45,
+  punchTop = 120,
   hero,
+  supports = [],
+  backdrop = "grid",
+  shake,
 }) => {
   return (
     <AbsoluteFill name="NewspaperSpotlightScene">
-      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
+      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
 
         <Sequence from={0} layout="none">
           <NewspaperSpotlight src={docSrc} width={680} x="50%" y={360} delay={10} highlightBox={highlightBox} />
@@ -223,11 +237,25 @@ export const NewspaperSpotlightScene = ({
             <Hero name={hero.name} src={hero.src} width={hero.width || 420} x={hero.x || "78%"} y={hero.y || 960} variant="grow" visibleFor={durationInFrames - 25} />
           </Sequence>
         )}
+
+        {supports.map((sup, idx) => (
+          <Sequence key={idx} from={sup.delay || 30 + idx * 25} layout="none">
+            <Support
+              name={sup.name || `Support-${idx}`}
+              src={sup.src}
+              width={sup.width || 260}
+              x={sup.x}
+              y={sup.y || 1000}
+              idle={sup.idle || "sway"}
+              visibleFor={sup.visibleFor ?? (durationInFrames - (sup.delay || 30))}
+            />
+          </Sequence>
+        ))}
       </CameraGroup>
       <BottomBar />
       {punchLines && (
         <Sequence from={punchFrom} layout="none">
-          <PunchPhrase lines={punchLines} top={120} stagger />
+          <PunchPhrase lines={punchLines} top={punchTop} stagger />
         </Sequence>
       )}
       <Sequence from={0} layout="none"><Sfx name="pageTurn" volume={0.45} /></Sequence>
@@ -244,11 +272,13 @@ export const QuoteBubbleScene = ({
   quoteText,
   highlight,
   hero,
+  backdrop = "grid",
+  shake,
 }) => {
   return (
     <AbsoluteFill name="QuoteBubbleScene">
-      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
 
         {/* Vintage Speech Quote Card */}
         <Sequence from={0} layout="none">
@@ -280,23 +310,26 @@ export const FlowDiagramScene = ({
   arrowDelay,
   punchLines,
   punchFrom = 60,
+  punchTop = 120,
+  backdrop = "grid",
+  shake,
 }) => {
   const leftDelay = leftHero.delay ?? 0;
   const rightDelay = rightHero.delay ?? 25;
   const realArrowDelay = arrowDelay ?? rightDelay + 15;
   return (
     <AbsoluteFill name="FlowDiagramScene">
-      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
+      <CameraGroup zoom={{ from: 1, to: 1.05 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
 
         {/* Left Hero Element */}
         <Sequence from={leftDelay} layout="none">
-          <Hero name={leftHero.name} src={leftHero.src} width={leftHero.width || 360} x={leftHero.x || "25%"} y={leftHero.y || 400} variant="rise" visibleFor={durationInFrames - leftDelay} />
+          <Hero name={leftHero.name} src={leftHero.src} width={leftHero.width || 360} x={leftHero.x || "25%"} y={leftHero.y || 400} variant="rise" visibleFor={leftHero.visibleFor ?? (durationInFrames - leftDelay)} />
         </Sequence>
 
         {/* Right Hero Element */}
         <Sequence from={rightDelay} layout="none">
-          <Hero name={rightHero.name} src={rightHero.src} width={rightHero.width || 360} x={rightHero.x || "75%"} y={rightHero.y || 400} variant="grow" visibleFor={durationInFrames - rightDelay} />
+          <Hero name={rightHero.name} src={rightHero.src} width={rightHero.width || 360} x={rightHero.x || "75%"} y={rightHero.y || 400} variant="grow" visibleFor={rightHero.visibleFor ?? (durationInFrames - rightDelay)} />
         </Sequence>
 
         {/* Flow Arrow Connecting them */}
@@ -311,7 +344,7 @@ export const FlowDiagramScene = ({
       <BottomBar />
       {punchLines && (
         <Sequence from={punchFrom} layout="none">
-          <PunchPhrase lines={punchLines} top={120} stagger />
+          <PunchPhrase lines={punchLines} top={punchTop} stagger />
         </Sequence>
       )}
       <Sequence from={leftDelay} layout="none"><Sfx name="whoosh" volume={0.4} /></Sequence>
@@ -328,11 +361,13 @@ export const MapLocationScene = ({
   locationName = "VIỆT NAM",
   hero,
   punchLines,
+  backdrop = "grid",
+  shake,
 }) => {
   return (
     <AbsoluteFill name="MapLocationScene">
-      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames}>
-        <SceneBackground />
+      <CameraGroup zoom={{ from: 1, to: 1.06 }} durationInFrames={durationInFrames} shake={shake}>
+        <SceneBackground variant={backdrop} />
 
         {/* Geographic Pin Callout */}
         <Sequence from={10} layout="none">

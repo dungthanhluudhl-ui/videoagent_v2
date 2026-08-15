@@ -1,0 +1,22 @@
+{
+  "name": "vox-pho-9x16",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "browser": "node scripts/ensure-browser.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.365",
+    "@sparticuz/chromium": "138.0.2",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.365"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.10",
+    "@types/react-dom": "19.1.7",
+    "typescript": "5.9.2"
+  }
+}
+

@@ -1,0 +1,665 @@
+{
+  "video": "V10",
+  "fps": 30,
+  "wordsFile": "input/words10_aligned.json",
+  "scenes": [
+    {
+      "id": "S1",
+      "startSec": 0.0,
+      "endSec": 4.14,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Chuyện gì xảy ra ở Itaewon?",
+      "visualTransformation": "dấu mộc điều tra ngày+địa điểm hiện ra trước khi lời thoại bắt đầu",
+      "contrastWithPrevious": "mở đầu",
+      "density": "low",
+      "visualLanguage": "text-only",
+      "template": "bespoke:TitleStamp",
+      "backdrop": "spotlight",
+      "variant": "punch",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "29.10.2022",
+          "ITAEWON, HÀN QUỐC"
+        ],
+        "anchorPhrase": null,
+        "top": 820
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 8,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S2",
+      "startSec": 4.14,
+      "endSec": 7.4,
+      "narrativeFunction": "context",
+      "viewerQuestion": "Itaewon ở đâu?",
+      "visualTransformation": "ghim vị trí Itaewon trên bản đồ",
+      "contrastWithPrevious": "từ chữ sang bản đồ",
+      "density": "low",
+      "visualLanguage": "map",
+      "template": "MapLocationScene",
+      "backdrop": "grid",
+      "variant": "dropSpin",
+      "assets": [],
+      "punch": null,
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S3",
+      "startSec": 7.4,
+      "endSec": 11.26,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Mức độ nghiêm trọng thế nào?",
+      "visualTransformation": "câu tuyên bố gây sốc bùng nổ",
+      "contrastWithPrevious": "đẩy cường độ lên",
+      "density": "high",
+      "visualLanguage": "text-only",
+      "template": "bespoke:PunchReveal",
+      "backdrop": "spotlight",
+      "variant": "strike",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "THẢM HỌA",
+          "CHẤN ĐỘNG THẾ GIỚI"
+        ],
+        "anchorPhrase": "chấn động thế giới",
+        "top": 760,
+        "describes": [
+          "chấn động thế giới"
+        ],
+        "from": 69
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 69,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S4",
+      "startSec": 11.26,
+      "endSec": 14.02,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Đám đông đông đến mức nào?",
+      "visualTransformation": "đám đông dồn vào hẻm hẹp",
+      "contrastWithPrevious": "hero người xuất hiện lần đầu",
+      "density": "med",
+      "visualLanguage": "cutout",
+      "template": "CollageScene",
+      "backdrop": "grid",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-CrowdBehind",
+          "src": "el10_crowd_behind.png",
+          "anchorPhrase": null
+        }
+      ],
+      "punch": {
+        "lines": [
+          "CON HẺM NHỎ"
+        ],
+        "anchorPhrase": "con hẻm nhỏ",
+        "top": 170,
+        "describes": [
+          "con hẻm nhỏ"
+        ],
+        "from": 48
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S5",
+      "startSec": 14.02,
+      "endSec": 19.58,
+      "narrativeFunction": "consequence",
+      "viewerQuestion": "Vì sao không cứu được?",
+      "visualTransformation": "bàn tay cố kéo nhưng lực ép quá lớn",
+      "contrastWithPrevious": "cận cảnh đơn chủ thể",
+      "density": "med",
+      "visualLanguage": "cutout",
+      "template": "bespoke:RescueCloseup",
+      "backdrop": "card",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-RescueHand",
+          "src": "el10_rescue_hand.png",
+          "anchorPhrase": null
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KHÔNG THỂ",
+          "RÚT RA ĐƯỢC"
+        ],
+        "anchorPhrase": "không thể rút họ ra được",
+        "top": 200,
+        "describes": [
+          "không thể rút họ ra được"
+        ],
+        "from": 114
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 114,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S6",
+      "startSec": 19.58,
+      "endSec": 25.38,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Bao nhiêu người chết?",
+      "visualTransformation": "số nạn nhân tăng dần thành con số gây sốc",
+      "contrastWithPrevious": "chuyển sang số liệu",
+      "density": "high",
+      "visualLanguage": "data",
+      "template": "StatCalloutScene",
+      "backdrop": "chart",
+      "variant": "punch",
+      "assets": [],
+      "punch": null,
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S7",
+      "startSec": 25.38,
+      "endSec": 31.52,
+      "narrativeFunction": "comparison",
+      "viewerQuestion": "Đã từng có thảm họa nào tương tự?",
+      "visualTransformation": "hai thảm họa cách 8 năm đặt song song",
+      "contrastWithPrevious": "bố cục chia đôi",
+      "density": "med",
+      "visualLanguage": "split",
+      "template": "SplitCompareScene",
+      "backdrop": "card",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "HeroL-Ferry",
+          "src": "el10_ferry_silhouette.png",
+          "anchorPhrase": "chìm Phạt Sơ Ân",
+          "describes": [
+            "chìm Phạt Sơ Ân"
+          ]
+        },
+        {
+          "role": "hero",
+          "name": "HeroR-Itaewon",
+          "src": "el10_crowd_behind.png",
+          "anchorPhrase": null
+        }
+      ],
+      "punch": {
+        "lines": [
+          "THẢM HỌA TIẾP THEO"
+        ],
+        "anchorPhrase": null,
+        "top": 150
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S8",
+      "startSec": 31.52,
+      "endSec": 38.78,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Nạn nhân là ai?",
+      "visualTransformation": "cùng một thế hệ trẻ được nhắc lại",
+      "contrastWithPrevious": "thẻ trích dẫn",
+      "density": "med",
+      "visualLanguage": "quote",
+      "template": "QuoteBubbleScene",
+      "backdrop": "grid",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-Students",
+          "src": "el10_students_backview.png",
+          "anchorPhrase": "học sinh cấp 3",
+          "describes": [
+            "học sinh cấp 3"
+          ]
+        }
+      ],
+      "punch": null,
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S9",
+      "startSec": 38.78,
+      "endSec": 46.44,
+      "narrativeFunction": "question",
+      "viewerQuestion": "Vì sao lại xảy ra?",
+      "visualTransformation": "câu hỏi treo lơ lửng",
+      "contrastWithPrevious": "hạ nhịp, chữ thuần",
+      "density": "low",
+      "visualLanguage": "text-only",
+      "template": "bespoke:QuestionReveal",
+      "backdrop": "spotlight",
+      "variant": "rise",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "VỐN CÓ THỂ",
+          "TRÁNH ĐƯỢC"
+        ],
+        "anchorPhrase": "có thể tránh được",
+        "top": 560,
+        "describes": [
+          "có thể tránh được"
+        ],
+        "from": 38
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 38,
+          "what": "element enters"
+        },
+        {
+          "frame": 83,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S10",
+      "startSec": 46.44,
+      "endSec": 54.24,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Kênh này là ai?",
+      "visualTransformation": "biểu tượng kênh và nút theo dõi bật lên",
+      "contrastWithPrevious": "chèn branding",
+      "density": "low",
+      "visualLanguage": "text-only",
+      "template": "bespoke:ChannelStinger",
+      "backdrop": "grid",
+      "variant": "punch",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "DẤU VẾT CUỐI CÙNG"
+        ],
+        "anchorPhrase": null,
+        "top": 520
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 6,
+          "what": "element enters"
+        },
+        {
+          "frame": 40,
+          "what": "element enters"
+        },
+        {
+          "frame": 60,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S11",
+      "startSec": 54.24,
+      "endSec": 61.58,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Itaewon thực sự là gì?",
+      "visualTransformation": "một điểm phóng to thành khu vực 1,37km2",
+      "contrastWithPrevious": "quay lại bản đồ",
+      "density": "med",
+      "visualLanguage": "map",
+      "template": "MapLocationScene",
+      "backdrop": "card",
+      "variant": "dropSpin",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "1,37 KM²"
+        ],
+        "anchorPhrase": "1,37 km2",
+        "top": null,
+        "describes": [
+          "1,37 km2"
+        ],
+        "from": 45
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S12",
+      "startSec": 61.58,
+      "endSec": 65.88,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Nơi đây nổi tiếng vì gì?",
+      "visualTransformation": "khu thương mại du lịch hiện ra",
+      "contrastWithPrevious": "cảnh thiết lập ngắn",
+      "density": "low",
+      "visualLanguage": "cutout",
+      "template": "CollageScene",
+      "backdrop": "grid",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-StreetSign",
+          "src": "el10_street_sign.png",
+          "anchorPhrase": null
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KHU PHỐ QUỐC TẾ"
+        ],
+        "anchorPhrase": null,
+        "top": 180
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S13",
+      "startSec": 65.88,
+      "endSec": 72.42,
+      "narrativeFunction": "list",
+      "viewerQuestion": "Có những gì ở đây?",
+      "visualTransformation": "các lớp văn hóa bar/thời trang/quốc tế xếp chồng",
+      "contrastWithPrevious": "liệt kê nhiều nhịp",
+      "density": "med",
+      "visualLanguage": "cutout",
+      "template": "CollageScene",
+      "backdrop": "spotlight",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-BarNeon",
+          "src": "el10_bar_neon.png",
+          "anchorPhrase": null
+        },
+        {
+          "role": "support",
+          "name": "Support-FashionRack",
+          "src": "el10_fashion_rack.png",
+          "anchorPhrase": "cửa hàng thời trang",
+          "describes": [
+            "cửa hàng thời trang"
+          ]
+        },
+        {
+          "role": "support",
+          "name": "Support-Passport",
+          "src": "el10_passport_flags.png",
+          "anchorPhrase": "người nước ngoài",
+          "describes": [
+            "người nước ngoài"
+          ]
+        }
+      ],
+      "punch": null,
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 50,
+          "what": "element enters"
+        },
+        {
+          "frame": 159,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S14",
+      "startSec": 72.42,
+      "endSec": 81.48,
+      "narrativeFunction": "causal-chain",
+      "viewerQuestion": "Vì sao giới trẻ đổ về?",
+      "visualTransformation": "phim Hàn nổi tiếng kéo giới trẻ về đêm",
+      "contrastWithPrevious": "sơ đồ nhân quả",
+      "density": "high",
+      "visualLanguage": "flow",
+      "template": "FlowDiagramScene",
+      "backdrop": "card",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "HeroL-KDrama",
+          "src": "el10_kdrama_screen.png",
+          "anchorPhrase": "Tầng lớp Itaewon",
+          "describes": [
+            "Tầng lớp Itaewon"
+          ]
+        },
+        {
+          "role": "hero",
+          "name": "HeroR-Youth",
+          "src": "el10_youth_group.png",
+          "anchorPhrase": "giới trẻ",
+          "describes": [
+            "giới trẻ"
+          ]
+        }
+      ],
+      "punch": {
+        "lines": [
+          "PHỐ KHÔNG NGỦ"
+        ],
+        "anchorPhrase": "cuộc sống về đêm",
+        "top": 150,
+        "describes": [
+          "cuộc sống về đêm"
+        ],
+        "from": 220
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 86,
+          "what": "element enters"
+        },
+        {
+          "frame": 118,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S15",
+      "startSec": 81.48,
+      "endSec": 85.46,
+      "narrativeFunction": "reversal",
+      "viewerQuestion": "Đằng sau phồn hoa là gì?",
+      "visualTransformation": "lớp hào nhoáng bị lật lại",
+      "contrastWithPrevious": "hạ nhịp, chuyển hướng",
+      "density": "low",
+      "visualLanguage": "text-only",
+      "template": "bespoke:PivotReveal",
+      "backdrop": "grid",
+      "variant": "rise",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "ĐẰNG SAU PHỒN HOA..."
+        ],
+        "anchorPhrase": null,
+        "top": 780
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 6,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S16",
+      "startSec": 85.46,
+      "endSec": 92.32,
+      "narrativeFunction": "mechanism",
+      "viewerQuestion": "Tên gọi có nguồn gốc nào?",
+      "visualTransformation": "tài liệu cổ lật mở ký ức chiến tranh",
+      "contrastWithPrevious": "tài liệu lịch sử",
+      "density": "med",
+      "visualLanguage": "document",
+      "template": "NewspaperSpotlightScene",
+      "backdrop": "card",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Document",
+          "src": "el10_historical_doc.png",
+          "anchorPhrase": null
+        }
+      ],
+      "punch": null,
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    },
+    {
+      "id": "S17",
+      "startSec": 92.32,
+      "endSec": 101.13,
+      "narrativeFunction": "conclusion",
+      "viewerQuestion": "Bi kịch nào từng xảy ra?",
+      "visualTransformation": "quân đội chiếm đóng gây bi kịch cho phụ nữ địa phương",
+      "contrastWithPrevious": "kết trầm",
+      "density": "med",
+      "visualLanguage": "cutout",
+      "template": "bespoke:SomberClose",
+      "backdrop": "spotlight",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-Historical",
+          "src": "el10_historical_figure.png",
+          "anchorPhrase": null
+        }
+      ],
+      "punch": {
+        "lines": [
+          "LỊCH SỬ BỊ CHE GIẤU"
+        ],
+        "anchorPhrase": "bi kịch cho phụ nữ",
+        "top": 220,
+        "describes": [
+          "bi kịch cho phụ nữ"
+        ],
+        "from": 163
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "element enters"
+        },
+        {
+          "frame": 163,
+          "what": "element enters"
+        }
+      ],
+      "status": "built"
+    }
+  ],
+  "status": "deferred",
+  "note": "Reconstructed FROM the shipped V10 build, defects included, as the calibration fixture for the gates. Not an approved plan - V10 will be re-planned from scratch with the upgraded skill. Keep status != 'active' so the hooks stay quiet until then."
+}

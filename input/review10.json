@@ -1,0 +1,247 @@
+{
+  "video": "V10",
+  "howToFill": "For each scene put 'pass' / 'fail' / 'n/a' against the four criteria after LOOKING at its frame. A 'fail' blocks until fixed, or until \"resolved\": true is set with a note explaining why it is acceptable.",
+  "criteria": {
+    "illustrated": "narration is shown, not left to the viewer's imagination",
+    "composed": "balanced, everything inside the frame and legible",
+    "varied": "not the same visual formula as its neighbours",
+    "purposeful": "every element is there for a reason, not filler"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames\\V10Scene1_f41.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames\\V10Scene2_f44.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Ban do doc duoc sau khi ha raster-brightness-max ve 0.78; kiem tra o co that, khong phai tren contact sheet thu nho."
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames\\V10Scene3_f30.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S4",
+      "frame": "input\\review_frames\\V10Scene4_f45.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S5",
+      "frame": "input\\review_frames\\V10Scene5_f41.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Luoi 740px + chu thich + tuong chan + mui ten trai kin dai 300-1250 (truoc chi 360-1040)."
+    },
+    {
+      "id": "S6",
+      "frame": "input\\review_frames\\V10Scene6_f30.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S7",
+      "frame": "input\\review_frames\\V10Scene7_f41.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "158 cham nay cao 840px thay vi 384px; con so 158 lam chan trang."
+    },
+    {
+      "id": "S8",
+      "frame": "input\\review_frames\\V10Scene8_f42.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Pha phong len 900px, duong do 8 NAM keo sat truc; noi dung lien mach 480-1190."
+    },
+    {
+      "id": "S9",
+      "frame": "input\\review_frames\\V10Scene9_f30.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Hai lop: khoi dam dong 860px phia sau + nhom nan nhan 820px phia truoc, ca hai vao cung mot nhip."
+    },
+    {
+      "id": "S10",
+      "frame": "input\\review_frames\\V10Scene10_f41.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Hai ve 540px kin be ngang + duong do CACH NHAU 8 NAM o day dai."
+    },
+    {
+      "id": "S11",
+      "frame": "input\\review_frames\\V10Scene11_f44.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Chuoi mat xich cao 980px, ban kinh 88; bon mat trai tu 300 den 1215."
+    },
+    {
+      "id": "S12",
+      "frame": "input\\review_frames\\V10Scene12_f32.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Ban do doc duoc sau khi sua diem trang; do phu do bang metric thap la do anh xam lien tuc, khong phai khung trong."
+    },
+    {
+      "id": "S13",
+      "frame": "input\\review_frames\\V10Scene13_f34.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Dau van tay 880px + khung ngam bon goc khep lai cung nhip voi dau."
+    },
+    {
+      "id": "S14",
+      "frame": "input\\review_frames\\V10Scene14_f43.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S15",
+      "frame": "input\\review_frames\\V10Scene15_f33.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Bien pho 700px, gach cheo phu tron bien, cau tra loi dung PHUONG/QUAN lap dai day."
+    },
+    {
+      "id": "S16",
+      "frame": "input\\review_frames\\V10Scene16_f46.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Ban do 1,37 km2: da xac nhan o co that co pho, khu nha va song Han; metric do phu khong doc duoc anh xam lien tuc."
+    },
+    {
+      "id": "S17",
+      "frame": "input\\review_frames\\V10Scene17_f36.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S18",
+      "frame": "input\\review_frames\\V10Scene18_f45.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Da sua han primitive StreetElevation - chieu cao mat tien gio chi bien thien 12%, them dai bien hieu/cua so/mai hien/o cua nen khong con doc ra bieu do cot."
+    },
+    {
+      "id": "S19",
+      "frame": "input\\review_frames\\V10Scene19_f30.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S20",
+      "frame": "input\\review_frames\\V10Scene20_f38.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S21",
+      "frame": "input\\review_frames\\V10Scene21_f42.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S22",
+      "frame": "input\\review_frames\\V10Scene22_f31.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S23",
+      "frame": "input\\review_frames\\V10Scene23_f48.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Nhanh le 960px + chu Han co 104 lam moc thi giac cho dai duoi."
+    },
+    {
+      "id": "S24",
+      "frame": "input\\review_frames\\V10Scene24_f28.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Tint ha tu 0.5 xuong 0.3 nen thay duoc tho giay chay; ten 梨泰院 hien roi bi lop toi dang len nuot - dung chuyen bien da khai trong plan."
+    },
+    {
+      "id": "S25",
+      "frame": "input\\review_frames\\V10Scene25_f50.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Xep chong hai ngon ngu: nen van ban co (wash=paper) + truc thoi gian + mai cong; truoc do wash muc 0.66 lam nen den kit."
+    },
+    {
+      "id": "S26",
+      "frame": "input\\review_frames\\V10Scene26_f34.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Anh full-bleed toi nhung ro chu the (cong chua luc hoang hon); metric do phu thap la do vung troi dong nhat."
+    }
+  ],
+  "howChecked": "Cham tren contact sheet, VA mo lai o co that tung canh bi nghi ngo (S2/S8/S12/S16/S18/S23/S24/S25/S26). Hai lan dau cham sai vi contact sheet thu nho giau ca hai loi: ban do nhat va S24 den kit."
+}

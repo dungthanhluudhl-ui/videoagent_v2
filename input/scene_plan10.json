@@ -1,0 +1,1616 @@
+{
+  "video": "V10",
+  "title": "Itaewon - Dấu vết cuối cùng",
+  "fps": 30,
+  "audio": "audio10.mp3",
+  "wordsFile": "input/words10_aligned.json",
+  "status": "active",
+  "scenes": [
+    {
+      "id": "S1",
+      "startSec": 0.0,
+      "endSec": 4.14,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Chuyện gì đã xảy ra ở đây?",
+      "visualTransformation": "một con hẻm đêm hiện dần ra từ bóng tối rồi ngày tháng đóng dấu lên nó",
+      "contrastWithPrevious": "mở đầu video",
+      "density": "low",
+      "comprehensionLoad": "simple",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: full-bleed night alley photo, date stamp landing over it",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Alley",
+          "describes": [],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 124,
+          "src": "el10_alley_night.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "29.10.2022"
+        ],
+        "anchorPhrase": null,
+        "top": 60,
+        "from": 62,
+        "describes": [],
+        "visibleFor": 700
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Alley enters"
+        },
+        {
+          "frame": 62,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 124,
+      "status": "reviewed"
+    },
+    {
+      "id": "S2",
+      "startSec": 4.14,
+      "endSec": 8.6,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Itaewon nằm ở đâu?",
+      "visualTransformation": "một điểm trên bản đồ Seoul thật được khoanh lại thành nơi xảy ra thảm họa",
+      "contrastWithPrevious": "từ ảnh không khí sang toạ độ thật",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "map",
+      "template": "bespoke: MapLibre map of Seoul, pin and label landing on Itaewon",
+      "backdrop": "card",
+      "variant": "dropSpin",
+      "assets": [
+        {
+          "role": "map",
+          "name": "Map-Seoul",
+          "describes": [
+            "tại Itaewon"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 260,
+          "delay": 0,
+          "visibleFor": 134
+        }
+      ],
+      "punch": {
+        "lines": [
+          "ITAEWON",
+          "SEOUL"
+        ],
+        "anchorPhrase": "tại Itaewon",
+        "top": null,
+        "from": 65,
+        "describes": [
+          "tại Itaewon"
+        ],
+        "visibleFor": 1180
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Map-Seoul enters"
+        },
+        {
+          "frame": 65,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 134,
+      "status": "reviewed"
+    },
+    {
+      "id": "S3",
+      "startSec": 8.6,
+      "endSec": 11.6,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Thảm họa lớn tới mức nào?",
+      "visualTransformation": "đám đông chật cứng lấp kín khung hình khi cụm chữ đập vào rồi giữ nguyên",
+      "contrastWithPrevious": "bản đồ tĩnh sang đám đông chuyển động",
+      "density": "high",
+      "comprehensionLoad": "simple",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: dense night crowd photo full-bleed, headline onDark, held still",
+      "backdrop": "photo",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Crowd",
+          "describes": [
+            "thảm họa dẫm đạp"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 90,
+          "src": "el10_crowd_night.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "THẢM HỌA",
+          "DẪM ĐẠP"
+        ],
+        "anchorPhrase": "thảm họa dẫm đạp",
+        "top": null,
+        "from": 5,
+        "describes": [
+          "thảm họa dẫm đạp"
+        ],
+        "visibleFor": 620
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Crowd enters"
+        },
+        {
+          "frame": 5,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 90,
+      "status": "reviewed"
+    },
+    {
+      "id": "S4",
+      "startSec": 11.6,
+      "endSec": 16.1,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Con hẻm đó nhỏ đến mức nào?",
+      "visualTransformation": "mặt cắt con hẻm được vẽ ra với bề rộng thật 3,2m so với chiều cao người",
+      "contrastWithPrevious": "từ ảnh chụp sang bản vẽ kỹ thuật",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: alley cross-section drawn with a 3,2m dimension line, held long enough to read",
+      "backdrop": "grid",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Dia-Alley",
+          "describes": [
+            "một con hẻm nhỏ",
+            "đám đông bị ép quá chặt"
+          ],
+          "width": 900,
+          "x": "50%",
+          "y": 480,
+          "delay": 0,
+          "visibleFor": 138
+        }
+      ],
+      "punch": {
+        "lines": [
+          "3,2 MÉT"
+        ],
+        "anchorPhrase": "một con hẻm nhỏ",
+        "top": null,
+        "from": 38,
+        "describes": [
+          "một con hẻm nhỏ"
+        ],
+        "visibleFor": 260
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Dia-Alley enters"
+        },
+        {
+          "frame": 38,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 135,
+      "status": "reviewed"
+    },
+    {
+      "id": "S5",
+      "startSec": 16.1,
+      "endSec": 20.2,
+      "narrativeFunction": "mechanism",
+      "viewerQuestion": "Vì sao kéo mạnh vẫn không rút được người ra?",
+      "visualTransformation": "lưới mật độ lấp kín rồi mũi tên lực kéo đâm vào và bật ngược lại",
+      "contrastWithPrevious": "từ kích thước sang LỰC",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "flow",
+      "template": "bespoke: density grid locking, then a pulling-force arrow rebounding",
+      "backdrop": "chart",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Grid-Density",
+          "describes": [
+            "dẫu có kéo mạnh"
+          ],
+          "width": 740,
+          "x": "50%",
+          "y": 300,
+          "delay": 0,
+          "visibleFor": 132
+        },
+        {
+          "role": "diagram",
+          "name": "Force-Arrow",
+          "describes": [
+            "không thể rút họ ra được"
+          ],
+          "width": 720,
+          "x": "50%",
+          "y": 1210,
+          "delay": 57,
+          "visibleFor": 78
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KÉO KHÔNG RA"
+        ],
+        "anchorPhrase": "không thể rút họ ra được",
+        "top": null,
+        "from": 57,
+        "describes": [
+          "không thể rút họ ra được"
+        ],
+        "visibleFor": 260
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Grid-Density enters"
+        },
+        {
+          "frame": 57,
+          "what": "Force-Arrow enters + punch phrase"
+        }
+      ],
+      "durationInFrames": 123,
+      "status": "reviewed"
+    },
+    {
+      "id": "S6",
+      "startSec": 20.2,
+      "endSec": 23.2,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Người ở đó đã chứng kiến điều gì?",
+      "visualTransformation": "khung hình lặng xuống, ánh sáng rút dần khi từng người ngừng thở",
+      "contrastWithPrevious": "nghỉ sau khối cơ chế: không sơ đồ, không giải thích",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: somber street-level night photo, one quiet beat",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Vigil",
+          "describes": [
+            "từng người một ngừng thở"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 75,
+          "src": "el10_street_vigil.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "TỪNG NGƯỜI MỘT"
+        ],
+        "anchorPhrase": "từng người một",
+        "top": null,
+        "from": 27,
+        "describes": [
+          "từng người một"
+        ],
+        "visibleFor": 1120
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Vigil enters"
+        },
+        {
+          "frame": 27,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 90,
+      "status": "reviewed"
+    },
+    {
+      "id": "S7",
+      "startSec": 23.2,
+      "endSec": 27.3,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Bao nhiêu người đã chết?",
+      "visualTransformation": "158 chấm tưởng niệm lấp dần khung hình cùng nhịp với con số đếm lên",
+      "contrastWithPrevious": "từ khoảnh khắc lặng sang con số đếm được",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "data",
+      "template": "bespoke: 158 memorial dots filling as a counter ticks to 158",
+      "backdrop": "card",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Dots-158",
+          "describes": [
+            "158 người thiệt mạng"
+          ],
+          "width": 980,
+          "x": "50%",
+          "y": 320,
+          "delay": 2,
+          "visibleFor": 126
+        }
+      ],
+      "punch": {
+        "lines": [
+          "158 NGƯỜI",
+          "THIỆT MẠNG"
+        ],
+        "anchorPhrase": "trong thảm họa này",
+        "top": null,
+        "from": 28,
+        "describes": [
+          "trong thảm họa này"
+        ],
+        "visibleFor": 1240
+      },
+      "visualEvents": [
+        {
+          "frame": 2,
+          "what": "Dots-158 enters"
+        },
+        {
+          "frame": 28,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 123,
+      "status": "reviewed"
+    },
+    {
+      "id": "S8",
+      "startSec": 27.3,
+      "endSec": 31.52,
+      "narrativeFunction": "reversal",
+      "viewerQuestion": "Đã từng có thảm họa nào lớn như vậy chưa?",
+      "visualTransformation": "trục thời gian nối mốc 2014 sang mốc 2022 bằng một đường kẻ",
+      "contrastWithPrevious": "từ một con số sang hai mốc lịch sử",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "timeline",
+      "template": "bespoke: two-marker timeline, Sewol 2014 to Itaewon 2022",
+      "backdrop": "chart",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "timeline",
+          "name": "Tl-Sewol",
+          "describes": [
+            "vụ chìm Phạt Sơ Ân năm 2014"
+          ],
+          "width": 960,
+          "x": "50%",
+          "y": 480,
+          "delay": 0,
+          "visibleFor": 127
+        },
+        {
+          "role": "support",
+          "name": "Sup-Ferry",
+          "describes": [
+            "vụ chìm Phạt Sơ Ân"
+          ],
+          "width": 900,
+          "x": 90,
+          "y": 850,
+          "delay": 82,
+          "visibleFor": 45,
+          "src": "el10_ferry.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Dim-8Years",
+          "describes": [
+            "vụ chìm Phạt Sơ Ân năm 2014"
+          ],
+          "width": 760,
+          "x": "50%",
+          "y": 790,
+          "delay": 82,
+          "visibleFor": 45
+        }
+      ],
+      "punch": {
+        "lines": [
+          "2014 → 2022"
+        ],
+        "anchorPhrase": "năm 2014",
+        "top": null,
+        "from": 82,
+        "describes": [
+          "năm 2014"
+        ],
+        "visibleFor": 260
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Tl-Sewol enters"
+        },
+        {
+          "frame": 82,
+          "what": "Sup-Ferry + duong do 8 NAM + punch phrase"
+        }
+      ],
+      "durationInFrames": 127,
+      "status": "reviewed"
+    },
+    {
+      "id": "S9",
+      "startSec": 31.52,
+      "endSec": 34.6,
+      "narrativeFunction": "paradox",
+      "viewerQuestion": "Nhóm nạn nhân đó là ai?",
+      "visualTransformation": "nhóm nạn nhân 2022 hiện ra như một khối người trẻ",
+      "contrastWithPrevious": "từ trục thời gian sang khuôn mặt",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "cutout",
+      "template": "bespoke: 2022 victim group as a single cut-out mass",
+      "backdrop": "grid",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "support",
+          "name": "Sup-CrowdBehind",
+          "describes": [
+            "nhóm người thiệt mạng tại Itaewon"
+          ],
+          "width": 860,
+          "x": 110,
+          "y": 760,
+          "delay": 25,
+          "visibleFor": 67,
+          "src": "el10_crowd_behind.png"
+        },
+        {
+          "role": "hero",
+          "name": "Hero-Youth",
+          "describes": [
+            "nhóm người thiệt mạng tại Itaewon"
+          ],
+          "width": 820,
+          "x": "50%",
+          "y": 300,
+          "delay": 25,
+          "visibleFor": 68,
+          "src": "el10_youth_2022.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "NHÓM NẠN NHÂN",
+          "2022"
+        ],
+        "anchorPhrase": "lần này",
+        "top": null,
+        "from": 62,
+        "describes": [
+          "lần này"
+        ],
+        "visibleFor": 1130
+      },
+      "visualEvents": [
+        {
+          "frame": 25,
+          "what": "Sup-CrowdBehind + Hero-Youth enter"
+        },
+        {
+          "frame": 62,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 92,
+      "status": "reviewed"
+    },
+    {
+      "id": "S10",
+      "startSec": 34.6,
+      "endSec": 38.78,
+      "narrativeFunction": "paradox",
+      "viewerQuestion": "Điểm trùng hợp rùng mình ở đây là gì?",
+      "visualTransformation": "hai nhóm cách nhau 8 năm xếp đối xứng, cùng một độ tuổi",
+      "contrastWithPrevious": "một nhóm tách thành hai vế đối chiếu",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "split",
+      "template": "bespoke: mirrored split of two victim groups, same age bracket",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-Youth2",
+          "describes": [
+            "thế hệ trẻ"
+          ],
+          "width": 540,
+          "x": 0,
+          "y": 520,
+          "delay": 8,
+          "visibleFor": 118,
+          "src": "el10_youth_2022.png"
+        },
+        {
+          "role": "hero",
+          "name": "Hero-Students",
+          "describes": [
+            "các em học sinh cấp 3"
+          ],
+          "width": 540,
+          "x": 540,
+          "y": 520,
+          "delay": 44,
+          "visibleFor": 82,
+          "src": "el10_students_2014.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Dim-8Years",
+          "describes": [
+            "thế hệ trẻ"
+          ],
+          "width": 940,
+          "x": "50%",
+          "y": 1110,
+          "delay": 46,
+          "visibleFor": 79
+        }
+      ],
+      "punch": {
+        "lines": [
+          "CÙNG MỘT",
+          "ĐỘ TUỔI"
+        ],
+        "anchorPhrase": "các em học sinh cấp 3",
+        "top": null,
+        "from": 44,
+        "describes": [
+          "các em học sinh cấp 3"
+        ],
+        "visibleFor": 1140
+      },
+      "visualEvents": [
+        {
+          "frame": 8,
+          "what": "Hero-Youth2 enters"
+        },
+        {
+          "frame": 44,
+          "what": "Hero-Students + duong do 8 NAM + punch phrase"
+        }
+      ],
+      "durationInFrames": 125,
+      "status": "reviewed"
+    },
+    {
+      "id": "S11",
+      "startSec": 38.78,
+      "endSec": 43.22,
+      "narrativeFunction": "question",
+      "viewerQuestion": "Nếu tránh được thì tại sao vẫn xảy ra?",
+      "visualTransformation": "chuỗi mắt xích phòng ngừa tự vẽ ra rồi gãy, để lại một câu hỏi treo",
+      "contrastWithPrevious": "từ đối chiếu sang chuỗi nhân quả bị đứt",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "flow",
+      "template": "bespoke: preventive chain drawing itself then snapping, question lands",
+      "backdrop": "spotlight",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Chain-Break",
+          "describes": [
+            "hoàn toàn có thể tránh được"
+          ],
+          "width": 900,
+          "x": "50%",
+          "y": 270,
+          "delay": 0,
+          "visibleFor": 133
+        }
+      ],
+      "punch": {
+        "lines": [
+          "TẠI SAO?"
+        ],
+        "anchorPhrase": "tại sao nó lại xảy ra",
+        "top": null,
+        "from": 88,
+        "describes": [
+          "tại sao nó lại xảy ra"
+        ],
+        "visibleFor": 1120
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Chain-Break enters"
+        },
+        {
+          "frame": 88,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 133,
+      "status": "reviewed"
+    },
+    {
+      "id": "S12",
+      "startSec": 43.22,
+      "endSec": 46.44,
+      "narrativeFunction": "hook",
+      "viewerQuestion": "Chúng ta sẽ quay lại đâu?",
+      "visualTransformation": "bản đồ kéo trở lại Itaewon, đánh dấu mốc ngày hôm đó",
+      "contrastWithPrevious": "câu hỏi treo sang hành động quay ngược",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "map",
+      "template": "bespoke: map pulling back to Itaewon with a date marker",
+      "backdrop": "card",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "map",
+          "name": "Map-Return",
+          "describes": [
+            "quay trở lại Itaewon"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 240,
+          "delay": 0,
+          "visibleFor": 96
+        }
+      ],
+      "punch": {
+        "lines": [
+          "QUAY LẠI",
+          "NGÀY HÔM ĐÓ"
+        ],
+        "anchorPhrase": "vào ngày hôm đó",
+        "top": null,
+        "from": 44,
+        "describes": [
+          "vào ngày hôm đó"
+        ],
+        "visibleFor": 260
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Map-Return enters"
+        },
+        {
+          "frame": 44,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 97,
+      "status": "reviewed"
+    },
+    {
+      "id": "S13",
+      "startSec": 46.44,
+      "endSec": 49.9,
+      "narrativeFunction": "conclusion",
+      "viewerQuestion": "Đây là kênh nào?",
+      "visualTransformation": "dấu vết in xuống mặt giấy rồi thành tên kênh",
+      "contrastWithPrevious": "từ bản đồ sang nhận diện kênh, nhịp chậm lại",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "template": "bespoke: stamped trace mark resolving into the channel name",
+      "backdrop": "spotlight",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Trace",
+          "describes": [
+            "Sự thật luôn để lại dấu vết"
+          ],
+          "width": 880,
+          "x": "50%",
+          "y": 330,
+          "delay": 0,
+          "visibleFor": 103,
+          "src": "el10_trace_stamp.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Frame-Corners",
+          "describes": [
+            "Sự thật luôn để lại dấu vết"
+          ],
+          "width": 940,
+          "x": "50%",
+          "y": 330,
+          "delay": 0,
+          "visibleFor": 103
+        }
+      ],
+      "punch": {
+        "lines": [
+          "DẤU VẾT",
+          "CUỐI CÙNG"
+        ],
+        "anchorPhrase": "Dấu vết cuối cùng",
+        "top": null,
+        "from": 77,
+        "describes": [
+          "Dấu vết cuối cùng"
+        ],
+        "visibleFor": 1150
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Doc-Trace + khung ngam vao"
+        },
+        {
+          "frame": 77,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 104,
+      "status": "reviewed"
+    },
+    {
+      "id": "S14",
+      "startSec": 49.9,
+      "endSec": 54.24,
+      "narrativeFunction": "conclusion",
+      "viewerQuestion": "Tôi nên làm gì tiếp?",
+      "visualTransformation": "nút theo dõi rồi nút like được nhấn thật trên màn hình điện thoại",
+      "contrastWithPrevious": "từ con dấu tĩnh sang thao tác trên thiết bị",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "mockup",
+      "template": "bespoke: phone mockup, subscribe then like pressed in sequence",
+      "backdrop": "card",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "mockup",
+          "name": "Mock-Phone",
+          "describes": [
+            "nhấn theo dõi"
+          ],
+          "width": 600,
+          "x": "50%",
+          "y": 400,
+          "delay": 1,
+          "visibleFor": 129
+        },
+        {
+          "role": "support",
+          "name": "Sup-Like",
+          "describes": [
+            "like video này"
+          ],
+          "width": 250,
+          "x": 720,
+          "y": 900,
+          "delay": 24,
+          "visibleFor": 105,
+          "src": "el10_like_burst.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "THEO DÕI"
+        ],
+        "anchorPhrase": "nhấn theo dõi",
+        "top": null,
+        "from": 1,
+        "describes": [
+          "nhấn theo dõi"
+        ],
+        "visibleFor": 1250
+      },
+      "visualEvents": [
+        {
+          "frame": 1,
+          "what": "Mock-Phone enters + punch phrase"
+        },
+        {
+          "frame": 24,
+          "what": "Sup-Like enters"
+        }
+      ],
+      "durationInFrames": 130,
+      "status": "reviewed"
+    },
+    {
+      "id": "S15",
+      "startSec": 54.24,
+      "endSec": 57.6,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Itaewon là một con phố phải không?",
+      "visualTransformation": "biển tên một con phố bị gạch đi",
+      "contrastWithPrevious": "từ CTA sang định nghĩa",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "split",
+      "template": "bespoke: a single street sign crossed out",
+      "backdrop": "grid",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "support",
+          "name": "Sup-StreetSign",
+          "describes": [
+            "một con phố đơn thuần"
+          ],
+          "width": 700,
+          "x": "50%",
+          "y": 320,
+          "delay": 0,
+          "visibleFor": 100,
+          "src": "el10_street_sign.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Label-District",
+          "describes": [
+            "một con phố đơn thuần"
+          ],
+          "width": 840,
+          "x": "50%",
+          "y": 1100,
+          "delay": 46,
+          "visibleFor": 54
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KHÔNG PHẢI",
+          "MỘT CON PHỐ"
+        ],
+        "anchorPhrase": "một con phố đơn thuần",
+        "top": null,
+        "from": 40,
+        "describes": [
+          "một con phố đơn thuần"
+        ],
+        "visibleFor": 250
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Sup-StreetSign enters"
+        },
+        {
+          "frame": 40,
+          "what": "punch phrase + gach cheo + nhan PHUONG/QUAN"
+        }
+      ],
+      "durationInFrames": 101,
+      "status": "reviewed"
+    },
+    {
+      "id": "S16",
+      "startSec": 57.6,
+      "endSec": 62.2,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Vậy Itaewon rộng bao nhiêu và ở đâu?",
+      "visualTransformation": "vòng tròn 1,37 km2 được vẽ đúng tỉ lệ lên bản đồ quận Yongsan",
+      "contrastWithPrevious": "phủ định xong thì đưa ra con số thật, giữ đủ lâu để đọc",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "map",
+      "template": "bespoke: real-scale 1,37 km2 footprint circle over Yongsan",
+      "backdrop": "card",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "map",
+          "name": "Map-Area",
+          "describes": [
+            "1,37 km2",
+            "nằm ở quận Jongsan"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 220,
+          "delay": 0,
+          "visibleFor": 138
+        }
+      ],
+      "punch": {
+        "lines": [
+          "1,37 KM²"
+        ],
+        "anchorPhrase": "1,37 km2",
+        "top": null,
+        "from": 35,
+        "describes": [
+          "1,37 km2"
+        ],
+        "visibleFor": 1240
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Map-Area enters"
+        },
+        {
+          "frame": 35,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 138,
+      "status": "reviewed"
+    },
+    {
+      "id": "S17",
+      "startSec": 62.2,
+      "endSec": 65.88,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Khu này trông như thế nào?",
+      "visualTransformation": "phố thương mại ban ngày lấp kín khung hình",
+      "contrastWithPrevious": "từ bản đồ trừu tượng sang mặt phố thật",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: daytime commercial street photo full-bleed",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Commerce",
+          "describes": [
+            "khu thương mại"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 110,
+          "src": "el10_commerce_day.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KHU THƯƠNG MẠI"
+        ],
+        "anchorPhrase": "khu thương mại",
+        "top": null,
+        "from": 4,
+        "describes": [
+          "khu thương mại"
+        ],
+        "visibleFor": 1160
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Commerce enters"
+        },
+        {
+          "frame": 4,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 110,
+      "status": "reviewed"
+    },
+    {
+      "id": "S18",
+      "startSec": 65.88,
+      "endSec": 70.4,
+      "narrativeFunction": "list",
+      "viewerQuestion": "Dày đặc là dày cỡ nào?",
+      "visualTransformation": "dãy mặt tiền cửa hàng được vẽ liên tiếp, mỗi loại một nhãn",
+      "contrastWithPrevious": "từ ảnh chụp sang bản vẽ đếm được",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "template": "bespoke: drawn street elevation, labelled shopfronts in a row",
+      "backdrop": "grid",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Elev-Shops",
+          "describes": [
+            "mật độ dày đặc của các quán bar",
+            "cửa hàng thời trang và nhà hàng quốc tế"
+          ],
+          "width": 1000,
+          "x": "50%",
+          "y": 360,
+          "delay": 0,
+          "visibleFor": 135
+        }
+      ],
+      "punch": {
+        "lines": [
+          "DÀY ĐẶC"
+        ],
+        "anchorPhrase": "cửa hàng thời trang",
+        "top": null,
+        "from": 55,
+        "describes": [
+          "cửa hàng thời trang"
+        ],
+        "visibleFor": 250
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Elev-Shops enters"
+        },
+        {
+          "frame": 55,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 136,
+      "status": "reviewed"
+    },
+    {
+      "id": "S19",
+      "startSec": 70.4,
+      "endSec": 73.4,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Ai sống ở đây?",
+      "visualTransformation": "các biển hiệu nhiều thứ tiếng trên cùng một mặt phố được chỉ ra từng cái",
+      "contrastWithPrevious": "từ bản vẽ sang bằng chứng trên ảnh thật",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "annotated",
+      "template": "bespoke: Itaewon signage photo with leader-lined language labels",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Signage",
+          "describes": [
+            "rất nhiều người nước ngoài"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 90,
+          "src": "el10_signage.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Ann-Langs",
+          "describes": [
+            "người nước ngoài"
+          ],
+          "width": 900,
+          "x": "50%",
+          "y": 660,
+          "delay": 28,
+          "visibleFor": 62
+        }
+      ],
+      "punch": {
+        "lines": [
+          "NHIỀU QUỐC TỊCH"
+        ],
+        "anchorPhrase": "người nước ngoài",
+        "top": null,
+        "from": 28,
+        "describes": [
+          "người nước ngoài"
+        ],
+        "visibleFor": 260
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Signage enters"
+        },
+        {
+          "frame": 28,
+          "what": "Ann-Langs enters + punch phrase"
+        }
+      ],
+      "durationInFrames": 90,
+      "status": "reviewed"
+    },
+    {
+      "id": "S20",
+      "startSec": 73.4,
+      "endSec": 77.2,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Vì sao giới trẻ đổ về đây?",
+      "visualTransformation": "màn hình phát cảnh phim, kéo ánh nhìn ra ngoài đời thật",
+      "contrastWithPrevious": "từ ảnh phố sang màn hình",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "mockup",
+      "template": "bespoke: TV mockup playing a drama frame set in Itaewon",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "mockup",
+          "name": "Mock-TV",
+          "describes": [
+            "các bộ phim truyền hình Hàn Quốc"
+          ],
+          "width": 860,
+          "x": "50%",
+          "y": 400,
+          "delay": 4,
+          "visibleFor": 114,
+          "src": "el10_drama_still.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "TẦNG LỚP ITAEWON"
+        ],
+        "anchorPhrase": "Tầng lớp Itaewon",
+        "top": null,
+        "from": 62,
+        "describes": [
+          "Tầng lớp Itaewon"
+        ],
+        "visibleFor": 1210
+      },
+      "visualEvents": [
+        {
+          "frame": 4,
+          "what": "Mock-TV enters"
+        },
+        {
+          "frame": 62,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 114,
+      "status": "reviewed"
+    },
+    {
+      "id": "S21",
+      "startSec": 77.2,
+      "endSec": 81.48,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Không khí ở đây về đêm ra sao?",
+      "visualTransformation": "đèn neon và dòng người lấp kín khung hình",
+      "contrastWithPrevious": "từ màn hình sang đời thật, sáng và ồn",
+      "density": "high",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: neon nightlife photo full-bleed",
+      "backdrop": "photo",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Neon",
+          "describes": [
+            "yêu thích đến đây dạo phố",
+            "cuộc sống về đêm"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 129,
+          "src": "el10_neon_night.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "CUỘC SỐNG",
+          "VỀ ĐÊM"
+        ],
+        "anchorPhrase": "cuộc sống về đêm",
+        "top": null,
+        "from": 82,
+        "describes": [
+          "cuộc sống về đêm"
+        ],
+        "visibleFor": 600
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Neon enters"
+        },
+        {
+          "frame": 82,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 128,
+      "status": "reviewed"
+    },
+    {
+      "id": "S22",
+      "startSec": 81.48,
+      "endSec": 84.6,
+      "narrativeFunction": "reversal",
+      "viewerQuestion": "Đằng sau sự phồn hoa là gì?",
+      "visualTransformation": "nửa khung hình rực rỡ bị một lớp tư liệu cũ đẩy lấn sang",
+      "contrastWithPrevious": "điểm xoay của cả video: hiện tại nhường chỗ quá khứ",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "split",
+      "template": "bespoke: bright present wiped over by a faded archival half",
+      "backdrop": "spotlight",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Prosper",
+          "describes": [
+            "sự phồn hoa đó"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 94,
+          "src": "el10_prosper.png"
+        },
+        {
+          "role": "support",
+          "name": "Sup-Archive",
+          "describes": [
+            "lịch sử thăng trầm"
+          ],
+          "width": 540,
+          "x": 520,
+          "y": 620,
+          "delay": 62,
+          "visibleFor": 62,
+          "src": "el10_archive_paper.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "PHỒN HOA",
+          "& THĂNG TRẦM"
+        ],
+        "anchorPhrase": "lịch sử thăng trầm",
+        "top": null,
+        "from": 62,
+        "describes": [
+          "lịch sử thăng trầm"
+        ],
+        "visibleFor": 250
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Prosper enters"
+        },
+        {
+          "frame": 62,
+          "what": "Sup-Archive enters + punch phrase"
+        }
+      ],
+      "durationInFrames": 94,
+      "status": "reviewed"
+    },
+    {
+      "id": "S23",
+      "startSec": 84.6,
+      "endSec": 89.44,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Tên gọi đó nghĩa là gì?",
+      "visualTransformation": "chữ Lê Thái Viện hiện ra cùng nhành lê, nghĩa được giải ra",
+      "contrastWithPrevious": "từ đối lập sang một cái tên cụ thể, nhịp chậm nhất đoạn này",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "template": "bespoke: the name Lê Thái Viện set as a document with pear-blossom motif",
+      "backdrop": "card",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Name",
+          "describes": [
+            "tên gọi mang ý nghĩa thơ mộng"
+          ],
+          "width": 960,
+          "x": "50%",
+          "y": 300,
+          "delay": 62,
+          "visibleFor": 83,
+          "src": "el10_pear_name.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Gloss-Hanja",
+          "describes": [
+            "tên gọi mang ý nghĩa thơ mộng"
+          ],
+          "width": 540,
+          "x": "50%",
+          "y": 1090,
+          "delay": 62,
+          "visibleFor": 83
+        }
+      ],
+      "punch": {
+        "lines": [
+          "LÊ THÁI VIỆN"
+        ],
+        "anchorPhrase": "Lê Thái Viện",
+        "top": null,
+        "from": 104,
+        "describes": [
+          "Lê Thái Viện"
+        ],
+        "visibleFor": 1240
+      },
+      "visualEvents": [
+        {
+          "frame": 62,
+          "what": "Doc-Name + chu Han hien"
+        },
+        {
+          "frame": 104,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 145,
+      "status": "reviewed"
+    },
+    {
+      "id": "S24",
+      "startSec": 89.44,
+      "endSec": 92.32,
+      "narrativeFunction": "reversal",
+      "viewerQuestion": "Ký ức đau thương nào?",
+      "visualTransformation": "cái tên thơ mộng chìm xuống dưới một lớp tối của chiến tranh",
+      "contrastWithPrevious": "cái tên đẹp bị phủ bóng",
+      "density": "med",
+      "comprehensionLoad": "simple",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: the poetic name swallowed by a rising dark layer",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-War",
+          "describes": [
+            "ký ức đau thương"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 86,
+          "src": "el10_war_texture.png"
+        },
+        {
+          "role": "diagram",
+          "name": "Name-Sinking",
+          "describes": [
+            "ký ức đau thương"
+          ],
+          "width": 540,
+          "x": "50%",
+          "y": 570,
+          "delay": 0,
+          "visibleFor": 86
+        }
+      ],
+      "punch": {
+        "lines": [
+          "KÝ ỨC",
+          "CHIẾN TRANH"
+        ],
+        "anchorPhrase": "ký ức đau thương",
+        "top": null,
+        "from": 38,
+        "describes": [
+          "ký ức đau thương"
+        ],
+        "visibleFor": 620
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-War + ten 梨泰院 hien"
+        },
+        {
+          "frame": 38,
+          "what": "lop toi dang len nuot cai ten + punch phrase"
+        }
+      ],
+      "durationInFrames": 86,
+      "status": "reviewed"
+    },
+    {
+      "id": "S25",
+      "startSec": 92.32,
+      "endSec": 97.38,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Chuyện xảy ra từ khi nào và ở đâu?",
+      "visualTransformation": "trục thời gian chạy ngược về cuối thế kỷ 16, rồi chính vùng 1,37 km2 lúc nãy bị phủ lớp chiếm đóng",
+      "contrastWithPrevious": "nhảy mốc rất xa về quá khứ, quay lại đúng tấm bản đồ cũ",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "timeline",
+      "template": "bespoke: timeline running back to the 16th century, then the same footprint shaded as occupied",
+      "backdrop": "chart",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-HistDoc",
+          "describes": [
+            "cuối thế kỷ 16"
+          ],
+          "delay": 0,
+          "visibleFor": 152,
+          "src": "el10_historical_doc.png"
+        },
+        {
+          "role": "timeline",
+          "name": "Tl-Back",
+          "describes": [
+            "cuối thế kỷ 16"
+          ],
+          "width": 960,
+          "x": "50%",
+          "y": 470,
+          "delay": 0,
+          "visibleFor": 110
+        },
+        {
+          "role": "map",
+          "name": "Map-Occupied",
+          "describes": [
+            "chiếm đóng khu vực này"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 240,
+          "delay": 111,
+          "visibleFor": 42
+        },
+        {
+          "role": "support",
+          "name": "Sup-Gate",
+          "describes": [
+            "quân đội Nhật đã chiếm đóng khu vực này"
+          ],
+          "width": 760,
+          "x": 160,
+          "y": 790,
+          "delay": 40,
+          "visibleFor": 71,
+          "src": "el10_historical_figure.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "THẾ KỶ 16"
+        ],
+        "anchorPhrase": "cuối thế kỷ 16",
+        "top": null,
+        "from": 6,
+        "describes": [
+          "cuối thế kỷ 16"
+        ],
+        "visibleFor": 250
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-HistDoc + Tl-Back + punch phrase"
+        },
+        {
+          "frame": 40,
+          "what": "Sup-Gate enters"
+        },
+        {
+          "frame": 111,
+          "what": "Map-Occupied enters"
+        }
+      ],
+      "durationInFrames": 152,
+      "status": "reviewed"
+    },
+    {
+      "id": "S26",
+      "startSec": 97.38,
+      "endSec": 100.78,
+      "narrativeFunction": "conclusion",
+      "viewerQuestion": "Hậu quả để lại là gì?",
+      "visualTransformation": "mái chùa cổ chìm dần trong bóng tối, khung hình lặng lại",
+      "contrastWithPrevious": "khép lại, nhịp chậm nhất video",
+      "density": "low",
+      "comprehensionLoad": "simple",
+      "visualLanguage": "background-photo",
+      "template": "bespoke: ancient temple at dusk full-bleed, frame settling into silence",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Temple",
+          "describes": [
+            "phụ nữ địa phương",
+            "một ngôi chùa cổ"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 102,
+          "src": "el10_temple_dusk.png"
+        }
+      ],
+      "punch": {
+        "lines": [
+          "MỘT NGÔI",
+          "CHÙA CỔ"
+        ],
+        "anchorPhrase": "một ngôi chùa cổ",
+        "top": null,
+        "from": 81,
+        "describes": [
+          "một ngôi chùa cổ"
+        ],
+        "visibleFor": 640
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Temple enters"
+        },
+        {
+          "frame": 81,
+          "what": "punch phrase"
+        }
+      ],
+      "durationInFrames": 102,
+      "status": "reviewed"
+    }
+  ]
+}

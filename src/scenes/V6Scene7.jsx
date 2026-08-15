@@ -6,6 +6,7 @@ export const V6Scene7 = () => {
   return (
     <QuoteBubbleScene
       durationInFrames={V6SCENE7_DURATION}
+      backdrop="card"
       quoteText="Bật trích nợ tự động để không trễ hạn!"
       highlight="hạn"
       hero={{

@@ -24,19 +24,61 @@ export const ORANGE = "#FF6A1A";
 export const INK = "#141414";
 export const BUBBLE_CREAM = "#F5F0E4";
 
-// Background: pale grid + static grain, identical every scene. Lives
-// INSIDE the CameraGroup zoom wrapper (it should scale together with the
-// hero, per the reference).
-export const SceneBackground = () => (
-  <AbsoluteFill name="Background" style={{ backgroundColor: BG }}>
-    <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
-      <defs>
-        <pattern id="grid" width={84} height={84} patternUnits="userSpaceOnUse">
-          <path d="M 84 0 L 0 0 0 84" fill="none" stroke={GRID_LINE} strokeWidth={1.5} />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
-    </svg>
+// Excluded placement band for Hero/Support/PunchPhrase/etc, in px from each
+// edge of the 1080x1920 canvas - top reserves space for a social app's
+// profile/follow UI, bottom matches Captions' already-established safe
+// zone (bottom: 440, "~1/3 from bottom for TikTok/Reels/Shorts UI").
+// Consumed by check_overlap.py's --safe-zone flag (see SKILL.md step 6);
+// keep both in sync if this ever changes.
+export const SAFE_ZONE = { top: 160, bottom: 460, left: 40, right: 40 };
+
+// Background: pale grid + static grain by default. Lives INSIDE the
+// CameraGroup zoom wrapper (it should scale together with the hero, per
+// the reference). `variant` swaps the backdrop TREATMENT per scene so
+// adjacent scenes don't all read as the identical frame - "grid" (default,
+// unchanged from before this prop existed) for a standard collage scene,
+// "chart" replaces the fine grid with bold ruled horizontal lines + left-
+// edge tick marks suited to a data/trend scene, "card" drops the grid for
+// a solid paper tone suited to a headline/quote scene, "spotlight" adds a
+// dark radial vignette suited to a warning/consequence beat. Pick
+// deliberately per scene (SKILL.md step 2b) - don't leave every scene on
+// the default. The fine-grid variant's line opacity (0.32) was tuned to be
+// clearly visible up close - a first "chart" pass at 0.14 opacity FAINT
+// lines rendered essentially invisible in an actual still (caught by
+// rendering and cropping one, not by eye on the code) - bold lines here
+// intentionally match that same visible-up-close bar, not a token nod.
+export const SceneBackground = ({ variant = "grid" }) => (
+  <AbsoluteFill name="Background" style={{ backgroundColor: variant === "card" ? BUBBLE_CREAM : BG }}>
+    {variant === "grid" && (
+      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+        <defs>
+          <pattern id="grid" width={84} height={84} patternUnits="userSpaceOnUse">
+            <path d="M 84 0 L 0 0 0 84" fill="none" stroke={GRID_LINE} strokeWidth={1.5} />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    )}
+    {variant === "chart" && (
+      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+        {[0.2, 0.4, 0.6, 0.8].map((f, i) => (
+          <g key={i}>
+            <line x1="0" y1={`${f * 100}%`} x2="100%" y2={`${f * 100}%`} stroke={INK} strokeWidth={1.5} opacity={0.16} />
+            <line x1="0" y1={`${f * 100}%`} x2="24" y2={`${f * 100}%`} stroke={ORANGE} strokeWidth={4} opacity={0.55} />
+          </g>
+        ))}
+        <line x1="24" y1="0" x2="24" y2="100%" stroke={ORANGE} strokeWidth={3} opacity={0.4} />
+      </svg>
+    )}
+    {variant === "spotlight" && (
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(circle at 50% 40%, rgba(20,20,20,0) 35%, rgba(20,20,20,0.28) 100%)",
+        }}
+      />
+    )}
     <div
       style={{
         position: "absolute",
@@ -61,7 +103,10 @@ export const BottomBar = () => (
 // Wraps background + foreground together under one continuous camera move
 // per scene (zoom and/or pan), matching the reference's "one continuous
 // shot" feel. `shake` adds a brief decaying jitter at a specific frame
-// (e.g. a gavel strike landing) — {at, len, mag}.
+// (e.g. a gavel strike landing, or a beat's word-anchored entrance) —
+// {at, len, mag}, OR an array of those for several punctuation points in
+// one scene (e.g. one small jolt per beat_sync.py anchor) — overlapping
+// windows sum their offsets rather than one replacing another.
 export const CameraGroup = ({ zoom, pan, shake, durationInFrames, children }) => {
   const frame = useCurrentFrame();
   const scale = zoom
@@ -71,12 +116,13 @@ export const CameraGroup = ({ zoom, pan, shake, durationInFrames, children }) =>
   const panY = pan ? interpolate(frame, [0, durationInFrames], [pan.from.y, pan.to.y], { extrapolateRight: "clamp" }) : 0;
   let shakeX = 0;
   let shakeY = 0;
-  if (shake) {
-    const t = frame - shake.at;
-    if (t >= 0 && t < shake.len) {
-      const decay = 1 - t / shake.len;
-      shakeX = Math.sin(t * 3.2) * shake.mag * decay;
-      shakeY = Math.cos(t * 2.6) * shake.mag * decay;
+  const shakes = shake ? (Array.isArray(shake) ? shake : [shake]) : [];
+  for (const s of shakes) {
+    const t = frame - s.at;
+    if (t >= 0 && t < s.len) {
+      const decay = 1 - t / s.len;
+      shakeX += Math.sin(t * 3.2) * s.mag * decay;
+      shakeY += Math.cos(t * 2.6) * s.mag * decay;
     }
   }
   return (
@@ -176,6 +222,10 @@ export const Hero = ({ name, src, width, x, y, variant = "rise", phase = 0, idle
 export const Support = ({ name, src, width, x, y, phase = 0, idle = "sway", visibleFor, exitLen = 10 }) => {
   const frame = useCurrentFrame();
   const { rot: idleRot, ty: idleTy } = idleMotion(Math.max(0, frame - 10), phase, idle);
+  const left = typeof x === "string" ? x : `${x}px`;
+  // Same percentage-centering fix as Hero (see SKILL.md's "got wrong" list)
+  // — Support never had it, just never got exercised with a "%" x so far.
+  const marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0;
   let sc = interpolate(frame, [0, 14], [0.4, 1], { extrapolateRight: "clamp", easing: Easing.spring({ damping: 12 }), output: "perceptual-scale" });
   let op = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
 
@@ -187,11 +237,43 @@ export const Support = ({ name, src, width, x, y, phase = 0, idle = "sway", visi
   }
 
   return (
-    <Interactive.Div name={name} style={{ position: "absolute", left: x, top: y, width, scale: sc, opacity: op, translate: `0px ${idleTy}px` }}>
+    <Interactive.Div name={name} style={{ position: "absolute", left, top: y, width, marginLeft, scale: sc, opacity: op, translate: `0px ${idleTy}px` }}>
       <div style={{ rotate: `${idleRot}deg` }}>
         <Img src={staticFile(src)} style={{ width: "100%", display: "block" }} />
       </div>
     </Interactive.Div>
+  );
+};
+
+// A horizontal string that sags loosely at first and pulls taut (with a
+// vibrating "twang" once `vibrateFrom` is reached) as more weight attaches
+// to it over time - built to render a specific `visualTransformation`
+// LITERALLY (V6Scene4's "căng như dây đàn" - taut as a guitar string) with
+// real accumulation, instead of illustrating a causal-chain scene the same
+// way as every other scene (icons popping into the same two fixed corner
+// slots, one replacing the last). `landedAt` is the ascending list of
+// frames at which each attached item lands - the string measurably tightens
+// at each one instead of on a generic timer.
+export const TensionString = ({ x1 = 100, x2 = 980, y = 1250, landedAt = [], vibrateFrom, color = ORANGE }) => {
+  const frame = useCurrentFrame();
+  const n = landedAt.length || 1;
+  const startSag = 110;
+  const endSag = 8;
+  const keyframes = [landedAt[0] !== undefined ? landedAt[0] - 20 : 0, ...landedAt];
+  const sagLevels = keyframes.map((_, i) => startSag - (i / n) * (startSag - endSag));
+  let sag = interpolate(frame, keyframes, sagLevels, { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  if (vibrateFrom !== undefined && frame >= vibrateFrom) {
+    const amt = interpolate(frame, [vibrateFrom, vibrateFrom + 40], [1, 0.3], { extrapolateRight: "clamp" });
+    sag += Math.sin(frame * 3.4) * 6 * amt;
+  }
+  const midX = (x1 + x2) / 2;
+  const d = `M ${x1},${y} Q ${midX},${y + sag} ${x2},${y}`;
+  return (
+    <svg style={{ position: "absolute", inset: 0, overflow: "visible" }} width="100%" height="100%">
+      <path d={d} fill="none" stroke={color} strokeWidth={5} opacity={0.75} strokeLinecap="round" />
+      <circle cx={x1} cy={y} r={7} fill={color} opacity={0.75} />
+      <circle cx={x2} cy={y} r={7} fill={color} opacity={0.75} />
+    </svg>
   );
 };
 
@@ -308,9 +390,16 @@ export const Shimmer = ({ src, width, x, y, delay = 0 }) => {
 // to land on empty grid space, not over the hero. `stagger` reveals it
 // word-by-word (kinetic typography) instead of the whole block popping in
 // at once. Supports explicit `lines` array or `\n` to prevent orphan words on new lines.
-export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize = 70, lineHeight = 1.22 }) => {
+// `onDark` flips the headline to light type with a soft shadow, for scenes
+// built on a BackgroundPhoto instead of pale paper. Without it the default
+// INK (#141414) headline is invisible against a darkened photo - caught by
+// rendering a still of the first BackgroundPhoto demo and finding the
+// headline had effectively vanished into the crowd behind it.
+export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize = 70, lineHeight = 1.22, onDark = false }) => {
   const frame = useCurrentFrame();
   const rawLines = lines || (typeof text === "string" ? text.split("\n") : [text]);
+  const inkColor = onDark ? "#F7F4EC" : INK;
+  const textShadow = onDark ? "0 3px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.9)" : undefined;
 
   // Smart line-breaker: if any line > 15 chars, balance into multi-lines
   let finalLines = [];
@@ -349,7 +438,8 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
           fontWeight: 900,
           fontSize: effectiveFontSize,
           lineHeight,
-          color: INK,
+          color: inkColor,
+          textShadow,
         }}
       >
         {finalLines.map((lineStr, lineIdx) => (
@@ -363,7 +453,7 @@ export const PunchPhrase = ({ text, lines, top = 120, stagger = false, fontSize 
   return (
     <Interactive.Div
       name="PunchPhrase"
-      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize: effectiveFontSize, lineHeight, color: INK }}
+      style={{ position: "absolute", left: 56, right: 56, top, fontFamily, fontWeight: 900, fontSize: effectiveFontSize, lineHeight, color: inkColor, textShadow }}
     >
       {finalLines.map((lineStr, lineIdx) => {
         const lineWords = lineStr.split(" ");
@@ -594,6 +684,116 @@ export const StatCounter = ({
         </div>
       )}
     </Interactive.Div>
+  );
+};
+
+// Progressively-drawn trend line chart (axis + polyline reveal via
+// strokeDashoffset, same draw-on technique FlowArrow already uses) with an
+// end-value badge landing once the line finishes drawing. Distinct from
+// StatCounter: that ticks ONE number up, this shows a curve/trend across
+// several points - use when the narration describes a value climbing,
+// falling, or being compared across steps (e.g. lãi suất escalating),
+// not as a default for every scene.
+export const AnimatedLineChart = ({
+  values,
+  labels,
+  x = 80,
+  y = 400,
+  width = 640,
+  height = 280,
+  delay = 0,
+  drawFrames = 40,
+  color = ORANGE,
+  endPrefix = "",
+  endSuffix = "",
+}) => {
+  const frame = useCurrentFrame();
+  const local = Math.max(0, frame - delay);
+  const progress = interpolate(local, [0, drawFrames], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const points = values.map((v, i) => [
+    (i / (values.length - 1)) * width,
+    height - ((v - min) / span) * height,
+  ]);
+  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]},${p[1]}`).join(" ");
+  const pathLength = points.reduce((acc, p, i) => {
+    if (i === 0) return 0;
+    const [px0, py0] = points[i - 1];
+    return acc + Math.hypot(p[0] - px0, p[1] - py0);
+  }, 0);
+
+  const badgeOpacity = interpolate(progress, [0.85, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const badgeScale = interpolate(progress, [0.85, 1], [0.5, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.spring({ damping: 9, stiffness: 200 }),
+    output: "perceptual-scale",
+  });
+  const lastPoint = points[points.length - 1];
+
+  return (
+    <div style={{ position: "absolute", left: x, top: y, width, height }}>
+      <svg width={width} height={height} style={{ overflow: "visible" }}>
+        <line x1={0} y1={height} x2={width} y2={height} stroke={INK} strokeWidth={2} opacity={0.3} />
+        <path
+          d={pathD}
+          fill="none"
+          stroke={color}
+          strokeWidth={7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={pathLength}
+          strokeDashoffset={pathLength * (1 - progress)}
+        />
+        {labels &&
+          labels.map((l, i) => (
+            <text
+              key={i}
+              x={points[i][0]}
+              y={height + 28}
+              fontFamily={fontFamily}
+              fontWeight={700}
+              fontSize={22}
+              fill={INK}
+              textAnchor="middle"
+              opacity={0.6}
+            >
+              {l}
+            </text>
+          ))}
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          left: lastPoint[0],
+          top: lastPoint[1],
+          translate: "-50% -140%",
+          opacity: badgeOpacity,
+          scale: badgeScale,
+          backgroundColor: INK,
+          color: BG,
+          borderRadius: 12,
+          padding: "6px 16px",
+          fontFamily,
+          fontWeight: 900,
+          fontSize: 36,
+          whiteSpace: "nowrap",
+          border: `3px solid ${color}`,
+          boxShadow: `0 6px 18px ${color}55`,
+        }}
+      >
+        {endPrefix}
+        {values[values.length - 1].toLocaleString("vi-VN")}
+        {endSuffix}
+      </div>
+    </div>
   );
 };
 

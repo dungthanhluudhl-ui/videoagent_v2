@@ -157,17 +157,27 @@ def chroma_key_remove(rgb_img, bg_name, inner=70, outer=170):
     arr = np.array(rgb_img.convert("RGB")).astype(np.float64)
     dist = np.sqrt(((arr - bg_rgb) ** 2).sum(axis=2))
     alpha = np.clip((dist - inner) / (outer - inner), 0, 1) * 255.0
-    edge = (alpha > 0) & (alpha < 255)
+    # Spill suppression used to only run in the partial-alpha feather band
+    # (`edge`) - fine for a matte subject, but a glossy/reflective one (a
+    # metallic credit card, a chrome gauge needle) can pick up real chroma
+    # color bouncing off its surface well inside the region classified as
+    # fully-opaque foreground, which never got corrected (confirmed: a real
+    # credit-card cutout kept a visible green rim along its curved edge even
+    # though its alpha there was 255). Run the same de-spill everywhere
+    # content survives (alpha > 0), not just the feather band - `excess`
+    # naturally clips to ~0 for non-green-dominant pixels, so genuinely
+    # correct colors elsewhere are untouched.
+    keep = alpha > 0
 
     r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
     out = arr.copy()
     if bg_name == "green":
         excess = np.clip(g - np.maximum(r, b), 0, None)
-        out[..., 1] = np.where(edge, g - excess, g)
+        out[..., 1] = np.where(keep, g - excess, g)
     elif bg_name == "magenta":
         excess = np.clip(np.minimum(r, b) - g, 0, None)
-        out[..., 0] = np.where(edge, r - excess / 2, r)
-        out[..., 2] = np.where(edge, b - excess / 2, b)
+        out[..., 0] = np.where(keep, r - excess / 2, r)
+        out[..., 2] = np.where(keep, b - excess / 2, b)
 
     rgba = np.dstack([np.clip(out, 0, 255), alpha]).astype(np.uint8)
     return Image.fromarray(rgba, "RGBA")

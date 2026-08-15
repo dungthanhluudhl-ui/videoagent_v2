@@ -1,14 +1,17 @@
-# References
+# references/
 
-`animation-variants.md` — entrance-animation catalogue, still accurate.
+Loaded on demand from SKILL.md, which stays short enough to be applied
+consistently. (The version of SKILL.md that shipped the V10 video was 1012
+lines; rules buried that deep were demonstrably not being followed.)
 
-There used to be an `example-scene.jsx` template here (single file per
-video). It was removed: this project moved to a multi-file pattern
-(`src/scenes/shared.jsx` + one file per scene + a `TransitionSeries`
-master timeline, per SKILL.md steps 6-7), and a separate synthetic
-example drifted out of sync with that real, working code more than once.
+| File | Read when |
+|---|---|
+| `visual-language.md` | **Every video, at planning.** Deciding what a scene should look like |
+| `primitives.md` | Before writing any component — what already exists, project and Remotion |
+| `gates.md` | A gate failed, or you need to know what's enforced and how |
+| `lessons.md` | Defects already paid for once |
+| `animation-variants.md` | Picking entrance animations |
 
-**For the next video, copy patterns straight from the current project's
-`src/scenes/shared.jsx` and `src/scenes/Scene*.jsx`** — they're proven
-and always up to date, since they're the actual shipped code, not a
-parallel doc that has to be remembered and kept in sync by hand.
+`example-scene.jsx` was removed: a synthetic template drifts out of sync with
+the real code. Copy patterns from the current `src/scenes/` instead — it is
+proven, working code.

@@ -45,6 +45,60 @@ import { V8Scene5, V8SCENE5_DURATION } from "./scenes/V8Scene5";
 import { V8Scene6, V8SCENE6_DURATION } from "./scenes/V8Scene6";
 import { V8Scene7, V8SCENE7_DURATION } from "./scenes/V8Scene7";
 
+import { V9Scene1, V9SCENE1_DURATION } from "./scenes/V9Scene1";
+import { V9Scene2, V9SCENE2_DURATION } from "./scenes/V9Scene2";
+import { V9Scene3, V9SCENE3_DURATION } from "./scenes/V9Scene3";
+import { V9Scene4, V9SCENE4_DURATION } from "./scenes/V9Scene4";
+import { V9Scene5, V9SCENE5_DURATION } from "./scenes/V9Scene5";
+import { V9Scene6, V9SCENE6_DURATION } from "./scenes/V9Scene6";
+import { V9Scene7, V9SCENE7_DURATION } from "./scenes/V9Scene7";
+import { V9Scene8a, V9SCENE8A_DURATION } from "./scenes/V9Scene8a";
+import { V9Scene8b, V9SCENE8B_DURATION } from "./scenes/V9Scene8b";
+import { V9Scene9, V9SCENE9_DURATION } from "./scenes/V9Scene9";
+import { V9Scene10, V9SCENE10_DURATION } from "./scenes/V9Scene10";
+import { ThueGiaoDichSo9, MASTER9_DURATION } from "./ThueGiaoDichSo9";
+
+// V10 = Itaewon crowd-crush video. Unrelated to the V9/ThueGiaoDichSo9
+// project above (that one is a separate, still-uncommitted video).
+import { V10Scene1, V10SCENE1_DURATION } from "./scenes/V10Scene1";
+import { V10Scene2, V10SCENE2_DURATION } from "./scenes/V10Scene2";
+import { V10Scene3, V10SCENE3_DURATION } from "./scenes/V10Scene3";
+import { V10Scene4, V10SCENE4_DURATION } from "./scenes/V10Scene4";
+import { V10Scene5, V10SCENE5_DURATION } from "./scenes/V10Scene5";
+import { V10Scene6, V10SCENE6_DURATION } from "./scenes/V10Scene6";
+import { V10Scene7, V10SCENE7_DURATION } from "./scenes/V10Scene7";
+import { V10Scene8, V10SCENE8_DURATION } from "./scenes/V10Scene8";
+import { V10Scene9, V10SCENE9_DURATION } from "./scenes/V10Scene9";
+import { V10Scene10, V10SCENE10_DURATION } from "./scenes/V10Scene10";
+import { V10Scene11, V10SCENE11_DURATION } from "./scenes/V10Scene11";
+import { V10Scene12, V10SCENE12_DURATION } from "./scenes/V10Scene12";
+import { V10Scene13, V10SCENE13_DURATION } from "./scenes/V10Scene13";
+import { V10Scene14, V10SCENE14_DURATION } from "./scenes/V10Scene14";
+import { V10Scene15, V10SCENE15_DURATION } from "./scenes/V10Scene15";
+import { V10Scene16, V10SCENE16_DURATION } from "./scenes/V10Scene16";
+import { V10Scene17, V10SCENE17_DURATION } from "./scenes/V10Scene17";
+import { V10Scene18, V10SCENE18_DURATION } from "./scenes/V10Scene18";
+import { V10Scene19, V10SCENE19_DURATION } from "./scenes/V10Scene19";
+import { V10Scene20, V10SCENE20_DURATION } from "./scenes/V10Scene20";
+import { V10Scene21, V10SCENE21_DURATION } from "./scenes/V10Scene21";
+import { V10Scene22, V10SCENE22_DURATION } from "./scenes/V10Scene22";
+import { V10Scene23, V10SCENE23_DURATION } from "./scenes/V10Scene23";
+import { V10Scene24, V10SCENE24_DURATION } from "./scenes/V10Scene24";
+import { V10Scene25, V10SCENE25_DURATION } from "./scenes/V10Scene25";
+import { V10Scene26, V10SCENE26_DURATION } from "./scenes/V10Scene26";
+import { ItaewonRemDap, MASTER10_DURATION } from "./ItaewonRemDap";
+
+// Render-proof compositions for the visual-language primitives (see
+// src/scenes/VLDemo.jsx) - a primitive that compiles but renders blank is a
+// real failure mode, so each gets a still-checkable composition.
+import {
+  VLDemoAnnotated, VLDemoBackground, VLDemoDensity, VLDemoDiagram,
+  VLDemoMap, VLDemoMockup, VLDemoTimeline, VLDEMO_DURATION,
+} from "./scenes/VLDemo";
+import {
+  VLDemoChain, VLDemoDots, VLDemoForce, VLDemoShops, VLDEMO2_DURATION,
+} from "./scenes/VLDemo2";
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -148,6 +202,81 @@ export const RemotionRoot = () => {
         id="XangTyGiaBatPho"
         component={XangTyGiaBatPho}
         durationInFrames={MASTER8_DURATION}
+        fps={LUATSU_CANVAS.fps}
+        width={LUATSU_CANVAS.width}
+        height={LUATSU_CANVAS.height}
+      />
+
+      <Folder name="ThueGiaoDichSo9-Scenes">
+        <Composition id="V9Scene1" component={V9Scene1} durationInFrames={V9SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene2" component={V9Scene2} durationInFrames={V9SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene3" component={V9Scene3} durationInFrames={V9SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene4" component={V9Scene4} durationInFrames={V9SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene5" component={V9Scene5} durationInFrames={V9SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene6" component={V9Scene6} durationInFrames={V9SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene7" component={V9Scene7} durationInFrames={V9SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene8a" component={V9Scene8a} durationInFrames={V9SCENE8A_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene8b" component={V9Scene8b} durationInFrames={V9SCENE8B_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene9" component={V9Scene9} durationInFrames={V9SCENE9_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V9Scene10" component={V9Scene10} durationInFrames={V9SCENE10_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+
+      <Folder name="VisualLanguage-Demos">
+        <Composition id="VLDemoBackground" component={VLDemoBackground} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoDiagram" component={VLDemoDiagram} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoDensity" component={VLDemoDensity} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoTimeline" component={VLDemoTimeline} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoAnnotated" component={VLDemoAnnotated} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoMap" component={VLDemoMap} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoMockup" component={VLDemoMockup} durationInFrames={VLDEMO_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoForce" component={VLDemoForce} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoDots" component={VLDemoDots} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoChain" component={VLDemoChain} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="VLDemoShops" component={VLDemoShops} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+
+      <Folder name="V10-Itaewon-Scenes">
+        <Composition id="V10Scene1" component={V10Scene1} durationInFrames={V10SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene2" component={V10Scene2} durationInFrames={V10SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene3" component={V10Scene3} durationInFrames={V10SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene4" component={V10Scene4} durationInFrames={V10SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene5" component={V10Scene5} durationInFrames={V10SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene6" component={V10Scene6} durationInFrames={V10SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene7" component={V10Scene7} durationInFrames={V10SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene8" component={V10Scene8} durationInFrames={V10SCENE8_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene9" component={V10Scene9} durationInFrames={V10SCENE9_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene10" component={V10Scene10} durationInFrames={V10SCENE10_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene11" component={V10Scene11} durationInFrames={V10SCENE11_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene12" component={V10Scene12} durationInFrames={V10SCENE12_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene13" component={V10Scene13} durationInFrames={V10SCENE13_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene14" component={V10Scene14} durationInFrames={V10SCENE14_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene15" component={V10Scene15} durationInFrames={V10SCENE15_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene16" component={V10Scene16} durationInFrames={V10SCENE16_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene17" component={V10Scene17} durationInFrames={V10SCENE17_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene18" component={V10Scene18} durationInFrames={V10SCENE18_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene19" component={V10Scene19} durationInFrames={V10SCENE19_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene20" component={V10Scene20} durationInFrames={V10SCENE20_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene21" component={V10Scene21} durationInFrames={V10SCENE21_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene22" component={V10Scene22} durationInFrames={V10SCENE22_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene23" component={V10Scene23} durationInFrames={V10SCENE23_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene24" component={V10Scene24} durationInFrames={V10SCENE24_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene25" component={V10Scene25} durationInFrames={V10SCENE25_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V10Scene26" component={V10Scene26} durationInFrames={V10SCENE26_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+
+      <Composition
+        id="ItaewonRemDap"
+        component={ItaewonRemDap}
+        durationInFrames={MASTER10_DURATION}
+        fps={LUATSU_CANVAS.fps}
+        width={LUATSU_CANVAS.width}
+        height={LUATSU_CANVAS.height}
+      />
+
+      <Composition
+        id="ThueGiaoDichSo9"
+        component={ThueGiaoDichSo9}
+        durationInFrames={MASTER9_DURATION}
         fps={LUATSU_CANVAS.fps}
         width={LUATSU_CANVAS.width}
         height={LUATSU_CANVAS.height}

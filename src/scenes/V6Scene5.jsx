@@ -16,17 +16,20 @@ export const V6Scene5 = () => {
         delay: 121,
       }}
       rightHero={{
-        // anchor: "ra chuồng gà" @ local frame 432 — was hardcoded 25,
-        // ~13.5s before the rejection consequence is actually spoken
+        // anchor: "ra chuồng gà" @ local frame 432 (beat_sync.py verified) —
+        // was hardcoded 25, ~13.5s before the rejection consequence is
+        // actually spoken
         name: "Hero-CicRejected",
         src: "el6_cic_rejected.png",
         width: 340,
         x: "75%",
-        delay: 420,
+        delay: 432,
       }}
-      arrowDelay={405}
-      punchLines={["CIC XẤU =", "KHÓ VAY"]}
+      arrowDelay={417}
+      punchLines={["CIC XẤU = KHÓ VAY"]}
       punchFrom={455}
+      punchTop={110}
+      shake={[{ at: 432, len: 12, mag: 7 }]}
     />
   );
 };
