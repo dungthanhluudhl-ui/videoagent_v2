@@ -21,6 +21,7 @@ re-ask.**
 
 | File | When |
 |---|---|
+| `references/worked-examples.md` | **Every video, at step 2a.** 12 real narration lines -> the visual decision, and the obvious answer that was rejected. Read BEFORE writing any `visualTransformation` |
 | `references/visual-language.md` | **Every video, at step 2.** How to decide what a scene should look like |
 | `references/primitives.md` | Before writing any component — check what exists first |
 | `references/gates.md` | When a gate fails, or to understand what's enforced |
@@ -79,6 +80,13 @@ The plan is a **file**, not chat text. It is the contract every later gate
 checks the build against. Schema is documented at the top of
 `scripts/plan_gate.py`.
 
+**Scaffold it first — a scene file cannot be written before its plan exists**
+(`hook_gate.py` blocks it):
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/new_video.py 11 --words input/words11_aligned.json
+```
+
 Scene boundaries follow Whisper's segments. Don't force a scene count — but
 note that a 6–9s average reads far better than 13s+ (the reference cuts about
 every 6.5s), and the opening 15 seconds deserve several distinct beats, not
@@ -123,7 +131,13 @@ Then:
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/scene_plan10.json
+py -3 .claude/skills/vox-collage-video/scripts/baseline_gate.py check input/scene_plan10.json
 ```
+
+`plan_gate` checks the floor. `baseline_gate` checks this video against the
+frozen profile of one already judged good (`references/baseline.json`) — it is
+the only thing that notices a build sliding backwards while still technically
+passing. Never re-`freeze` the baseline with a weaker video just to quieten it.
 
 Fix every failure. **Present the shot list to the user for approval** before
 sourcing anything — this checkpoint is where a wrong creative direction is
@@ -273,6 +287,14 @@ contact sheet. Only render an mp4 if the user asks for a file.
 `.claude/settings.json` runs `hook_gate.py` on every scene edit and at the end
 of every turn, while a plan has `"status": "active"`. Violations block. Set
 the status to `"shipped"` when the video is done.
+
+Two things are enforced regardless of any plan's status:
+
+* **No scene file for a new video before its plan exists.** Building from a
+  shot list that only lives in chat is the original defect this skill exists
+  to prevent, and it was reachable simply by doing things in the wrong order.
+* **No regression against `references/baseline.json`.** The Stop hook runs
+  `baseline_gate.py check` alongside the other three.
 
 **Never make a gate quiet by thinning the plan.** If a threshold is genuinely
 wrong for a video, change it explicitly and say why.

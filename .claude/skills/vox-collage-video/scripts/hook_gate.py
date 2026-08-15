@@ -25,10 +25,17 @@ Contract with Claude Code:
 
 Two safety rules make this safe to leave switched on permanently:
 
-1. SCOPED. It does nothing at all unless an ACTIVE scene plan exists
-   (`input/scene_plan*.json` with top-level "status": "active"). Unrelated
-   work in this repo - and any other project - is untouched. Set the plan's
-   status to "shipped" when a video is done and the gates go quiet.
+1. SCOPED. With one deliberate exception, it does nothing unless an ACTIVE
+   scene plan exists (`input/scene_plan*.json` with top-level
+   "status": "active"). Unrelated work in this repo - and any other project -
+   is untouched. Set the plan's status to "shipped" when a video is done and
+   the gates go quiet.
+
+   The exception is `guard_planless_scene`: a scene file for a video newer
+   than every planned video is blocked outright. Without it the whole system
+   was absent at the one moment it mattered most - the start of a new video,
+   before any plan exists - which let the original "shot list only lived in
+   chat" defect back in through the front door.
 2. FAIL-OPEN. Any unexpected error (bad JSON, missing script, crash) prints
    a warning and exits 0. A gate that bricks the repo when it has a bug is
    worse than no gate; the failure mode has to be "stops enforcing", never
@@ -37,11 +44,13 @@ Two safety rules make this safe to leave switched on permanently:
 
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
 SCRIPTS = pathlib.Path(__file__).resolve().parent
 SCENE_FILE_HINT = "src/scenes/"
+SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 
 
 def find_active_plan(root):
@@ -60,6 +69,59 @@ def find_active_plan(root):
               f"set all but one to \"status\": \"shipped\"", file=sys.stderr)
         return None
     return plans[0] if plans else None
+
+
+def planned_video_numbers(root):
+    """{10, 11, ...} - every video that has a plan file, active or not."""
+    nums = set()
+    for path in (root / "input").glob("scene_plan*.json"):
+        m = re.search(r"scene_plan(\d+)\.json$", path.name)
+        if m:
+            nums.add(int(m.group(1)))
+    return nums
+
+
+def guard_planless_scene(payload, root):
+    """Close the biggest hole in this whole system.
+
+    Every other check here is scoped to an ACTIVE plan, and `main` used to
+    return 0 the moment none was found. So the enforcement layer was absent
+    exactly when it mattered most: at the START of a new video, before any
+    plan file exists. Nothing stopped scene files being written straight from
+    a chat shot list - which is the original defect this skill was built to
+    make impossible, reachable again simply by doing things in the wrong order.
+
+    Rule: a scene file for a video NEWER than every planned video must not be
+    written until that video has `input/scene_plan<N>.json`. Older videos
+    (V3-V9 here) predate the convention and are deliberately left alone -
+    blocking edits to already-shipped work would be a bug, not enforcement.
+    """
+    tool_input = payload.get("tool_input") or {}
+    edited = str(tool_input.get("file_path") or tool_input.get("path") or "")
+    edited_norm = edited.replace("\\", "/")
+    if SCENE_FILE_HINT not in edited_norm:
+        return 0
+    m = SCENE_FILE_RE.search(edited_norm)
+    if not m:
+        return 0
+    video = int(m.group(1))
+    planned = planned_video_numbers(root)
+    if not planned or video in planned or video <= max(planned):
+        return 0
+
+    print(
+        f"[vox-gate] {pathlib.Path(edited_norm).name} belongs to video V{video}, which has "
+        f"no plan file. `input/scene_plan{video}.json` must exist BEFORE any scene of it "
+        f"is written.\n"
+        f"Scaffold it with:\n"
+        f"    py -3 .claude/skills/vox-collage-video/scripts/new_video.py {video} "
+        f"--words input/words{video}_aligned.json\n"
+        f"then fill in step 2a/2b per SKILL.md, get it past plan_gate.py and past "
+        f"baseline_gate.py check, and show the shot list to the user for approval.\n"
+        f"Building scenes from a shot list that only exists in chat is the exact defect "
+        f"this skill was built to make impossible.",
+        file=sys.stderr)
+    return 2
 
 
 def run(script, *args):
@@ -110,6 +172,11 @@ def stop(root, plan):
         ("plan_gate.py", [str(plan_path)], "scene plan"),
         ("build_gate.py", [str(plan_path)], "built scenes vs plan"),
         ("review_gate.py", [str(plan_path)], "self-review pass"),
+        # Compares this video against the FROZEN profile of one already judged
+        # good, not against an absolute floor. Every gate above accepts a video
+        # that sits just over the minimum; this is the one that notices the
+        # whole build sliding backwards while still technically passing.
+        ("baseline_gate.py", ["check", str(plan_path)], "so với mốc chuẩn"),
     ):
         if not (SCRIPTS / script).exists():
             continue        # gate not installed yet - fail open, don't block
@@ -138,6 +205,14 @@ def main():
 
     try:
         root = pathlib.Path(payload.get("cwd") or ".").resolve()
+
+        # Runs BEFORE the active-plan lookup on purpose: this is the one check
+        # that has to work when no plan exists at all.
+        if mode == "post-edit":
+            blocked = guard_planless_scene(payload, root)
+            if blocked:
+                return blocked
+
         plan = find_active_plan(root)
         if not plan:
             return 0        # scoped: no active video, nothing to enforce

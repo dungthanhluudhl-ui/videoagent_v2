@@ -203,3 +203,72 @@ Thresholds are CLI flags, deliberately. If one is genuinely wrong for a
 video, change it explicitly and say why. What must not happen is thinning the
 plan until a gate goes quiet — that is the failure mode the gates exist to
 prevent, and it will look identical to progress.
+
+## baseline_gate.py — không được tệ hơn video trước
+
+Mọi gate khác đo **SÀN**. `plan_gate` nhận 70% độ phủ nội dung; V10 đạt 95,9%.
+Nó nhận 1,60 s/nhịp ở cảnh complex; V10 đạt 2,10. Nghĩa là video sau có thể
+đạt 71% và 1,61, **pass sạch mọi gate, và xem thì tệ hơn hẳn**. Đó chính là
+kiểu hỏng "chất lượng chênh lệch, không đồng nhất" mà trước file này không có
+gì đo được.
+
+`baseline_gate` so video mới với **hồ sơ đã đóng băng** của một video từng
+được duyệt là đạt (`references/baseline.json`), không so với mức tối thiểu.
+
+```bash
+py -3 baseline_gate.py profile input/scene_plan11.json   # xem số của video này
+py -3 baseline_gate.py check   input/scene_plan11.json   # gate
+py -3 baseline_gate.py freeze  input/scene_plan11.json   # đặt mốc chuẩn MỚI
+```
+
+Mốc chuẩn hiện tại: **V10 Itaewon** (commit `ebf39b8`, tag `v10-restore-point`).
+
+| Chỉ số | V10 | Cho phép tụt |
+|---|---|---|
+| độ phủ nội dung | 95,9% | 8 điểm |
+| giây/nhịp cảnh complex | 2,10 | 0,25 |
+| giây/nhịp cảnh moderate | 1,80 | 0,20 |
+| số ngôn ngữ hình ảnh | 11 | 2 |
+| tỉ lệ ngôn ngữ nhiều nhất | 26,9% | +8 điểm |
+| cảnh xếp chồng ≥2 vai trò | 42,3% | 12 điểm |
+| cảnh có hình vẽ bằng code | 65,4% | 12 điểm |
+| cảnh chỉ có ảnh nền | 23,1% | +10 điểm |
+| tài nguyên/cảnh | 1,62 | 0,35 |
+| khoảng cách sự kiện lớn nhất | 3,55s | +1,0s |
+
+**Một ngưỡng KHÔNG lấy từ V10:** `photo_only_last_third_pct` ≤ toàn video + 12
+điểm. Đóng băng hồ sơ cũng đóng băng cả điểm yếu của nó, và V10 hơi nghiêng về
+ảnh không khí ở đoạn cuối (25% ở 1/3 cuối so với 23% toàn video). Ngưỡng này
+đặt tuyệt đối để video sau không được nhạt dần về cuối.
+
+### Khi gate này FAIL
+
+Sửa kế hoạch. **Đừng `freeze` lại bằng video kém hơn để gate im lặng** — làm
+vậy là xoá đúng thứ file này tồn tại để bảo vệ. Chỉ `freeze` lại khi video mới
+thực sự tốt hơn ở mọi chỉ số.
+
+### Giới hạn phải nói rõ
+
+Gate này đọc **kế hoạch**, không đọc pixel (nó chạy trong hook nên phải nhanh
+và không render). Lỗi bố cục — hình nhỏ lơ lửng giữa khoảng trắng — là việc của
+`review_gate` và của mắt người. Truyền `--frames input/review_frames` để bổ
+sung số đo độ lấp khung khi frame đã render xong.
+
+Và: **cấu trúc không phải chất lượng.** Một kế hoạch có thể đạt mọi con số ở
+đây mà vẫn nhàm. Gate này làm cho việc "trượt lùi âm thầm" trở nên bất khả thi;
+nó không làm cho bất cứ thứ gì hay lên. Phần đó là `worked-examples.md`.
+
+## Chặn cảnh chưa có kế hoạch (hook_gate)
+
+Trước đây `hook_gate` trả về 0 ngay khi không tìm thấy plan nào `active` —
+nghĩa là **toàn bộ hệ thống cưỡng chế vắng mặt đúng lúc quan trọng nhất**: đầu
+một video mới, trước khi có plan. Có thể viết thẳng `V11Scene1.jsx` từ shot
+list trong chat, đúng cái lỗi gốc mà skill này ra đời để ngăn.
+
+Nay: file cảnh của một video **mới hơn mọi video đã có plan** bị chặn thẳng
+(exit 2). Video cũ (V3–V9) có trước quy ước nên được để yên — chặn sửa việc đã
+ship là bug, không phải cưỡng chế.
+
+Dựng khung plan bằng `new_video.py <N> --words input/words<N>_aligned.json`.
+Khung này để rỗng mọi trường biên tập **có chủ ý** — `plan_gate` fail 423 lỗi
+trên khung trắng, nên không thể nhầm khung với kế hoạch.
