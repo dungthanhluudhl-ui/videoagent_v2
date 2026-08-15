@@ -42,13 +42,18 @@ REF_REVIEW = ROOT / "input" / "review10.json"
 class Case:
     """One (mutation, gate, expected outcome) triple."""
 
-    def __init__(self, name, gate, mutate=None, expect_fail=True, args=None, review=None):
+    def __init__(self, name, gate, mutate=None, expect_fail=True, args=None, review=None,
+                 scene_edit=None):
         self.name = name
         self.gate = gate
         self.mutate = mutate
         self.expect_fail = expect_fail
         self.args = args or (lambda plan_path: [str(plan_path)])
         self.review = review
+        # (filename, old, new) applied to a copied scene file. Needed because
+        # text_gate reads the BUILT .jsx, not the plan - a defect that only
+        # exists in drawn markup cannot be expressed as a plan mutation.
+        self.scene_edit = scene_edit
 
 
 def run_gate(gate, argv, cwd):
@@ -151,6 +156,33 @@ def regress_below_baseline(plan):
     return plan
 
 
+def flash_element(plan):
+    """An element that appears and vanishes before it can be read.
+
+    The real one: V11/S13 planned a crowd photo with visibleFor=15. Hero and
+    Support fade IN over ~10 frames and start fading OUT at
+    (visibleFor - exitLen), exitLen=10 - so those 15 frames gave FIVE at full
+    opacity, and the photo was arriving and leaving at the same time. Every
+    gate passed it, because every gate asked whether something appeared and
+    none asked whether it stayed."""
+    for a in plan["scenes"][0].get("assets", []):
+        a["visibleFor"] = 15
+    return plan
+
+
+def crammed_scene(plan):
+    """More beats in one scene than a viewer can follow.
+
+    V10 - the cut the user approved - averaged 2.04 beats/scene. V11, the cut
+    that read as relentless, averaged 2.62 at almost identical
+    seconds-per-beat. The variable that regressed is how many things happen in
+    one scene, not how fast each one lands."""
+    s = plan["scenes"][0]
+    s["comprehensionLoad"] = "moderate"
+    s["visualEvents"] = [{"frame": f, "what": "beat"} for f in (0, 20, 40, 60)]
+    return plan
+
+
 def mark_every_scene_built(plan):
     """A built video with no review file must still be blocked.
 
@@ -171,6 +203,12 @@ def unexplained_pass_on_empty_frame(review):
     return review
 
 
+def wordy_label(_plan):
+    """A drawn sentence instead of a label - handled by mutating the SCENE file,
+    not the plan, because that is where drawn text lives."""
+    return _plan
+
+
 CASES = [
     Case("plan_gate: cảnh không có minh hoạ nào", "plan_gate.py", drop_all_assets),
     Case("plan_gate: một ngôn ngữ dùng cho cả video", "plan_gate.py", one_language_everywhere),
@@ -178,6 +216,13 @@ CASES = [
     Case("plan_gate: khoảng chết hình > 4s", "plan_gate.py", open_a_dead_gap),
     Case("plan_gate: nhịp khai khống, không có gì đằng sau", "plan_gate.py", unbacked_event),
     Case("plan_gate: trường biên tập còn rỗng", "plan_gate.py", placeholder_fields),
+    Case("plan_gate: phần tử nháy lên rồi tắt, chưa kịp đọc", "plan_gate.py", flash_element),
+    Case("text_gate: nhãn chữ dài thành câu, đè lên nhau", "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx",
+                     "KHỐI NGƯỜI BỊ KHOÁ CHẶT",
+                     "khối người bị khoá chặt không ai rút ra nổi dù kéo mạnh đến đâu"),
+         expect_fail=True),
+    Case("plan_gate: nhồi quá nhiều nhịp vào một cảnh", "plan_gate.py", crammed_scene),
     Case("baseline_gate: tụt so với video mốc", "baseline_gate.py", regress_below_baseline,
          args=lambda p: ["check", str(p)]),
     Case("review_gate: chấm 'pass' cho khung đo được là trống, không nêu lý do",
@@ -186,7 +231,12 @@ CASES = [
          mark_every_scene_built, review=lambda r: {"video": "x", "scenes": []}),
     # The reference itself must survive all four. A gate that cannot pass is a
     # wall, and a wall gets removed.
-    Case("plan_gate: V10 thật phải PASS", "plan_gate.py", None, expect_fail=False),
+    # V10 shipped BEFORE the element-lifetime rule and breaks it 12 times.
+    # Skipping that one gate here is not softening it - it is refusing to let a
+    # rule written after V10 turn the reference into a wall. The debt is
+    # recorded in references/lessons.md, not hidden.
+    Case("plan_gate: V10 thật phải PASS (trừ luật mới sau khi V10 ship)", "plan_gate.py",
+         None, expect_fail=False, args=lambda p: [str(p), "--skip-lifetime"]),
     Case("build_gate: V10 thật phải PASS", "build_gate.py", None, expect_fail=False),
     Case("review_gate: V10 thật phải PASS", "review_gate.py", None, expect_fail=False),
     Case("baseline_gate: V10 thật phải PASS", "baseline_gate.py", None, expect_fail=False,
@@ -194,7 +244,7 @@ CASES = [
 ]
 
 
-def build_sandbox(tmp, plan_mut, review_mut):
+def build_sandbox(tmp, plan_mut, review_mut, scene_edit=None):
     """A throwaway copy of input/ so no case can touch the real files.
 
     src/ and the baseline are symlink-free copies too - build_gate and
@@ -227,6 +277,13 @@ def build_sandbox(tmp, plan_mut, review_mut):
     if scenes.exists():
         (tmp / "src").mkdir(exist_ok=True)
         shutil.copytree(scenes, tmp / "src" / "scenes", dirs_exist_ok=True)
+    if scene_edit:
+        fn, old, new = scene_edit
+        f = tmp / "src" / "scenes" / fn
+        s = f.read_text(encoding="utf-8")
+        if old not in s:
+            raise AssertionError(f"scene_edit: {old!r} not in {fn}")
+        f.write_text(s.replace(old, new, 1), encoding="utf-8")
     return plan_path
 
 
@@ -246,7 +303,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix="voxgate-") as td:
             tmp = pathlib.Path(td)
             try:
-                plan_path = build_sandbox(tmp, case.mutate, case.review)
+                plan_path = build_sandbox(tmp, case.mutate, case.review, case.scene_edit)
                 code, out = run_gate(case.gate, case.args(plan_path), tmp)
             except Exception as exc:                          # noqa: BLE001
                 results.append((case.name, False, f"selftest crashed: {exc}"))

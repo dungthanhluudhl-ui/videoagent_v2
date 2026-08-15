@@ -40,7 +40,7 @@ export const V11Scene23 = () => (
       </DrawnText>
       <DrawnPath d="M 856 30 L 916 30 L 916 118 L 856 118 Z" delay={86} drawFrames={12}
                  length={300} stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={86} x={886} y={98} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={86} overlayOn="Sup-Exit1" x={886} y={98} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 54, fontWeight: 900 }}>
         1
       </DrawnText>

@@ -70,7 +70,7 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 # gate that CRASHES (a bug in the gate should not brick the repo); it must not
 # protect against a gate that has VANISHED, which is a broken install.
 REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
-                  "baseline_gate.py", "selftest.py")
+                  "baseline_gate.py", "text_gate.py", "selftest.py")
 
 
 def find_active_plan(root):
@@ -191,6 +191,7 @@ def guard_premature_shipped(payload, root):
     for script, args in (("plan_gate.py", [str(path)]),
                          ("build_gate.py", [str(path)]),
                          ("review_gate.py", [str(path)]),
+                         ("text_gate.py", [str(path)]),
                          ("baseline_gate.py", ["check", str(path)])):
         if not (SCRIPTS / script).exists():
             failures.append(f"{script}: MISSING")
@@ -258,6 +259,7 @@ def stop(root, plan):
         ("plan_gate.py", [str(plan_path)], "scene plan"),
         ("build_gate.py", [str(plan_path)], "built scenes vs plan"),
         ("review_gate.py", [str(plan_path)], "self-review pass"),
+        ("text_gate.py", [str(plan_path)], "chữ vẽ: va chạm, độ dài, lặp narration"),
         # Compares this video against the FROZEN profile of one already judged
         # good, not against an absolute floor. Every gate above accepts a video
         # that sits just over the minimum; this is the one that notices the

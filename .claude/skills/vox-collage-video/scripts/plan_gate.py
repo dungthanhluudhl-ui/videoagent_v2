@@ -176,6 +176,32 @@ DEFAULTS = {
     "breath_window": 10,          # every N consecutive scenes must contain one low-density scene
     "uniform_run": 4,             # this many consecutive scenes of near-equal length = metronome
     "uniform_tolerance": 0.15,    # "near-equal" means within +/-15% of the run's mean
+
+    # --- element lifetime -------------------------------------------------
+    # An element the viewer never gets to READ is worse than no element: it
+    # flickers, pulls the eye, and is gone. V11 shipped five of them straight
+    # out of the plan (S13's crowd photo: visibleFor=15 -> 0.5s) plus six more
+    # added during a fix round. Nothing in any gate objected, because every
+    # existing rule asks "did something appear?" and none asks "did it stay?".
+    "min_clear_frames": 45,       # 1.5s at FULL opacity, after fades
+    # Hero/Support in shared.jsx fade IN over ~8-12 frames and start fading
+    # OUT at (visibleFor - exitLen), exitLen = 10 (Support) / 12 (Hero). So a
+    # visibleFor of 15 gives FIVE clean frames, not fifteen - the element is
+    # arriving and leaving at the same time and never reaches full opacity.
+    # The floor has to cover both fades, not just the readable stretch.
+    "fade_overhead_frames": 22,
+    # Where the last beat of a scene may sit. Lower bound comes from dead air
+    # (the scene cut is the next event, so a beat too early leaves a hole),
+    # upper bound from min_clear_frames. The window is 75 frames wide and is
+    # never empty - checked against all 24 V11 scenes, 23 had 8-89 frames of
+    # slack and the 24th was short by ONE frame.
+    "last_beat_min_frames": 45,   # >= this many frames before the scene ends
+    # Beats a single scene may carry, by load. V10 - the cut the user approved
+    # - averaged 2.04 beats/scene; V11, the cut that read as relentless,
+    # averaged 2.62 at almost identical seconds-per-beat (1.91 vs 1.97). The
+    # variable that regressed is HOW MANY THINGS per scene, not how fast.
+    "max_beats": {"simple": 2, "moderate": 2, "complex": 3},
+    "max_beats_closing": 5,       # only the final scene may carry more
 }
 
 
@@ -652,6 +678,74 @@ def gate_dead_air(scenes, rep, thresholds, fps):
                f"{limit:.0f}s across the whole video")
 
 
+def gate_element_lifetime(scenes, rep, thresholds, fps):
+    """Did it STAY long enough to be read?
+
+    Every other gate in this file asks whether something APPEARED. None asked
+    whether it lasted, and the gap shipped: eleven elements in V11 were on
+    screen for under a second, four of them under 0.8s, and the shortest was
+    a crowd photo that fades out before its own entrance animation finishes.
+
+    Three checks, all measured, none of them in tension with the dead-air or
+    coverage gates:
+
+      * lifetime   visibleFor must cover both fades plus a readable stretch.
+      * last beat  must sit >= min_clear_frames before the cut, so the scene's
+                   final reveal is not swallowed by the transition.
+      * beat count capped by load - the one number that actually separates the
+                   approved V10 cut from the relentless V11 one.
+    """
+    rep.section("Element-lifetime gate")
+    clear = thresholds["min_clear_frames"]
+    overhead = thresholds["fade_overhead_frames"]
+    floor = clear + overhead
+    last_min = thresholds["last_beat_min_frames"]
+    caps = thresholds["max_beats"]
+    bad = False
+
+    for i, scene in enumerate(scenes):
+        sid = scene.get("id", "?")
+        dur = int(scene.get("durationInFrames") or 0)
+
+        for asset in scene.get("assets", []):
+            vis = asset.get("visibleFor")
+            if vis is None:
+                continue
+            if int(vis) < floor:
+                name = asset.get("name") or asset.get("src") or "?"
+                rep.fail(
+                    f"{sid}/{name}: visibleFor={int(vis)} frames. Hero/Support fade in over "
+                    f"~10 and start fading out {overhead - 10} frames before the end, so this "
+                    f"is roughly {max(0, int(vis) - overhead) / fps:.2f}s at full opacity - "
+                    f"below the {clear / fps:.1f}s a viewer needs to take it in. "
+                    f"Raise visibleFor to >= {floor}, or drop the element.")
+                bad = True
+
+        events = scene.get("visualEvents") or []
+        if events and dur:
+            last = max(int(e.get("frame") or 0) for e in events)
+            if dur - last < last_min:
+                rep.fail(
+                    f"{sid}: last beat at frame {last} of {dur} leaves only "
+                    f"{(dur - last) / fps:.2f}s before the cut - it flashes and is gone. "
+                    f"Move it to <= frame {dur - last_min}.")
+                bad = True
+
+        cap = (thresholds["max_beats_closing"] if i == len(scenes) - 1
+               else caps.get(scene.get("comprehensionLoad"), 2))
+        if len(events) > cap:
+            rep.fail(
+                f"{sid}: {len(events)} beats in one {dur / fps:.1f}s scene "
+                f"(cap {cap} for load={scene.get('comprehensionLoad')}). The approved V10 cut "
+                f"averaged 2.04 beats/scene; the cut that read as relentless averaged 2.62 at "
+                f"the SAME seconds-per-beat. Split the scene or drop a beat.")
+            bad = True
+
+    if not bad:
+        rep.ok(f"every element stays >= {clear / fps:.1f}s clear, every last beat lands "
+               f">= {last_min / fps:.1f}s before its cut, no scene over its beat cap")
+
+
 def gate_content_coverage(scenes, words, rep, thresholds, fps):
     """The gate for the user's #1 criterion: "audio nói đến đâu có minh họa
     đến đó" - measured as a PERCENTAGE OF RUNNING TIME, not a keyword score.
@@ -826,6 +920,13 @@ def main():
     ap.add_argument("plan", help="path to input/scene_plan<N>.json")
     ap.add_argument("--words", default=None,
                     help="aligned transcript; defaults to the plan's own wordsFile field")
+    ap.add_argument("--skip-lifetime", action="store_true",
+                    help="skip the element-lifetime gate. EXISTS FOR ONE REASON: V10 shipped "
+                         "before this rule and violates it 12 times, so the selftest case that "
+                         "proves 'a gate that cannot pass is a wall' would otherwise be "
+                         "asserting the wall. Recorded as deferred debt in "
+                         "references/lessons.md. hook_gate never passes this flag, so the "
+                         "ACTIVE plan can never use it.")
     ap.add_argument("--json", action="store_true", help="emit machine-readable results")
     for key, value in DEFAULTS.items():
         ap.add_argument(f"--{key.replace('_', '-')}", type=float, default=value)
@@ -853,6 +954,8 @@ def main():
         gate_diversity(scenes, rep, thresholds)
         gate_dead_air(scenes, rep, thresholds, fps)
         gate_pacing(scenes, words, rep, thresholds, fps)
+        if not args.skip_lifetime:
+            gate_element_lifetime(scenes, rep, thresholds, fps)
         gate_anchors(scenes, words, rep)
         gate_content_coverage(scenes, words, rep, thresholds, fps)
 

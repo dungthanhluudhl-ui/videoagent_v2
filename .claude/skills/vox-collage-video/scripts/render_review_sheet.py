@@ -67,9 +67,30 @@ def main():
         total = int(round((scene.get("endSec", 0) - scene.get("startSec", 0)) * fps))
         if total <= 0:
             continue
-        # Sample inside the scene, never frame 0 - entrances are mid-flight there
-        # and everything looks half-drawn.
-        picks = [int(total * (i + 1) / (args.per_scene + 1)) for i in range(args.per_scene)]
+        # Sample ON THE BEATS, not on fractions of the runtime.
+        #
+        # This used to pick 1/4, 1/2, 3/4 of the scene - which never once looked
+        # at the scene's LAST beat. Every defect the first viewer of V11 found
+        # was at the end of a scene: labels flashing in over the top of other
+        # elements and vanishing, a crowd photo appearing and disappearing
+        # inside half a second. The contact sheet showed none of it, so the
+        # self-review recorded 24 clean scenes on a video full of end-of-scene
+        # collisions. Fractional sampling was not a small inaccuracy; it was
+        # blind to exactly the frames where things go wrong.
+        #
+        # So: settle-frames after every declared visualEvent, plus one near the
+        # cut. If the plan says something happens at frame 192, frame 202 is
+        # what the viewer sees, and that is what gets looked at.
+        settle = 10
+        beats = sorted({int(e.get("frame") or 0) for e in (scene.get("visualEvents") or [])})
+        picks = sorted({min(total - 2, b + settle) for b in beats if b + settle < total}
+                       | {max(1, total - 6)})
+        # Keep a mid-scene frame too, so a long hold is not judged only on its
+        # transitions.
+        if len(picks) < args.per_scene:
+            picks = sorted(set(picks) | {int(total * (i + 1) / (args.per_scene + 1))
+                                         for i in range(args.per_scene)})
+        picks = [f for f in picks if 0 < f < total]
         scene_frames = []
         for f in picks:
             dest = out_dir / f"{comp}_f{f}.png"
