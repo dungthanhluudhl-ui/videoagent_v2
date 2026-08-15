@@ -93,6 +93,18 @@ export const OSM_RASTER_STYLE = {
     paint: {
       "raster-saturation": -0.72,
       "raster-contrast": 0.2,
+      // Two wrong turns here, both caught on rendered stills:
+      //   0.78 white point + 0.2 contrast -> at zoom 17-18 carto-light is
+      //     mostly white building fill, so the map read as a blank sheet.
+      //   0.62 white point -> darkening the white point pulled EVERYTHING
+      //     toward mid-grey and the streets disappeared into the buildings.
+      //   0.52 contrast -> the exact failure this file already warned about
+      //     four lines up: on a near-white style, contrast pushes the pale
+      //     background to PURE white and the streets vanish completely.
+      // Back to the pair V10 proved. The real fix for a flat close-up map is
+      // not paint at all - it is zoom: carto-light simply carries little ink
+      // at z17-18, so map scenes stay at z16 and the measurement that needs
+      // close detail is drawn on top instead.
       "raster-brightness-max": 0.78,
     },
   }],

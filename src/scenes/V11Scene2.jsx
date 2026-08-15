@@ -13,7 +13,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, Hero, PunchPhrase, SceneBackground, Support } from "./shared";
-import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE2_DURATION = 106;
 
@@ -26,10 +26,10 @@ export const V11Scene2 = () => (
       <DrawnPath d="M 60 44 L 1020 44" delay={4} drawFrames={20} length={960} strokeWidth={6} />
       <DrawnPath d="M 60 44 L 60 78 M 1020 44 L 1020 78" delay={20} drawFrames={8}
                  length={80} strokeWidth={5} />
-      <text x={540} y={140} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={20} x={540} y={140} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 800, letterSpacing: 2 }}>
         NGƯỜI ĐƯỢC TRIỀU ĐÌNH NUÔI
-      </text>
+      </DrawnText>
       <DrawnPath d="M 300 176 L 780 176" delay={26} drawFrames={14} length={480}
                  stroke="#C2410C" strokeWidth={7} />
     </DiagramCanvas>

@@ -13,7 +13,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground, Support } from "./shared";
-import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE21_DURATION = 224;
 
@@ -26,38 +26,38 @@ export const V11Scene21 = () => (
       <DrawnPath d="M 540 40 L 540 560" delay={0} drawFrames={26} length={520} strokeWidth={8} />
       <DrawnPath d="M 540 40 L 510 96 M 540 40 L 570 96" delay={22} drawFrames={8}
                  length={130} stroke="#C2410C" strokeWidth={8} />
-      <text x={600} y={64} fill="#C2410C"
+      <DrawnText delay={22} x={600} y={64} fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
         BẮC
-      </text>
-      <text x={600} y={556} fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={22} x={600} y={556} fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
         NAM
-      </text>
+      </DrawnText>
 
       {/* đầu Bắc: đích đến */}
       <DrawnPath d="M 80 100 L 470 100 L 470 200 L 80 200 Z" delay={30} drawFrames={16}
                  length={980} stroke="#C2410C" strokeWidth={7} />
-      <text x={275} y={148} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={30} x={275} y={148} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
         PHỐ ẨM THỰC
-      </text>
-      <text x={275} y={186} textAnchor="middle" fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={38} x={275} y={186} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 28, fontWeight: 700 }}>
         họ muốn tới đây
-      </text>
+      </DrawnText>
 
       {/* đầu Nam: lối vào */}
       <DrawnPath d="M 610 400 L 1000 400 L 1000 500 L 610 500 Z" delay={60} drawFrames={16}
                  length={980} strokeWidth={7} />
-      <text x={805} y={448} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={60} x={805} y={448} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
         GA TÀU · BẾN XE
-      </text>
-      <text x={805} y={486} textAnchor="middle" fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={68} x={805} y={486} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 28, fontWeight: 700 }}>
         họ xuống ở đây
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={85} layout="none">
@@ -69,14 +69,14 @@ export const V11Scene21 = () => (
     <DiagramCanvas y={940} height={310}>
       <DrawnPath d="M 540 240 L 540 60 M 516 96 L 540 60 L 564 96" delay={130}
                  drawFrames={14} length={230} stroke="#C2410C" strokeWidth={9} />
-      <text x={790} y={140} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={130} x={790} y={140} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 900 }}>
         PHẢI ĐI LÊN
-      </text>
-      <text x={790} y={196} textAnchor="middle" fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={138} x={790} y={196} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 700 }}>
         từ Nam ngược lên Bắc
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={115} layout="none">

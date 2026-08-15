@@ -15,8 +15,7 @@
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase } from "./shared";
 import {
-  BackgroundPhoto, DiagramCanvas, DimensionLine, DrawnPath, ForceArrow,
-} from "./visualLanguage";
+  BackgroundPhoto, DiagramCanvas, DimensionLine, DrawnPath, ForceArrow, DrawnText } from "./visualLanguage";
 
 export const V11SCENE24_DURATION = 286;
 
@@ -47,10 +46,10 @@ export const V11Scene24 = () => (
                  stroke="#F2EFE7" strokeWidth={8} />
       <DimensionLine x1={430} y1={110} x2={650} y2={110} label="3,2m" delay={162}
                      offset={0} fontSize={44} />
-      <text x={200} y={120} textAnchor="middle" fill="#F2EFE7"
+      <DrawnText delay={147} x={200} y={120} textAnchor="middle" fill="#F2EFE7"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 800 }}>
         chỗ thắt nút
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     {/* tầng 3 (211) - hai vách bóp lại thành cái phễu */}
@@ -59,10 +58,10 @@ export const V11Scene24 = () => (
                  length={860} stroke="#C2410C" strokeWidth={9} />
       <DrawnPath d="M 1010 20 L 650 100 L 650 130 L 1010 200" delay={217} drawFrames={18}
                  length={860} stroke="#C2410C" strokeWidth={9} />
-      <text x={540} y={196} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={217} x={540} y={196} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
         PHỄU THẮT NGHẸT
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     {/* tầng 4 (260) - hai dòng người đi ngược chiều đâm vào chỗ thắt */}

@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, Support } from "./shared";
-import { BackgroundPhoto, DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { BackgroundPhoto, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE13_DURATION = 130;
 
@@ -30,16 +30,16 @@ export const V11Scene13 = () => (
           <DrawnPath d={`M ${150 + i * 260} 128 L ${150 + i * 260} 172`}
                      delay={10 + i * 8} drawFrames={6} length={44}
                      stroke="#C2410C" strokeWidth={7} />
-          <text x={150 + i * 260} y={106} textAnchor="middle" fill="#F2EFE7"
+          <DrawnText delay={10 + i * 8} x={150 + i * 260} y={106} textAnchor="middle" fill="#F2EFE7"
                 style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
             {2016 + i}
-          </text>
+          </DrawnText>
         </g>
       ))}
-      <text x={540} y={240} textAnchor="middle" fill="#F2EFE7" opacity={0.85}
+      <DrawnText delay={40} x={540} y={240} textAnchor="middle" fill="#F2EFE7" opacity={0.85}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
         năm nào cũng đông
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={91} layout="none">

@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DensityGrid, DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DensityGrid, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE14_DURATION = 173;
 
@@ -29,30 +29,30 @@ export const V11Scene14 = () => (
                    fillCount={250} delay={0} fillFrames={80} />
       <DrawnPath d="M 100 386 L 980 386" delay={70} drawFrames={16} length={880}
                  stroke="#C2410C" strokeWidth={6} />
-      <text x={540} y={452} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={70} x={540} y={452} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 800 }}>
         mỗi chấm ≈ 400 người
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     {/* mốc năm lật sang 2022 - chuyển sang vế sau của câu */}
     <DiagramCanvas y={900} height={350}>
-      <text x={250} y={110} textAnchor="middle" fill="#1A1A1A" opacity={0.45}
+      <DrawnText delay={116} x={250} y={110} textAnchor="middle" fill="#1A1A1A" opacity={0.45}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 78, fontWeight: 900 }}>
         2019
-      </text>
+      </DrawnText>
       <DrawnPath d="M 380 88 L 620 88 M 586 66 L 620 88 L 586 110" delay={116}
                  drawFrames={12} length={300} stroke="#C2410C" strokeWidth={9} />
-      <text x={830} y={110} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={126} x={830} y={110} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 78, fontWeight: 900 }}>
         2022
-      </text>
+      </DrawnText>
       <DrawnPath d="M 630 170 L 1030 170" delay={130} drawFrames={12} length={400}
                  strokeWidth={5} dashed />
-      <text x={830} y={232} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={136} x={830} y={232} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
         Halloween năm ấy
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <BottomBar />

@@ -13,7 +13,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground, Support } from "./shared";
-import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE3_DURATION = 102;
 
@@ -23,10 +23,10 @@ const Plaque = ({ x, text, delay }) => (
                delay={delay} drawFrames={14} length={980} strokeWidth={7} />
     <DrawnPath d={`M ${x + 18} 58 L ${x + 262} 58 L ${x + 262} 232 L ${x + 18} 232 Z`}
                delay={delay + 6} drawFrames={12} length={840} strokeWidth={3} opacity={0.45} />
-    <text x={x + 140} y={168} textAnchor="middle" fill="#1A1A1A"
+    <DrawnText delay={delay + 8} x={x + 140} y={168} textAnchor="middle" fill="#1A1A1A"
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 74, fontWeight: 900 }}>
       {text}
-    </text>
+    </DrawnText>
   </g>
 );
 
@@ -51,22 +51,22 @@ export const V11Scene3 = () => (
     {/* cột niên đại bên phải, cân lại khối giấy lệch trái */}
     <DiagramCanvas y={860} height={390}>
       <DrawnPath d="M 890 20 L 890 330" delay={40} drawFrames={18} length={320} strokeWidth={6} />
-      <text x={950} y={120} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={40} x={950} y={120} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
         DÂN
-      </text>
-      <text x={950} y={172} textAnchor="middle" fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={46} x={950} y={172} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
         GỌI
-      </text>
-      <text x={950} y={236} textAnchor="middle" fill="#C2410C"
+      </DrawnText>
+      <DrawnText delay={52} x={950} y={236} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 900 }}>
         THẾ KỶ
-      </text>
-      <text x={950} y={282} textAnchor="middle" fill="#C2410C"
+      </DrawnText>
+      <DrawnText delay={58} x={950} y={282} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 44, fontWeight: 900 }}>
         16
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={68} layout="none">

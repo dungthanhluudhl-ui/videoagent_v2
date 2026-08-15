@@ -13,14 +13,14 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, Support } from "./shared";
-import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 import { LOCAL_RASTER_STYLE, MapGraphic } from "./MapGraphic";
 
 export const V11SCENE23_DURATION = 148;
 
 export const V11Scene23 = () => (
   <AbsoluteFill name="V11Scene23">
-    <MapGraphic center={[126.9944, 37.5343]} zoom={18} style={LOCAL_RASTER_STYLE}
+    <MapGraphic center={[126.9944, 37.5343]} zoom={16} style={LOCAL_RASTER_STYLE}
                 label="CON HẺM" sublabel="đầu phía Nam"
                 delay={0} pinDelay={18} tint={0.22} />
 
@@ -31,23 +31,23 @@ export const V11Scene23 = () => (
     </Sequence>
 
     {/* số hiệu lối ra viết đè lên tấm biển để trống của ảnh nguồn */}
-    <DiagramCanvas y={840} height={410}>
+    <DiagramCanvas y={940} height={310}>
       <DrawnPath d="M 120 120 L 560 120 M 526 96 L 560 120 L 526 144" delay={70}
                  drawFrames={14} length={480} stroke="#C2410C" strokeWidth={9} />
-      <text x={330} y={88} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={70} x={330} y={88} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 900 }}>
         ĐẦU NAM CỦA HẺM
-      </text>
+      </DrawnText>
       <DrawnPath d="M 856 30 L 916 30 L 916 118 L 856 118 Z" delay={86} drawFrames={12}
                  length={300} stroke="#C2410C" strokeWidth={6} />
-      <text x={886} y={98} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={86} x={886} y={98} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 54, fontWeight: 900 }}>
         1
-      </text>
-      <text x={330} y={196} textAnchor="middle" fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={94} x={330} y={196} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
         người từ ga đổ thẳng vào
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <BottomBar />

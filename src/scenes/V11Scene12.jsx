@@ -13,7 +13,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DiagramCanvas, DimensionLine, DrawnPath, SlopeIndicator } from "./visualLanguage";
+import { DiagramCanvas, DimensionLine, DrawnPath, SlopeIndicator, DrawnText } from "./visualLanguage";
 
 export const V11SCENE12_DURATION = 230;
 
@@ -43,17 +43,18 @@ export const V11Scene12 = () => (
     <DiagramCanvas y={660} height={260}>
       <DrawnPath d="M 90 130 L 990 130" delay={118} drawFrames={18} length={900}
                  strokeWidth={7} />
-      <text x={540} y={90} textAnchor="middle" fill="#1A1A1A" opacity={0.55}
+      <DrawnText delay={118} x={540} y={90} textAnchor="middle" fill="#1A1A1A" opacity={0.55}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 800 }}>
         KHÔNG HỀ BẰNG PHẲNG
-      </text>
+      </DrawnText>
       <DrawnPath d="M 250 74 L 830 74" delay={148} drawFrames={10} length={580}
                  stroke="#C2410C" strokeWidth={9} />
     </DiagramCanvas>
 
     {/* tầng 3 - mặt đất nghiêng, nhà dựng ngay trên dốc */}
     <DiagramCanvas y={880} height={370}>
-      <SlopeIndicator x1={90} y1={280} x2={990} y2={80} label="DỐC" delay={192} />
+      <DrawnPath d="M 90 280 L 990 80" delay={192} drawFrames={20} length={922} strokeWidth={9} />
+      <SlopeIndicator x1={90} y1={280} x2={990} y2={80} label="DỐC" delay={196} />
       <DrawnPath d="M 250 236 L 250 156 L 360 132 L 360 212 Z" delay={202} drawFrames={12}
                  length={420} strokeWidth={5} />
       <DrawnPath d="M 500 180 L 500 100 L 610 76 L 610 156 Z" delay={210} drawFrames={12}

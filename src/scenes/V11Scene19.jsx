@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase } from "./shared";
-import { BackgroundPhoto, DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { BackgroundPhoto, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE19_DURATION = 107;
 
@@ -21,10 +21,10 @@ const Tag = ({ ax, ay, lx, ly, text, anchor, delay }) => (
     <DrawnPath d={`M ${ax} ${ay} L ${lx} ${ly}`} delay={delay} drawFrames={8}
                length={420} stroke="#C2410C" strokeWidth={5} />
     <circle cx={ax} cy={ay} r={12} fill="none" stroke="#C2410C" strokeWidth={5} />
-    <text x={lx} y={ly - 16} textAnchor={anchor} fill="#F2EFE7"
+    <DrawnText delay={delay + 4} x={lx} y={ly - 16} textAnchor={anchor} fill="#F2EFE7"
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
       {text}
-    </text>
+    </DrawnText>
   </g>
 );
 

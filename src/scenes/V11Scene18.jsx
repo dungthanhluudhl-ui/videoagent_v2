@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DiagramCanvas, DrawnPath, ForceArrow } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, ForceArrow, DrawnText } from "./visualLanguage";
 
 export const V11SCENE18_DURATION = 152;
 
@@ -28,14 +28,14 @@ export const V11Scene18 = () => (
                  stroke="#C2410C" strokeWidth={10} />
       <DrawnPath d="M 540 190 L 470 190" delay={32} drawFrames={8} length={72}
                  stroke="#C2410C" strokeWidth={10} />
-      <text x={540} y={330} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={32} x={540} y={330} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 66, fontWeight: 900, letterSpacing: 6 }}>
         20:00
-      </text>
-      <text x={540} y={390} textAnchor="middle" fill="#1A1A1A" opacity={0.7}
+      </DrawnText>
+      <DrawnText delay={40} x={540} y={390} textAnchor="middle" fill="#1A1A1A" opacity={0.7}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
         trên các lối đi
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     {/* mặt cắt lối đi: hai vách khép lại, hai luồng người ép vào nhau */}
@@ -50,10 +50,10 @@ export const V11Scene18 = () => (
                   travelFrames={14} />
       <ForceArrow x={990} y={212} length={280} delay={118} label="" thickness={20}
                   travelFrames={14} direction={-1} />
-      <text x={540} y={400} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={118} x={540} y={400} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
         CHEN CHÚC · XÔ ĐẨY
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={19} layout="none">

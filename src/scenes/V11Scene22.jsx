@@ -13,7 +13,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DiagramCanvas, DrawnPath, ForceArrow } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, ForceArrow, DrawnText } from "./visualLanguage";
 
 export const V11SCENE22_DURATION = 125;
 
@@ -25,24 +25,24 @@ export const V11Scene22 = () => (
     <DiagramCanvas y={310} height={520}>
       <DrawnPath d="M 70 60 L 1010 60" delay={0} drawFrames={20} length={940}
                  stroke="#C2410C" strokeWidth={9} />
-      <text x={70} y={38} fill="#C2410C"
+      <DrawnText delay={0} x={70} y={38} fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 900 }}>
         PHỐ ẨM THỰC (BẮC)
-      </text>
+      </DrawnText>
       <DrawnPath d="M 70 440 L 1010 440" delay={6} drawFrames={20} length={940}
                  strokeWidth={9} />
-      <text x={70} y={492} fill="#1A1A1A"
+      <DrawnText delay={6} x={70} y={492} fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 900 }}>
         ĐƯỜNG CHÍNH ITAEWON (NAM)
-      </text>
+      </DrawnText>
       {[180, 400, 620, 840].map((x, i) => (
         <DrawnPath key={x} d={`M ${x} 440 L ${x} 60`} delay={20 + i * 6} drawFrames={12}
                    length={380} strokeWidth={5} />
       ))}
-      <text x={540} y={266} textAnchor="middle" fill="#1A1A1A" opacity={0.72}
+      <DrawnText delay={30} x={540} y={266} textAnchor="middle" fill="#1A1A1A" opacity={0.72}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 800 }}>
         chỉ có các con hẻm nhỏ cắt ngang
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     {/* dòng người bị dồn vào hẻm */}
@@ -53,20 +53,20 @@ export const V11Scene22 = () => (
                   thickness={22} travelFrames={16} />
       <DrawnPath d="M 560 60 L 560 300 M 620 60 L 620 300" delay={44} drawFrames={14}
                  length={240} strokeWidth={7} />
-      <text x={590} y={342} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={44} x={590} y={342} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
         HẺM NGANG
-      </text>
+      </DrawnText>
       <ForceArrow x={660} y={180} length={320} delay={60} label="" thickness={22}
                   travelFrames={16} />
       <DrawnPath d="M 760 60 L 980 60 M 760 60 L 980 60" delay={72} drawFrames={10}
                  length={220} strokeWidth={5} opacity={0.4} />
       <DrawnPath d="M 780 40 L 960 96 M 960 40 L 780 96" delay={78} drawFrames={10}
                  length={220} stroke="#C2410C" strokeWidth={7} />
-      <text x={870} y={140} textAnchor="middle" fill="#1A1A1A" opacity={0.65}
+      <DrawnText delay={78} x={870} y={140} textAnchor="middle" fill="#1A1A1A" opacity={0.65}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 26, fontWeight: 700 }}>
         không còn lối khác
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={52} layout="none">

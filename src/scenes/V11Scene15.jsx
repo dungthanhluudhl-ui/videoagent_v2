@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DeviceMockup, DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DeviceMockup, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE15_DURATION = 112;
 
@@ -39,10 +39,10 @@ export const V11Scene15 = () => (
     <DiagramCanvas y={1058} height={200}>
       <DrawnPath d="M 300 96 L 780 96 L 780 40 L 300 40 Z" delay={83} drawFrames={12}
                  length={1080} strokeWidth={6} />
-      <text x={540} y={84} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={83} x={540} y={84} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 900 }}>
         ĐEO KHẨU TRANG
-      </text>
+      </DrawnText>
       <DrawnPath d="M 286 68 L 794 68" delay={92} drawFrames={9} length={510}
                  stroke="#C2410C" strokeWidth={11} />
     </DiagramCanvas>

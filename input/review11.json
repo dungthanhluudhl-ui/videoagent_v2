@@ -1,0 +1,228 @@
+{
+  "video": "V11",
+  "howToFill": "For each scene put 'pass' / 'fail' / 'n/a' against the four criteria after LOOKING at its frame. A 'fail' blocks until fixed, or until \"resolved\": true is set with a note explaining why it is acceptable.",
+  "criteria": {
+    "illustrated": "narration is shown, not left to the viewer's imagination",
+    "composed": "balanced, everything inside the frame and legible",
+    "varied": "not the same visual formula as its neighbours",
+    "purposeful": "every element is there for a reason, not filler"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames\\V11Scene1_f25.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames\\V11Scene2_f26.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames\\V11Scene3_f25.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S4",
+      "frame": "input\\review_frames\\V11Scene4_f37.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S5",
+      "frame": "input\\review_frames\\V11Scene5_f37.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S6",
+      "frame": "input\\review_frames\\V11Scene6_f54.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S7",
+      "frame": "input\\review_frames\\V11Scene7_f38.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S8",
+      "frame": "input\\review_frames\\V11Scene8_f29.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S9",
+      "frame": "input\\review_frames\\V11Scene9_f48.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S10",
+      "frame": "input\\review_frames\\V11Scene10_f32.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S11",
+      "frame": "input\\review_frames\\V11Scene11_f33.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S12",
+      "frame": "input\\review_frames\\V11Scene12_f57.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S13",
+      "frame": "input\\review_frames\\V11Scene13_f32.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S14",
+      "frame": "input\\review_frames\\V11Scene14_f43.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S15",
+      "frame": "input\\review_frames\\V11Scene15_f28.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S16",
+      "frame": "input\\review_frames\\V11Scene16_f42.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S17",
+      "frame": "input\\review_frames\\V11Scene17_f29.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S18",
+      "frame": "input\\review_frames\\V11Scene18_f38.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S19",
+      "frame": "input\\review_frames\\V11Scene19_f26.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S20",
+      "frame": "input\\review_frames\\V11Scene20_f44.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S21",
+      "frame": "input\\review_frames\\V11Scene21_f56.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S22",
+      "frame": "input\\review_frames\\V11Scene22_f31.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S23",
+      "frame": "input\\review_frames\\V11Scene23_f37.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    },
+    {
+      "id": "S24",
+      "frame": "input\\review_frames\\V11Scene24_f71.png",
+      "illustrated": "",
+      "composed": "",
+      "varied": "",
+      "purposeful": "",
+      "note": ""
+    }
+  ]
+}

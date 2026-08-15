@@ -9,7 +9,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, Support } from "./shared";
-import { BackgroundPhoto, DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { BackgroundPhoto, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE7_DURATION = 155;
 
@@ -17,10 +17,10 @@ const Node = ({ y, label, delay }) => (
   <g>
     <DrawnPath d={`M 70 ${y} L 640 ${y} L 640 ${y + 96} L 70 ${y + 96} Z`}
                delay={delay} drawFrames={14} length={1330} stroke="#F2EFE7" strokeWidth={6} />
-    <text x={355} y={y + 64} textAnchor="middle" fill="#F2EFE7"
+    <DrawnText delay={delay + 6} x={355} y={y + 64} textAnchor="middle" fill="#F2EFE7"
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
       {label}
-    </text>
+    </DrawnText>
   </g>
 );
 
@@ -50,14 +50,14 @@ export const V11Scene7 = () => (
                  delay={104} drawFrames={10} length={140} stroke="#C2410C" strokeWidth={8} />
       <DrawnPath d="M 70 140 L 620 140 L 620 250 L 70 250 Z" delay={112} drawFrames={14}
                  length={1320} stroke="#C2410C" strokeWidth={7} />
-      <text x={345} y={210} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={112} x={345} y={210} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 46, fontWeight: 900 }}>
         SÔI ĐỘNG BẬC NHẤT
-      </text>
-      <text x={345} y={330} textAnchor="middle" fill="#F2EFE7"
+      </DrawnText>
+      <DrawnText delay={122} x={345} y={330} textAnchor="middle" fill="#F2EFE7"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
         người nước ngoài đổ về
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <BottomBar />

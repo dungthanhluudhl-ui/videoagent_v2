@@ -991,3 +991,36 @@ export const StreetElevation = ({
     </g>
   );
 };
+
+/**
+ * DrawnText - an SVG label that arrives on a beat.
+ *
+ * The gap this closes was invisible in code review and obvious the moment a
+ * frame was rendered: every drawing primitive here takes a `delay` and
+ * animates in, but a bare <text> inside DiagramCanvas has no timing at all -
+ * it is simply painted from frame 0. So a scene whose plan said "the label
+ * arrives at frame 150" showed that label from the very first frame, and the
+ * declared visual beats collapsed into one. Checked across V11: 67 labels in
+ * 24 scenes, all of them early.
+ *
+ * Same props as <text>, plus `delay` and `rise`.
+ */
+export const DrawnText = ({ delay = 0, rise = 14, children, style, ...rest }) => {
+  const frame = useCurrentFrame();
+  const local = frame - delay;
+  const opacity = interpolate(local, [0, 10], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const dy = interpolate(local, [0, 14], [rise, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+  return (
+    <text {...rest} opacity={(rest.opacity ?? 1) * opacity}
+          transform={`translate(0 ${dy})`} style={style}>
+      {children}
+    </text>
+  );
+};

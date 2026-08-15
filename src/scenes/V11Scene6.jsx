@@ -14,7 +14,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground, Support } from "./shared";
-import { DiagramCanvas, DrawnPath, Timeline } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, Timeline, DrawnText } from "./visualLanguage";
 import { LOCAL_RASTER_STYLE, MapPanel } from "./MapGraphic";
 
 export const V11SCENE6_DURATION = 218;
@@ -24,7 +24,7 @@ export const V11Scene6 = () => (
     <SceneBackground variant="chart" />
 
     <Timeline
-      y={430}
+      y={486}
       x={70}
       width={940}
       events={[
@@ -35,8 +35,8 @@ export const V11Scene6 = () => (
     />
 
     <Sequence from={97} layout="none">
-      <PunchPhrase lines={["CĂN CỨ MỸ", "NGAY SÁT BÊN"]} top={176} fontSize={62} />
-      <MapPanel x={60} y={560} width={960} height={380}
+      <PunchPhrase lines={["CĂN CỨ MỸ", "NGAY SÁT BÊN"]} top={168} fontSize={56} />
+      <MapPanel x={60} y={618} width={960} height={330}
                 center={[126.9800, 37.5335]} zoom={14} style={LOCAL_RASTER_STYLE}
                 label="CĂN CỨ YONGSAN" sublabel="sát cạnh Itaewon"
                 delay={0} pinDelay={14} tint={0.16} />
@@ -51,14 +51,14 @@ export const V11Scene6 = () => (
     <DiagramCanvas y={940} height={310}>
       <DrawnPath d="M 540 130 L 900 130 M 866 110 L 900 130 L 866 150"
                  delay={150} drawFrames={12} length={430} stroke="#C2410C" strokeWidth={8} />
-      <text x={730} y={94} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={150} x={730} y={94} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
         SÁT VÁCH
-      </text>
-      <text x={730} y={198} textAnchor="middle" fill="#1A1A1A"
+      </DrawnText>
+      <DrawnText delay={158} x={730} y={198} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
         ITAEWON
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <BottomBar />

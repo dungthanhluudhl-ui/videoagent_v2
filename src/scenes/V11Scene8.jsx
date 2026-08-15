@@ -12,16 +12,16 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase } from "./shared";
-import { BackgroundPhoto, DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { BackgroundPhoto, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE8_DURATION = 116;
 
 const StruckName = ({ y, text, delay }) => (
   <g>
-    <text x={110} y={y} fill="#1A1A1A"
+    <DrawnText delay={Math.max(0, delay - 6)} x={110} y={y} fill="#1A1A1A"
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 54, fontWeight: 800 }}>
       {text}
-    </text>
+    </DrawnText>
     <DrawnPath d={`M 96 ${y - 18} L 900 ${y - 18}`} delay={delay} drawFrames={9}
                length={810} stroke="#C2410C" strokeWidth={9} />
   </g>
@@ -49,10 +49,10 @@ export const V11Scene8 = () => (
       <DrawnPath d="M 130 70 L 950 70 M 130 118 L 950 118 M 130 166 L 950 166 M 130 214 L 950 214"
                  delay={90} drawFrames={20} length={3300} stroke="#1A1A1A" strokeWidth={22}
                  opacity={0.82} />
-      <text x={540} y={330} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={96} x={540} y={330} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 900 }}>
         CẦN MỘT CÁI TÊN KHÁC
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <BottomBar />

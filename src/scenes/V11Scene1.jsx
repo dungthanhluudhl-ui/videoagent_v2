@@ -48,7 +48,7 @@ export const V11Scene1 = () => (
       <MapPanel x={60} y={676} width={960} height={560}
                 center={[126.9945, 37.5345]} zoom={15} style={LOCAL_RASTER_STYLE}
                 label="KHU TẠM CƯ" sublabel="bên đường vào kinh thành"
-                delay={0} pinDelay={10} tint={0.16} />
+                delay={0} pinDelay={10} tint={0.04} />
     </Sequence>
 
     <BottomBar />

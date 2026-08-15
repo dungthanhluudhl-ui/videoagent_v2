@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground, Support } from "./shared";
-import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE16_DURATION = 170;
 
@@ -20,14 +20,14 @@ const Bar = ({ x, h, year, value, delay, accent }) => (
   <g>
     <DrawnPath d={`M ${x} 560 L ${x} ${560 - h} L ${x + 190} ${560 - h} L ${x + 190} 560`}
                delay={delay} drawFrames={20} length={1000} stroke={accent} strokeWidth={8} />
-    <text x={x + 95} y={600} textAnchor="middle" fill="#1A1A1A"
+    <DrawnText delay={delay + 8} x={x + 95} y={600} textAnchor="middle" fill="#1A1A1A"
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 900 }}>
       {year}
-    </text>
-    <text x={x + 95} y={526 - h} textAnchor="middle" fill={accent}
+    </DrawnText>
+    <DrawnText delay={delay + 16} x={x + 95} y={526 - h} textAnchor="middle" fill={accent}
           style={{ fontFamily: "Be Vietnam Pro", fontSize: 42, fontWeight: 900 }}>
       {value}
-    </text>
+    </DrawnText>
   </g>
 );
 
@@ -43,10 +43,10 @@ export const V11Scene16 = () => (
       {/* đường mức của 2019, để thấy rõ phần vượt lên */}
       <DrawnPath d="M 130 260 L 700 260" delay={96} drawFrames={14} length={570}
                  strokeWidth={4} dashed />
-      <text x={640} y={236} textAnchor="end" fill="#1A1A1A" opacity={0.6}
+      <DrawnText delay={96} x={640} y={236} textAnchor="end" fill="#1A1A1A" opacity={0.6}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 28, fontWeight: 700 }}>
         mức 2019
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={31} layout="none">

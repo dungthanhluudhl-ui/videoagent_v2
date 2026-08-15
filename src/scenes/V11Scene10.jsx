@@ -9,7 +9,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, Hero, PunchPhrase, SceneBackground, Support } from "./shared";
-import { DiagramCanvas, DrawnPath } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
 
 export const V11SCENE10_DURATION = 131;
 
@@ -24,10 +24,10 @@ export const V11Scene10 = () => (
 
     <DiagramCanvas y={300} height={950}>
       {/* nhãn nửa trái: kỳ vọng */}
-      <text x={70} y={40} fill="#1A1A1A"
+      <DrawnText delay={0} x={70} y={40} fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900, letterSpacing: 3 }}>
         QUỐC TẾ NHẤT HÀN QUỐC
-      </text>
+      </DrawnText>
       <DrawnPath d="M 70 60 L 620 60" delay={8} drawFrames={12} length={550}
                  stroke="#C2410C" strokeWidth={6} />
 
@@ -35,10 +35,10 @@ export const V11Scene10 = () => (
       <DrawnPath d="M 770 20 L 770 900" delay={100} drawFrames={20} length={880}
                  strokeWidth={5} dashed />
 
-      <text x={900} y={410} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={100} x={900} y={410} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
         NHƯNG
-      </text>
+      </DrawnText>
 
       {/* dải nhà thấp vẽ tay ở nửa dưới bên trái - "trông như một ngôi làng" */}
       <DrawnPath d="M 70 780 L 700 780" delay={104} drawFrames={16} length={630}
@@ -49,10 +49,10 @@ export const V11Scene10 = () => (
                  drawFrames={14} length={400} strokeWidth={5} />
       <DrawnPath d="M 550 780 L 550 724 L 630 690 L 710 724 L 710 780" delay={120}
                  drawFrames={14} length={380} strokeWidth={5} />
-      <text x={390} y={848} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={124} x={390} y={848} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
         nhà thấp, ngõ nhỏ
-      </text>
+      </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={113} layout="none">
