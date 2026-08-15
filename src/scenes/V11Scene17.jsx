@@ -27,8 +27,8 @@ export const V11Scene17 = () => (
 
     {/* mốc giờ, để "giữa chiều" là một thời điểm chứ không phải cảm giác */}
     <DiagramCanvas y={330} height={260}>
-      <DrawnPath d="M 340 160 L 740 160" delay={12} drawFrames={16} length={400}
-                 stroke="#F2EFE7" strokeWidth={5} opacity={0.8} />
+      <DrawnPath d="M 300 60 L 780 60 L 780 250 L 300 250 Z" delay={12} drawFrames={16} length={1340}
+                 stroke="#F2EFE7" strokeWidth={5} fill="rgba(18,16,14,0.72)" />
       <DrawnText delay={12} x={540} y={126} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 52, fontWeight: 900, letterSpacing: 4 }}>
         16:00

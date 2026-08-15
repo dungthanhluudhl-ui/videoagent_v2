@@ -67,6 +67,19 @@ export const V11Scene4 = () => (
       </DrawnText>
     </DiagramCanvas>
 
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={100} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={104} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        không giả thuyết nào có giấy tờ xác nhận
+      </DrawnText>
+      <DrawnText delay={112} x={540} y={172} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
+        cả hai vẫn song song tồn tại
+      </DrawnText>
+    </DiagramCanvas>
+
     <BottomBar />
   </AbsoluteFill>
 );

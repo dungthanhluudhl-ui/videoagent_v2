@@ -55,6 +55,15 @@ export const V11Scene14 = () => (
       </DrawnText>
     </DiagramCanvas>
 
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={150} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={154} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        và rồi đến lượt Halloween 2022
+      </DrawnText>
+    </DiagramCanvas>
+
     <BottomBar />
   </AbsoluteFill>
 );

@@ -51,6 +51,15 @@ export const V11Scene15 = () => (
       <PunchPhrase lines={["BỎ KHẨU TRANG"]} top={190} fontSize={68} />
     </Sequence>
 
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={98} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={102} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        lần đầu sau hai năm không còn ràng buộc
+      </DrawnText>
+    </DiagramCanvas>
+
     <BottomBar />
   </AbsoluteFill>
 );

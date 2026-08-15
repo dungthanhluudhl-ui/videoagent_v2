@@ -12,7 +12,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DiagramCanvas, DrawnPath, ForceArrow, DrawnText } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText, ForceArrow } from "./visualLanguage";
 
 export const V11SCENE18_DURATION = 152;
 
@@ -59,6 +59,15 @@ export const V11Scene18 = () => (
     <Sequence from={19} layout="none">
       <PunchPhrase lines={["8 GIỜ TỐI", "BẮT ĐẦU CHEN"]} top={170} fontSize={60} />
     </Sequence>
+
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={130} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={134} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        lối đi hẹp lại, người vẫn dồn vào
+      </DrawnText>
+    </DiagramCanvas>
 
     <BottomBar />
   </AbsoluteFill>

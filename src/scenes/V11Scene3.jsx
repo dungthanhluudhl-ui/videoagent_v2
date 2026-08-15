@@ -73,6 +73,15 @@ export const V11Scene3 = () => (
       <PunchPhrase lines={["DỊ THÁI VIỆN"]} top={704} fontSize={72} />
     </Sequence>
 
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={72} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={76} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        tên do dân đặt, không phải tên trong sổ sách
+      </DrawnText>
+    </DiagramCanvas>
+
     <BottomBar />
   </AbsoluteFill>
 );

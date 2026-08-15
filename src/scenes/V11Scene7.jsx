@@ -48,13 +48,13 @@ export const V11Scene7 = () => (
     <DiagramCanvas y={800} height={450}>
       <DrawnPath d="M 355 20 L 355 120 M 335 100 L 355 120 L 375 100"
                  delay={104} drawFrames={10} length={140} stroke="#C2410C" strokeWidth={8} />
-      <DrawnPath d="M 70 140 L 620 140 L 620 250 L 70 250 Z" delay={112} drawFrames={14}
+      <DrawnPath d="M 70 140 L 600 140 L 600 250 L 70 250 Z" delay={112} drawFrames={14}
                  length={1320} stroke="#C2410C" strokeWidth={7} />
-      <DrawnText delay={112} x={345} y={210} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 46, fontWeight: 900 }}>
+      <DrawnText delay={112} x={335} y={210} textAnchor="middle" fill="#C2410C"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
         SÔI ĐỘNG BẬC NHẤT
       </DrawnText>
-      <DrawnText delay={122} x={345} y={330} textAnchor="middle" fill="#F2EFE7"
+      <DrawnText delay={122} x={335} y={330} textAnchor="middle" fill="#F2EFE7"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
         người nước ngoài đổ về
       </DrawnText>

@@ -13,7 +13,7 @@
 
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
-import { DiagramCanvas, DrawnPath, ForceArrow, DrawnText } from "./visualLanguage";
+import { DiagramCanvas, DrawnPath, DrawnText, ForceArrow } from "./visualLanguage";
 
 export const V11SCENE22_DURATION = 125;
 
@@ -22,7 +22,7 @@ export const V11Scene22 = () => (
     <SceneBackground variant="grid" />
 
     {/* hai trục đường lớn, các con hẻm ngang nối giữa chúng */}
-    <DiagramCanvas y={310} height={520}>
+    <DiagramCanvas y={392} height={520}>
       <DrawnPath d="M 70 60 L 1010 60" delay={0} drawFrames={20} length={940}
                  stroke="#C2410C" strokeWidth={9} />
       <DrawnText delay={0} x={70} y={38} fill="#C2410C"
@@ -72,6 +72,15 @@ export const V11Scene22 = () => (
     <Sequence from={52} layout="none">
       <PunchPhrase lines={["BUỘC QUA HẺM NGANG"]} top={188} fontSize={62} />
     </Sequence>
+
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={96} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={100} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        mọi dòng người dồn vào cùng vài con hẻm
+      </DrawnText>
+    </DiagramCanvas>
 
     <BottomBar />
   </AbsoluteFill>

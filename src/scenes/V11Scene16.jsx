@@ -58,6 +58,15 @@ export const V11Scene16 = () => (
       <PunchPhrase lines={["130.000 NGƯỜI", "KỶ LỤC"]} top={180} fontSize={62} />
     </Sequence>
 
+    <DiagramCanvas y={1040} height={210}>
+      <DrawnPath d="M 90 40 L 990 40" delay={120} drawFrames={16} length={900}
+                 stroke="#C2410C" strokeWidth={6} />
+      <DrawnText delay={124} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
+            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
+        cao hơn năm 2019 khoảng 30.000 người
+      </DrawnText>
+    </DiagramCanvas>
+
     <BottomBar />
   </AbsoluteFill>
 );
