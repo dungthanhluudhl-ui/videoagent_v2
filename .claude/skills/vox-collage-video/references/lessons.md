@@ -396,3 +396,57 @@ sign band across the facade, upper-storey windows, an awning, a doorway
 standing on the street line. Heights now vary by 12%, and the sign label's
 font size is derived from the shopfront width — a fixed 26px overflowed
 "THỜI TRANG" past its own facade at seven shops across 1000px.
+
+## `onDark` is about the pixels behind the text, not about the scene
+
+V10/S19 put `<PunchPhrase onDark />` at `top={230}` over a `BackgroundPhoto`.
+Correct instinct — it is a photo scene, so the headline should be pale — and
+the result was **invisible**, because the top of that particular photo is
+bright sky. `onDark` describes the *region under the text*, and a photo is not
+uniformly dark.
+
+Two ways out, in order of preference:
+
+1. Put the headline where the photo actually is dark. Check by sampling the
+   rendered still, not by looking at the source image thumbnail.
+2. Give the text its own scrim (a soft dark gradient behind the headline
+   block), which makes the placement independent of the photo.
+
+Related and left unfixed on purpose in V10: annotation labels at
+`fontSize 34` over a busy signage photo — legible at desk distance, not on a
+phone. Text sitting on photographic detail needs a size step up, or a chip.
+
+## Judge a mockup scene with the caption on
+
+V10/S14 places a phone `DeviceMockup` centred and large. On the scene still it
+looks right. On the MASTER frame the caption chip lands **inside the phone
+screen**, so it reads as part of the app UI rather than as a subtitle.
+
+Any element that occupies the horizontal centre below y≈1200 will collide with
+the caption band. That is fine for a full-bleed photo (the chip has its own
+background) and wrong for anything with its own frame, screen or border. Check
+mockups, documents and device shots on a master still specifically.
+
+## A single element scene has no second layer to fall back on
+
+V10/S20 is the weakest scene in the finished video, and the reason is
+structural rather than aesthetic: it uses ONE visual language (`mockup`) and
+one element. When that element is sized correctly there is still ~500px of
+bare paper under it, because nothing else was ever planned to be there.
+
+Measured across V10: scenes layering ≥2 asset roles are 42% of the video, and
+the two that do not (S8, S20) are the two that needed the most rescuing. The
+rule in `visual-language.md` — *most strong scenes are two languages stacked* —
+is not a style preference. It is what leaves you something to fill the frame
+with when the first idea turns out to be small.
+
+## Recording a defect is not fixing it, but it is not nothing
+
+The four V10 defects above were left unfixed by an explicit decision: the user
+judged that preserving the METHOD mattered more than polishing one video, and
+that fixing them before the preservation work was done would just produce a
+good video followed by worse ones.
+
+They are written here rather than in a commit message because a commit message
+is read once, by whoever wrote it. This file is read at the start of the next
+build, which is when these patterns can still be avoided.

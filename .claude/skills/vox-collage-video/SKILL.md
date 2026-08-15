@@ -288,13 +288,25 @@ contact sheet. Only render an mp4 if the user asks for a file.
 of every turn, while a plan has `"status": "active"`. Violations block. Set
 the status to `"shipped"` when the video is done.
 
+`selftest.py` runs the gates against deliberately-broken inputs and asserts
+each one fails. **Run it after touching any gate script** — it is the only
+thing that notices a gate edited into uselessness:
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/selftest.py
+```
+
 Two things are enforced regardless of any plan's status:
 
 * **No scene file for a new video before its plan exists.** Building from a
   shot list that only lives in chat is the original defect this skill exists
   to prevent, and it was reachable simply by doing things in the wrong order.
 * **No regression against `references/baseline.json`.** The Stop hook runs
-  `baseline_gate.py check` alongside the other three.
+  `baseline_gate.py check` alongside the others.
+
+Four ways this system used to switch itself off silently now block instead: a
+missing gate file, a plan with broken JSON, `"status": "shipped"` typed before
+the video passes, and a gate edited to always return 0. See `gates.md`.
 
 **Never make a gate quiet by thinning the plan.** If a threshold is genuinely
 wrong for a video, change it explicitly and say why.

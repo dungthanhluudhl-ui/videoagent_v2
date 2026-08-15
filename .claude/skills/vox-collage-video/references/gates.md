@@ -272,3 +272,77 @@ ship là bug, không phải cưỡng chế.
 Dựng khung plan bằng `new_video.py <N> --words input/words<N>_aligned.json`.
 Khung này để rỗng mọi trường biên tập **có chủ ý** — `plan_gate` fail 423 lỗi
 trên khung trắng, nên không thể nhầm khung với kế hoạch.
+
+## selftest.py — test cho chính bộ gate
+
+Mọi script khác canh video. Không có gì canh **chúng nó**. Điều đó nghiêm
+trọng hơn nghe thấy, vì `hook_gate.py` cố ý fail-open: một gate âm thầm ngừng
+hoạt động trông y hệt một gate không có gì để báo.
+
+```bash
+py -3 selftest.py        # 12 trường hợp
+py -3 selftest.py -v     # xem output từng gate
+```
+
+Mỗi trường hợp dựng một input hỏng có chủ ý trong thư mục tạm, chạy gate thật,
+và khẳng định gate **phải FAIL**. Sau đó chạy plan V10 thật qua cả 4 gate và
+khẳng định **phải PASS**. Gate không thể fail thì không phải gate; gate không
+thể pass thì là bức tường, và tường sẽ bị dỡ.
+
+Các mutation đều là lỗi dự án **đã từng ship hoặc suýt ship**, không phải tình
+huống bịa: cảnh không minh hoạ, một ngôn ngữ cho cả video, cảnh khó bị bóp
+thời lượng, khoảng chết hình, nhịp khai khống, trường biên tập rỗng, tụt so
+với mốc chuẩn, chấm "pass" cho khung đo được là trống.
+
+**Chạy sau mỗi lần sửa bất kỳ gate nào.** Đã nối vào Stop hook.
+
+> Lần chạy đầu tiên, selftest báo FAIL một trường hợp — và lỗi nằm ở **test**,
+> không ở gate: nhịp khống cắm ở frame 60 của S1 lại rơi trong dung sai 8
+> frame của punch tại 62, nên gate im lặng là đúng. Câu chuyện đó được giữ lại
+> trong docstring của `unbacked_event` thay vì dọn đi, vì đó chính là kiểu
+> nhầm lẫn mà selftest sinh ra để phơi bày.
+
+## Bốn đường im lặng đã bịt
+
+`hook_gate` fail-open có chủ ý — gate hỏng mà khoá cứng dự án thì tệ hơn không
+có gate. Nhưng bốn thứ sau từng đi nhờ ngoại lệ đó dù chẳng liên quan gì, đo
+được trên chính checkout V10:
+
+| Tình huống | Trước | Nay |
+|---|---|---|
+| Một gate script bị xoá/đổi tên | exit 0 | **CHẶN** (`REQUIRED_GATES`) |
+| Plan JSON hỏng cú pháp | exit 0 | **CHẶN** (`find_active_plan` trả `broken`) |
+| `status: "shipped"` đặt sớm | exit 0 | **CHẶN** (`guard_premature_shipped`) |
+| Gate bị sửa thành luôn PASS | exit 0 | **CHẶN** (`selftest.py`) |
+
+Không cái nào là lỗi môi trường; mỗi cái đều là đúng loại sai sót hệ thống này
+sinh ra để bắt, và mỗi cái đều âm thầm tắt cả hệ thống.
+
+Riêng `shipped`: gate canh **thời điểm chuyển trạng thái**, không canh trạng
+thái. Ngay khi plan được ghi với `shipped`, cả 4 gate chạy, và lệnh ghi bị
+chặn nếu có gate nào fail. Video xong thật thì trạng thái đúng và mọi thứ im
+lặng — đó mới là công dụng của trường status.
+
+## review_gate — đòi số đo, không đòi lời khai
+
+Nửa "chấm điểm" của gate này **đã hỏng trên thực tế**, hai lần trong một phiên,
+trên cùng một video: sau khi sửa 11 cảnh thưa, tôi ghi `composed: "pass"` cho
+cả 26 cảnh, và người xem vẫn tìm ra cảnh trống; lượt sau S19 (headline chìm)
+và S20 (trống dải dưới) cũng đã được ghi `"pass"` vài phút trước đó.
+
+Gate hỏi "đã xem chưa?" và chấp nhận "rồi" làm bằng chứng. Gate mà đầu vào là
+sự trung thực của người chấm thì không phải gate, đó là cái biểu mẫu.
+
+Nay gate **tự đo khung hình** rồi đối chất với lời khai:
+
+* Dải khả dụng y=300→1250 (dưới đó là chỗ của caption, vốn KHÔNG có trong scene
+  still — đo cả khung sẽ báo trống thừa ~20 điểm).
+* Cảnh bị đánh dấu khi <55% số hàng có nội dung, hoặc có khoảng trống liền mạch
+  >300px.
+* Cảnh bị đánh dấu mà ghi `"pass"` trơn sẽ **bị từ chối**, trừ khi có
+  `"resolved": true` hoặc một `note` ≥25 ký tự nói rõ *vì sao* — ảnh full-bleed
+  và bản đồ đo thấp một cách chính đáng, nói một câu là xong; không nhận ra mới
+  là cái đắt.
+* Frame **cũ hơn** file .jsx của cảnh = bằng chứng ôi. Verdict trên bằng chứng
+  ôi là verdict về một bản dựng không còn tồn tại. (Đã xảy ra: frame S8 cũ hơn
+  bản dựng lại của nó.)
