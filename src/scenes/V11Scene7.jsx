@@ -10,6 +10,7 @@
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, Support } from "./shared";
 import { BackgroundPhoto, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
+import { IconCrowd } from "./iconVocabulary";
 
 export const V11SCENE7_DURATION = 155;
 
@@ -39,10 +40,13 @@ export const V11Scene7 = () => (
       <Node y={322} label="HỘP ĐÊM" delay={72} />
     </DiagramCanvas>
 
+    <Sequence from={36} layout="none">
+      <Support name="Sup-Bar" src="el10_bar_neon.png" width={300} x={660} y={800}
+               visibleFor={119} />
+    </Sequence>
+
     <Sequence from={104} layout="none">
       <PunchPhrase lines={["KHU PHỐ TÂY"]} top={180} fontSize={70} onDark />
-      <Support name="Sup-Bar" src="el10_bar_neon.png" width={300} x={660} y={800}
-               visibleFor={51} />
     </Sequence>
 
     <DiagramCanvas y={800} height={450}>
@@ -54,10 +58,10 @@ export const V11Scene7 = () => (
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
         SÔI ĐỘNG BẬC NHẤT
       </DrawnText>
-      <DrawnText delay={122} x={335} y={330} textAnchor="middle" fill="#F2EFE7"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
-        người nước ngoài đổ về
-      </DrawnText>
+      {/* "người nước ngoài đổ về" - lời thoại đã nói câu này rồi, viết lại là
+          bắt đọc lần thứ hai. Mũi tên phía trên đã mang nghĩa "đổ về"; chỉ còn
+          thiếu "người", và một ký hiệu nói điều đó nhanh hơn bốn chữ. */}
+      <IconCrowd x={335} y={318} size={124} delay={122} color="#F2EFE7" accent="#C2410C" />
     </DiagramCanvas>
 
     <BottomBar />

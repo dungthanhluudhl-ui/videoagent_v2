@@ -28,7 +28,7 @@ export const V11Scene2 = () => (
                  length={80} strokeWidth={5} />
       <DrawnText delay={20} x={540} y={140} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 38, fontWeight: 800, letterSpacing: 2 }}>
-        NGƯỜI ĐƯỢC TRIỀU ĐÌNH NUÔI
+        TRIỀU ĐÌNH NUÔI
       </DrawnText>
       <DrawnPath d="M 300 176 L 780 176" delay={26} drawFrames={14} length={480}
                  stroke="#C2410C" strokeWidth={7} />
@@ -39,9 +39,14 @@ export const V11Scene2 = () => (
             variant="flip" visibleFor={106} />
     </Sequence>
 
-    <Sequence from={41} layout="none">
+    {/* Support và punch có nhịp riêng, nên phải có Sequence riêng. Dùng chung
+        một Sequence thì dời cái này là dời luôn cái kia. */}
+    <Sequence from={0} layout="none">
       <Support name="Sup-Child" src="el11_child_pair.png" width={340} x={600} y={470}
-               visibleFor={65} phase={9} />
+               visibleFor={106} phase={9} />
+    </Sequence>
+
+    <Sequence from={41} layout="none">
       <PunchPhrase lines={["NHỮNG ĐỨA TRẺ LAI"]} top={186} fontSize={66} />
     </Sequence>
 

@@ -13,6 +13,7 @@
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground } from "./shared";
 import { DiagramCanvas, DrawnPath, DrawnText, ForceArrow } from "./visualLanguage";
+import { IconClock, IconDensity } from "./iconVocabulary";
 
 export const V11SCENE18_DURATION = 152;
 
@@ -22,12 +23,11 @@ export const V11Scene18 = () => (
 
     {/* mặt đồng hồ chỉ 20:00 */}
     <DiagramCanvas y={330} height={430}>
-      <DrawnPath d="M 540 40 m -150 0 a 150 150 0 1 0 300 0 a 150 150 0 1 0 -300 0"
-                 delay={0} drawFrames={26} length={950} strokeWidth={8} fill="rgba(26,26,26,0.19)" />
-      <DrawnPath d="M 540 190 L 540 92" delay={26} drawFrames={8} length={100}
-                 stroke="#C2410C" strokeWidth={10} />
-      <DrawnPath d="M 540 190 L 470 190" delay={32} drawFrames={8} length={72}
-                 stroke="#C2410C" strokeWidth={10} />
+      {/* Mặt đồng hồ cũ có tâm ở y=40 nhưng hai kim lại vẽ từ y=190 - tức từ
+          MÉP DƯỚI của vòng tròn, nên kim treo lơ lửng ngoài mặt đồng hồ. Đó là
+          lỗi sinh ra khi hình học được gõ lại ở từng cảnh. IconClock tính kim
+          từ chính tâm nó, nên lỗi này không thể lặp lại. */}
+      <IconClock x={540} y={150} size={300} delay={0} hourAngle={240} minuteAngle={0} />
       <DrawnText delay={32} x={540} y={330} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 66, fontWeight: 900, letterSpacing: 6 }}>
         20:00
@@ -50,24 +50,15 @@ export const V11Scene18 = () => (
                   travelFrames={14} />
       <ForceArrow x={990} y={212} length={280} delay={118} label="" thickness={20}
                   travelFrames={14} direction={-1} />
-      <DrawnText delay={118} x={540} y={400} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 40, fontWeight: 900 }}>
-        CHEN CHÚC · XÔ ĐẨY
-      </DrawnText>
+      {/* Hai mũi tên đã cho thấy LỰC ép từ hai phía; ô lưới cho thấy KẾT QUẢ -
+          chỗ trống còn lại bao nhiêu. Chữ "chen chúc" chỉ khẳng định điều đó
+          bằng lời, đúng lúc lời thoại cũng đang nói y như vậy. */}
+      <IconDensity x={540} y={170} size={210} delay={118} fill={0.92} />
     </DiagramCanvas>
 
     <Sequence from={19} layout="none">
       <PunchPhrase lines={["8 GIỜ TỐI", "BẮT ĐẦU CHEN"]} top={170} fontSize={60} />
     </Sequence>
-
-    <DiagramCanvas y={1040} height={210}>
-      <DrawnPath d="M 90 40 L 990 40" delay={130} drawFrames={16} length={900}
-                 stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={134} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
-        lối đi hẹp lại, người vẫn dồn vào
-      </DrawnText>
-    </DiagramCanvas>
 
     <BottomBar />
   </AbsoluteFill>

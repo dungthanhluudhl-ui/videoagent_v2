@@ -2,7 +2,7 @@
   "video": "V11",
   "fps": 30,
   "wordsFile": "input/words11_aligned.json",
-  "status": "shipped",
+  "status": "active",
   "continuationOf": "V10 (Itaewon phần 1) - xem input/scene_plan10.json",
   "scenes": [
     {
@@ -36,8 +36,8 @@
           "describes": [
             "tại đây"
           ],
-          "delay": 64,
-          "visibleFor": 38,
+          "delay": 34,
+          "visibleFor": 68,
           "width": 1080,
           "x": "50%",
           "y": 620
@@ -103,8 +103,8 @@
           "describes": [
             "những đứa trẻ lai"
           ],
-          "delay": 41,
-          "visibleFor": 65,
+          "delay": 0,
+          "visibleFor": 106,
           "src": "el11_child_pair.png",
           "width": 340,
           "x": 600,
@@ -169,8 +169,8 @@
           "describes": [
             "người dân thời bấy giờ"
           ],
-          "delay": 18,
-          "visibleFor": 84,
+          "delay": 0,
+          "visibleFor": 102,
           "src": "el10_archive_paper.png",
           "width": 480,
           "x": 240,
@@ -183,11 +183,11 @@
         ],
         "anchorPhrase": "Dị Thái Viện",
         "top": null,
-        "from": 68,
+        "from": 57,
         "describes": [
           "Dị Thái Viện"
         ],
-        "visibleFor": 34
+        "visibleFor": 45
       },
       "visualEvents": [
         {
@@ -195,7 +195,7 @@
           "what": "Doc-OldName + Sup-Paper enters"
         },
         {
-          "frame": 68,
+          "frame": 57,
           "what": "punch phrase enters"
         }
       ],
@@ -211,7 +211,7 @@
       "visualTransformation": "khung hình tách đôi, hai cách viết tên đứng đối diện nhau",
       "contrastWithPrevious": "một tên gọi tách thành hai giả thuyết",
       "density": "med",
-      "comprehensionLoad": "moderate",
+      "comprehensionLoad": "complex",
       "visualLanguage": "split",
       "template": "bespoke: two competing etymologies mirrored",
       "backdrop": "card",
@@ -262,6 +262,10 @@
           "what": "Split-Names + punch phrase enters"
         },
         {
+          "frame": 8,
+          "what": "Sup-Pear + punch phrase enters"
+        },
+        {
           "frame": 70,
           "what": "Sup-Pear enters"
         }
@@ -300,8 +304,8 @@
           "describes": [
             "binh lính Nhật đầu hàng"
           ],
-          "delay": 33,
-          "visibleFor": 116,
+          "delay": 0,
+          "visibleFor": 149,
           "width": 1000,
           "x": "50%",
           "y": 320
@@ -336,10 +340,6 @@
         {
           "frame": 0,
           "what": "Bg-War enters"
-        },
-        {
-          "frame": 33,
-          "what": "Flow-Exile enters"
         },
         {
           "frame": 80,
@@ -475,8 +475,8 @@
           "describes": [
             "khu phố Tây"
           ],
-          "delay": 104,
-          "visibleFor": 51,
+          "delay": 36,
+          "visibleFor": 119,
           "src": "el10_bar_neon.png",
           "width": 300,
           "x": 660,
@@ -543,8 +543,8 @@
           "describes": [
             "tên gọi không mấy nhã nhặn,"
           ],
-          "delay": 51,
-          "visibleFor": 65,
+          "delay": 16,
+          "visibleFor": 100,
           "width": 960,
           "x": "50%",
           "y": 400
@@ -570,10 +570,6 @@
         {
           "frame": 16,
           "what": "punch phrase enters"
-        },
-        {
-          "frame": 51,
-          "what": "Strike-Names enters"
         }
       ],
       "durationInFrames": 116,
@@ -684,8 +680,8 @@
           "describes": [
             "một ngôi làng"
           ],
-          "delay": 113,
-          "visibleFor": 18,
+          "delay": 0,
+          "visibleFor": 131,
           "src": "el10_commerce_day.png",
           "width": 230,
           "x": 810,
@@ -698,11 +694,11 @@
         ],
         "anchorPhrase": "một ngôi làng",
         "top": null,
-        "from": 113,
+        "from": 86,
         "describes": [
           "một ngôi làng"
         ],
-        "visibleFor": 18
+        "visibleFor": 45
       },
       "visualEvents": [
         {
@@ -710,8 +706,8 @@
           "what": "Hero-Passports enters"
         },
         {
-          "frame": 113,
-          "what": "Sup-Village + punch phrase enters"
+          "frame": 86,
+          "what": "punch phrase enters"
         }
       ],
       "durationInFrames": 131,
@@ -825,8 +821,8 @@
           "describes": [
             "xây dựng ngay trên dốc"
           ],
-          "delay": 192,
-          "visibleFor": 38,
+          "delay": 118,
+          "visibleFor": 112,
           "width": 1000,
           "x": "50%",
           "y": 860
@@ -839,11 +835,11 @@
         ],
         "anchorPhrase": "trên dốc",
         "top": null,
-        "from": 192,
+        "from": 185,
         "describes": [
           "trên dốc"
         ],
-        "visibleFor": 38
+        "visibleFor": 45
       },
       "visualEvents": [
         {
@@ -855,8 +851,8 @@
           "what": "Diag-Flat enters"
         },
         {
-          "frame": 192,
-          "what": "Diag-Slope + punch phrase enters"
+          "frame": 185,
+          "what": "punch phrase enters"
         }
       ],
       "durationInFrames": 230,
@@ -893,8 +889,8 @@
           "describes": [
             "tập trung rất đông người"
           ],
-          "delay": 115,
-          "visibleFor": 15,
+          "delay": 0,
+          "visibleFor": 130,
           "src": "el10_crowd_behind.png",
           "width": 840,
           "x": 120,
@@ -907,11 +903,11 @@
         ],
         "anchorPhrase": "tâm điểm",
         "top": null,
-        "from": 91,
+        "from": 85,
         "describes": [
           "tâm điểm"
         ],
-        "visibleFor": 39
+        "visibleFor": 45
       },
       "visualEvents": [
         {
@@ -919,12 +915,8 @@
           "what": "Bg-Halloween enters"
         },
         {
-          "frame": 91,
+          "frame": 85,
           "what": "punch phrase enters"
-        },
-        {
-          "frame": 115,
-          "what": "Sup-Crowd enters"
         }
       ],
       "durationInFrames": 130,
@@ -963,8 +955,8 @@
           "describes": [
             "Halloween năm 2022"
           ],
-          "delay": 116,
-          "visibleFor": 57,
+          "delay": 106,
+          "visibleFor": 67,
           "width": 900,
           "x": "50%",
           "y": 900
@@ -993,7 +985,7 @@
           "what": "punch phrase enters"
         },
         {
-          "frame": 116,
+          "frame": 106,
           "what": "Year-Turn enters"
         }
       ],
@@ -1033,8 +1025,8 @@
           "describes": [
             "quy định đeo khẩu trang"
           ],
-          "delay": 83,
-          "visibleFor": 29,
+          "delay": 0,
+          "visibleFor": 112,
           "width": 720,
           "x": "50%",
           "y": 1030
@@ -1046,11 +1038,11 @@
         ],
         "anchorPhrase": "đeo khẩu trang",
         "top": null,
-        "from": 83,
+        "from": 67,
         "describes": [
           "đeo khẩu trang"
         ],
-        "visibleFor": 29
+        "visibleFor": 45
       },
       "visualEvents": [
         {
@@ -1058,8 +1050,8 @@
           "what": "Mock-News enters"
         },
         {
-          "frame": 83,
-          "what": "Mask-Struck + punch phrase enters"
+          "frame": 67,
+          "what": "punch phrase enters"
         }
       ],
       "durationInFrames": 112,
@@ -1167,8 +1159,8 @@
           "describes": [
             "vẫn tiếp tục đổ về"
           ],
-          "delay": 74,
-          "visibleFor": 42,
+          "delay": 5,
+          "visibleFor": 111,
           "width": 900,
           "x": "50%",
           "y": 980
@@ -1192,8 +1184,8 @@
           "what": "Bg-Afternoon + punch phrase enters"
         },
         {
-          "frame": 74,
-          "what": "Flow-In enters"
+          "frame": 5,
+          "what": "Flow-In + punch phrase enters"
         }
       ],
       "durationInFrames": 116,
@@ -1300,8 +1292,8 @@
           "describes": [
             "không khí cuồng"
           ],
-          "delay": 68,
-          "visibleFor": 39,
+          "delay": 20,
+          "visibleFor": 87,
           "width": 1000,
           "x": "50%",
           "y": 320
@@ -1325,8 +1317,8 @@
           "what": "Bg-Costume + punch phrase enters"
         },
         {
-          "frame": 68,
-          "what": "Anno-Costume enters"
+          "frame": 20,
+          "what": "Anno-Costume + punch phrase enters"
         }
       ],
       "durationInFrames": 107,
@@ -1377,8 +1369,8 @@
           "describes": [
             "302m"
           ],
-          "delay": 154,
-          "visibleFor": 24,
+          "delay": 106,
+          "visibleFor": 72,
           "width": 920,
           "x": "50%",
           "y": 880
@@ -1390,11 +1382,11 @@
         ],
         "anchorPhrase": "302m",
         "top": null,
-        "from": 154,
+        "from": 133,
         "describes": [
           "302m"
         ],
-        "visibleFor": 24
+        "visibleFor": 45
       },
       "visualEvents": [
         {
@@ -1406,8 +1398,8 @@
           "what": "Ruler-North enters"
         },
         {
-          "frame": 154,
-          "what": "Dim-302 + punch phrase enters"
+          "frame": 133,
+          "what": "punch phrase enters"
         }
       ],
       "durationInFrames": 178,
@@ -1517,8 +1509,8 @@
           "describes": [
             "buộc phải"
           ],
-          "delay": 23,
-          "visibleFor": 102,
+          "delay": 0,
+          "visibleFor": 125,
           "width": 920,
           "x": "50%",
           "y": 880
@@ -1682,8 +1674,8 @@
           "describes": [
             "2 hướng đối đầu"
           ],
-          "delay": 260,
-          "visibleFor": 26,
+          "delay": 219,
+          "visibleFor": 67,
           "width": 1000,
           "x": "50%",
           "y": 1080
@@ -1720,7 +1712,7 @@
           "what": "Funnel-Jam + punch phrase enters"
         },
         {
-          "frame": 260,
+          "frame": 219,
           "what": "Flow-Opposed enters"
         }
       ],

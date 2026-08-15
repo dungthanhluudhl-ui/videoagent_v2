@@ -13,6 +13,7 @@
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, SceneBackground, Support } from "./shared";
 import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
+import { IconRise } from "./iconVocabulary";
 
 export const V11SCENE16_DURATION = 170;
 
@@ -47,6 +48,10 @@ export const V11Scene16 = () => (
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 28, fontWeight: 700 }}>
         mức 2019
       </DrawnText>
+      {/* Cột phải của khung còn trống, và điều phải đọng lại không phải hai con
+          số mà là HƯỚNG giữa chúng. Ký hiệu nói điều đó ngay khi đường mức 2019
+          hiện ra, không cần thêm một dòng chữ nào. */}
+      <IconRise x={870} y={200} size={160} delay={96} />
     </DiagramCanvas>
 
     <Sequence from={31} layout="none">
@@ -57,15 +62,6 @@ export const V11Scene16 = () => (
     <Sequence from={79} layout="none">
       <PunchPhrase lines={["130.000 NGƯỜI", "KỶ LỤC"]} top={180} fontSize={62} />
     </Sequence>
-
-    <DiagramCanvas y={1040} height={210}>
-      <DrawnPath d="M 90 40 L 990 40" delay={120} drawFrames={16} length={900}
-                 stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={124} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
-        cao hơn năm 2019 khoảng 30.000 người
-      </DrawnText>
-    </DiagramCanvas>
 
     <BottomBar />
   </AbsoluteFill>

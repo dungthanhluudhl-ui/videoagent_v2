@@ -24,9 +24,13 @@ export const V11Scene10 = () => (
 
     <DiagramCanvas y={300} height={950}>
       {/* nhãn nửa trái: kỳ vọng */}
-      <DrawnText delay={0} x={70} y={40} fill="#1A1A1A"
+      {/* Cột trái đã kín: hero chiếm y 330-967, dãy nhà vẽ tay 956-1080. Nhãn
+          này không có chỗ nào để né ra, và nó vốn là chú thích CHO chính bức
+          ảnh hộ chiếu - nên nó nằm trên ảnh, có nền để đọc được, và khai báo
+          overlayOn để nói rõ đây là chủ ý chứ không phải va chạm bỏ sót. */}
+      <DrawnText delay={0} x={70} y={40} fill="#1A1A1A" overlayOn="Hero-Passports" plate
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900, letterSpacing: 3 }}>
-        QUỐC TẾ NHẤT HÀN QUỐC
+        QUỐC TẾ NHẤT
       </DrawnText>
       <DrawnPath d="M 70 60 L 620 60" delay={8} drawFrames={12} length={550}
                  stroke="#C2410C" strokeWidth={6} />
@@ -57,9 +61,12 @@ export const V11Scene10 = () => (
       </DrawnText>
     </DiagramCanvas>
 
-    <Sequence from={113} layout="none">
+    <Sequence from={0} layout="none">
       <Support name="Sup-Village" src="el10_commerce_day.png" width={230} x={810} y={740}
-               visibleFor={18} />
+               visibleFor={131} />
+    </Sequence>
+
+    <Sequence from={86} layout="none">
       <PunchPhrase lines={["LÀNG TRONG PHỐ"]} top={186} fontSize={66} />
     </Sequence>
 

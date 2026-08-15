@@ -60,6 +60,21 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     extra = [f"--gl={args.gl}"] if args.gl else []
 
+    # Delete this video's previous frames FIRST.
+    #
+    # Nothing here ever skipped a render, so stale frames looked impossible -
+    # but the frame NUMBERS come from the plan's beats, and when a beat moves
+    # the new frame lands under a new name while the old file stays behind. The
+    # directory then holds two builds at once, and the older one is
+    # indistinguishable from the current one at a glance. That is not a
+    # hypothetical: judging this video, a leftover frame was read as current
+    # and showed a label that had already been rewritten.
+    #
+    # Only this video's frames go, so a plan can be reviewed without wiping the
+    # reference video's frames next to it.
+    for old in out_dir.glob(f"{video}Scene*.png"):
+        old.unlink()
+
     thumbs, review_entries, failures = [], [], []
     for scene in scenes:
         sid = scene.get("id", "")

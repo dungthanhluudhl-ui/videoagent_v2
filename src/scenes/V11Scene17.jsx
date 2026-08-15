@@ -13,6 +13,7 @@
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase } from "./shared";
 import { BackgroundPhoto, DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
+import { IconDensity } from "./iconVocabulary";
 
 export const V11SCENE17_DURATION = 116;
 
@@ -27,16 +28,18 @@ export const V11Scene17 = () => (
 
     {/* mốc giờ, để "giữa chiều" là một thời điểm chứ không phải cảm giác */}
     <DiagramCanvas y={330} height={260}>
-      <DrawnPath d="M 300 60 L 780 60 L 780 250 L 300 250 Z" delay={12} drawFrames={16} length={1340}
+      {/* Tấm nền rộng ra để mang HAI thứ cạnh nhau: mấy giờ, và đã đông đến
+          đâu. Lần đầu tôi thả ô lưới vào chỗ dòng chữ cũ, nó tràn khỏi đáy tấm
+          nền và đọc thành nhiễu bên cạnh con số - tấm nền vốn được cắt vừa cho
+          một dòng chữ. */}
+      <DrawnPath d="M 240 60 L 840 60 L 840 250 L 240 250 Z" delay={12} drawFrames={16} length={1580}
                  stroke="#F2EFE7" strokeWidth={5} fill="rgba(18,16,14,0.72)" />
-      <DrawnText delay={12} x={540} y={126} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={12} x={420} y={172} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 52, fontWeight: 900, letterSpacing: 4 }}>
         16:00
       </DrawnText>
-      <DrawnText delay={20} x={540} y={218} textAnchor="middle" fill="#F2EFE7"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
-        đã vô cùng đông đúc
-      </DrawnText>
+      <IconDensity x={700} y={155} size={130} delay={20} fill={0.83}
+                   color="#F2EFE7" accent="#C2410C" />
     </DiagramCanvas>
 
     {/* dòng người vẫn chảy vào */}

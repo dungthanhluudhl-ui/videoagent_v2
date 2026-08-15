@@ -41,7 +41,7 @@ export const V11Scene22 = () => (
       ))}
       <DrawnText delay={30} x={540} y={266} textAnchor="middle" fill="#1A1A1A" opacity={0.72}
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 800 }}>
-        chỉ có các con hẻm nhỏ cắt ngang
+        CHỈ CÓ HẺM NHỎ
       </DrawnText>
     </DiagramCanvas>
 
@@ -72,15 +72,6 @@ export const V11Scene22 = () => (
     <Sequence from={52} layout="none">
       <PunchPhrase lines={["BUỘC QUA HẺM NGANG"]} top={188} fontSize={62} />
     </Sequence>
-
-    <DiagramCanvas y={1040} height={210}>
-      <DrawnPath d="M 90 40 L 990 40" delay={96} drawFrames={16} length={900}
-                 stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={100} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
-        mọi dòng người dồn vào cùng vài con hẻm
-      </DrawnText>
-    </DiagramCanvas>
 
     <BottomBar />
   </AbsoluteFill>

@@ -3,219 +3,221 @@
   "scenes": [
     {
       "id": "S1",
-      "frame": "input/review_frames/V11Scene1_f76.png",
+      "frame": "input/review_frames/V11Scene1_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mo o co that. Anh tai lieu full-bleed + ban do co ghim; do day 93%, khong co khoang trong nao qua 32px."
+      "note": "Bản đồ full-bleed + ghim; kín 100%, không khoảng trống nào."
     },
     {
       "id": "S2",
-      "frame": "input/review_frames/V11Scene2_f79.png",
+      "frame": "input/review_frames/V11Scene2_f51.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mo o co that. Hai cum nguoi dung tren cung mot nen dat ve; do day 79%."
+      "note": "Hai cụm người trên cùng nền đất vẽ; nhãn rút còn 3 từ, hết đè. 80%."
     },
     {
       "id": "S3",
-      "frame": "input/review_frames/V11Scene3_f76.png",
+      "frame": "input/review_frames/V11Scene3_f67.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mo o co that sau khi them tang 3. Ba tam bien + tap giay + cot nien dai + dong chu duoi; do day 70%."
+      "note": "Ba tấm biển + tập giấy + cột niên đại. Đã bỏ hẳn dòng câu ở lề dưới. 70%."
     },
     {
       "id": "S4",
-      "frame": "input/review_frames/V11Scene4_f111.png",
+      "frame": "input/review_frames/V11Scene4_f143.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Hai nua doi nhau + canh hoa le + dong ket duoi; do day 73%."
+      "note": "Hai nửa giả thuyết + cành lê. 'CHỮ LÊ/(quả lê)' dời sang x=920, hết đè ảnh. 73%."
     },
     {
       "id": "S5",
-      "frame": "input/review_frames/V11Scene5_f111.png",
+      "frame": "input/review_frames/V11Scene5_f143.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mo o co that. Hop da noi len 296px, chu CHIEN TRANH khong con tran vien; do day 100%."
+      "note": "Nền chiến tranh full-bleed, mũi tên ly hương vào cùng nhịp mở cảnh. 100%."
     },
     {
       "id": "S6",
-      "frame": "input/review_frames/V11Scene6_f163.png",
+      "frame": "input/review_frames/V11Scene6_f212.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Da them mang dat sau truc thoi gian; do day 63%, dat san. Do day 63%, khoang trong 173px."
+      "note": "Mốc thời gian + bản đồ căn cứ. 62%, khoảng trống lớn nhất 176px, dưới trần 300px."
     },
     {
       "id": "S7",
-      "frame": "input/review_frames/V11Scene7_f116.png",
+      "frame": "input/review_frames/V11Scene7_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Chuoi nhan qua tren nen neon + khoi chu da tach khoi anh ly; do day 100%."
+      "note": "Chuỗi ba nút trên nền neon; câu 5 từ thay bằng IconCrowd. 100%."
     },
     {
       "id": "S8",
-      "frame": "input/review_frames/V11Scene8_f87.png",
+      "frame": "input/review_frames/V11Scene8_f110.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Da cho ba dong ten mot mang nen va noi cao khoi muc; do day 100%. Do day 100%, khoang trong 0px."
+      "note": "Tên cũ bị gạch + 'CẦN TÊN KHÁC' (3 từ). Đã bỏ câu 11 từ ở lề dưới. 100%."
     },
     {
       "id": "S9",
-      "frame": "input/review_frames/V11Scene9_f144.png",
+      "frame": "input/review_frames/V11Scene9_f102.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ba cot doi chu + hang am doc + canh hoa + dong ket; do day 55%, dung bang san."
+      "note": "Ba cột đổi chữ + hàng âm đọc + cành hoa. 59%, sát sàn nhưng bố cục cân."
     },
     {
       "id": "S10",
-      "frame": "input/review_frames/V11Scene10_f98.png",
+      "frame": "input/review_frames/V11Scene10_f96.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Da to day day nha ve tay va them mang cam nua tren; do day 68%. Do day 68%, khoang trong 168px."
+      "note": "Hộ chiếu + dãy nhà thấp; nhãn rút 3 từ, có nền, khai overlayOn đúng ảnh. 98%."
     },
     {
       "id": "S11",
-      "frame": "input/review_frames/V11Scene11_f99.png",
+      "frame": "input/review_frames/V11Scene11_f127.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Anh khu nha bam doc + bon duong chi dan; do day 100%."
+      "note": "Ảnh khu nhà bám dốc + bốn đường chỉ dẫn. 92%."
     },
     {
       "id": "S12",
-      "frame": "input/review_frames/V11Scene12_f215.png",
+      "frame": "input/review_frames/V11Scene12_f224.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Do o khung f215 - sau nhip 192 khi tang doc hien ra; ba tang deu co mang dat. Do day 79%, khoang trong 82px."
+      "note": "Sơ đồ dốc ba tầng; nhịp cuối dời về frame 163, còn 2,2s trước cắt. 100%."
     },
     {
       "id": "S13",
-      "frame": "input/review_frames/V11Scene13_f97.png",
+      "frame": "input/review_frames/V11Scene13_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Anh dam dong full-bleed + dai nam; do day 100%."
+      "note": "Ảnh Halloween full-bleed + dải năm; ảnh đám đông nay vào cùng nhịp mở. 100%."
     },
     {
       "id": "S14",
-      "frame": "input/review_frames/V11Scene14_f129.png",
+      "frame": "input/review_frames/V11Scene14_f167.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Da them mang nen sau luoi cham va sau dai moc nam; do day 70%. Do day 70%, khoang trong 85px."
+      "note": "Lưới chấm + dải 2019→2022. Nhãn rút còn 3 từ. 69%."
     },
     {
       "id": "S15",
-      "frame": "input/review_frames/V11Scene15_f84.png",
+      "frame": "input/review_frames/V11Scene15_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Khung dien thoai + o khau trang bi gach; do day 100%."
+      "note": "Khung điện thoại + ô khẩu trang bị gạch. Đã bỏ câu 9 từ. 100%."
     },
     {
       "id": "S16",
-      "frame": "input/review_frames/V11Scene16_f127.png",
+      "frame": "input/review_frames/V11Scene16_f164.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Hai cot so + duong muc + anh dam dong + dong ket; do day 80%."
+      "note": "Hai cột số + IconRise ở cột phải - hướng đọc được ngay, không cần chữ. 87%."
     },
     {
       "id": "S17",
-      "frame": "input/review_frames/V11Scene17_f87.png",
+      "frame": "input/review_frames/V11Scene17_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Anh pho chieu + o nen muc cho 16:00 + hai mui ten; do day 100%."
+      "note": "Tấm nền giờ mang '16:00' + ô lưới mật độ cạnh nhau, nằm gọn trong nền. 100%."
     },
     {
       "id": "S18",
-      "frame": "input/review_frames/V11Scene18_f114.png",
+      "frame": "input/review_frames/V11Scene18_f146.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Da to day mat dong ho va hai vach loi di; do day 56%. Do day 56%, khoang trong 97px."
+      "note": "Đồng hồ nay là IconClock nên kim neo đúng tâm (lỗi kim lệch đã hết); ô lưới đặt trong khe hẹp giữa hai vách, hai mũi tên ép vào. 62%."
     },
     {
       "id": "S19",
-      "frame": "input/review_frames/V11Scene19_f80.png",
+      "frame": "input/review_frames/V11Scene19_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Anh dam dong hoa trang + bon nhan; do day 100%."
+      "note": "Ảnh đám đông hoá trang full-bleed + bốn nhãn ngắn. 100%."
     },
     {
       "id": "S20",
-      "frame": "input/review_frames/V11Scene20_f133.png",
+      "frame": "input/review_frames/V11Scene20_f172.png",
       "illustrated": "pass",
-      "composed": "pass",
+      "composed": "fail",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ban do full-bleed do duoc 23% la DUNG - tile carto-light gan nhu don sac nen phan lon hang doc thanh nen. Da mo o co that: duong pho, o nha, thuoc do va nhan deu ro."
+      "note": "ĐO ĐƯỢC 31% số hàng có mực, khoảng trống liền 344px (trần 300px) - DƯỚI SÀN. Nội dung chỉ nằm trong dải y≈820-1130; phần còn lại là tile carto-light gần màu giấy nên máy đọc là nền. Đã thử hạ tint (0,2→0,06) và tăng zoom (16→17): chỉ số nhích 0,32→0,34, tức không phải lỗi tham số mà là cảnh thiếu một phần tử nữa. Ghi nhận nợ, không viết thêm chữ để lấp - đó đúng là cách vòng trước làm hỏng 10 cảnh.",
+      "resolved": true
     },
     {
       "id": "S21",
-      "frame": "input/review_frames/V11Scene21_f168.png",
+      "frame": "input/review_frames/V11Scene21_f125.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Truc Bac-Nam + hai o dau + anh ga tau + dong ket; do day 60%."
+      "note": "Trục Bắc-Nam + hai ô đầu + ảnh ga tàu; nhãn rút còn 'NAM → BẮC'. 59%, trống 192px."
     },
     {
       "id": "S22",
-      "frame": "input/review_frames/V11Scene22_f93.png",
+      "frame": "input/review_frames/V11Scene22_f119.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mo o co that. Hai truc duong + hem ngang + hai mui ten + loi khac bi gach; do day 70%."
+      "note": "Hai trục đường + hẻm ngang; hai câu dài thay bằng 'CHỈ CÓ HẺM NHỎ'. 73%."
     },
     {
       "id": "S23",
-      "frame": "input/review_frames/V11Scene23_f111.png",
+      "frame": "input/review_frames/V11Scene23_f69.png",
       "illustrated": "pass",
-      "composed": "pass",
+      "composed": "fail",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ban do full-bleed do duoc 46% cung vi ly do nhu S20. Da mo o co that: chu thich khong con dam vao nhan ghim."
+      "note": "ĐO ĐƯỢC 47% số hàng có mực, khoảng trống liền 492px - DƯỚI SÀN, cùng nguyên nhân với S20. Cảnh mỏng đi một phần vì câu 6 từ được thay bằng IconCrowd nhỏ hơn; đổi lại người xem bớt một lượt đọc. Cần thêm một phần tử thật (không phải chữ) ở dải y 300-780 - chưa làm vì mọi phương án đều phải bịa thêm vị trí trên bản đồ.",
+      "resolved": true
     },
     {
       "id": "S24",
-      "frame": "input/review_frames/V11Scene24_f214.png",
+      "frame": "input/review_frames/V11Scene24_f10.png",
       "illustrated": "pass",
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Mo o co that. Anh hem + bon tang do kich thuoc; do day 100%."
+      "note": "Ảnh hẻm full-bleed + bốn tầng độ; nhịp cuối dời về 219, còn 2,2s. 100%."
     }
   ]
 }

@@ -55,28 +55,18 @@ export const V11Scene4 = () => (
     </Sequence>
 
     <DiagramCanvas y={740} height={510}>
-      <DrawnPath d="M 800 70 L 800 30 L 560 30" delay={80} drawFrames={14} length={280}
+      {/* Hai nhãn này nằm đè lên ảnh quả lê (x 250..850): chú thích chỉ vào một
+          vật thì phải nằm CẠNH vật đó, không nằm trên nó. Dời sang x=920, đường
+          dẫn kéo dài theo. */}
+      <DrawnPath d="M 920 70 L 920 30 L 560 30" delay={80} drawFrames={14} length={400}
                  stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={80} x={880} y={92} textAnchor="middle" fill="#C2410C"
+      <DrawnText delay={80} x={920} y={92} textAnchor="middle" fill="#C2410C"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 900 }}>
         CHỮ LÊ
       </DrawnText>
-      <DrawnText delay={88} x={880} y={140} textAnchor="middle" fill="#1A1A1A"
+      <DrawnText delay={88} x={920} y={140} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 700 }}>
         (quả lê)
-      </DrawnText>
-    </DiagramCanvas>
-
-    <DiagramCanvas y={1040} height={210}>
-      <DrawnPath d="M 90 40 L 990 40" delay={100} drawFrames={16} length={900}
-                 stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={104} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
-        không giả thuyết nào có giấy tờ xác nhận
-      </DrawnText>
-      <DrawnText delay={112} x={540} y={172} textAnchor="middle" fill="#C2410C"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 900 }}>
-        cả hai vẫn song song tồn tại
       </DrawnText>
     </DiagramCanvas>
 

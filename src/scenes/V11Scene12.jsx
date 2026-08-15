@@ -66,7 +66,7 @@ export const V11Scene12 = () => (
                  length={420} strokeWidth={5} fill="rgba(26,26,26,0.19)" />
     </DiagramCanvas>
 
-    <Sequence from={192} layout="none">
+    <Sequence from={185} layout="none">
       <PunchPhrase lines={["HẸP DẦN", "VÀ DỐC"]} top={176} fontSize={62} />
     </Sequence>
 

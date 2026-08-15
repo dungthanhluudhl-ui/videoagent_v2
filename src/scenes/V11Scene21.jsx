@@ -75,22 +75,13 @@ export const V11Scene21 = () => (
       </DrawnText>
       <DrawnText delay={138} x={790} y={196} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 30, fontWeight: 700 }}>
-        từ Nam ngược lên Bắc
+        NAM → BẮC
       </DrawnText>
     </DiagramCanvas>
 
     <Sequence from={115} layout="none">
       <PunchPhrase lines={["ĐÍCH Ở BẮC", "GA Ở NAM"]} top={176} fontSize={62} />
     </Sequence>
-
-    <DiagramCanvas y={1040} height={210}>
-      <DrawnPath d="M 90 40 L 990 40" delay={180} drawFrames={16} length={900}
-                 stroke="#C2410C" strokeWidth={6} />
-      <DrawnText delay={184} x={540} y={112} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 36, fontWeight: 800 }}>
-        muốn lên Bắc thì phải cắt ngang
-      </DrawnText>
-    </DiagramCanvas>
 
     <BottomBar />
   </AbsoluteFill>

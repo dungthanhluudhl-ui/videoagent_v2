@@ -14,6 +14,7 @@
 import { AbsoluteFill, Sequence } from "remotion";
 import { BottomBar, PunchPhrase, Support } from "./shared";
 import { DiagramCanvas, DrawnPath, DrawnText } from "./visualLanguage";
+import { IconCrowd } from "./iconVocabulary";
 import { LOCAL_RASTER_STYLE, MapGraphic } from "./MapGraphic";
 
 export const V11SCENE23_DURATION = 148;
@@ -44,10 +45,9 @@ export const V11Scene23 = () => (
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 54, fontWeight: 900 }}>
         1
       </DrawnText>
-      <DrawnText delay={94} x={330} y={196} textAnchor="middle" fill="#1A1A1A"
-            style={{ fontFamily: "Be Vietnam Pro", fontSize: 32, fontWeight: 700 }}>
-        người từ ga đổ thẳng vào
-      </DrawnText>
+      {/* "người từ ga đổ thẳng vào" - lời thoại đang nói đúng câu này. Ký hiệu
+          đám đông đặt ngay đầu lối ra nói cùng một điều, không tốn lượt đọc. */}
+      <IconCrowd x={330} y={196} size={110} delay={94} />
     </DiagramCanvas>
 
     <BottomBar />

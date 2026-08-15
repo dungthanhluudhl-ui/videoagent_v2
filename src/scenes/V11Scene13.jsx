@@ -42,13 +42,13 @@ export const V11Scene13 = () => (
       </DrawnText>
     </DiagramCanvas>
 
-    <Sequence from={91} layout="none">
+    <Sequence from={85} layout="none">
       <PunchPhrase lines={["TÂM ĐIỂM HALLOWEEN"]} top={630} fontSize={64} onDark />
     </Sequence>
 
-    <Sequence from={115} layout="none">
+    <Sequence from={0} layout="none">
       <Support name="Sup-Crowd" src="el10_crowd_behind.png" width={840} x={120} y={780}
-               visibleFor={15} />
+               visibleFor={130} />
     </Sequence>
 
     <BottomBar />

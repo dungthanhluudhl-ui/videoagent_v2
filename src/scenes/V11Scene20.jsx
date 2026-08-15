@@ -32,13 +32,13 @@ export const V11Scene20 = () => (
                  length={104} stroke="#C2410C" strokeWidth={8} />
       <DrawnText delay={124} x={540} y={132} textAnchor="middle" fill="#1A1A1A"
             style={{ fontFamily: "Be Vietnam Pro", fontSize: 34, fontWeight: 800 }}>
-        toàn bộ chiều dài phố ẩm thực
+        PHỐ ẨM THỰC
       </DrawnText>
       <DimensionLine x1={120} y1={230} x2={960} y2={230} label="302m" delay={154}
                      offset={0} fontSize={56} />
     </DiagramCanvas>
 
-    <Sequence from={154} layout="none">
+    <Sequence from={133} layout="none">
       <PunchPhrase lines={["302 MÉT"]} top={196} fontSize={76} />
     </Sequence>
 
