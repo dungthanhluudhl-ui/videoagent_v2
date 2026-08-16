@@ -409,6 +409,15 @@ CASES = [
                      'label="KHU TẠM CƯ" />'
                      '<DrawnPath d="M 200 600 L 900 600"'),
          expect_message=["cuts through the map's own label stack"]),
+    # Chữ do primitive tự vẽ ra từ prop của nó: cùng loại điểm mù với chip bản
+    # đồ ở trên. Sàn 44px trước đây chỉ soi chữ gõ thẳng vào file cảnh, nên một
+    # nhãn kích thước 30px do component vẽ thì lọt thẳng.
+    Case("text_gate: chữ do component tự vẽ cũng phải qua sàn 44px", "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx", '<DrawnPath d="M 840 862 L 840 998"',
+                     '<DimensionLine x1={200} y1={400} x2={800} y2={400} '
+                     'label="HẸP DẦN" fontSize={30} />'
+                     '<DrawnPath d="M 840 862 L 840 998"'),
+         expect_message=["DimensionLine draws", "under the 44px floor"]),
     Case("text_gate: hai ký hiệu vẽ chồng lên nhau", "text_gate.py", None,
          scene_edit=("V10Scene5.jsx", '<DrawnPath d="M 840 862 L 840 998"',
                      '<IconCrowd x={540} y={300} size={220} delay={0} />'

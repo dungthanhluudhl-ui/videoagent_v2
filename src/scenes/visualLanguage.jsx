@@ -227,7 +227,13 @@ export const DimensionLine = ({
   delay = 0,
   color = ORANGE,
   offset = 26,
-  fontSize = 34,
+  // 44, not 34. The old default was under the project's own 44px readability
+  // floor, and it anchored every author who touched it: across two videos the
+  // explicit sizes came out 36, 38, 40, 42 - climbing toward the floor and
+  // never reaching it. Four of the eight dimension labels ever drawn are
+  // under-size, which is a broken default, not four careless authors.
+  // No scene changes: every existing use passes fontSize explicitly.
+  fontSize = 44,
 }) => {
   const frame = useCurrentFrame();
   const progress = interpolate(frame, [delay, delay + 16], [0, 1], {

@@ -2,7 +2,7 @@
   "video": "V11",
   "fps": 30,
   "wordsFile": "input/words11_aligned.json",
-  "status": "active",
+  "status": "shipped",
   "continuationOf": "V10 (Itaewon phần 1) - xem input/scene_plan10.json",
   "scenes": [
     {
@@ -67,7 +67,7 @@
         }
       ],
       "durationInFrames": 102,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S2",
@@ -134,7 +134,7 @@
         }
       ],
       "durationInFrames": 106,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S3",
@@ -200,7 +200,7 @@
         }
       ],
       "durationInFrames": 102,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S4",
@@ -271,7 +271,7 @@
         }
       ],
       "durationInFrames": 149,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S5",
@@ -347,7 +347,7 @@
         }
       ],
       "durationInFrames": 149,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S6",
@@ -430,7 +430,7 @@
         }
       ],
       "durationInFrames": 218,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S7",
@@ -510,7 +510,7 @@
         }
       ],
       "durationInFrames": 155,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S8",
@@ -573,7 +573,7 @@
         }
       ],
       "durationInFrames": 116,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S9",
@@ -644,7 +644,7 @@
         }
       ],
       "durationInFrames": 193,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S10",
@@ -711,7 +711,7 @@
         }
       ],
       "durationInFrames": 131,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S11",
@@ -774,7 +774,7 @@
         }
       ],
       "durationInFrames": 133,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S12",
@@ -856,7 +856,7 @@
         }
       ],
       "durationInFrames": 230,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S13",
@@ -920,7 +920,7 @@
         }
       ],
       "durationInFrames": 130,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S14",
@@ -990,7 +990,7 @@
         }
       ],
       "durationInFrames": 173,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S15",
@@ -1055,7 +1055,7 @@
         }
       ],
       "durationInFrames": 112,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S16",
@@ -1126,7 +1126,7 @@
         }
       ],
       "durationInFrames": 170,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S17",
@@ -1189,7 +1189,7 @@
         }
       ],
       "durationInFrames": 116,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S18",
@@ -1259,7 +1259,7 @@
         }
       ],
       "durationInFrames": 152,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S19",
@@ -1322,7 +1322,7 @@
         }
       ],
       "durationInFrames": 107,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S20",
@@ -1403,7 +1403,7 @@
         }
       ],
       "durationInFrames": 178,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S21",
@@ -1474,7 +1474,7 @@
         }
       ],
       "durationInFrames": 224,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S22",
@@ -1539,7 +1539,7 @@
         }
       ],
       "durationInFrames": 125,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S23",
@@ -1605,7 +1605,7 @@
         }
       ],
       "durationInFrames": 148,
-      "status": "built"
+      "status": "reviewed"
     },
     {
       "id": "S24",
@@ -1717,7 +1717,7 @@
         }
       ],
       "durationInFrames": 286,
-      "status": "built"
+      "status": "reviewed"
     }
   ]
 }

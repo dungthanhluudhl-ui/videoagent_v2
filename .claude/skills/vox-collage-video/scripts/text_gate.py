@@ -540,6 +540,92 @@ MAP_LABEL_SIZE = 44         # visualLanguage.jsx LABEL_SIZE
 MAP_SUBLABEL_SIZE = 36      # visualLanguage.jsx SUBLABEL_SIZE
 
 
+# Every primitive that renders text out of its OWN props. Text listed here is
+# text the viewer sees; text NOT listed here is text no rule in this file can
+# reach, which is precisely how a dashed ring came to be drawn straight through
+# "KHU TẠM CƯ" with six gates green.
+#
+# Two tiers on purpose:
+#   exact  - geometry is static and derivable from the props, so the box is
+#            real and joins every collision rule below.
+#   listed - geometry moves with an animation (ForceArrow's label rides the
+#            arrow's overshoot) or lives in absolute DOM. Measuring those from
+#            source would be guessing, and a guessed box produces false
+#            failures - already paid for twice today. So they are COUNTED and
+#            named in the "not checked" line instead of silently skipped.
+#            Silence is what made this class of defect survive eleven videos.
+TEXT_BEARING = {
+    "DimensionLine":      ("label",),
+    "SlopeIndicator":     ("label",),
+    "Timeline":           ("label", "sublabel"),
+    "AnnotatedPhoto":     ("label",),
+    "ForceArrow":         ("label",),
+    "MemorialDots":       ("label",),
+    "ChainBreak":         ("label",),
+    "StreetElevation":    ("label",),
+    "SpeechBubble":       ("text",),
+    "SpeechBubbleQuote":  ("text",),
+    "StatCounter":        ("label",),
+    "AnimatedLineChart":  ("label",),
+    "NewspaperSpotlight": ("text",),
+    "DocumentStamp":      ("text",),
+    "VoxMapPin":          ("locationName",),
+}
+
+DIMLINE_DEFAULT_SIZE = 44   # visualLanguage.jsx DimensionLine fontSize default
+
+
+def _prop_str(rest, name):
+    m = re.search(rf'(?<![A-Za-z]){name}="([^"]*)"', rest)
+    return m.group(1) if m else ""
+
+
+def _prop_num(rest, name, default=None):
+    m = re.search(rf"(?<![A-Za-z]){name}=\{{(-?\d+(?:\.\d+)?)\}}", rest)
+    return float(m.group(1)) if m else default
+
+
+def parse_component_labels(text, scene_duration):
+    """(measured, listed) text drawn by primitives out of their own props.
+
+    `measured` entries carry a real box and are checked like any label.
+    `listed` entries are only named, so the gap is visible in the output.
+    """
+    measured, listed = [], []
+    for cy, body in canvas_blocks(text):
+        for m in re.finditer(r"<DimensionLine\b(.*?)/>", body, re.S):
+            rest = m.group(1)
+            label = _prop_str(rest, "label")
+            if not label:
+                continue
+            x1, y1 = _prop_num(rest, "x1"), _prop_num(rest, "y1")
+            x2, y2 = _prop_num(rest, "x2"), _prop_num(rest, "y2")
+            if None in (x1, y1, x2, y2):
+                listed.append(("DimensionLine", label, "toạ độ không phải số"))
+                continue
+            fs = _prop_num(rest, "fontSize", DIMLINE_DEFAULT_SIZE)
+            # Straight off the component: the plate is
+            #   x = midX - len*fs*0.32 - 14, w = len*fs*0.64 + 28
+            #   y = midY - fs*0.85,          h = fs*1.5
+            mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2 + cy
+            half = len(label) * fs * 0.32 + 14
+            measured.append({
+                "component": "DimensionLine", "text": label, "size": fs,
+                "box": (mid_x - half, mid_y - fs * 0.85, mid_x + half, mid_y + fs * 0.65),
+                "plate_w": half * 2, "from": 0, "to": scene_duration})
+
+    for name, props in TEXT_BEARING.items():
+        if name == "DimensionLine":
+            continue
+        for m in re.finditer(rf"<{name}\b(.*?)/>", text, re.S):
+            rest = m.group(1)
+            for p in props:
+                val = _prop_str(rest, p)
+                if val:
+                    listed.append((name, val, "vị trí đổi theo animation hoặc nằm ngoài SVG"))
+    return measured, listed
+
+
 def parse_map_labels(text, scene_duration):
     """The chip + sublabel a MapPanel/MapGraphic draws for itself.
 
@@ -744,6 +830,8 @@ def main():
         icons = parse_icons(src, dur)
         punches = parse_punch(src, dur)
         map_labels = parse_map_labels(src, dur)
+        comp_measured, comp_listed = parse_component_labels(src, dur)
+        unchecked += [(sid, f"{c} {v!r} ({why})") for c, v, why in comp_listed]
         assets = asset_boxes(scene, public_dir)
         runs = narration_runs(words_path, scene.get("startSec", 0), scene.get("endSec", 0))
         # A full-bleed photo is not in `assets` with an x/y - it IS the frame.
@@ -758,6 +846,35 @@ def main():
         on_photo = bool(bg) and 'wash="paper"' not in bg.group(1)
         checked += 1
         total_words += sum(len(l["text"].split()) for l in labels)
+
+        # Text a primitive draws for itself, where the geometry is exact.
+        for cl in comp_measured:
+            if cl["size"] < MIN_FONT_SIZE:
+                problems.append(
+                    f"{sid}: {cl['component']} draws {cl['text']!r} at {cl['size']:.0f}px, "
+                    f"under the {MIN_FONT_SIZE}px floor. The floor applies to every word on "
+                    f"screen, not only the ones typed into the scene file - and a "
+                    f"measurement nobody can read is the one label that has no reason to "
+                    f"exist. Pass fontSize={MIN_FONT_SIZE} or larger.")
+            real_w = text_width(cl["text"], cl["size"], 900)
+            if real_w > cl["plate_w"]:
+                problems.append(
+                    f"{sid}: {cl['component']} draws {cl['text']!r} {real_w:.0f}px wide on a "
+                    f"plate only {cl['plate_w']:.0f}px wide - the text runs off its own "
+                    f"backing. The component sizes that plate by COUNTING CHARACTERS "
+                    f"(len x fontSize x 0.64), which under-measures Vietnamese: accented "
+                    f"caps are wider than the 0.64 factor assumes.")
+            for st in strokes:
+                if not (cl["from"] < st["to"] and st["from"] < cl["to"]):
+                    continue
+                if _framed(st, cl["box"]):
+                    continue
+                if any(_seg_hits_rect(a, b, cl["box"], st["width"] / 2 + STROKE_SLACK)
+                       for poly in st["polys"] for a, b in zip(poly, poly[1:])):
+                    problems.append(
+                        f"{sid}: a drawn stroke ({st['d'][:34]}...) runs through "
+                        f"{cl['component']}'s own label {cl['text']!r}.")
+                    break
 
         # The map's own chip/sublabel: same protection as any other text.
         for ml in map_labels:

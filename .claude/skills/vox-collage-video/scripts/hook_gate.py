@@ -102,9 +102,25 @@ def find_active_plan(root):
         if data.get("status") == "active":
             plans.append((path, data))
     if len(plans) > 1:
-        print(f"[vox-gate] several active plans ({', '.join(str(p) for p, _ in plans)}) - "
-              f"set all but one to \"status\": \"shipped\"", file=sys.stderr)
-        return None, broken
+        # HARD FAIL, not a warning. Returning None here used to mean "no active
+        # plan", which makes every gate downstream skip and the turn end green -
+        # so the one state where enforcement is off is also the state that looks
+        # exactly like a clean run. Hit for real: with V11 and V12 both open the
+        # Stop hook printed this line and exited 0, and nothing was being
+        # checked at all.
+        #
+        # Two open plans is also never a legitimate state - the plan is the
+        # contract for ONE video - so refusing costs nothing and the message
+        # says exactly which file to change.
+        print(f"[vox-gate] KHÔNG THỂ CƯỠNG CHẾ: có {len(plans)} kế hoạch cùng đang mở "
+              f"({', '.join(p.name for p, _ in plans)}).\n"
+              f"  Mỗi lần chỉ được MỘT video đang dựng, vì mọi gate đều chấm bản dựng "
+              f"theo đúng một bản kế hoạch.\n"
+              f"  Đặt \"status\": \"shipped\" cho video đã xong, giữ lại đúng một cái "
+              f"\"active\".\n"
+              f"  (Trước đây chỗ này chỉ cảnh báo rồi cho qua - tức là gate tắt hẳn "
+              f"mà lượt vẫn xanh.)", file=sys.stderr)
+        sys.exit(2)
     return (plans[0] if plans else None), broken
 
 
