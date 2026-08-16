@@ -169,11 +169,32 @@ def main():
         src = text_gate.expand_helpers(jsx.read_text(encoding="utf-8"))
         labels = text_gate.parse_labels(src, int(scene.get("durationInFrames") or 0))
 
+        # Tiêu đề PHẢI được soi cùng với nhãn vẽ. Bản đầu của gate này chỉ đọc
+        # parse_labels, tức là chỉ thấy <DrawnText>/<text> trong SVG - còn
+        # PunchPhrase là DOM nên tàng hình với nó. Hậu quả: một cảnh chỉ có
+        # tiêu đề (rất nhiều cảnh như vậy) cho ra "0 nhãn soi ... PASSED" -
+        # xanh mà không kiểm gì, thứ tệ hơn cả một gate báo lỗi. Mà tiêu đề
+        # lại đúng là dòng chữ to nhất khung hình và là chỗ đã thực sự lọt lỗi
+        # ("chữ chìm vào ảnh nền tối").
+        #
+        # parse_punch đã tự đọc <Sequence from={N}> bọc ngoài, nên `from` của
+        # nó là khung TUYỆT ĐỐI - không được cộng thêm sequence_offset như với
+        # nhãn vẽ, cộng hai lần là gate lại bỏ qua đúng thứ nó cần soi.
+        probes = []
+        for p in text_gate.parse_punch(src, int(scene.get("durationInFrames") or 0)):
+            if not p.get("box"):
+                continue
+            probes.append({"text": " / ".join(p.get("lines") or []) or "(tiêu đề)",
+                           "box": p["box"], "start": int(p.get("from", 0)) + APPEAR_FRAMES})
         for lab in labels:
             if not lab.get("box") or not lab.get("text"):
                 continue
+            probes.append({"text": lab["text"], "box": lab["box"],
+                           "start": label_start(src, lab)})
+
+        for lab in probes:
             # Nhãn chưa tới lượt hiện thì vắng mực là ĐÚNG, không phải lỗi.
-            if at is not None and label_start(src, lab) > at:
+            if at is not None and lab["start"] > at:
                 skipped += 1
                 continue
             r = probe(img, lab["box"], scale)

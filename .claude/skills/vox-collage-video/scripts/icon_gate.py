@@ -65,6 +65,16 @@ FLOOR_BUILT_FRACTION = 0.8
 FLOOR_SCENE_FRACTION = 0.2      # >= a fifth of scenes carry a symbol
 FLOOR_DISTINCT_ICONS = 3        # ... drawn from at least this many icons
 
+# Below this many scenes, "3 distinct icons" stops being a variety floor and
+# becomes a quota: on a 3-scene build it forces a symbol into EVERY scene,
+# which is six times stricter than the one-in-five rule it is supposed to
+# support. The user's own acceptance criteria forbid exactly that outcome -
+# "mọi tài nguyên có chủ đích, không cho có" - so a gate that can only be
+# satisfied by filler is a gate pushing the build in the wrong direction.
+#
+# Above the threshold nothing changes: a 24-scene video is still held to 3.
+SMALL_PLAN_SCENES = 8
+
 
 def load_registry(root):
     """(registry, exported_names, problems) parsed from iconVocabulary.jsx.
@@ -201,12 +211,19 @@ def main():
     total = len(scenes)
     if not args.scene and not args.skip_floor and total and built >= FLOOR_BUILT_FRACTION * total:
         need_scenes = math.ceil(total * FLOOR_SCENE_FRACTION)
-        if with_icon < need_scenes or len(used_icons) < FLOOR_DISTINCT_ICONS:
+        need_icons = FLOOR_DISTINCT_ICONS
+        scaled = ""
+        if total < SMALL_PLAN_SCENES:
+            need_icons = min(FLOOR_DISTINCT_ICONS, need_scenes)
+            scaled = (f" [bản dựng {total} cảnh: hạ sàn ký hiệu khác nhau từ "
+                      f"{FLOOR_DISTINCT_ICONS} xuống {need_icons} - ở quy mô này đòi "
+                      f"{FLOOR_DISTINCT_ICONS} là buộc cảnh nào cũng phải có ký hiệu]")
+        if with_icon < need_scenes or len(used_icons) < need_icons:
             problems.append(
                 f"symbol floor: {with_icon}/{total} scene(s) carry a drawn symbol "
                 f"({len(used_icons)} distinct: {', '.join(sorted(used_icons)) or 'none'}). "
                 f"A finished video needs >= {need_scenes} scene(s) and "
-                f">= {FLOOR_DISTINCT_ICONS} distinct icons.\n"
+                f">= {need_icons} distinct icons.{scaled}\n"
                 f"     This floor is not decoration. Rule 1 above can be satisfied forever by "
                 f"never typing a trigger word - by writing around the vocabulary instead of "
                 f"using it, which is exactly how @remotion/shapes sat installed and unused "

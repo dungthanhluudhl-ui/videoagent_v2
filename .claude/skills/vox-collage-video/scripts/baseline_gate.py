@@ -68,6 +68,28 @@ METRICS = {
     "max_event_gap_sec":     ("down", 1.0,  "khoảng cách sự kiện thị giác lớn nhất"),
 }
 
+# Metrics that are a COUNT of scenes rather than a rate over them. A count can
+# never exceed the number of scenes, so comparing a short plan against a
+# 26-scene reference asks for something arithmetically impossible.
+#
+# Found on a real run: the V12 three-scene test build used three DIFFERENT
+# visual languages - maximal possible variety, nothing repeated - and still
+# failed "số ngôn ngữ hình ảnh khác nhau: 3 (mốc 11, cần >= 9.0)". The gate was
+# measuring LENGTH and reporting it as a quality regression. Every rate metric
+# in the same run came in at or above the reference.
+#
+# Capping the floor at the scene count keeps the metric fully strict at full
+# length (a 24-scene plan is still held to 9) while letting a short plan be
+# judged on what it can actually achieve. The cap is PRINTED whenever it
+# engages: a threshold that relaxes silently is a threshold that rots.
+COUNT_METRICS = {"distinct_languages"}
+
+# Below this many scenes, rate metrics are computed over so few samples that a
+# single scene moves them by tens of percent. The comparison still runs - it is
+# the only regression check there is - but it is labelled, so nobody reads
+# "PASSED" on a 3-scene build as proof that the finished video will hold.
+SMALL_PLAN_SCENES = 8
+
 # Targets that do NOT come from the reference video, because the reference was
 # itself weak here. Freezing V10's own number would freeze its flaw.
 ABSOLUTE_TARGETS = {
@@ -228,16 +250,28 @@ def check(profile, baseline):
     lines.append(f"--- so với mốc chuẩn {baseline.get('reference', '?')} "
                  f"({ref.get('scenes', '?')} cảnh, {ref.get('runtime_sec', '?')}s) ---")
 
+    n_scenes = profile.get("scenes")
+    if isinstance(n_scenes, int) and n_scenes < SMALL_PLAN_SCENES:
+        lines.append(f"     [{n_scenes} cảnh - bản dựng ngắn. Các chỉ số tỉ lệ tính trên "
+                     f"quá ít mẫu, một cảnh làm lệch cả chục phần trăm. So sánh này chỉ "
+                     f"để tham khảo, KHÔNG chứng minh video đủ dài sẽ giữ được mức này.]")
+
     for key, (direction, slack, label) in METRICS.items():
         new, old = profile.get(key), ref.get(key)
         if new is None or old is None:
             lines.append(f"     {label}: bỏ qua (thiếu số liệu)")
             continue
         limit = old - slack if direction == "up" else old + slack
+        note = ""
+        if key in COUNT_METRICS and direction == "up" and isinstance(n_scenes, int) \
+                and limit > n_scenes:
+            note = (f"  [hạ trần: {n_scenes} cảnh thì nhiều nhất cũng chỉ đạt "
+                    f"{n_scenes}, đòi {round(limit, 2)} là bất khả]")
+            limit = n_scenes
         bad = new < limit if direction == "up" else new > limit
         arrow = "≥" if direction == "up" else "≤"
         mark = "FAIL" if bad else "OK  "
-        lines.append(f"{mark} {label}: {new} (mốc {old}, cần {arrow} {round(limit, 2)})")
+        lines.append(f"{mark} {label}: {new} (mốc {old}, cần {arrow} {round(limit, 2)}){note}")
         if bad:
             failures.append(
                 f"{label}: {new} so với {old} ở {baseline.get('reference', 'mốc chuẩn')} "

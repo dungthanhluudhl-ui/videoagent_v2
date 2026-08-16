@@ -90,6 +90,12 @@ import { V10Scene24, V10SCENE24_DURATION } from "./scenes/V10Scene24";
 import { V10Scene25, V10SCENE25_DURATION } from "./scenes/V10Scene25";
 import { V10Scene26, V10SCENE26_DURATION } from "./scenes/V10Scene26";
 
+// V12 = ban dung thu 3 canh (cold-start test). Cung cua so loi 0-10.32s cua
+// V11/S1-S3 nhung lap ke hoach lai tu dau, tu input/scene_plan12.json.
+import { V12Scene1, V12SCENE1_DURATION } from "./scenes/V12Scene1";
+import { V12Scene2, V12SCENE2_DURATION } from "./scenes/V12Scene2";
+import { V12Scene3, V12SCENE3_DURATION } from "./scenes/V12Scene3";
+
 // V11 = Itaewon phan 2. Tiep lien mach V10, dung tu input/scene_plan11.json.
 import { V11Scene1, V11SCENE1_DURATION } from "./scenes/V11Scene1";
 import { V11Scene2, V11SCENE2_DURATION } from "./scenes/V11Scene2";
@@ -263,6 +269,12 @@ export const RemotionRoot = () => {
         <Composition id="VLDemoDots" component={VLDemoDots} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="VLDemoChain" component={VLDemoChain} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="VLDemoShops" component={VLDemoShops} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+
+      <Folder name="V12-Coldstart-Test-Scenes">
+        <Composition id="V12Scene1" component={V12Scene1} durationInFrames={V12SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V12Scene2" component={V12Scene2} durationInFrames={V12SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V12Scene3" component={V12Scene3} durationInFrames={V12SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       </Folder>
 
       <Folder name="V11-Itaewon-P2-Scenes">

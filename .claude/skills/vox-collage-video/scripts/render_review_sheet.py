@@ -96,7 +96,12 @@ def main():
         # So: settle-frames after every declared visualEvent, plus one near the
         # cut. If the plan says something happens at frame 192, frame 202 is
         # what the viewer sees, and that is what gets looked at.
-        settle = 10
+        # Must cover the SLOWEST entrance in the kit, or the "settled" frame is
+        # taken while things are still arriving. BackgroundPhoto fades in over
+        # 18 frames; at settle=10 every scene that opens on one was judged at
+        # ~55% opacity, which reads as a washed-out empty frame and is not what
+        # the viewer sees. Hero rise is 16, Support scale-in 14, DrawnText 14.
+        settle = 20
         beats = sorted({int(e.get("frame") or 0) for e in (scene.get("visualEvents") or [])})
         picks = sorted({min(total - 2, b + settle) for b in beats if b + settle < total}
                        | {max(1, total - 6)})
@@ -117,7 +122,12 @@ def main():
                 failures.append(f"{comp} frame {f}: {log.strip().splitlines()[-1] if log.strip() else 'render failed'}")
         review_entries.append({
             "id": sid,
-            "frame": str(scene_frames[0]) if scene_frames else "",
+            # The MIDDLE sample, not the first. The first is the scene at its
+            # opening beat - the fewest elements it will ever carry - so
+            # recording it as the evidence frame judges every scene on its
+            # thinnest moment, and pixel_gate then has to skip most labels as
+            # "not due yet". The middle sample is the scene doing its job.
+            "frame": str(scene_frames[len(scene_frames) // 2]) if scene_frames else "",
             "illustrated": "", "composed": "", "varied": "", "purposeful": "",
             "note": "",
         })

@@ -84,7 +84,16 @@ def parse_elem(raw):
     role = kv.get("role")
     if not role:
         lname = name.strip().lower()
-        role = "hero" if lname.startswith("hero") else "support" if lname.startswith("support") else "other"
+        # `bg`/`background` prefix -> a full-bleed BackgroundPhoto. Before this
+        # existed there was NO correct way to check a scene that has one:
+        # passing it in reported a safe-zone violation on all four edges plus
+        # 100% overlap with everything (both true of any full-bleed layer, and
+        # both meaningless), and leaving it out reported the frame as EMPTY on
+        # every frame before the first foreground beat. Two wrong answers and
+        # no third option, on a layer that carries a large share of scenes.
+        role = ("background" if lname.startswith(("bg", "background"))
+                else "hero" if lname.startswith("hero")
+                else "support" if lname.startswith("support") else "other")
     return {
         "name": name.strip(),
         "src": src,
@@ -203,7 +212,7 @@ def sample_frames(elems, samples):
     return sorted({int(last * i / (samples + 1)) for i in range(1, samples + 1)})
 
 
-def balance_check(elems, safe, max_dx, max_dy, samples):
+def balance_check(elems, safe, max_dx, max_dy, samples, has_background=False):
     """Is the visual mass CENTRED, or has it drifted to an edge?
 
     This is the user's defect #3, and it is a different failure from both of
@@ -244,6 +253,12 @@ def balance_check(elems, safe, max_dx, max_dy, samples):
         band = alpha_canvas(live)[int(band_top):int(band_bottom), :]
         ys, xs = np.nonzero(band)
         if xs.size == 0:
+            if has_background:
+                # Only the background is up: nothing to balance, and a
+                # full-bleed layer is centred by construction. Not a defect.
+                print(f"frame {frame:5d}: chỉ có ảnh nền full-bleed - không có khối "
+                      f"tiền cảnh nào để cân")
+                continue
             print(f"frame {frame:5d}: nothing on screen inside the usable band  <-- EMPTY")
             failed = True
             continue
@@ -268,7 +283,7 @@ def balance_check(elems, safe, max_dx, max_dy, samples):
     return failed
 
 
-def coverage_check(elems, safe, floor, samples, target):
+def coverage_check(elems, safe, floor, samples, target, has_background=False):
     """Do the illustrations actually FILL the frame, or is the viewer looking
     mostly at empty paper?
 
@@ -316,16 +331,29 @@ def coverage_check(elems, safe, floor, samples, target):
         inside = alpha_canvas(live)[int(band_top):int(band_bottom), :]
         pct = 100.0 * inside.sum() / band_area
         names = ", ".join(e["name"] for e in live) or "(nothing on screen)"
-        flag = "  <-- TOO EMPTY" if pct < floor * 100 else ""
+        if has_background:
+            names += " + nền full-bleed"
+        flag = "  <-- TOO EMPTY" if pct < floor * 100 and not has_background else ""
         print(f"frame {frame:5d}: {pct:5.1f}% filled by {names}{flag}")
         if pct < worst_pct:
             worst_pct, worst_frame = pct, frame
 
     if worst_pct < floor * 100:
-        print(f"Worst coverage {worst_pct:.1f}% at frame {worst_frame} < floor {floor:.0%} - "
-              f"enlarge the hero (size it by its RENDERED height, not a guessed width), "
-              f"add a BackgroundPhoto, or add a real second beat.")
-        return True
+        if has_background:
+            # The remedy the failure text prescribes ("add a BackgroundPhoto")
+            # is already in place, so failing here would be telling the author
+            # to do the thing they did. The number is still printed: a thin
+            # foreground over a photo is a real weakness, just not an empty
+            # frame, and the distinction is the whole point of this branch.
+            print(f"Lớp tiền cảnh chỉ phủ {worst_pct:.1f}% ở khung {worst_frame} - dưới sàn "
+                  f"{floor:.0%}, NHƯNG cảnh có ảnh nền full-bleed nên khung hình không trống. "
+                  f"Không tính là lỗi; vẫn nên cân nhắc thêm một nhịp tiền cảnh.")
+            return False
+        else:
+            print(f"Worst coverage {worst_pct:.1f}% at frame {worst_frame} < floor {floor:.0%} - "
+                  f"enlarge the hero (size it by its RENDERED height, not a guessed width), "
+                  f"add a BackgroundPhoto, or add a real second beat.")
+            return True
     if worst_pct < target * 100:
         print(f"Worst coverage {worst_pct:.1f}% - clears the {floor:.0%} floor but under the "
               f"{target:.0%} target; this scene will still read as sparse.")
@@ -366,12 +394,19 @@ def main():
     safe = parse_safe_zone(args.safe_zone)
     failed = False
 
+    # A full-bleed background is deliberately edge-to-edge and deliberately
+    # under everything else, so it is exempt from the two checks that measure
+    # exactly those two things. It still counts as PRESENCE: its existence is
+    # what turns "the frame is empty" from a failure into a note.
+    backgrounds = [e for e in elems if e["role"] == "background"]
+    fg = [e for e in elems if e["role"] != "background"]
+
     print("--- Pairwise overlap ---")
     worst = 0.0
     any_checked = False
-    for i in range(len(elems)):
-        for j in range(i + 1, len(elems)):
-            a, b = elems[i], elems[j]
+    for i in range(len(fg)):
+        for j in range(i + 1, len(fg)):
+            a, b = fg[i], fg[j]
             if not windows_overlap(a, b):
                 continue
             any_checked = True
@@ -391,6 +426,9 @@ def main():
           f"{safe['top']:.0f},{safe['bottom']:.0f},{safe['left']:.0f},{safe['right']:.0f}) ---")
     bboxes = {}
     for e in elems:
+        if e["role"] == "background":
+            print(f"{e['name']:22s} nền full-bleed - miễn safe zone (đúng ra là phải tràn mép)")
+            continue
         bbox, _mask, _origin = bbox_and_mask(e)
         bboxes[e["name"]] = bbox
         x0, y0, x1, y1 = bbox
@@ -427,11 +465,15 @@ def main():
             else:
                 print(f"{s['name']:22s} OK (ratio {worst_ratio:.0%})")
 
-    if coverage_check(elems, safe, args.coverage_floor, args.coverage_samples,
-                      args.coverage_target):
+    # Coverage and balance are measured on the FOREGROUND only: a full-bleed
+    # layer fills 100% and sits perfectly centred by construction, so folding
+    # it in would make both checks answer "fine" for every scene that has one.
+    if coverage_check(fg, safe, args.coverage_floor, args.coverage_samples,
+                      args.coverage_target, has_background=bool(backgrounds)):
         failed = True
 
-    if balance_check(elems, safe, args.balance_dx, args.balance_dy, args.coverage_samples):
+    if balance_check(fg, safe, args.balance_dx, args.balance_dy, args.coverage_samples,
+                     has_background=bool(backgrounds)):
         failed = True
 
     print(f"\n{'FAILED' if failed else 'PASSED'}")

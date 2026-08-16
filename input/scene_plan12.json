@@ -1,0 +1,231 @@
+{
+  "video": "V12",
+  "fps": 30,
+  "wordsFile": "input/words11_aligned.json",
+  "status": "shipped",
+  "_howToUse": [
+    "BẢN DỰNG THỬ 3 CẢNH - bài kiểm tra nguội của skill, không phải video giao cho khách.",
+    "Phủ đúng cửa sổ 0-10.32s mà V11/S1-S3 đã dựng, nhưng lập kế hoạch lại từ đầu và cố ý",
+    "chọn ba ngôn ngữ hình ảnh KHÁC V11 (V11: document/cutout/document) để kiểm chứng rằng",
+    "chất lượng đến từ quy trình chứ không phải từ việc chép lại đáp án cũ.",
+    "Mọi trường rỗng đều PHẢI điền - plan_gate.py fail trên placeholder.",
+    "Đặt status='shipped' khi xong để hook im lặng."
+  ],
+  "scenes": [
+    {
+      "id": "S1",
+      "startSec": 0.0,
+      "endSec": 3.4,
+      "narrativeFunction": "cause",
+      "viewerQuestion": "Vì sao triều đình lại dựng riêng một khu ở đúng chỗ này?",
+      "visualTransformation": "khung cảnh cung đình lùi ra sau thành nền, bản đồ thật tiến lên, rồi một vòng khoanh siết lại đúng mảnh đất được cấp - người xem thấy chữ 'tại đây' biến thành một toạ độ có thật",
+      "contrastWithPrevious": "mở đầu bằng một vị trí có toạ độ thật thay vì một tờ công văn chung chung",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "map",
+      "template": "bespoke: cung đình lùi về nền, bản đồ và vòng khoanh tiến lên",
+      "backdrop": "card",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Court",
+          "src": "el10_temple_dusk.png",
+          "anchorPhrase": "Triều đình Joseon",
+          "describes": [
+            "Triều đình Joseon"
+          ],
+          "delay": 0,
+          "visibleFor": 102
+        },
+        {
+          "role": "map",
+          "name": "Map-Site",
+          "anchorPhrase": "tại đây",
+          "describes": [
+            "tại đây"
+          ],
+          "width": 960,
+          "x": 60,
+          "y": 700,
+          "delay": 34,
+          "visibleFor": 68
+        },
+        {
+          "role": "diagram",
+          "name": "Dia-Ring",
+          "anchorPhrase": "lập ra một khu tạm cư",
+          "describes": [
+            "lập ra một khu tạm cư"
+          ],
+          "width": 960,
+          "x": 60,
+          "y": 700,
+          "delay": 34,
+          "visibleFor": 68
+        }
+      ],
+      "punch": {
+        "lines": [
+          "MỘT KHU RIÊNG",
+          "GIỮA KINH THÀNH"
+        ],
+        "anchorPhrase": "lập ra một khu tạm cư",
+        "top": 200,
+        "from": 34,
+        "describes": [
+          "lập ra một khu tạm cư"
+        ],
+        "visibleFor": 68
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Court enters"
+        },
+        {
+          "frame": 34,
+          "what": "Map-Site + Dia-Ring + punch phrase enter"
+        }
+      ],
+      "durationInFrames": 102,
+      "status": "reviewed"
+    },
+    {
+      "id": "S2",
+      "startSec": 3.4,
+      "endSec": 6.86,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Khu ấy dựng lên là để cho ai?",
+      "visualTransformation": "hai thân phận bị bỏ lại - người mẹ và đứa trẻ - hiện ra đứng trên cùng một nền đất, biến một dòng chữ trong sử thành hai con người cụ thể",
+      "contrastWithPrevious": "từ toạ độ trên bản đồ hạ xuống thành người thật",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "cutout",
+      "template": "bespoke: hai cụm người đứng trên cùng một nền đất kẻ",
+      "backdrop": "grid",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Hero-Mother",
+          "src": "el11_mother_child.png",
+          "anchorPhrase": "phụ nữ mang thai",
+          "describes": [
+            "phụ nữ mang thai"
+          ],
+          "width": 490,
+          "x": 80,
+          "y": 345,
+          "delay": 0,
+          "visibleFor": 104
+        },
+        {
+          "role": "support",
+          "name": "Sup-Child",
+          "src": "el12_child_pair.png",
+          "anchorPhrase": "đứa trẻ lai",
+          "describes": [
+            "đứa trẻ lai"
+          ],
+          "width": 410,
+          "x": 620,
+          "y": 445,
+          "delay": 0,
+          "visibleFor": 104
+        }
+      ],
+      "punch": {
+        "lines": [
+          "SINH RA",
+          "NGOÀI Ý MUỐN"
+        ],
+        "anchorPhrase": "đứa trẻ lai",
+        "top": 168,
+        "from": 45,
+        "describes": [
+          "đứa trẻ lai"
+        ],
+        "visibleFor": 59
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hero-Mother + Sup-Child enter"
+        },
+        {
+          "frame": 45,
+          "what": "punch phrase enters"
+        }
+      ],
+      "durationInFrames": 104,
+      "status": "reviewed"
+    },
+    {
+      "id": "S3",
+      "startSec": 6.86,
+      "endSec": 10.32,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Dân thời ấy gọi nơi này là gì?",
+      "visualTransformation": "cái tên bật ra từ miệng đám đông chứ không phải từ công văn - bong bóng thoại nở lên phía trên một hàng người, rồi ba chữ rơi vào trong",
+      "contrastWithPrevious": "từ hai con người cụ thể mở ra tiếng gọi truyền miệng của cả một vùng",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "quote",
+      "template": "bespoke: bong bóng thoại mọc lên từ một hàng người",
+      "backdrop": "spotlight",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Village",
+          "src": "el11_hillside_houses.png",
+          "anchorPhrase": "người dân thời bấy giờ",
+          "describes": [
+            "người dân thời bấy giờ"
+          ],
+          "delay": 0,
+          "visibleFor": 104
+        },
+        {
+          "role": "diagram",
+          "name": "Dia-Voice",
+          "anchorPhrase": "người dân thời bấy giờ",
+          "describes": [
+            "người dân thời bấy giờ",
+            "gọi nơi này"
+          ],
+          "width": 840,
+          "x": 120,
+          "y": 520,
+          "delay": 0,
+          "visibleFor": 104
+        }
+      ],
+      "punch": {
+        "lines": [
+          "DỊ THÁI VIỆN"
+        ],
+        "anchorPhrase": "gọi nơi này",
+        "top": 600,
+        "from": 45,
+        "describes": [
+          "gọi nơi này là Dị Thái Viện"
+        ],
+        "visibleFor": 59
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Bg-Village + Dia-Voice enter"
+        },
+        {
+          "frame": 45,
+          "what": "punch phrase - cái tên rơi vào bong bóng"
+        }
+      ],
+      "durationInFrames": 104,
+      "status": "reviewed"
+    }
+  ]
+}

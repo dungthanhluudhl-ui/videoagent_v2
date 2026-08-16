@@ -1,0 +1,39 @@
+{
+  "video": "V12",
+  "howToFill": "For each scene put 'pass' / 'fail' / 'n/a' against the four criteria after LOOKING at its frame. A 'fail' blocks until fixed, or until \"resolved\": true is set with a note explaining why it is acceptable.",
+  "criteria": {
+    "illustrated": "narration is shown, not left to the viewer's imagination",
+    "composed": "balanced, everything inside the frame and legible",
+    "varied": "not the same visual formula as its neighbours",
+    "purposeful": "every element is there for a reason, not filler"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames\\V12Scene1_f54.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Ảnh chùa thời Joseon đứng cho 'Triều đình Joseon'; bản đồ thật + pin đứng cho 'tại đây'; vòng khoanh nét đứt đứng cho 'lập ra một khu tạm cư'. Ba cụm từ, ba thứ nhìn thấy được. Bố cục do check_overlap chốt: tiêu đề 200..366, panel bản đồ 700..1260, không đè nhau, trọng tâm dx=0 dy=+18. ĐÃ SỬA trong lượt này: tint ảnh nền 0.55 -> 0.36, vì ở 0.55 nửa giây đầu cảnh gần như trắng trơn. CÒN LẠI: ở tỉ lệ soi 0.25 lớp bản đồ đọc ra rất nhạt (Positron vốn xám nhạt); render lại ở --scale=1 thì đủ nét đường phố và chữ Hàn, nên đây là giới hạn của khâu soi chứ không phải lỗi cảnh."
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames\\V12Scene2_f65.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Mẹ + con đứng cho 'phụ nữ mang thai', cặp trẻ đứng cho 'đứa trẻ lai'; đường nền đất giữ hai cụm trên cùng một mặt thay vì lơ lửng. Cỡ hai cụm lấy từ check_overlap chứ không đoán: 420/340 chỉ phủ 22.2% (dưới ngưỡng 25%, đọc ra thưa), 490/410 lên 30.1%, trọng tâm dx=-5 dy=+49. ĐÃ SỬA trong lượt này: cutout el12_child_pair ban đầu chạy nhầm cờ --color nên hai đứa trẻ ra màu và không có bóng đổ trong khi người mẹ là xám + bóng cam - lệch phong cách ngay trong một khung hình. Đã xử lý lại đúng nhánh 'người'."
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames\\V12Scene3_f65.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Lời thoại nói 'NGƯỜI DÂN thời bấy giờ đã GỌI' - đây là tiếng truyền miệng, nên dùng bong bóng thoại mọc từ một hàng người, không dùng tấm biển như V11. Bong bóng tô mực + chữ onDark là cặp duy nhất đọc được trên ảnh nền tối; text_gate đã chặn đúng phương án chữ mực ban đầu. ĐÃ SỬA trong lượt này: IconCrowd vẽ 3 người nhưng 2 người dùng màu mực mặc định nên tàng hình trên nền tối, chỉ còn 1 hình cam đứng lẻ như vệt bẩn - đã đổi color sang màu sáng và tăng cỡ 190 -> 250. Không gate nào bắt được lỗi này, chỉ nhìn khung hình thật mới thấy."
+    }
+  ]
+}
