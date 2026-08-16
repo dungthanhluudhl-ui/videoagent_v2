@@ -92,6 +92,7 @@ import { V10Scene26, V10SCENE26_DURATION } from "./scenes/V10Scene26";
 
 // V12 = ban dung thu 3 canh (cold-start test). Cung cua so loi 0-10.32s cua
 // V11/S1-S3 nhung lap ke hoach lai tu dau, tu input/scene_plan12.json.
+import { V12ColdStart, V12_COLDSTART_DURATION } from "./V12ColdStart";
 import { V12Scene1, V12SCENE1_DURATION } from "./scenes/V12Scene1";
 import { V12Scene2, V12SCENE2_DURATION } from "./scenes/V12Scene2";
 import { V12Scene3, V12SCENE3_DURATION } from "./scenes/V12Scene3";
@@ -272,6 +273,7 @@ export const RemotionRoot = () => {
       </Folder>
 
       <Folder name="V12-Coldstart-Test-Scenes">
+        <Composition id="V12ColdStart" component={V12ColdStart} durationInFrames={V12_COLDSTART_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="V12Scene1" component={V12Scene1} durationInFrames={V12SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="V12Scene2" component={V12Scene2} durationInFrames={V12SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="V12Scene3" component={V12Scene3} durationInFrames={V12SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />

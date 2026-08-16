@@ -397,6 +397,18 @@ CASES = [
     Case("text_gate: nét vẽ chạy xuyên qua chữ", "text_gate.py", None,
          scene_edit=("V10Scene5.jsx", 'd="M 840 862 L 840 998"', 'd="M 300 812 L 800 812"'),
          expect_message=["runs through the label"]),
+    # Người xem đầu tiên nhìn V12/S1 là thấy ngay: vòng khoanh nét đứt cắt
+    # ngang chip "KHU TẠM CƯ" của chính bản đồ. SÁU gate cho qua, vì chữ đó
+    # không phải PunchPhrase cũng không phải DrawnText - nó là DOM do
+    # MapGraphic tự vẽ, nằm ngoài mọi danh sách chữ mà các gate biết.
+    # DiagramCanvas ở V10Scene5 đặt y=280, nên nét vẽ local y=600 rơi vào
+    # tuyệt đối y=880, đúng giữa chồng nhãn (343, 790, 736, 980).
+    Case("text_gate: nét vẽ cắt ngang nhãn của chính bản đồ", "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx", '<DrawnPath d="M 840 862 L 840 998"',
+                     '<MapPanel x={60} y={700} width={960} height={560} '
+                     'label="KHU TẠM CƯ" />'
+                     '<DrawnPath d="M 200 600 L 900 600"'),
+         expect_message=["cuts through the map's own label stack"]),
     Case("text_gate: hai ký hiệu vẽ chồng lên nhau", "text_gate.py", None,
          scene_edit=("V10Scene5.jsx", '<DrawnPath d="M 840 862 L 840 998"',
                      '<IconCrowd x={540} y={300} size={220} delay={0} />'

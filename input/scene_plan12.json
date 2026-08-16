@@ -53,7 +53,7 @@
         },
         {
           "role": "diagram",
-          "name": "Dia-Ring",
+          "name": "Dia-Scale",
           "anchorPhrase": "lập ra một khu tạm cư",
           "describes": [
             "lập ra một khu tạm cư"
@@ -85,7 +85,7 @@
         },
         {
           "frame": 34,
-          "what": "Map-Site + Dia-Ring + punch phrase enter"
+          "what": "Map-Site + Dia-Scale + punch phrase enter"
         }
       ],
       "durationInFrames": 102,

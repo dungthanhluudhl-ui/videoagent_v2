@@ -524,6 +524,78 @@ def parse_punch(text, scene_duration):
     return out
 
 
+# MapGraphic draws its own chip + sublabel + pin as ONE stack anchored so the
+# stack's BOTTOM sits at the centre of its canvas, growing upward. MapPanel
+# reserves `stackH = 190` for it and nudges the inner canvas down by
+# max(0, stackH - height/2) so a short panel does not behead the chip.
+# Mirrored here; keep in sync with src/scenes/MapGraphic.jsx.
+MAP_STACK_H = 190
+# The bottom 40px of that stack is the pin itself (a 30px dot + 10px gap), not
+# text. Counting it as text was a WRONG RULE, not a wrong threshold: the first
+# run flagged V11/S20, where a dimension line crosses the pin dot on purpose -
+# it measures the street THROUGH the place it marks - while the chip and the
+# sublabel above it are untouched. Rendering that frame is what settled it.
+MAP_PIN_H = 40
+MAP_LABEL_SIZE = 44         # visualLanguage.jsx LABEL_SIZE
+MAP_SUBLABEL_SIZE = 36      # visualLanguage.jsx SUBLABEL_SIZE
+
+
+def parse_map_labels(text, scene_duration):
+    """The chip + sublabel a MapPanel/MapGraphic draws for itself.
+
+    This text existed on screen and NO gate knew about it. It is not a
+    PunchPhrase and not a DrawnText - it is DOM the map component renders from
+    its own `label`/`sublabel` props - so every rule in this file that protects
+    text from being crossed, covered or crowded simply skipped it.
+
+    That is not theoretical. On V12/S1 a dashed annotation ring was drawn
+    concentric with the map's pin; the label stack grows straight up out of
+    that same pin, so the ring's top arc cut clean through both the chip and
+    the sublabel. plan_gate, build_gate, check_overlap, text_gate, icon_gate
+    and pixel_gate all passed it. The first thing that noticed was a person
+    looking at the frame - which is the exact failure mode this whole gate
+    suite exists to make impossible.
+
+    Returns the stack as ONE box rather than two, because 190px is the
+    component's own reserved height and is the number that stays true when the
+    chip's wrapping changes.
+    """
+    out = []
+    for m in re.finditer(r"<(MapPanel|MapGraphic)\b(.*?)/>", text, re.S):
+        kind, rest = m.group(1), m.group(2)
+
+        def num(name, default):
+            mm = re.search(rf"(?<![A-Za-z]){name}=\{{(-?\d+)\}}", rest)
+            return int(mm.group(1)) if mm else default
+
+        def prop(name):
+            mm = re.search(rf'(?<![A-Za-z]){name}="([^"]*)"', rest)
+            return mm.group(1) if mm else ""
+
+        label, sublabel = prop("label"), prop("sublabel")
+        if not label:
+            continue                       # no label -> no text to protect
+        if kind == "MapPanel":
+            px, py = num("x", 0), num("y", 620)
+            pw, ph = num("width", 1080), num("height", 620)
+        else:
+            px, py, pw, ph = 0, 0, CANVAS_W, CANVAS_H
+        shift = max(0, MAP_STACK_H - ph / 2)
+        cx = px + pw / 2
+        bottom = py + ph / 2 + shift
+        # chip: padding 10px 26px + 3px border each side, plus the 📍 glyph.
+        chip_w = text_width(label, MAP_LABEL_SIZE, 900) + 58 + MAP_LABEL_SIZE
+        sub_w = (text_width(sublabel, MAP_SUBLABEL_SIZE, 700) + 36) if sublabel else 0
+        half = max(chip_w, sub_w) / 2
+        sm = [x for x in re.finditer(r"<Sequence\s+from=\{(\d+)\}", text[:m.start()])]
+        delay = int(sm[-1].group(1)) if sm else 0
+        out.append({"text": label, "sublabel": sublabel,
+                    "box": (cx - half, bottom - MAP_STACK_H,
+                            cx + half, bottom - MAP_PIN_H),
+                    "from": delay, "to": scene_duration})
+    return out
+
+
 def parse_labels(text, scene_duration):
     """Every DrawnText in a scene file, with its absolute box and window."""
     labels = []
@@ -671,6 +743,7 @@ def main():
         strokes = parse_strokes(src, dur)
         icons = parse_icons(src, dur)
         punches = parse_punch(src, dur)
+        map_labels = parse_map_labels(src, dur)
         assets = asset_boxes(scene, public_dir)
         runs = narration_runs(words_path, scene.get("startSec", 0), scene.get("endSec", 0))
         # A full-bleed photo is not in `assets` with an x/y - it IS the frame.
@@ -685,6 +758,33 @@ def main():
         on_photo = bool(bg) and 'wash="paper"' not in bg.group(1)
         checked += 1
         total_words += sum(len(l["text"].split()) for l in labels)
+
+        # The map's own chip/sublabel: same protection as any other text.
+        for ml in map_labels:
+            for st in strokes:
+                if not (ml["from"] < st["to"] and st["from"] < ml["to"]):
+                    continue
+                if _framed(st, ml["box"]):
+                    continue
+                hit = any(_seg_hits_rect(a, b, ml["box"], st["width"] / 2 + STROKE_SLACK)
+                          for poly in st["polys"] for a, b in zip(poly, poly[1:]))
+                if hit:
+                    problems.append(
+                        f"{sid}: a drawn stroke ({st['d'][:34]}...) cuts through the map's own "
+                        f"label stack ({ml['text']!r}"
+                        + (f" / {ml['sublabel']!r}" if ml["sublabel"] else "")
+                        + f") at {tuple(int(v) for v in ml['box'])}. MapGraphic grows that stack "
+                        f"straight UP out of the pin, so anything drawn concentric with the pin "
+                        f"will cross it. Leave a gap in the stroke where the stack sits, or move "
+                        f"the stroke off the pin.")
+                    break
+            for punch in punches:
+                if punch["from"] < ml["to"] and ml["from"] < punch["to"] \
+                        and overlap(punch["box"], ml["box"]):
+                    problems.append(
+                        f"{sid}: the headline {punch['lines']!r} lands on top of the map's own "
+                        f"label {ml['text']!r}. Two blocks of text in the same place read as one "
+                        f"broken block.")
 
         for punch in punches:
             if on_photo and not punch["on_dark"]:

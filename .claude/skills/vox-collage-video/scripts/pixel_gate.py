@@ -58,6 +58,27 @@ APPEAR_FRAMES = 10
 SEQ_RE = re.compile(r"<Sequence\b[^>]*?>|</Sequence>")
 SEQ_FROM = re.compile(r"from=\{(\d+)\}")
 
+# `//` only when it is not the tail of a URL scheme.
+COMMENT_RE = re.compile(r"\{/\*.*?\*/\}|(?<!:)//[^\n]*", re.S)
+
+
+def blank_comments(src):
+    """Blank every comment while keeping every character index identical.
+
+    `label_start` locates a label by searching the source for its text, so any
+    comment that happens to quote that text hijacks the lookup. Not
+    hypothetical: a comment explaining the scale bar said "500 m = 132px", and
+    because that comment sits ABOVE the <Sequence from={34}> wrapping the
+    label, the search landed there, the enclosing Sequence was missed, and the
+    gate decided a label due at frame 72 was overdue at 38 - then reported the
+    empty box as a defect. The scene was right and the gate was wrong.
+
+    Blanking with spaces rather than deleting keeps every index valid, so the
+    Sequence walk still works on the same string.
+    """
+    return COMMENT_RE.sub(
+        lambda m: "".join("\n" if c == "\n" else " " for c in m.group(0)), src)
+
 
 def sequence_offset(src, index):
     """Tổng `from` của mọi <Sequence> đang bọc quanh vị trí `index`.
@@ -166,7 +187,7 @@ def main():
         img = np.asarray(Image.open(fpath).convert("L"))
         scale = img.shape[1] / CANVAS_W
         at = frame_index(fpath)
-        src = text_gate.expand_helpers(jsx.read_text(encoding="utf-8"))
+        src = blank_comments(text_gate.expand_helpers(jsx.read_text(encoding="utf-8")))
         labels = text_gate.parse_labels(src, int(scene.get("durationInFrames") or 0))
 
         # Tiêu đề PHẢI được soi cùng với nhãn vẽ. Bản đầu của gate này chỉ đọc

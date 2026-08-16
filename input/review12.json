@@ -15,7 +15,7 @@
       "composed": "pass",
       "varied": "pass",
       "purposeful": "pass",
-      "note": "Ảnh chùa thời Joseon đứng cho 'Triều đình Joseon'; bản đồ thật + pin đứng cho 'tại đây'; vòng khoanh nét đứt đứng cho 'lập ra một khu tạm cư'. Ba cụm từ, ba thứ nhìn thấy được. Bố cục do check_overlap chốt: tiêu đề 200..366, panel bản đồ 700..1260, không đè nhau, trọng tâm dx=0 dy=+18. ĐÃ SỬA trong lượt này: tint ảnh nền 0.55 -> 0.36, vì ở 0.55 nửa giây đầu cảnh gần như trắng trơn. CÒN LẠI: ở tỉ lệ soi 0.25 lớp bản đồ đọc ra rất nhạt (Positron vốn xám nhạt); render lại ở --scale=1 thì đủ nét đường phố và chữ Hàn, nên đây là giới hạn của khâu soi chứ không phải lỗi cảnh."
+      "note": "Anh chua Joseon dung cho 'Trieu dinh Joseon'; ban do that + pin dung cho 'tai day'; thanh ti le 500m dung cho quy mo 'mot khu tam cu'. DA SUA sau khi nguoi xem chi ra: vong khoanh net dut dong tam voi pin CAT NGANG chip 'KHU TAM CU'. Day la loi CAU TRUC chu khong phai chinh so - MapGraphic moc chong nhan thang len tu chan pin, chong nhan rong 393px trong khi vong chi co ban kinh 190, nen KHONG ton tai ban kinh nao vua om duoc pin vua lach duoc chu. Thay bang thanh ti le dat o goc panel: noi dung cai y ma vong khoanh dinh noi (khu nay to co nao) bang so THAT (zoom 15, vi do 37,53 -> 3,789 m/px, nen 500m = 132px), khong tranh cho voi chu. Bo luon sublabel vi no lap lai tieu de. text_gate nay co luat rieng chan chuyen nay, kem 1 ca selftest. CON LAI: lop ban do van doc ra nhat o ti le soi 0,25. Da thu z16 theo khuyen nghi ghi trong MapGraphic.jsx va render ra so sanh: z16 PHANG HON o khung crop ngang nay, nen giu z15."
     },
     {
       "id": "S2",
