@@ -39,6 +39,68 @@ REF_PLAN = ROOT / "input" / "scene_plan10.json"
 REF_REVIEW = ROOT / "input" / "review10.json"
 
 
+def _fake_cutout(path, spill=False, all_green=False, touch_border=False,
+                 wide_feather=False):
+    """Dựng một ảnh cutout tổng hợp mang đúng MỘT khuyết tật.
+
+    Tổng hợp chứ không dùng tài sản thật, vì một ca kiểm thử phải nêu được
+    chính xác thứ nó kiểm. Tài sản thật mang nhiều đặc điểm cùng lúc, và một
+    ca xanh vì lý do khác với tên gọi của nó thì tệ hơn một ca đỏ.
+    """
+    import numpy as np
+    from PIL import Image
+
+    n, r = 200, 60
+    yy, xx = np.mgrid[0:n, 0:n]
+    d = np.sqrt((xx - n / 2) ** 2 + (yy - n / 2) ** 2)
+    rgba = np.zeros((n, n, 4), np.uint8)
+    body = d <= r
+    rgba[body, :3] = 128
+    rgba[body, 3] = 255
+    if all_green:                      # vật THẬT màu xanh: xanh cả trong lẫn ngoài
+        rgba[body, :3] = (0, 255, 0)
+    if spill:                          # phông hắt lên: chỉ xanh ở vành ngoài
+        rgba[body & (d > r - 5), :3] = (0, 255, 0)
+    if wide_feather:                   # quầng khói: alpha xuống dốc rất thoải
+        band = (d > 40) & (d <= 90)
+        rgba[band, :3] = 128
+        rgba[band, 3] = np.clip(255 * (90 - d[band]) / 50, 21, 234).astype(np.uint8)
+    if touch_border:                   # khối nền sót lại, chạy ra tận mép dưới
+        rgba[-30:, :, :3] = 128
+        rgba[-30:, :, 3] = 255
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(rgba, "RGBA").save(path)
+
+
+def _repaint_frames(mode):
+    """Vẽ đè mọi khung hình review trong sandbox để dựng đúng một khuyết tật.
+
+    Đè lên khung hình chứ không sửa file cảnh, vì thứ đang được kiểm là "mã
+    nguồn nói có chữ ở đây, khung hình render có đúng thế không". Sửa toạ độ
+    trong file cảnh chỉ dịch chuyển cả hai vế cùng lúc.
+    """
+    def hook(tmp):
+        import numpy as np
+        from PIL import Image
+
+        for f in (tmp / "input" / "review_frames").glob("*.png"):
+            w, h = Image.open(f).size
+            if mode == "blank":                 # không còn mực ở bất cứ đâu
+                arr = np.full((h, w), 235, np.uint8)
+            else:                               # có mực, nhưng chênh 31/255
+                arr = np.full((h, w), 200, np.uint8)
+                arr[::4, :] = 231
+            Image.fromarray(arr, "L").convert("RGB").save(f)
+    return hook
+
+
+def cutout_case(**kw):
+    """(sandbox_hook, args) cho một ca cutout_gate."""
+    def hook(tmp):
+        _fake_cutout(tmp / "public" / "el10_probe.png", **kw)
+    return hook, (lambda plan_path: [str(plan_path.parent.parent / "public")])
+
+
 class Case:
     """One (mutation, gate, expected outcome) triple."""
 
@@ -380,6 +442,33 @@ CASES = [
          scene_edit=("V10Scene19.jsx", '"NHIỀU QUỐC TỊCH"]} top={230} onDark',
                      '"NHIỀU QUỐC TỊCH"]} top={230}'),
          expect_message=["has no onDark"]),
+    # pixel_gate. Đây là gate duy nhất nhìn thứ người xem nhìn, nên hai ca này
+    # là bằng chứng nó thật sự đọc pixel chứ không chỉ đọc lại mã nguồn.
+    Case("pixel_gate: mã nguồn có chữ nhưng khung hình render trống trơn",
+         "pixel_gate.py", None, sandbox_hook=_repaint_frames("blank"),
+         expect_message=["mực ở đó"]),
+    Case("pixel_gate: chữ có hiện nhưng chìm vào nền",
+         "pixel_gate.py", None, sandbox_hook=_repaint_frames("lowcontrast"),
+         expect_message=["chìm vào nền"]),
+    # cutout_gate. Ca thứ hai là ca quan trọng nhất: một gate chỉ đếm pixel
+    # xanh sẽ kết tội mọi vật vốn dĩ màu xanh. Luật thật là "xanh dồn ở mép mà
+    # ruột không xanh", nên phải chứng minh cả chiều KHÔNG báo lỗi.
+    Case("cutout_gate: viền còn ám màu phông xanh", "cutout_gate.py", None,
+         sandbox_hook=cutout_case(spill=True)[0],
+         args=cutout_case(spill=True)[1],
+         expect_message=["viền còn ám màu phông"]),
+    Case("cutout_gate: vật vốn dĩ màu xanh KHÔNG được coi là lỗi",
+         "cutout_gate.py", None, expect_fail=False,
+         sandbox_hook=cutout_case(all_green=True)[0],
+         args=cutout_case(all_green=True)[1]),
+    Case("cutout_gate: chủ thể bị cắt cụt ở mép ảnh", "cutout_gate.py", None,
+         sandbox_hook=cutout_case(touch_border=True)[0],
+         args=cutout_case(touch_border=True)[1],
+         expect_message=["viền ảnh vẫn đặc"]),
+    Case("cutout_gate: quầng khói quanh cutout", "cutout_gate.py", None,
+         sandbox_hook=cutout_case(wide_feather=True)[0],
+         args=cutout_case(wide_feather=True)[1],
+         expect_message=["alpha lưng chừng"]),
     Case("plan_gate: nhồi quá nhiều nhịp vào một cảnh", "plan_gate.py", crammed_scene),
     Case("plan_gate: 4 cảnh dày liên tiếp, không có cảnh nghỉ nào",
          "plan_gate.py", dense_run_no_breath,
@@ -423,6 +512,16 @@ CASES = [
     Case("review_gate: V10 thật phải PASS", "review_gate.py", None, expect_fail=False),
     Case("baseline_gate: V10 thật phải PASS", "baseline_gate.py", None, expect_fail=False,
          args=lambda p: ["check", str(p)]),
+    # Bản đầu của pixel_gate báo 4 lỗi ở đây, cả 4 đều giả: nhãn nằm trong
+    # <Sequence from={46}> còn khung hình chụp ở frame 33, nên ô trống là ĐÚNG.
+    # Ca này khoá lại chỗ đó - một gate soi pixel mà không biết mốc thời gian
+    # thì sẽ kết tội gần như mọi nhãn xuất hiện muộn.
+    Case("pixel_gate: V10 thật phải PASS (nhãn hiện muộn không phải lỗi)",
+         "pixel_gate.py", None, expect_fail=False),
+    # cutout_gate KHÔNG có ca "V10 phải PASS": V10 thật sự ship với hai cutout
+    # lỗi (el10_youth_2022 cắt cụt đầu người ở mép trên, el10_street_sign cụt
+    # cột ở mép dưới) - đúng hai tài sản SKILL.md đã ghi là lọt lưới. Bắt V10
+    # phải xanh ở đây là bắt gate nói dối.
 ]
 
 

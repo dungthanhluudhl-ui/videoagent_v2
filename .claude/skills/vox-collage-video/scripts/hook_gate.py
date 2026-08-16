@@ -71,7 +71,8 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 # gate that CRASHES (a bug in the gate should not brick the repo); it must not
 # protect against a gate that has VANISHED, which is a broken install.
 REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
-                  "baseline_gate.py", "text_gate.py", "icon_gate.py", "selftest.py")
+                  "baseline_gate.py", "text_gate.py", "icon_gate.py",
+                  "cutout_gate.py", "pixel_gate.py", "selftest.py")
 
 
 def find_active_plan(root):
@@ -331,6 +332,19 @@ def stop(root, plan):
         # that sits just over the minimum; this is the one that notices the
         # whole build sliding backwards while still technically passing.
         ("baseline_gate.py", ["check", str(plan_path)], "so với mốc chuẩn"),
+        # Chất lượng tách nền, đo bằng số thay vì bằng mắt. Trước gate này,
+        # cách duy nhất để biết một cutout có sạch không là mở từng file ra
+        # nhìn - đắt, và không đáng tin: hai tài sản V10 đã ship với lỗi nhìn
+        # thấy được sau khi một contact sheet "duyệt" chúng. Gate này tìm lại
+        # được đúng hai file đó.
+        ("cutout_gate.py",
+         ["public", "--video", str(plan_data.get("video", "V")).lstrip("Vv"),
+          "--plan", str(plan_path)],
+         "chất lượng tách nền"),
+        # Gate duy nhất nhìn thứ NGƯỜI XEM nhìn. Mọi gate chữ phía trên dựng
+        # lại hình học từ mã nguồn; cái đó bắt được nhiều, nhưng lỗi nhãn bị
+        # panel cắt cụt ở S6 đã lọt qua tất cả và chỉ lộ ra khi render still.
+        ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render"),
         # The gates checking the gates. Cheap (it runs them against throwaway
         # copies in a temp dir) and it is the only thing that notices when a
         # gate has been edited into uselessness - which nothing did before,

@@ -159,6 +159,22 @@ NEGATIVE_CONSTRAINTS = (
     "look, no glossy plastic 3D"
 )
 
+# Framing. Added after cutout_gate.py measured the two V10 assets that shipped
+# with visible defects: both had 2.4% and 30.5% of the image BORDER still
+# opaque - the crowd's heads sliced flat by the top edge, the sign's pole
+# running straight off the bottom. No background-removal model can fix that;
+# checked head-to-head, birefnet-general-lite produced the same border figures
+# (2.3% / 36.4%) as isnet-general-use. The subject was never fully in frame to
+# begin with, so the fix has to happen here, in the prompt.
+#
+# Only applied to chroma assets. A BackgroundPhoto is full-bleed on purpose and
+# takes the separate clause below.
+FRAMING_CONSTRAINTS = (
+    "the entire subject fully inside the frame, complete and uncropped, "
+    "with a clear empty margin of background on all four sides, nothing "
+    "touching or running past any frame edge"
+)
+
 CHROMA_SPECS = {
     "green": {
         "rgb": (0, 255, 0),
@@ -166,7 +182,7 @@ CHROMA_SPECS = {
         "desc": (
             f"a perfectly uniform pure chroma-key green background, "
             f"exactly #00FF00, because the assets contain no green "
-            f"details, {NEGATIVE_CONSTRAINTS}"
+            f"details, {NEGATIVE_CONSTRAINTS}, {FRAMING_CONSTRAINTS}"
         ),
     },
     "magenta": {
@@ -176,7 +192,7 @@ CHROMA_SPECS = {
             f"a perfectly uniform pure chroma-key magenta background, "
             f"exactly #FF00FF, because the assets contain green details "
             f"(cash, plants, herbs) that a green screen would destroy, "
-            f"{NEGATIVE_CONSTRAINTS}"
+            f"{NEGATIVE_CONSTRAINTS}, {FRAMING_CONSTRAINTS}"
         ),
     },
     "blue": {
@@ -185,7 +201,7 @@ CHROMA_SPECS = {
         "desc": (
             f"a perfectly uniform pure chroma-key blue background, "
             f"exactly #0000FF, because the assets contain both green and "
-            f"magenta/pink details, {NEGATIVE_CONSTRAINTS}"
+            f"magenta/pink details, {NEGATIVE_CONSTRAINTS}, {FRAMING_CONSTRAINTS}"
         ),
     },
     "white": {
@@ -193,7 +209,7 @@ CHROMA_SPECS = {
         "reason": "legacy plain white, only when a subject conflicts with every chroma color at once",
         "desc": (
             f"a solid plain white studio background, evenly lit "
-            f"edge-to-edge, {NEGATIVE_CONSTRAINTS}"
+            f"edge-to-edge, {NEGATIVE_CONSTRAINTS}, {FRAMING_CONSTRAINTS}"
         ),
     },
 }

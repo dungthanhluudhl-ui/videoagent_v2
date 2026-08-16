@@ -204,10 +204,20 @@ clean, rembg otherwise). **Read the `removal:` line it prints.** rembg does
 badly on busy scenes, architecture and flat-lay documents — for those, prefer
 `BackgroundPhoto` (no cutout needed at all) over fighting the mask.
 
-**Inspect every result composited at full size, not just in a thumbnail
-grid.** Chroma spill and ghosted edges are invisible at 300px and obvious at
-full size — two shipped V10 assets had visible defects that a contact sheet
-had already "passed".
+Then measure them instead of squinting at them:
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/cutout_gate.py public/ --video 11 --plan input/scene_plan11.json
+```
+
+This is the cheap half of the check, and it finds the defects eyes miss — it
+flags exactly the two shipped V10 assets a contact sheet had already "passed".
+A `viền ảnh vẫn đặc` failure means the SOURCE is wrong (subject running off
+frame); no model switch fixes it, so regenerate rather than re-cut.
+
+**Then inspect what it passes, composited at full size, not in a thumbnail
+grid.** The gate answers "is the edge clean"; it cannot answer "is this the
+right picture".
 
 ## 5. SFX
 
@@ -284,6 +294,8 @@ Add a `<Folder>` of scene compositions plus the master to `src/Root.jsx`.
 py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/scene_plan10.json
 # LOOK at the contact sheet, then fill in input/review10.json
 py -3 .claude/skills/vox-collage-video/scripts/review_gate.py input/scene_plan10.json
+# and check the render against what the code claims is drawn there:
+py -3 .claude/skills/vox-collage-video/scripts/pixel_gate.py input/scene_plan10.json
 ```
 
 Judge every scene on the user's four criteria — illustrated / composed /

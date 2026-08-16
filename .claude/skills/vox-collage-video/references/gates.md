@@ -230,6 +230,55 @@ metric went green.
 exit number written across a deliberately blank sign. It names its target, so
 an overlay on anything else still fails: a declaration, not an escape hatch.
 
+## cutout_gate.py — is the cutout clean?
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/cutout_gate.py public/ --video 11 --plan input/scene_plan11.json
+```
+
+Cutting an image costs seconds and almost no tokens. **Judging** it was the
+expensive part: with no measurement, every PNG had to be opened and squinted
+at, and eyes are unreliable enough that it had to be done twice. Two V10
+assets still shipped with defects a contact sheet had already "passed" — this
+gate finds exactly those two.
+
+It measures five things, and the first one is the reason it works at all:
+chroma spill is detected as an **edge-versus-core difference**, not as a green
+pixel count. A plant is green all the way through; spill is green only at the
+rim. Counting green alone would convict every green object in the project.
+
+| Failure | Fix |
+|---|---|
+| `viền còn ám màu phông` | The screen colour is bleeding onto the subject. Re-cut with a different `--bg-mode`, or regenerate the source with a flat screen and no cast shadow |
+| `alpha lưng chừng` | A haze/ghost band, not antialiasing. Try `--model birefnet-general` |
+| `viền ảnh vẫn đặc` | The subject runs off the frame edge. **No removal model can fix this** — measured: birefnet-general-lite gave the same border figures as isnet-general-use. Regenerate the source with the subject fully in frame |
+| `gần như không khử được gì` | Check the `removal:` line — the method was auto-picked wrong |
+
+Only `hero` and `support` assets are judged. A `background` photo is
+full-bleed on purpose and has no alpha channel; the first version of this gate
+reported 12 of them as broken, which was the rule being wrong, not the images.
+
+## pixel_gate.py — does the render match what the code claims?
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/pixel_gate.py input/scene_plan11.json
+```
+
+Every other text gate reconstructs geometry from source. This one takes the
+box `text_gate` predicts and looks at the **rendered frame** at that spot. The
+gap is real: the `CĂN CỨ YONGSAN` label sliced by a panel on S6 passed every
+text gate and only appeared when a still was rendered.
+
+| Failure | Fix |
+|---|---|
+| `chỉ có N% mực ở đó` | The label is clipped, covered, or never appears. Open the named frame and look at that exact spot — the double-subtracted `delay` trap in SKILL.md §6 produces this |
+| `chỉ chênh N/255 so với nền` | Dark ink sinking into a dark photo. Add `plate`, use a light `fill`, or `wash="paper"` |
+
+It only judges labels that should have **fully appeared** by the captured
+frame — enclosing `<Sequence from={N}>` offsets plus `DrawnText`'s 10-frame
+fade-in. Skipping that is not optional: without it the gate convicted four
+perfectly correct V10 labels whose `<Sequence>` had not started yet.
+
 ## Adjusting a threshold
 
 Thresholds are CLI flags, deliberately. If one is genuinely wrong for a
