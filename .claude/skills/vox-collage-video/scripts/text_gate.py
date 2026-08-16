@@ -95,6 +95,44 @@ def _load_metrics():
 METRICS = _load_metrics()
 
 
+def font_family_problems(scenes_dir):
+    """Every width in this gate is read out of a table measured for ONE font.
+
+    Nothing used to check that the scenes actually draw in that font. Two
+    failure modes, both silent, both already paid for once:
+
+      * a literal family name that does not resolve - `fontFamily:
+        "BeVietnamPro"` shipped in SplitCompareScene for seven videos. The
+        browser fell back to a system sans, so every rendered width differed
+        from every measured width and the gate still said fine.
+      * a video switching to a different family without re-running
+        measure_font.py - which puts us straight back to the wrong-arithmetic
+        bug that let 94 text defects through V11.
+
+    So: the family a scene names must be the family the table was measured
+    for, spelled the same way.
+    """
+    if not METRICS:
+        return []
+    want = METRICS.get("fontFamily")
+    if not want:
+        return []
+    problems = []
+    root = pathlib.Path(scenes_dir)
+    for path in sorted(root.glob("*.jsx")):
+        src = path.read_text(encoding="utf-8")
+        for m in re.finditer(r'fontFamily\s*[:=]\s*"([^"]+)"', src):
+            if m.group(1) != want:
+                line = src[: m.start()].count("\n") + 1
+                problems.append(
+                    f"{path.name}:{line}: fontFamily {m.group(1)!r} is not {want!r}, the "
+                    f"font data/font_metrics.json was measured for. Either import "
+                    f"`fontFamily` from ./shared, or re-run measure_font.py for the new "
+                    f"font - a family this gate has no measurements for is a label whose "
+                    f"width is a guess again.")
+    return problems
+
+
 def text_width(text, size, weight=700):
     """Rendered width in px, from the measured font table when it exists.
 
@@ -611,6 +649,7 @@ def main():
     public_dir = pathlib.Path(args.public_dir)
 
     problems, checked, total_words, unchecked = [], 0, 0, []
+    problems += font_family_problems(args.scenes_dir)
     for name, line, size, snippet in primitive_font_sizes(args.scenes_dir):
         problems.append(
             f"{name}:{line}: hardcoded fontSize {size}. Shared primitives must draw at "

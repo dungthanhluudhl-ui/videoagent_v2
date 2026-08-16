@@ -368,6 +368,14 @@ CASES = [
                      "      <DiagramCanvas y={280} height={1000}>\n"
                      "        <Probe x={540} label=\"mot cau dai khong the goi la nhan duoc nua\" delay={0} />"),
          expect_message=["mot cau dai"]),
+    # Shipped for seven videos in SplitCompareScene: `fontFamily:
+    # "BeVietnamPro"` is not a family any browser resolves, so those labels
+    # rendered in a fallback sans while the gate measured them in Be Vietnam
+    # Pro. Wrong font = wrong widths = the V11 bug class all over again.
+    Case("text_gate: chữ khai một font mà bảng số đo không có", "text_gate.py", None,
+         scene_edit=("V10Scene14.jsx", 'fontFamily: "Be Vietnam Pro", fontSize: 42',
+                     'fontFamily: "BeVietnamPro", fontSize: 42'),
+         expect_message=["is not 'Be Vietnam Pro'"]),
     Case("text_gate: câu punch mực đen nằm trên ảnh nền đã làm tối", "text_gate.py", None,
          scene_edit=("V10Scene19.jsx", '"NHIỀU QUỐC TỊCH"]} top={230} onDark',
                      '"NHIỀU QUỐC TỊCH"]} top={230}'),

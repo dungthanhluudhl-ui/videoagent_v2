@@ -14,6 +14,7 @@ import {
   StatCounter,
   Support,
   VoxMapPin,
+  fontFamily,
 } from "./shared";
 
 // ============================================================================
@@ -107,7 +108,7 @@ export const SplitCompareScene = ({
         <Sequence from={0} layout="none">
           <Hero name={leftHero.name} src={leftHero.src} width={leftHero.width || 360} x={leftHero.x || "25%"} y={leftHero.y || 400} variant="rise" visibleFor={durationInFrames} />
           {leftLabel && (
-            <div style={{ position: "absolute", left: "5%", top: 960, width: "40%", textAlign: "center", fontFamily: "BeVietnamPro", fontWeight: 900, fontSize: 34, color: "#141414", backgroundColor: "#F5F0E4", padding: "8px 12px", borderRadius: 12, border: "2px solid #FF6A1A", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+            <div style={{ position: "absolute", left: "5%", top: 960, width: "40%", textAlign: "center", fontFamily, fontWeight: 900, fontSize: 34, color: "#141414", backgroundColor: "#F5F0E4", padding: "8px 12px", borderRadius: 12, border: "2px solid #FF6A1A", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
               {leftLabel}
             </div>
           )}
@@ -117,7 +118,7 @@ export const SplitCompareScene = ({
         <Sequence from={20} layout="none">
           <Hero name={rightHero.name} src={rightHero.src} width={rightHero.width || 360} x={rightHero.x || "75%"} y={rightHero.y || 400} variant="grow" visibleFor={durationInFrames - 20} />
           {rightLabel && (
-            <div style={{ position: "absolute", left: "55%", top: 960, width: "40%", textAlign: "center", fontFamily: "BeVietnamPro", fontWeight: 900, fontSize: 34, color: "#141414", backgroundColor: "#F5F0E4", padding: "8px 12px", borderRadius: 12, border: "2px solid #FF6A1A", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+            <div style={{ position: "absolute", left: "55%", top: 960, width: "40%", textAlign: "center", fontFamily, fontWeight: 900, fontSize: 34, color: "#141414", backgroundColor: "#F5F0E4", padding: "8px 12px", borderRadius: 12, border: "2px solid #FF6A1A", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
               {rightLabel}
             </div>
           )}
