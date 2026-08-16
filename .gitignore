@@ -12,7 +12,26 @@ input/raw_cache
 .preview
 
 # Large generated PNG cutouts (can be regenerated)
-public/el_*.png
+#
+# The pattern used to be `public/el_*.png`, which matched nothing: the files
+# are actually named el10_signage.png, el11_costume_crowd.png - a digit after
+# "el", not an underscore. So 37 cutouts (22.8 MB) went into git unnoticed, and
+# every new video added ~20 MB more to the history permanently.
+public/el*_*.png
+#
+# ...except the reference video's assets. selftest.py runs build_gate and
+# review_gate against V10 for real, to prove the gates do not raise false
+# alarms. Untrack V10 and a fresh clone has a selftest that cannot run. V11 is
+# still the active build and stays tracked until it ships.
+#
+# Both are already in the history, so untracking them now would reclaim
+# nothing anyway - git keeps every version it has ever seen. The point of this
+# rule is V12 onward.
+!public/el10_*.png
+!public/el11_*.png
+
+# Gate self-test fingerprint - local state, changes on every gate edit
+.claude/skills/vox-collage-video/data/.selftest_stamp
 
 # Installed skills lock
 skills-lock.json

@@ -53,6 +53,7 @@ Two safety rules make this safe to leave switched on permanently:
    `guard_premature_shipped`.
 """
 
+import hashlib
 import json
 import pathlib
 import re
@@ -269,9 +270,50 @@ def post_edit(payload, root, plan):
     return 0
 
 
+STAMP = SCRIPTS.parent / "data" / ".selftest_stamp"
+
+
+def gate_fingerprint():
+    """Hash of everything selftest.py actually exercises.
+
+    Measured: the six real gates take 1.0s combined; selftest takes 14s,
+    because it re-runs them ~29 times against throwaway copies. Paying that at
+    the end of EVERY turn buys nothing when no gate has changed - selftest only
+    answers "do the gates still catch what they claim to", and gates do not
+    rot on their own between two edits to a scene file.
+
+    So: hash the gate sources plus the measurement data they read, and skip the
+    run while that hash is unchanged. This is not an opt-out. Touch any gate,
+    even by one character, and the hash moves and selftest runs again - which
+    is exactly the moment it has something to say. Delete the stamp and it runs
+    too, so the cautious state is the default state.
+    """
+    h = hashlib.sha256()
+    files = sorted(SCRIPTS.glob("*.py"))
+    files += sorted((SCRIPTS.parent / "data").glob("*.json"))
+    for f in files:
+        try:
+            h.update(f.name.encode())
+            h.update(f.read_bytes())
+        except OSError:
+            return None                 # unreadable -> no stamp -> always run
+    return h.hexdigest()
+
+
+def selftest_is_current():
+    fp = gate_fingerprint()
+    if fp is None:
+        return False, None
+    try:
+        return STAMP.read_text(encoding="utf-8").strip() == fp, fp
+    except OSError:
+        return False, fp
+
+
 def stop(root, plan):
     plan_path, plan_data = plan
     failures = []
+    skip_selftest, fingerprint = selftest_is_current()
 
     for script, args, label in (
         ("plan_gate.py", [str(plan_path)], "scene plan"),
@@ -305,11 +347,21 @@ def stop(root, plan):
                 f".claude/skills/vox-collage-video/scripts/{script}`) before continuing. "
                 f"Do not remove it from REQUIRED_GATES to make this message go away.")
             continue
+        # The existence check above still runs for selftest.py - a vanished
+        # gate is a broken install whether or not this turn needed to run it.
+        if script == "selftest.py" and skip_selftest:
+            continue
         code, out = run(script, *args)
         if code != 0:
             failures.append(f"### {label} ({script})\n{out.strip()}")
 
     if not failures:
+        if fingerprint and not skip_selftest:
+            try:
+                STAMP.parent.mkdir(parents=True, exist_ok=True)
+                STAMP.write_text(fingerprint, encoding="utf-8")
+            except OSError:
+                pass                    # no stamp -> selftest runs next turn
         return 0
 
     print("[vox-gate] this video does not meet the agreed quality bar yet:\n\n"
