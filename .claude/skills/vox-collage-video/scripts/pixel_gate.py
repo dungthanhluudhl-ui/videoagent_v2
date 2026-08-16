@@ -132,9 +132,15 @@ def main():
 
     review_path = plan_path.parent / f"review{num}.json"
     if not review_path.exists():
-        print(f"Chưa có {review_path.name} - chạy render_review_sheet.py trước.",
-              file=sys.stderr)
-        sys.exit(1)
+        # Cùng lý do như cutout_gate: video mới chưa render khung hình nào thì
+        # không có gì để soi, và đó không phải lỗi. Thoát 1 ở đây đồng nghĩa
+        # hook Stop chặn mọi video mới ngay từ lượt đầu.
+        #
+        # Không phải lỗ hổng: review_gate.py mới là gate đòi phải có file
+        # review cho một video đã dựng, và nó vẫn chặn y như cũ.
+        print(f"OK   chưa có {review_path.name} - chưa tới bước 9 (render + tự soi). "
+              f"review_gate.py là chỗ đòi file này.")
+        sys.exit(0)
     review = json.loads(review_path.read_text(encoding="utf-8"))
     entries = review.get("scenes", review)
     entries = list(entries.values()) if isinstance(entries, dict) else entries

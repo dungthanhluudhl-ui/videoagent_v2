@@ -184,6 +184,19 @@ def main():
             files += [pathlib.Path(f) for f in glob.glob(p)] or [path]
     files = [f for f in files if f.exists()]
     if not files:
+        # "Chưa tới lúc" khác hẳn "có lỗi". Một video mới đi qua bước 2 (lập
+        # kế hoạch) trước bước 3 (đi tìm ảnh), nên ở lượt đầu tiên thư mục
+        # public/ chưa có gì cả. Bản đầu của gate này thoát 1 ở đây, tức là
+        # hook Stop chặn cứng mọi video mới ngay từ lượt đầu - đo thật trên
+        # một V12 giả lập mới phát hiện ra.
+        #
+        # Không phải lỗ hổng: khi cảnh đã dựng mà thiếu tài sản đã lên kế
+        # hoạch thì build_gate.py mới là chỗ báo. Chỉ nới cho chế độ hook
+        # (--plan có mặt); gọi tay mà không thấy file thì vẫn là lỗi gõ nhầm.
+        msg = "Chưa có cutout nào cho video này - chưa tới bước 3 (đi tìm ảnh)."
+        if args.plan:
+            print(f"OK   {msg}")
+            sys.exit(0)
         print("Không tìm thấy file nào.", file=sys.stderr)
         sys.exit(1)
 

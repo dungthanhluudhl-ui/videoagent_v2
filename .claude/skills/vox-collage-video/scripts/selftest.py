@@ -442,6 +442,17 @@ CASES = [
          scene_edit=("V10Scene19.jsx", '"NHIỀU QUỐC TỊCH"]} top={230} onDark',
                      '"NHIỀU QUỐC TỊCH"]} top={230}'),
          expect_message=["has no onDark"]),
+    # "Chưa tới lúc" KHÁC "có lỗi". Bản đầu của hai gate mới thoát 1 khi chưa
+    # có ảnh / chưa có khung hình, tức là hook Stop chặn cứng mọi video mới
+    # ngay từ lượt đầu tiên - phát hiện bằng cách dựng thử một V12 giả lập.
+    # Hai ca này khoá lại, và chúng phải PASS chứ không phải FAIL.
+    Case("cutout_gate: video mới chưa có ảnh thì không được coi là lỗi",
+         "cutout_gate.py", None, expect_fail=False,
+         args=lambda p: [str(p.parent.parent / "public"), "--video", "99",
+                         "--plan", str(p)]),
+    Case("pixel_gate: video mới chưa có khung hình thì không được coi là lỗi",
+         "pixel_gate.py", None, expect_fail=False,
+         sandbox_hook=lambda tmp: (tmp / "input" / "review10.json").unlink(True)),
     # pixel_gate. Đây là gate duy nhất nhìn thứ người xem nhìn, nên hai ca này
     # là bằng chứng nó thật sự đọc pixel chứ không chỉ đọc lại mã nguồn.
     Case("pixel_gate: mã nguồn có chữ nhưng khung hình render trống trơn",
