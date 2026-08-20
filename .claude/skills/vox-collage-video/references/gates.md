@@ -42,6 +42,8 @@ py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/scene_plan10.j
 | Failure | What it means | Fix |
 |---|---|---|
 | `field '<x>' is empty` | A 2a/2b field was left blank | Fill it. An empty `visualTransformation` reliably produces a background+text scene |
+| `đó là lời khen, không phải một quyết định` | Ô đầy chữ nhưng rỗng nghĩa ("phù hợp", "sinh động", "trực quan") | Viết cái gì đổi thành cái gì, cạnh cái gì. Danh sách cụm sáo rỗng bắn 0 lần trên 53 cảnh đã ship — thêm cụm nào phải đo lại |
+| `quá ngắn để tả một quan hệ` | `visualTransformation` dưới 25 ký tự | Cảnh ngắn nhất đã ship là 31 ký tự. Dưới ngưỡng này là chưa quyết định gì |
 | `no illustrative asset` | Scene declares a visual language but has nothing to show | Add the asset, or declare `text-only` (capped) |
 | `text-only scenes = N (x%) > 15%` | Too much of the video is a blank page | Give those scenes a `background-photo`, `diagram`, or `map` |
 | `<field> repeats on consecutive scenes` | Two neighbours look the same | Change one — see `visual-language.md` |
@@ -279,6 +281,43 @@ frame — enclosing `<Sequence from={N}>` offsets plus `DrawnText`'s 10-frame
 fade-in. Skipping that is not optional: without it the gate convicted four
 perfectly correct V10 labels whose `<Sequence>` had not started yet.
 
+## assemble.py --check — phần cơ khí có khớp hợp đồng không?
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/scene_plan10.json --check
+```
+
+Không phải gate chấm chất lượng — nó canh ba file MÁY SINH (captionData,
+`V<N>Master.jsx`, khối `ASSEMBLE:V<N>` trong Root.jsx) không bị sửa tay lệch
+khỏi plan. Stop hook chạy nó, và `guard_premature_shipped` chạy nó trước khi
+cho ship.
+
+| Failure | Fix |
+|---|---|
+| `captionData<M>.js LỆCH bản sinh` | Chạy lại `assemble.py` — đừng sửa caption bằng tay; nguồn sự thật là words file |
+| `V<N>Master.jsx LỆCH bản sinh từ plan` | Rail/cảnh trong master bị sửa tay. Sinh lại; nếu cần transition đặc biệt, khai `transitionIn` trong plan hoặc viết master TÊN KHÁC bằng tay |
+| `chưa được sinh dù mọi cảnh đã dựng` | Chạy `assemble.py` — video đủ cảnh mà thiếu master là bước 7 chưa làm |
+| `là file viết tay, không đè` | Đúng hành vi: file không mang dấu AUTO-GENERATED thì script không đụng. `--force` chỉ khi chắc chắn |
+
+Còn thiếu cảnh thì mọi bước tự "bỏ qua (chưa tới lúc)" — video đang dựng dở
+không bao giờ bị chặn vì chưa xong.
+
+## init_video.py — KHÔNG phải gate, và vì sao
+
+`init_video.py` dựng `words<N>_aligned.json` từ audio + kịch bản. Nó **không**
+nằm trong Stop hook và **không** ở `REQUIRED_GATES`, khác với `assemble.py`.
+
+Lý do đo được: caption là hàm thuần của words file, nên sai một khung là sai.
+Còn bản ghép chữ-với-thời-gian thì không: whisper đôi khi nghe ĐÚNG hơn kịch
+bản ("bà" → "bar", "mặt độ" → "mật độ"), và hai video đã ship đều được sửa tay
+đúng những chỗ đó. Bắt file phải khớp máy từng từ là bắt phiên sau xoá đi phần
+sửa đúng.
+
+Cái nó tự chặn được là thứ máy biết chắc: ghép nhầm cặp audio/kịch bản
+(>15% lệch số từ so với whisper, hoặc số từ/giây ngoài khoảng tiếng nói).
+`--check` báo tỉ lệ giống và chỉ fail dưới 90% — đo thật: V10 99.3%,
+V11 96.5%, cặp sai 23.8% → chặn.
+
 ## Adjusting a threshold
 
 Thresholds are CLI flags, deliberately. If one is genuinely wrong for a
@@ -339,6 +378,20 @@ sung số đo độ lấp khung khi frame đã render xong.
 Và: **cấu trúc không phải chất lượng.** Một kế hoạch có thể đạt mọi con số ở
 đây mà vẫn nhàm. Gate này làm cho việc "trượt lùi âm thầm" trở nên bất khả thi;
 nó không làm cho bất cứ thứ gì hay lên. Phần đó là `worked-examples.md`.
+
+## Chặn cảnh chưa duyệt shot list (hook_gate)
+
+`"shotlistApproved"` trong plan là chốt duyệt của user, học từ vox-director
+(`aspect_approx_confirmed`): sự chấp thuận của con người là một FIELD DỮ LIỆU,
+không phải một câu văn. `post_edit` chặn mọi file cảnh của video active khi cờ
+chưa `true`; `guard_premature_shipped` chặn ship khi cờ bị gỡ. Scaffold của
+`new_video.py` đặt sẵn `false`.
+
+Giới hạn nói thẳng: field vẫn do model gõ (nguyên tắc ANCHOR — không có mỏ neo
+ngoài nào ghim nó), nên chốt này KHÔNG chứng minh được user đã duyệt. Cái nó
+mua được là loại bỏ đường "im lặng bỏ qua checkpoint": muốn vượt phải chủ động
+khai man, và hai ca selftest khoá cả hai chiều (chưa duyệt → chặn; duyệt rồi →
+không chặn oan).
 
 ## Chặn cảnh chưa có kế hoạch (hook_gate)
 

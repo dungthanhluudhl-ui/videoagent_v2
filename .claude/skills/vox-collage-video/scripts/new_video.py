@@ -156,6 +156,10 @@ def main():
         "fps": args.fps,
         "wordsFile": words_path,
         "status": "active",
+        # Chốt duyệt: hook chặn MỌI file cảnh của video này khi cờ chưa true.
+        # Chỉ đặt true sau khi user thật sự duyệt shot list (hoặc đã dặn chạy
+        # end-to-end từ đầu).
+        "shotlistApproved": False,
         "_howToUse": [
             "Mọi trường rỗng ở đây đều PHẢI điền - plan_gate.py fail trên placeholder.",
             "Điền theo thứ tự 2a -> 2b-0 -> 2b trong SKILL.md. Nghĩa trước, component sau.",
@@ -163,7 +167,8 @@ def main():
             "Phải dời lại theo comprehensionLoad: cảnh người xem phải ĐỌC cần >=4s "
             "và >=1.6s mỗi nhịp; cảnh chỉ để NHÌN thì không.",
             "Chạy plan_gate.py, rồi baseline_gate.py check, rồi đưa shot list cho user duyệt "
-            "TRƯỚC khi source bất kỳ ảnh nào.",
+            "TRƯỚC khi source bất kỳ ảnh nào. User duyệt xong mới đặt "
+            "shotlistApproved=true - hook chặn mọi file cảnh khi cờ còn false.",
             "Đặt status='shipped' khi xong video để hook im lặng.",
             # Written INTO the plan file, not left in a reference doc, because
             # the plan is the file that gets opened on every scene of every

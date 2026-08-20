@@ -1086,8 +1086,15 @@ export const DrawnText = ({
   // number is the number.
   const requested = Number(style?.fontSize ?? rest.fontSize ?? 34);
   const weight = Number(style?.fontWeight ?? rest.fontWeight ?? 700);
+  // measureText has no concept of CSS letter-spacing - it reads glyph
+  // advances only, so a caller that tracks its caps out (several do, for the
+  // same look PunchPhrase uses) renders wider than this number says. Missed
+  // once: V13/S2's "THIẾT BỊ ĐO" at letterSpacing=1 measured 10px narrower
+  // than it rendered, and the plate ran short of the text it was sized for.
+  const letterSpacing = Number(style?.letterSpacing ?? rest.letterSpacing ?? 0);
   const str = String(children ?? "");
-  const natural = measureText({ text: str, fontFamily, fontSize: requested, fontWeight: weight }).width;
+  const spacingPx = str.length * letterSpacing;
+  const natural = measureText({ text: str, fontFamily, fontSize: requested, fontWeight: weight }).width + spacingPx;
   const size =
     maxWidth && natural > maxWidth
       ? fitText({ text: str, withinWidth: maxWidth, fontFamily, fontWeight: weight }).fontSize
@@ -1102,13 +1109,23 @@ export const DrawnText = ({
     return <g transform={`translate(0 ${dy})`}>{label}</g>;
   }
 
-  const w = measureText({ text: str, fontFamily, fontSize: size, fontWeight: weight }).width;
+  const w = measureText({ text: str, fontFamily, fontSize: size, fontWeight: weight }).width + spacingPx;
   const anchor = rest.textAnchor || "start";
   const left = anchor === "middle" ? rest.x - w / 2 : anchor === "end" ? rest.x - w : rest.x;
+  // Cap-height (0.78em) covers plain Latin caps but not Vietnamese's
+  // double-stacked diacritics (Ế Ể Ễ Ệ Ố Ồ Ổ Ỗ Ộ Ứ Ừ Ử Ữ Ự - a tone mark
+  // riding a circumflex/horn that's already raised) - the same defect class
+  // PunchPhrase already paid for once (CHỖ THẮT -> CHÔ THÂT, fixed there via
+  // lineHeight 1.34) but that fix never reached this component. 0.92 buys
+  // back the missing ~0.14em of headroom; the extra goes entirely into the
+  // TOP offset and TOP-side height so the bottom edge - never the reported
+  // problem - keeps exactly its old clearance.
+  const topEm = 0.92;
+  const capEm = 0.78; // original baseline-to-cap-top distance, kept for the bottom math
   return (
     <g transform={`translate(0 ${dy})`} opacity={opacity}>
-      <rect x={left - platePad} y={rest.y - size * 0.78 - platePad * 0.5}
-            width={w + platePad * 2} height={size + platePad}
+      <rect x={left - platePad} y={rest.y - size * topEm - platePad * 0.5}
+            width={w + platePad * 2} height={size * (1 + topEm - capEm) + platePad}
             rx={plateRadius} fill={plateColor} opacity={0.92} />
       {label}
     </g>

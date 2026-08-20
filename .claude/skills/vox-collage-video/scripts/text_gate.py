@@ -82,6 +82,21 @@ STROKE_SLACK = 5            # extra px around a stroke before it counts as a hit
                             # render showed the line touching the letters. Ink
                             # that close reads as a collision whatever the
                             # arithmetic says.
+MAX_STRIKE_LINES = 1        # `struck` used to skip ALL stroke-collision checks
+                            # unconditionally - a blind escape hatch with no
+                            # check on what the strike itself looks like. Every
+                            # PREVIOUSLY SHIPPED struck label (V11 S8/S9/S15)
+                            # crosses its text with exactly ONE straight line,
+                            # at widths up to 11px on a 44px label, and reads
+                            # fine - so width is not the failure mode. V13/S2
+                            # crossed "SIÊU NHIÊN" with TWO diagonal lines
+                            # forming an X, and the user named it directly:
+                            # "khiến người xem không đọc được chữ và nhìn rối
+                            # mắt". A second line doesn't double the ink, it
+                            # multiplies the letters that get crossed twice -
+                            # that's the actual mechanism, so the cap is on
+                            # COUNT, not on a width nobody's shipped work has
+                            # ever exceeded.
 METRICS_PATH = pathlib.Path(__file__).resolve().parent.parent / "data" / "font_metrics.json"
 
 
@@ -133,21 +148,29 @@ def font_family_problems(scenes_dir):
     return problems
 
 
-def text_width(text, size, weight=700):
+def text_width(text, size, weight=700, letter_spacing=0):
     """Rendered width in px, from the measured font table when it exists.
 
     The table holds one advance per character at a reference size, so summing
     it ignores kerning - a few px on a long word, against the ~130px error the
     old flat 0.50 em estimate carried on a 14-character uppercase label.
+
+    `letter_spacing` is added back on top: the advance table has no notion of
+    CSS letter-spacing, same blind spot DrawnText's own `measureText` call
+    has in the browser (see visualLanguage.jsx). Missed once on both sides at
+    once: V13/S2's "THIẾT BỊ ĐO" at letterSpacing=1 measured 10px narrower on
+    BOTH the JS plate and this gate than it actually rendered.
     """
     if not METRICS:
-        return len(text) * size * CHAR_EM
-    rows = METRICS["advances"]
-    key = str(weight) if str(weight) in rows else max(rows, key=lambda k: int(k))
-    adv = rows[key]
-    ref = METRICS["refSize"]
-    fallback = size * CHAR_EM
-    return sum(adv[c] * size / ref if c in adv else fallback for c in text)
+        base = len(text) * size * CHAR_EM
+    else:
+        rows = METRICS["advances"]
+        key = str(weight) if str(weight) in rows else max(rows, key=lambda k: int(k))
+        adv = rows[key]
+        ref = METRICS["refSize"]
+        fallback = size * CHAR_EM
+        base = sum(adv[c] * size / ref if c in adv else fallback for c in text)
+    return base + len(text) * letter_spacing
 
 
 def strip_accents(s):
@@ -155,9 +178,9 @@ def strip_accents(s):
                    if unicodedata.category(c) != "Mn").lower()
 
 
-def text_box(x, y, size, anchor, text, weight=700):
+def text_box(x, y, size, anchor, text, weight=700, letter_spacing=0):
     """(left, top, right, bottom) for an SVG <text> in canvas coordinates."""
-    w = text_width(text, size, weight)
+    w = text_width(text, size, weight, letter_spacing)
     if anchor == "middle":
         left = x - w / 2
     elif anchor == "end":
@@ -717,6 +740,8 @@ def parse_labels(text, scene_duration):
             size = int(fm.group(1)) if fm else 34
             wm = re.search(r"fontWeight:\s*(\d+)", rest)
             weight = int(wm.group(1)) if wm else 700
+            lsm = re.search(r"letterSpacing:\s*(\d+(?:\.\d+)?)", rest)
+            letter_spacing = float(lsm.group(1)) if lsm else 0
             anchor = "start"
             am = re.search(r'textAnchor="(\w+)"', rest)
             if am:
@@ -735,10 +760,11 @@ def parse_labels(text, scene_duration):
             # that cannot happen.
             mw = re.search(r"maxWidth=\{(\d+)\}", rest)
             if mw:
-                w = text_width(content, size, weight)
+                w = text_width(content, size, weight, letter_spacing)
                 if w > int(mw.group(1)):
                     size = max(1, int(size * int(mw.group(1)) / w))
-            box = text_box(int(xm.group(1)), cy + int(ym.group(1)), size, anchor, content, weight)
+            box = text_box(int(xm.group(1)), cy + int(ym.group(1)), size, anchor, content,
+                           weight, letter_spacing)
             # A plated label occupies its slab, not just its glyphs. Measuring
             # the glyphs alone would let a plate quietly cover the very image
             # the plate was added to sit clear of.
@@ -746,7 +772,12 @@ def parse_labels(text, scene_duration):
             if plated:
                 pm = re.search(r"platePad=\{(\d+)\}", rest)
                 pad = int(pm.group(1)) if pm else PLATE_PAD
-                box = (box[0] - pad, box[1] - pad * 0.5,
+                # Mirrors DrawnText's plate rect exactly (visualLanguage.jsx):
+                # cap-height (0.78em) alone doesn't cover Vietnamese's
+                # double-stacked diacritics (Ế Ệ Ố Ỗ...), so the plate
+                # reserves an extra 0.14em - on the TOP only, since that's
+                # where V13/S2's "THIẾT BỊ ĐO" actually overflowed.
+                box = (box[0] - pad, box[1] - pad * 0.5 - size * 0.14,
                        box[2] + pad, box[3] + pad * 0.5)
             labels.append({"text": content, "box": box, "from": delay,
                            "to": scene_duration, "size": size, "weight": weight,
@@ -937,11 +968,22 @@ def main():
 
         for i, ic in enumerate(icons):
             for other in icons[i + 1:]:
-                if ic["from"] < other["to"] and other["from"] < ic["to"] \
-                        and overlap(ic["box"], other["box"]):
-                    problems.append(
-                        f"{sid}: symbols {ic['name']} and {other['name']} overlap each other. "
-                        f"Two drawings on the same spot read as one unreadable drawing.")
+                if not (ic["from"] < other["to"] and other["from"] < ic["to"]):
+                    continue
+                if not overlap(ic["box"], other["box"]):
+                    continue
+                # IconBan means "this is rejected" - covering the thing it
+                # rejects is the entire point, the same relationship `struck`
+                # already has with a label. V13/S6 draws four IconTurtle then
+                # an IconBan directly over them (matches the shotlist: "orange
+                # strike wipes across the entire false branch"), so a ban icon
+                # is exempt from this check exactly like a strike is exempt
+                # from the label-collision one - everything else still fails.
+                if "IconBan" in (ic["name"], other["name"]):
+                    continue
+                problems.append(
+                    f"{sid}: symbols {ic['name']} and {other['name']} overlap each other. "
+                    f"Two drawings on the same spot read as one unreadable drawing.")
 
         for i, lab in enumerate(labels):
             # "·" is a separator between two labels, not a word of its own.
@@ -996,20 +1038,33 @@ def main():
                     f"{sid}: label {lab['text']!r} is dark ink on a darkened BackgroundPhoto with "
                     f"nothing behind it. Pass `plate`, or give it a pale fill.")
 
+            crossing = []
             for st in strokes:
-                if lab.get("struck"):
-                    break
                 if not (lab["from"] < st["to"] and st["from"] < lab["to"]):
                     continue
                 if _framed(st, lab["box"]):
                     continue
                 if any(_seg_hits_rect(a, b, lab["box"], st["width"] / 2 + STROKE_SLACK)
                        for poly in st["polys"] for a, b in zip(poly, poly[1:])):
+                    crossing.append(st)
+
+            if lab.get("struck"):
+                # A declared strike is SUPPOSED to cross its label - that part
+                # is not a defect. What is: more than one line doing it. See
+                # MAX_STRIKE_LINES above for why count, not width, is the cap.
+                if len(crossing) > MAX_STRIKE_LINES:
                     problems.append(
-                        f"{sid}: a drawn stroke ({st['d'][:34]}...) runs through the label "
-                        f"{lab['text']!r}. Move the label off the line, or give it a plate so the "
-                        f"line stops at its edge.")
-                    break
+                        f"{sid}: label {lab['text']!r} is struck by {len(crossing)} separate "
+                        f"strokes (cap {MAX_STRIKE_LINES}). Every previously shipped strike-through "
+                        f"in this project uses ONE line - a second line doesn't reject the word "
+                        f"more clearly, it multiplies the letters that get crossed twice until the "
+                        f"word stops being legible. Drop to one line.")
+            elif crossing:
+                st = crossing[0]
+                problems.append(
+                    f"{sid}: a drawn stroke ({st['d'][:34]}...) runs through the label "
+                    f"{lab['text']!r}. Move the label off the line, or give it a plate so the "
+                    f"line stops at its edge.")
 
             for ic in icons:
                 if lab["from"] < ic["to"] and ic["from"] < lab["to"] \

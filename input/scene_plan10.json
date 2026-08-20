@@ -5,6 +5,7 @@
   "audio": "audio10.mp3",
   "wordsFile": "input/words10_aligned.json",
   "status": "shipped",
+  "shotlistApproved": true,
   "scenes": [
     {
       "id": "S1",

@@ -72,7 +72,7 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 # protect against a gate that has VANISHED, which is a broken install.
 REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
                   "baseline_gate.py", "text_gate.py", "icon_gate.py",
-                  "cutout_gate.py", "pixel_gate.py", "selftest.py")
+                  "cutout_gate.py", "pixel_gate.py", "assemble.py", "selftest.py")
 
 
 def find_active_plan(root):
@@ -206,11 +206,16 @@ def guard_premature_shipped(payload, root):
         return 0
 
     failures = []
+    if data.get("shotlistApproved") is not True:
+        failures.append("### shot list chưa duyệt\n"
+                        "Video sắp ship mà \"shotlistApproved\" chưa phải true - shot list "
+                        "chưa từng được user duyệt (hoặc chốt đã bị gỡ khỏi plan).")
     for script, args in (("plan_gate.py", [str(path)]),
                          ("build_gate.py", [str(path)]),
                          ("review_gate.py", [str(path)]),
                          ("text_gate.py", [str(path)]),
                          ("icon_gate.py", [str(path)]),
+                         ("assemble.py", [str(path), "--check"]),
                          ("baseline_gate.py", ["check", str(path)])):
         if not (SCRIPTS / script).exists():
             failures.append(f"{script}: MISSING")
@@ -259,6 +264,24 @@ def post_edit(payload, root, plan):
     sid = scene_id_for(edited_norm, plan_data)
     if not sid or not any(s.get("id") == sid for s in plan_data.get("scenes", [])):
         return 0            # a scene file from a different video - not ours to police
+
+    # Chốt duyệt shot list. SKILL.md bước 2 viết "trình shot list cho user
+    # duyệt" từ đầu - nhưng đó là CÂU VĂN, và không gì trong hệ thống này từng
+    # kiểm nó. Học từ vox-director (aspect_approx_confirmed): sự chấp thuận
+    # của con người phải là MỘT FIELD DỮ LIỆU trong hợp đồng, và code dừng khi
+    # thiếu. Gate không thể biết user có thật sự duyệt hay không (field vẫn do
+    # model gõ - xem nguyên tắc ANCHOR trong plan_gate.py); cái nó mua được là
+    # biến "im lặng bỏ qua checkpoint" thành "phải chủ động khai man" - đúng
+    # cái sàn khả thi.
+    if plan_data.get("shotlistApproved") is not True:
+        print(f"[vox-gate] {sid}: shot list của {plan_path.name} CHƯA được user duyệt "
+              f"(\"shotlistApproved\" chưa phải true) - chưa được dựng cảnh nào.\n"
+              f"  Thứ tự đúng: plan qua plan_gate + baseline_gate -> TRÌNH shot list "
+              f"cho user -> user đồng ý -> đặt \"shotlistApproved\": true -> mới dựng.\n"
+              f"  Chỉ đặt true sau khi user THẬT SỰ duyệt, hoặc họ đã dặn từ đầu là "
+              f"chạy end-to-end không cần hỏi. Tự đặt true để vượt chốt này không phải "
+              f"là quên - là khai man có chủ đích.", file=sys.stderr)
+        return 2
 
     code, out = run("build_gate.py", str(plan_path), "--scene", sid)
     if code != 0:
@@ -361,6 +384,11 @@ def stop(root, plan):
         # lại hình học từ mã nguồn; cái đó bắt được nhiều, nhưng lỗi nhãn bị
         # panel cắt cụt ở S6 đã lọt qua tất cả và chỉ lộ ra khi render still.
         ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render"),
+        # Phần CƠ KHÍ sinh từ plan: captions, master, đăng ký Root. Tự biết
+        # "chưa tới lúc" khi cảnh còn thiếu, nhưng một khi mọi cảnh đã dựng thì
+        # master viết tay lệch plan - hoặc quên sinh - là chặn. Phép đệm rail
+        # sai đã từng kéo 25 cảnh lệch audio nửa giây mà không gate nào thấy.
+        ("assemble.py", [str(plan_path), "--check"], "master/captions khớp bản sinh từ plan"),
         # The gates checking the gates. Cheap (it runs them against throwaway
         # copies in a temp dir) and it is the only thing that notices when a
         # gate has been edited into uselessness - which nothing did before,

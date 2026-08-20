@@ -11,6 +11,7 @@ lines; rules buried that deep were demonstrably not being followed.)
 | `gates.md` | A gate failed, or you need to know what's enforced and how |
 | `lessons.md` | Defects already paid for once |
 | `animation-variants.md` | Picking entrance animations |
+| `kickoff-prompt.md` | For the USER, not the model: the paste-in prompt that starts a new video in a fresh session |
 
 `example-scene.jsx` was removed: a synthetic template drifts out of sync with
 the real code. Copy patterns from the current `src/scenes/` instead — it is

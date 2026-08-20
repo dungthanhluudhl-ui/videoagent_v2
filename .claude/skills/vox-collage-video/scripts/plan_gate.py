@@ -35,16 +35,30 @@ each failure.
       "endSec": 4.14,
 
       // --- 2a Editorial Director fields (meaning BEFORE component) ---
-      "narrativeFunction": "hook",       // hook/question/paradox/cause/causal-chain/
-                                         // list/definition/mechanism/evidence/
-                                         // reversal/conclusion
+      "narrativeFunction": "hook",       // free text, not a closed enum - nothing in this
+                                         // file validates it against a fixed list. Common
+                                         // values: hook/question/paradox/cause/causal-chain/
+                                         // list/definition/mechanism/evidence/reversal/
+                                         // conclusion/transition - but a shotlist's own word
+                                         // (e.g. "transition") is never a reason to substitute
+                                         // one of these; only LOAD_FROM_FUNCTION's raise_to()
+                                         // reads this field, and an unrecognized value just
+                                         // floors at "simple" rather than failing anything.
       "viewerQuestion": "...",           // the one thing this scene answers/raises
       "visualTransformation": "...",     // the RELATIONSHIP the viewer must see form
       "contrastWithPrevious": "...",     // what's different from the scene before
       "density": "low|med|high",
 
       // --- 2b-0 Visual language (NEW - decided before any template) ---
-      "visualLanguage": "cutout",        // see VISUAL_LANGUAGES below
+      // A single string, OR a list when the scene genuinely layers two
+      // techniques (the shotlist's own "background-photo + annotated" - see
+      // scene_languages()). First entry is the PRIMARY language: it's what
+      // the consecutive-repeat check compares and what drives the
+      // comprehensionLoad floor most visibly. Don't reach for a list just
+      // because a scene touches two things in passing - it's for when the
+      // shotlist itself names two, or the scene structurally can't be
+      // described by one (see VISUAL_LANGUAGES below for the vocabulary).
+      "visualLanguage": "cutout",
 
       // --- 2b Motion Implementer fields ---
       "template": "CollageScene",        // named template or "bespoke:<desc>"
@@ -122,6 +136,33 @@ REQUIRED_SCENE_FIELDS = [
     "contrastWithPrevious", "density", "visualLanguage",
     "template", "backdrop", "variant", "comprehensionLoad",
 ]
+
+# Chữ điền cho có. `is_empty` bắt được ô trống và placeholder, nhưng không bắt
+# được một câu đầy đủ mà rỗng nghĩa - "hình ảnh phù hợp với nội dung" trôi qua
+# mọi check trong khi nó không quyết định điều gì hết.
+#
+# Ý tưởng lấy từ GENERIC_PHRASES của OpenMontage, nhưng danh sách thì dựng từ
+# thất bại CỦA DỰ ÁN NÀY: SKILL.md bước 3 ghi "ly cocktail" cho một cảnh về
+# Itaewon là minh hoạ CHO DANH MỤC chứ không cho địa điểm, và đó chính là kiểu
+# chữ đẻ ra nó.
+#
+# Điều kiện để danh sách này không thành bức tường: bắn ĐÚNG 0 lần trên 53
+# cảnh đã ship của V10+V11+V12 - đã đo. Thêm cụm nào cũng phải đo lại.
+VAGUE_PHRASES = [
+    "phù hợp", "liên quan", "minh họa cho nội dung", "minh hoạ cho nội dung",
+    "thể hiện nội dung", "làm rõ ý", "sinh động", "ấn tượng", "đẹp mắt",
+    "bắt mắt", "chuyên nghiệp", "nổi bật", "thu hút", "hài hòa", "hài hoà",
+    "nói chung", "tổng thể", "một hình ảnh", "một vật thể", "hình minh họa",
+    "hình minh hoạ", "asset minh", "trực quan", "rõ ràng hơn", "dễ hiểu hơn",
+    "a person", "modern", "futuristic", "cutting-edge", "state-of-the-art",
+    "seamless", "elegant", "stunning", "beautiful", "professional",
+    "dynamic", "engaging", "relevant", "appropriate", "eye-catching",
+    "visually",
+]
+VAGUE_FIELDS = ["visualTransformation", "viewerQuestion", "contrastWithPrevious"]
+# Ngắn nhất trong 53 cảnh đã ship là 31 ký tự ("biển tên một con phố bị gạch
+# đi"), nên sàn 25 chừa biên và chỉ bắt được đoạn cụt thật sự.
+MIN_TRANSFORMATION_CHARS = 25
 
 # How hard this scene is for a viewer to TAKE IN - which decides how much
 # screen time it has earned. Ordered, so max() means "the harder of the two".
@@ -225,6 +266,24 @@ DEFAULTS = {
 
 def is_empty(value):
     return value is None or (isinstance(value, str) and value.strip().lower() in EMPTY_MARKERS)
+
+
+def scene_languages(scene):
+    """`visualLanguage` as a list, whatever form the plan wrote it in.
+
+    Real shotlists describe a scene's technique as a LAYERED spec - the
+    reference example is "background-photo + annotated" - but the field used
+    to accept only one string, so every layered shotlist got silently
+    flattened to its primary language and the secondary one vanished from
+    the plan even though the scene still built it. First entry is always the
+    PRIMARY language (what the consecutive-repeat check compares); anything
+    after it is a secondary technique the scene also uses. A plan may still
+    write a single string - both forms are equivalent, order matters only
+    when there is more than one."""
+    v = scene.get("visualLanguage")
+    if v is None:
+        return []
+    return list(v) if isinstance(v, list) else [v]
 
 
 def strip_accents(text):
@@ -334,13 +393,34 @@ def gate_fields(scenes, rep):
             if is_empty(scene.get(field)):
                 rep.fail(f"{sid}: field '{field}' is empty/placeholder")
                 bad = True
-        lang = scene.get("visualLanguage")
-        if lang and lang not in VISUAL_LANGUAGES:
-            rep.fail(f"{sid}: unknown visualLanguage {lang!r} "
-                     f"(valid: {', '.join(sorted(VISUAL_LANGUAGES))})")
-            bad = True
+        for lang in scene_languages(scene):
+            if lang not in VISUAL_LANGUAGES:
+                rep.fail(f"{sid}: unknown visualLanguage {lang!r} "
+                         f"(valid: {', '.join(sorted(VISUAL_LANGUAGES))})")
+                bad = True
         if scene.get("endSec", 0) <= scene.get("startSec", 0):
             rep.fail(f"{sid}: endSec must be greater than startSec")
+            bad = True
+
+        # Điền chữ cho có: đầy ô nhưng rỗng nghĩa.
+        for field in VAGUE_FIELDS:
+            value = scene.get(field)
+            if not isinstance(value, str):
+                continue
+            low = value.lower()
+            for phrase in VAGUE_PHRASES:
+                if phrase in low:
+                    rep.fail(f"{sid}: {field} nói {phrase!r} - đó là lời khen, không "
+                             f"phải một quyết định. Viết ra thứ người xem THẤY: cái gì "
+                             f"đổi thành cái gì, cạnh cái gì. ({value!r})")
+                    bad = True
+                    break
+        vt = scene.get("visualTransformation")
+        if isinstance(vt, str) and 0 < len(vt.strip()) < MIN_TRANSFORMATION_CHARS:
+            rep.fail(f"{sid}: visualTransformation chỉ {len(vt.strip())} ký tự - quá "
+                     f"ngắn để tả một quan hệ đang hình thành (cảnh ngắn nhất đã ship "
+                     f"là {31} ký tự). Vague ở đây là thứ đẻ ra cảnh 'chữ trên nền "
+                     f"trắng'. ({vt!r})")
             bad = True
     if not bad:
         rep.ok(f"all {len(scenes)} scenes have every required field filled in")
@@ -357,7 +437,7 @@ def gate_no_empty_scenes(scenes, rep, thresholds):
     for scene in scenes:
         sid = scene.get("id", "?")
         assets = illustrative_assets(scene)
-        declared_text_only = scene.get("visualLanguage") == "text-only"
+        declared_text_only = "text-only" in scene_languages(scene)
         if not assets:
             if declared_text_only:
                 text_only.append(sid)
@@ -398,7 +478,16 @@ def gate_diversity(scenes, rep, thresholds):
 
     for field, limit_key in (("visualLanguage", "max_language_share"),
                              ("variant", "max_variant_share")):
-        counts = Counter(s.get(field) for s in scenes)
+        # visualLanguage may now be a list (a shotlist's own "background-photo
+        # + annotated" layered spec, see scene_languages()). Share is still
+        # "in what % of SCENES does this language appear" - a scene declaring
+        # two languages counts once for each, but never twice for the same
+        # one, so a scene can't inflate its own language's share by repeating
+        # it in the list.
+        if field == "visualLanguage":
+            counts = Counter(lang for s in scenes for lang in set(scene_languages(s)))
+        else:
+            counts = Counter(s.get(field) for s in scenes)
         limit = thresholds[limit_key]
         for value, count in counts.most_common():
             if count / n > limit:
@@ -407,11 +496,21 @@ def gate_diversity(scenes, rep, thresholds):
                 bad = True
         rep.info(f"{field} spread: " + ", ".join(f"{k}×{v}" for k, v in counts.most_common()))
 
-    # Consecutive repeats read far more strongly than global share.
+    # Consecutive repeats read far more strongly than global share. For
+    # visualLanguage, only the PRIMARY (first-listed) language is compared -
+    # a secondary technique repeating is far less noticeable than the
+    # dominant one repeating, and comparing full sets would fail almost any
+    # two neighbouring scenes once each carries 2-3 declared languages.
     for field in ("template", "backdrop", "visualLanguage"):
         for prev, cur in zip(scenes, scenes[1:]):
-            if prev.get(field) == cur.get(field):
-                rep.fail(f"{field}={cur.get(field)!r} repeats on consecutive scenes "
+            if field == "visualLanguage":
+                p_langs, c_langs = scene_languages(prev), scene_languages(cur)
+                prev_v = p_langs[0] if p_langs else None
+                cur_v = c_langs[0] if c_langs else None
+            else:
+                prev_v, cur_v = prev.get(field), cur.get(field)
+            if prev_v is not None and prev_v == cur_v:
+                rep.fail(f"{field}={cur_v!r} repeats on consecutive scenes "
                          f"{prev.get('id')} -> {cur.get('id')}")
                 bad = True
 
@@ -482,7 +581,12 @@ def derive_load(scene, words):
         spoken = " ".join(w[0] for w in words if start <= w[1] < end)
         if re.search(r"\d", spoken):
             raise_to("complex")
-    raise_to(LOAD_FROM_LANGUAGE.get(scene.get("visualLanguage"), "simple"))
+    # A scene declaring several languages (scene_languages()) is only as
+    # easy as its HARDEST one - a background-photo scene that also carries a
+    # diagram still asks the viewer to read a construction, so raise_to()
+    # runs once per declared language rather than on a single value.
+    for lang in scene_languages(scene):
+        raise_to(LOAD_FROM_LANGUAGE.get(lang, "simple"))
     raise_to(LOAD_FROM_FUNCTION.get(scene.get("narrativeFunction"), "simple"))
     return load
 

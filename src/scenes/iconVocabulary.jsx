@@ -119,6 +119,10 @@ export const VOX_ICONS = {
     means: "hai thứ được đặt lên bàn cân, so sánh",
     triggers: ["so sánh", "đối lập", "cân bằng", "đánh đổi", "trái ngược"],
   },
+  IconTurtle: {
+    means: "một con vật cụ thể được nhắc tới nhưng không phải chủ thể chính - vd rùa trong ẩn dụ, câu đùa",
+    triggers: ["con rùa", "mai rùa", "rùa"],
+  },
   IconWarning: {
     means: "cảnh báo, rủi ro, dấu hiệu nguy hiểm",
     triggers: ["cảnh báo", "nguy hiểm", "rủi ro", "báo động", "nguy cơ"],
@@ -503,6 +507,47 @@ export const IconScale = ({
               stroke={tilt > 0 ? accent : color} strokeWidth={6} />
       <Stroke d={centred(base, x, y + size * 0.42)} delay={delay + 22} drawFrames={7}
               stroke={color} strokeWidth={5} />
+    </g>
+  );
+};
+
+/**
+ * A walking turtle, side view - real icon geometry, not hand-drawn from
+ * scratch. Path data is `Turtle` from `lucide-react` (v1.33.0, ISC license,
+ * node_modules/lucide-react/dist/esm/icons/turtle.mjs), copied verbatim
+ * rather than imported through Lucide's own component so it can run through
+ * this file's own progressive-stroke system instead of rendering as a
+ * static pasted-in icon. Native viewBox is 24x24 - `outer` scales+centres
+ * it the same way every other icon here is centred on (x, y), so a caller
+ * still only ever thinks in this file's `size` units, never Lucide's.
+ *
+ * Why a real icon library instead of hand-drawing a shell: four ad hoc
+ * ovals-with-lines shipped once (V13/S6) and read as unrecognizable -
+ * see lessons.md. A licensed, professionally drawn silhouette reads as a
+ * turtle at a glance, which is the entire point of using a symbol instead
+ * of a sentence.
+ */
+export const IconTurtle = ({
+  x, y, size = defaults.size, delay = defaults.delay,
+  color = defaults.color,
+}) => {
+  const scale = size / 24;
+  const outer = `translate(${x} ${y}) scale(${scale}) translate(-12 -12)`;
+  // Native-units stroke width (24x24 space) so the rendered width scales
+  // with `size` exactly like the drawing itself, instead of staying a fixed
+  // pixel count regardless of icon size.
+  const sw = 1.5;
+  const shell =
+    "m12 10 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a8 8 0 1 0-16 0v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3l2-4h4Z";
+  const legL = "M4.82 7.9 8 10";
+  const legR = "M15.18 7.9 12 10";
+  const base = "M16.93 10H20a2 2 0 0 1 0 4H2";
+  return (
+    <g transform={outer}>
+      <Stroke d={shell} delay={delay} drawFrames={18} stroke={color} strokeWidth={sw} />
+      <Stroke d={legL} delay={delay + 10} drawFrames={6} stroke={color} strokeWidth={sw} />
+      <Stroke d={legR} delay={delay + 13} drawFrames={6} stroke={color} strokeWidth={sw} />
+      <Stroke d={base} delay={delay + 18} drawFrames={8} stroke={color} strokeWidth={sw} />
     </g>
   );
 };

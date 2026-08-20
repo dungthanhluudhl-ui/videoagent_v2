@@ -52,6 +52,18 @@ DEFAULT_BASELINE = HERE.parent / "references" / "baseline.json"
 ILLUSTRATIVE_ROLES = {"hero", "support", "diagram", "map", "timeline",
                       "document", "chart", "mockup", "background"}
 
+
+def _langs(scene):
+    """`visualLanguage` as a list - mirrors plan_gate.py's scene_languages().
+    A shotlist may describe a scene as several layered techniques
+    ("background-photo + annotated"); duplicated here rather than imported
+    so this script stays runnable standalone, same as its 0.78-ratio and
+    other small mirrors of plan_gate/text_gate constants."""
+    v = scene.get("visualLanguage")
+    if v is None:
+        return []
+    return list(v) if isinstance(v, list) else [v]
+
 # metric -> (direction, slack, label)
 #   direction "up"   : higher is better, FAIL when new < ref - slack
 #   direction "down" : lower  is better, FAIL when new > ref + slack
@@ -194,7 +206,9 @@ def build_profile(plan, words, frames_dir=None):
     if not n:
         raise SystemExit("baseline_gate: plan has no scenes")
 
-    langs = [s.get("visualLanguage") for s in scenes]
+    # Each scene counted once per DISTINCT language it declares - a scene
+    # naming the same language twice can't inflate its own share.
+    langs = [lang for s in scenes for lang in set(_langs(s))]
     counts = collections.Counter(langs)
 
     spb = {}
@@ -243,8 +257,21 @@ def build_profile(plan, words, frames_dir=None):
 # Check
 # ---------------------------------------------------------------------------
 
-def check(profile, baseline):
-    """Return (lines, failures)."""
+def check(profile, baseline, slack_overrides=None):
+    """Return (lines, failures).
+
+    `slack_overrides`: {metric_key: new_slack}, from --slack on the CLI. Every
+    other threshold in this project is "overridable from the CLI so a video
+    with a genuinely different shape isn't forced through one hardcoded
+    number" (plan_gate.py's own words) - this file had no such escape until
+    V13 needed one: `visualLanguage` gained list support (scene_languages()),
+    which means a secondary technique like `cutout` now legitimately shows up
+    across HALF a video about one specific animal, and the 26.9%-based V10
+    ceiling (measured before compound declarations existed at all) was never
+    calibrated against that. SKILL.md's own rule stands: change the number
+    explicitly and say why - not silently thin the plan until the gate goes
+    quiet. This is the "why" mechanism, not the excuse."""
+    slack_overrides = slack_overrides or {}
     lines, failures = [], []
     ref = baseline.get("profile", {})
     lines.append(f"--- so với mốc chuẩn {baseline.get('reference', '?')} "
@@ -261,8 +288,11 @@ def check(profile, baseline):
         if new is None or old is None:
             lines.append(f"     {label}: bỏ qua (thiếu số liệu)")
             continue
-        limit = old - slack if direction == "up" else old + slack
         note = ""
+        if key in slack_overrides:
+            slack = slack_overrides[key]
+            note = f"  [slack ghi đè qua --slack thành {slack} cho video này]"
+        limit = old - slack if direction == "up" else old + slack
         if key in COUNT_METRICS and direction == "up" and isinstance(n_scenes, int) \
                 and limit > n_scenes:
             note = (f"  [hạ trần: {n_scenes} cảnh thì nhiều nhất cũng chỉ đạt "
@@ -316,8 +346,21 @@ def main():
                     help="thư mục frame đã render (vd input/review_frames) để đo thêm độ lấp khung")
     ap.add_argument("--baseline", default=str(DEFAULT_BASELINE))
     ap.add_argument("--note", default="", help="ghi chú khi freeze")
+    ap.add_argument("--slack", action="append", default=[],
+                    help="ghi đè slack một chỉ số cho VIDEO NÀY, dạng key=value "
+                         "(vd --slack max_language_share_pct=25). Chỉ dùng khi ngưỡng "
+                         "mặc định thực sự sai cho hình dạng video này - nói rõ lý do "
+                         "ở chỗ gọi lệnh, không dùng để dập tắt một hồi quy thật.")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
+    slack_overrides = {}
+    for kv in args.slack:
+        key, _, val = kv.partition("=")
+        if key not in METRICS:
+            print(f"baseline_gate: --slack {kv!r} - {key!r} không phải chỉ số hợp lệ "
+                  f"({', '.join(METRICS)})", file=sys.stderr)
+            return 2
+        slack_overrides[key] = float(val)
 
     with open(args.plan, encoding="utf-8") as fh:
         plan = json.load(fh)
@@ -354,7 +397,7 @@ def main():
               f"chạy `freeze` trên một video đã được duyệt trước.")
         return 0                       # fail open: no reference is not a violation
 
-    lines, failures = check(profile, baseline)
+    lines, failures = check(profile, baseline, slack_overrides)
     if args.json:
         print(json.dumps({"passed": not failures, "failures": failures,
                           "profile": profile}, ensure_ascii=False, indent=2))

@@ -105,7 +105,7 @@ class Case:
     """One (mutation, gate, expected outcome) triple."""
 
     def __init__(self, name, gate, mutate=None, expect_fail=True, args=None, review=None,
-                 scene_edit=None, sandbox_hook=None, expect_message=()):
+                 scene_edit=None, sandbox_hook=None, expect_message=(), stdin=None):
         self.name = name
         self.gate = gate
         self.mutate = mutate
@@ -126,12 +126,16 @@ class Case:
         # the rule under test - a passing test that tested nothing, which is
         # worse than a failing one.
         self.expect_message = tuple(expect_message)
+        # Callable(plan_path) -> str đổ vào stdin. hook_gate.py nhận payload
+        # (cwd, tool_input) qua stdin đúng như harness đưa, nên test nó phải
+        # đưa cùng đường.
+        self.stdin = stdin
 
 
-def run_gate(gate, argv, cwd):
+def run_gate(gate, argv, cwd, stdin_text=None):
     proc = subprocess.run([sys.executable, str(SCRIPTS / gate), *argv],
                           capture_output=True, text=True, encoding="utf-8",
-                          errors="replace", cwd=str(cwd))
+                          errors="replace", cwd=str(cwd), input=stdin_text)
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
@@ -368,6 +372,80 @@ def unexplained_pass_on_empty_frame(review):
     return review
 
 
+def copy_src_file(*names):
+    """sandbox_hook: chép thêm file src/ mà assemble.py cần so sánh."""
+    def hook(tmp):
+        (tmp / "src").mkdir(exist_ok=True)
+        for name in names:
+            shutil.copy2(ROOT / "src" / name, tmp / "src" / name)
+    return hook
+
+
+def unpad_first_rail(tmp):
+    """Sinh master thật trong sandbox rồi bỏ đệm rail ĐẦU - đúng lỗi đã ship
+    một lần ở V10: mọi cảnh từ S2 trôi sớm nửa giây so với audio của nó."""
+    subprocess.run([sys.executable, str(SCRIPTS / "assemble.py"),
+                    str(tmp / "input" / "scene_plan10.json"), "--only", "master"],
+                   cwd=str(tmp), capture_output=True)
+    f = tmp / "src" / "V10Master.jsx"
+    s = f.read_text(encoding="utf-8")
+    s = s.replace("(V10SCENE1_DURATION + T)", "V10SCENE1_DURATION", 1)
+    s = s.replace("durationInFrames={V10SCENE1_DURATION + T}",
+                  "durationInFrames={V10SCENE1_DURATION}", 1)
+    f.write_text(s, encoding="utf-8")
+
+
+def fake_handwritten_master(tmp):
+    (tmp / "src").mkdir(exist_ok=True)
+    (tmp / "src" / "V10Master.jsx").write_text("// ban viet tay\n", encoding="utf-8")
+
+
+def vague_transformation(plan):
+    """Ô nào cũng đầy chữ, nhưng không quyết định điều gì."""
+    plan["scenes"][3]["visualTransformation"] = (
+        "một hình ảnh phù hợp với nội dung, trực quan và sinh động")
+    return plan
+
+
+def stub_transformation(plan):
+    plan["scenes"][5]["visualTransformation"] = "ảnh hiện ra"
+    return plan
+
+
+def copy_input_file(*names):
+    """sandbox_hook: chép thêm file input/ mà một gate cần đọc."""
+    def hook(tmp):
+        for name in names:
+            src = ROOT / "input" / name
+            if src.exists():
+                shutil.copy2(src, tmp / "input" / name)
+    return hook
+
+
+def activate_unapproved(plan):
+    """Plan đang dựng nhưng shot list chưa được user duyệt."""
+    plan["status"] = "active"
+    plan["shotlistApproved"] = False
+    return plan
+
+
+def activate_approved(plan):
+    plan["status"] = "active"
+    plan["shotlistApproved"] = True
+    return plan
+
+
+def post_edit_payload(plan_path):
+    """Payload PostToolUse y như harness gửi: vừa ghi một file cảnh của V10.
+
+    Dùng S1 chứ không phải S5: ca "đã duyệt thì không chặn oan" cần một cảnh
+    sạch cả build/text/icon per-scene để đi hết đường post_edit; S5 mang nợ
+    text_gate từ trước khi luật <=4 từ ra đời (đã ghi trong lessons.md)."""
+    tmp = plan_path.parent.parent
+    return json.dumps({"cwd": str(tmp), "tool_input": {
+        "file_path": str(tmp / "src" / "scenes" / "V10Scene1.jsx")}})
+
+
 def wordy_label(_plan):
     """A drawn sentence instead of a label - handled by mutating the SCENE file,
     not the plan, because that is where drawn text lives."""
@@ -397,6 +475,23 @@ CASES = [
     Case("text_gate: nét vẽ chạy xuyên qua chữ", "text_gate.py", None,
          scene_edit=("V10Scene5.jsx", 'd="M 840 862 L 840 998"', 'd="M 300 812 L 800 812"'),
          expect_message=["runs through the label"]),
+    # `struck` từng cho `break` NGAY khi thấy nhãn có cờ này - tức là bỏ qua
+    # HOÀN TOÀN việc kiểm nét gạch, không đếm, không đo. V13/S2 gạch chữ
+    # "SIÊU NHIÊN" bằng hai nét chéo bắt chéo thành X (mỗi chữ bị cắt hai lần
+    # theo suốt chiều cao) và lọt sạch, vì gate chưa từng hỏi CÓ MẤY nét. Ba
+    # cảnh đã ship dùng đúng MỘT nét (V11/S8,S9,S15) nên trần đặt ở 1, không
+    # phải đoán.
+    Case("text_gate: gạch chữ bằng hai nét chéo thành X thay vì một nét",
+         "text_gate.py", None,
+         scene_edit=("V10Scene5.jsx", '<DrawnPath d="M 840 862 L 840 998"',
+                     '<DrawnText delay={10} x={100} y={500} struck '
+                     'style={{fontSize: 44}}>TEST LABEL</DrawnText>'
+                     '<DrawnPath d="M 80 495 L 400 495" delay={20} drawFrames={5} '
+                     'strokeWidth={6}/>'
+                     '<DrawnPath d="M 80 505 L 400 505" delay={20} drawFrames={5} '
+                     'strokeWidth={6}/>'
+                     '<DrawnPath d="M 840 862 L 840 998"'),
+         expect_message=["struck by 2 separate strokes", "cap 1"]),
     # Người xem đầu tiên nhìn V12/S1 là thấy ngay: vòng khoanh nét đứt cắt
     # ngang chip "KHU TẠM CƯ" của chính bản đồ. SÁU gate cho qua, vì chữ đó
     # không phải PunchPhrase cũng không phải DrawnText - nó là DOM do
@@ -554,6 +649,60 @@ CASES = [
     # lỗi (el10_youth_2022 cắt cụt đầu người ở mép trên, el10_street_sign cụt
     # cột ở mép dưới) - đúng hai tài sản SKILL.md đã ghi là lọt lưới. Bắt V10
     # phải xanh ở đây là bắt gate nói dối.
+    #
+    # assemble.py - phần cơ khí sinh từ plan (captions, master, đăng ký).
+    # Ca 1 là khoá luật ngắt dòng: generator phải tái tạo ĐÚNG TỪNG KHUNG file
+    # caption đã ship - ai đổi thuật toán ngắt dòng/làm tròn frame là vỡ ở đây.
+    # Ca 2 là lỗi rail đã ship một lần ở V10. Ca 3 là hàng rào chống đè công
+    # viết tay.
+    Case("assemble: captionData sinh lại phải khớp từng khung bản đã ship",
+         "assemble.py", None, expect_fail=False,
+         sandbox_hook=copy_src_file("captionData10.js"),
+         args=lambda p: [str(p), "--only", "captions", "--check"]),
+    Case("assemble: master bỏ đệm rail đầu phải bị --check bắt",
+         "assemble.py", None, sandbox_hook=unpad_first_rail,
+         args=lambda p: [str(p), "--only", "master", "--check"],
+         expect_message=["LỆCH"]),
+    Case("assemble: không được đè master viết tay",
+         "assemble.py", None, sandbox_hook=fake_handwritten_master,
+         args=lambda p: [str(p), "--only", "master"],
+         expect_message=["viết tay"]),
+    # Chốt duyệt shot list (hook_gate.post_edit). "Trình shot list cho user
+    # duyệt" nằm trong SKILL.md từ đầu nhưng là CÂU VĂN - không gì kiểm. Giờ
+    # nó là field dữ liệu, và hai ca này khoá cả hai chiều: chưa duyệt thì
+    # chặn, duyệt rồi thì KHÔNG được chặn oan (một chốt chặn cả hai chiều là
+    # bức tường, không phải cái chốt).
+    Case("hook_gate: shot list chưa duyệt thì không được dựng cảnh",
+         "hook_gate.py", activate_unapproved,
+         args=lambda p: ["post-edit"], stdin=post_edit_payload,
+         expect_message=["shotlistApproved"]),
+    Case("hook_gate: shot list đã duyệt thì dựng cảnh bình thường",
+         "hook_gate.py", activate_approved, expect_fail=False,
+         args=lambda p: ["post-edit"], stdin=post_edit_payload),
+    # init_video.align. KHÔNG phải hàm thuần (phiên sau sửa tay vài từ whisper
+    # nghe đúng hơn kịch bản là việc NÊN làm), nên ca này khoá đúng thứ khoá
+    # được: dựng lại từ transcript+kịch bản THẬT của V10 phải giống file đã
+    # ship >=90%. Đó là mức phân biệt được "sửa tay vài chữ" với "ghép nhầm
+    # cặp audio/kịch bản" - đo thật là 99.3%.
+    Case("init_video: ghép lại V10 phải khớp file đã ship", "init_video.py", None,
+         expect_fail=False,
+         sandbox_hook=copy_input_file("transcript10.json", "Scitpt9_Itaewon_P1.txt"),
+         args=lambda p: ["10", "--only", "align", "--check",
+                         "--script", "input/Scitpt9_Itaewon_P1.txt"]),
+    # Chữ điền cho có. `is_empty` chỉ bắt ô trống; hai ca này bắt ô ĐẦY mà rỗng
+    # nghĩa - đúng loại chữ đẻ ra cảnh "chữ trên nền trắng". Danh sách cụm sáo
+    # rỗng bắn 0 lần trên 53 cảnh đã ship (đo, không đoán), nên nó không phải
+    # bức tường.
+    Case("plan_gate: visualTransformation đầy chữ nhưng rỗng nghĩa",
+         "plan_gate.py", vague_transformation,
+         expect_message=["không phải một quyết định"]),
+    Case("plan_gate: visualTransformation cụt lủn", "plan_gate.py", stub_transformation,
+         expect_message=["quá ngắn để tả một quan hệ"]),
+    Case("init_video: ghép nhầm cặp audio/kịch bản phải bị chặn", "init_video.py", None,
+         sandbox_hook=copy_input_file("transcript10.json", "Scripttest9_Itaewon_P2.txt"),
+         args=lambda p: ["10", "--only", "align", "--check",
+                         "--script", "input/Scripttest9_Itaewon_P2.txt"],
+         expect_message=["ghép nhầm cặp"]),
 ]
 
 
@@ -620,7 +769,8 @@ def main():
             try:
                 plan_path = build_sandbox(tmp, case.mutate, case.review, case.scene_edit,
                                           case.sandbox_hook)
-                code, out = run_gate(case.gate, case.args(plan_path), tmp)
+                code, out = run_gate(case.gate, case.args(plan_path), tmp,
+                                     case.stdin(plan_path) if case.stdin else None)
             except Exception as exc:                          # noqa: BLE001
                 results.append((case.name, False, f"selftest crashed: {exc}"))
                 continue

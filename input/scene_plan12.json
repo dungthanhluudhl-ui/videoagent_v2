@@ -3,6 +3,7 @@
   "fps": 30,
   "wordsFile": "input/words11_aligned.json",
   "status": "shipped",
+  "shotlistApproved": true,
   "_howToUse": [
     "BẢN DỰNG THỬ 3 CẢNH - bài kiểm tra nguội của skill, không phải video giao cho khách.",
     "Phủ đúng cửa sổ 0-10.32s mà V11/S1-S3 đã dựng, nhưng lập kế hoạch lại từ đầu và cố ý",

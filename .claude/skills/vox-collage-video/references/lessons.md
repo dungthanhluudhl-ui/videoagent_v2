@@ -511,3 +511,56 @@ The second attempt failed the same way for a different reason: three beats need
 mutation has to stretch the scenes to reproduce it. Two rules interacting is
 not a bug in either; it is why the mutation has to be built against the real
 rule set rather than against an idea of it.
+
+## V13/S2 — `struck` was a blind escape hatch, and DrawnText's plate math never budgeted for Vietnamese diacritics
+
+Two independent defects shipped in the same scene, both invisible to every
+gate that ran, both caught only when the user looked at the actual render:
+
+1. **"SIÊU NHIÊN" crossed by two diagonal strokes forming an X.** `text_gate`'s
+   struck-label check used to `break` the moment it saw the `struck` flag —
+   an unconditional skip, not a check. So it never asked how many strokes
+   were crossing the label or how they were arranged. Two thick diagonal
+   lines cut every letter twice along its full height; the user named the
+   result directly: "không đọc được chữ và nhìn rối mắt". Every struck label
+   already shipped (V11/S8, S9, S15) uses exactly ONE straight line, at
+   widths up to 11px on a 44px label, and reads fine — so the failure mode
+   is line COUNT, not stroke width. Fixed: `text_gate.py` now collects every
+   stroke that actually crosses a struck label's box and fails past
+   `MAX_STRIKE_LINES = 1`, with the reasoning and the shipped precedent
+   written into the constant. The scene itself was rebuilt with one
+   horizontal line through the label's own x-height (not its baseline —
+   `y = baseline - 0.36*fontSize`, matching where the three shipped examples
+   sit), the same convention already in use everywhere else.
+
+2. **"THIẾT BỊ ĐO" ran past its own plate.** Confirmed by rendering the exact
+   label at three variants (fontWeight 800 vs 900, with and without
+   `letterSpacing`) before touching any code — root-causing from evidence,
+   not from a guess. Weight made no visible difference (ruling out a
+   font-loading mismatch); removing `letterSpacing` shrank the horizontal
+   overflow but left the diacritic on "Ế" poking through the plate's top
+   edge either way. Two real, separate bugs in `DrawnText` (`visualLanguage.jsx`):
+   - `measureText` has no concept of CSS `letter-spacing` — any label that
+     tracks its caps out (a common look here, PunchPhrase does the same)
+     measures narrower than it renders. Fixed by adding `str.length *
+     letterSpacing` back onto the measured width, both in the JS component
+     and in `text_gate.py`'s mirror (`text_width`/`text_box` now take a
+     `letter_spacing` param, and `parse_labels` reads it out of the JSX).
+   - The plate's vertical clearance (`size * 0.78`, cap-height) never
+     accounted for Vietnamese's double-stacked diacritics (Ế Ể Ễ Ệ Ố Ồ Ổ Ỗ Ộ
+     Ứ Ừ Ử Ữ Ự — a tone mark riding a circumflex/horn that's already raised)
+     — the exact same defect class `PunchPhrase` paid for once already
+     (`CHỖ THẮT` → `CHÔ THÂT`, fixed there via `lineHeight 1.34`), just never
+     backported to this component. Fixed by reserving an extra `0.14em` on
+     the TOP of the plate only — the bottom was never the reported problem,
+     so its clearance is untouched (verified: old bottom formula and new
+     bottom formula are algebraically identical).
+
+Both fixes are covered by a `selftest.py` case (the X-strike one) and by a
+direct before/after render comparison (the plate one) — checked in this
+session, not asserted. Neither defect showed up in `text_gate`, `build_gate`,
+`review_gate`, or `pixel_gate` before the fix, because every one of those
+gates either skipped `struck` labels outright or measured width/height with
+the same missing terms the render itself was using — a gate built on the
+same wrong arithmetic as the bug it's supposed to catch will always agree
+with it.
