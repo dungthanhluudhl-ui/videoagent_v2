@@ -1,0 +1,209 @@
+{
+  "note": "Bo hoi quy co nhan cho vision_check.py va asset_vision.py. MOI nhan phai ghi NGUON su that o truong `why`. Khong duoc dan nhan bang cam tinh cua agent - do dung la thu hai script nay sinh ra de thay the. Chay: py -3 vision_regress.py",
+  "sources": {
+    "nguoi-xem": "Bang cham diem 26 canh V10 do chinh nguoi xem viet (GIU/BO + ghi chu).",
+    "text_gate": "text_gate.py doc MA NGUON, khong nhin anh - mot co che hoan toan doc lap.",
+    "do-so-hoc": "Do bang PIL: ty le diem trong suot va ty le diem xanh trong vung duc.",
+    "nhin-tan-mat": "Agent tu mo anh ra xem va mo ta duoc loi."
+  },
+  "khong-dua-vao-bo-nay": {
+    "V10/S20 'qua don dieu'": "Nguoi xem BO canh nay voi ly do 'qua don dieu, khong minh hoa tot'. DA THU va KHONG dua vao bo hoi quy duoc, vi day la phan xet THAM MY chu khong phai mot phep kiem co dinh: o frame 24 model co ghi 'khung hinh trong trai' nhung SETTLE_FRAME=45 (dung) chan lai vi luc do phan tu con dang bay vao; den frame 108 thi khung da co du do va model goi la sach - cung dung. Khong khung nao trong bieu dat duoc 'ca canh nay nham chan'. Ghi lai o day de khong ai them no vao roi tuong script hong.",
+    "V13S1Block drift": "Loi dau cam troi khoi vat. Da dung lai co chu dinh va render cap loi/da-sua, nhung hai khung khac nhau chu yeu o muc phong anh - ca thu qua yeu de lam nhan. Muc `mark_missed` den gio VAN CHUA co bang chung nao.",
+    "V10/S20 Mock-TV": "el10_drama_still.png la khung phim se duoc DeviceMockup boc vao trong mot cai TV. asset_vision gan co no 3/3 lan ('anh la quay bar go, khong phai mockup TV'). Bo ra khoi bo hoi quy vi phan quyet 'dung' o day doi hoi phai BIET rang co mot component se boc no lai - thu khong nam trong buc anh. Gan co no la hanh vi HOP LY, chi ton mot cai liec mat. Giu no lam nhan 'sach' se bien bo hoi quy thanh mot bai kiem tri nho, khong phai bai kiem chat luong."
+  },
+  "frames": [
+    {
+      "path": "input/template_seed_frames/V10Scene7_f48.png",
+      "bad": true,
+      "expect": [
+        "text_overlap"
+      ],
+      "source": "nguoi-xem",
+      "why": "Nguoi xem: 'S7 dang gap loi cac chu tieu de bi de boi cac cham tron'."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene7_f117.png",
+      "bad": true,
+      "expect": [
+        "text_overlap"
+      ],
+      "source": "nguoi-xem",
+      "why": "Cung loi voi f48, o khung muon hon."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene19_f84.png",
+      "bad": true,
+      "expect": [
+        "text_tiny"
+      ],
+      "source": "nguoi-xem",
+      "why": "Nguoi xem BO canh nay: 'thiet ke xau, chu bi an'."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene15_f60.png",
+      "bad": true,
+      "expect": [
+        "text_overlap",
+        "collision"
+      ],
+      "source": "text_gate",
+      "why": "text_gate: 'a drawn stroke runs through the headline at y 274..368'. Model goi lo nay khi thi text_overlap khi thi collision - cung mot loi, hai cai ten, nen `expect` nhan ca hai."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene18_f75.png",
+      "bad": true,
+      "expect": [
+        "text_tiny",
+        "text_overlap"
+      ],
+      "source": "text_gate",
+      "why": "text_gate: nhan 'QUAN BAR · THOI TRANG · NHA HANG QUOC TE' ve o 34px, duoi san 44px."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene18_f130.png",
+      "bad": true,
+      "expect": [
+        "text_tiny"
+      ],
+      "source": "text_gate",
+      "why": "Cung nhan 34px voi f75."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene1_f82.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "Nguoi xem GIU, khong ghi chu loi. text_gate cung sach o canh nay."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene3_f84.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene6_f84.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene21_f102.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene23_f124.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, 'minh hoa tot'."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene26_f96.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene16_f132.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene13_f97.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, 'dung de gioi thieu ve kenh tuong doi phu hop'."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene2_f85.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene12_f64.png",
+      "bad": false,
+      "source": "nguoi-xem",
+      "why": "GIU, text_gate sach."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene2_f20.png",
+      "bad": false,
+      "source": "nhin-tan-mat",
+      "why": "KHUNG SOM (f20 = 0,67s): phan tu con dang bay vao nen khung trong la DUNG. Day tung la duong tinh gia that, va la ly do SETTLE_FRAME=45 ra doi. Neu no bi gan co lai thi nghia la chan som da hong."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene8_f20.png",
+      "bad": false,
+      "source": "nhin-tan-mat",
+      "why": "Khung som, giong S2_f20."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene26_f20.png",
+      "bad": false,
+      "source": "nhin-tan-mat",
+      "why": "Khung som."
+    },
+    {
+      "path": "input/template_seed_frames/V10Scene16_f20.png",
+      "bad": false,
+      "source": "nhin-tan-mat",
+      "why": "Khung som."
+    }
+  ],
+  "assets": [
+    {
+      "plan": "input/scene_plan10.json",
+      "scene": "S25",
+      "name": "Sup-Gate",
+      "bad": true,
+      "expect": [
+        "subject_cropped"
+      ],
+      "source": "nguoi-xem",
+      "why": "Nguoi xem: 'co mot loi ve cutout hinh ngoi chua bi loi'. Agent mo anh ra xem va xac nhan: cac cot duoi mai bi xoa nen an mat thanh vet loang."
+    },
+    {
+      "plan": "input/scene_plan10.json",
+      "scene": "S8",
+      "name": "Sup-Ferry",
+      "bad": false,
+      "source": "do-so-hoc",
+      "why": "49% diem trong suot, 0,0% diem xanh trong vung duc -> tach nen sach. Tung bi bao oan 'con phong xanh' khi encoder con vut alpha di."
+    },
+    {
+      "plan": "input/scene_plan10.json",
+      "scene": "S15",
+      "name": "Sup-StreetSign",
+      "bad": false,
+      "source": "do-so-hoc",
+      "why": "80% trong suot, 0,0% xanh. Tung bi bao oan vi loi encoder."
+    },
+    {
+      "plan": "input/scene_plan10.json",
+      "scene": "S22",
+      "name": "Sup-Archive",
+      "bad": false,
+      "source": "do-so-hoc",
+      "why": "21% trong suot, 0,0% xanh. Tung bi bao oan vi loi encoder."
+    },
+    {
+      "plan": "input/scene_plan10.json",
+      "scene": "S23",
+      "name": "Doc-Name",
+      "bad": false,
+      "source": "nhin-tan-mat",
+      "why": "Itaewon nghia la 'vuon le', va visualTransformation ghi 'chu Le Thai Vien hien ra cung nhanh le' - nen nhanh le CHINH LA thu phai co. Tung bi bao oan vi ten o co tien to 'Doc-'."
+    },
+    {
+      "plan": "input/scene_plan13.json",
+      "scene": "S8",
+      "name": "Hero-Few",
+      "bad": false,
+      "source": "nhin-tan-mat",
+      "why": "Tung bi bao 'khong minh hoa duoc di chuyen binh thuong' - nhung visualTransformation ghi 'cum nam con dung chon chan', tuc anh dung la khong di chuyen duoc. Bao oan vi thieu ngu canh."
+    }
+  ]
+}

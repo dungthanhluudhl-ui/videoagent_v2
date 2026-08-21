@@ -88,6 +88,7 @@ import sys
 
 import numpy as np
 from PIL import Image, ImageOps
+from PIL.PngImagePlugin import PngInfo
 from rembg import remove, new_session
 from scipy import ndimage
 
@@ -267,7 +268,70 @@ def add_drop_shadow(rgba, color_hex, offset_frac=0.03):
     return canvas
 
 
-def process_one(raw_path, out_path, do_color, do_shadow, shadow_color, bg_mode, get_session):
+def parse_aspect(raw):
+    """'3:4' -> (3.0, 4.0). Also accepts '0.75' as width/height."""
+    raw = raw.strip()
+    if ":" in raw:
+        a, b = raw.split(":", 1)
+        w, h = float(a), float(b)
+    else:
+        w, h = float(raw), 1.0
+    if w <= 0 or h <= 0:
+        sys.exit(f"--fit needs positive numbers, got {raw!r}")
+    return w, h
+
+
+def fit_to_aspect(rgba, aspect):
+    """Pad with transparency until the image matches `aspect` exactly.
+
+    NEVER crops and NEVER distorts - it only adds empty space on the two
+    short sides and centres the content in it. Cropping would eat the
+    subject, and scaling to fit would stretch it; both are worse than the
+    letterboxing this does.
+
+    Why this exists: `Hero`/`Support` in shared.jsx take a `width` and
+    nothing else - the rendered HEIGHT is whatever the source PNG's aspect
+    ratio makes it (`<Img style={{width:"100%"}}>`), and crop_to_content()
+    above cuts every cutout tight to its subject, so that ratio is
+    effectively random per image. The measured consequence: the same slot
+    at width=680 renders 383px tall for a 16:9 source and 907px for a 3:4
+    one - a 2.4x difference in area from an identical layout. Coverage,
+    safe-zone and overlap all move with it, which is why a fixed "layout
+    box" could not, on its own, stop the tran/de/qua-nho defects. Declaring
+    the aspect at cutout time is what makes a slot mean something.
+    """
+    tw, th = aspect
+    w, h = rgba.size
+    need_h = w * th / tw
+    if need_h >= h:
+        new_w, new_h = w, int(round(need_h))
+    else:
+        new_w, new_h = int(round(h * tw / th)), h
+    canvas = Image.new("RGBA", (max(new_w, w), max(new_h, h)), (0, 0, 0, 0))
+    canvas.alpha_composite(rgba, ((canvas.width - w) // 2, (canvas.height - h) // 2))
+    return canvas
+
+
+def stamp(content_size, aspect_raw, removal):
+    """Provenance written INTO the PNG, not into a sidecar file.
+
+    asset_gate.py needs the size of the real CONTENT to catch an asset being
+    rendered larger than its source (the V10/S25 defect: a 622px-wide crop
+    placed in a width=760 slot, i.e. blown up 122% and visibly soft). Once
+    fit_to_aspect() pads the file, the PNG's own dimensions include the
+    padding and no longer answer that question. A sidecar JSON would, but it
+    goes stale the moment a file is re-cut and the JSON isn't. PNG tEXt
+    chunks travel with the file and cannot desync from it.
+    """
+    meta = PngInfo()
+    meta.add_text("voxContentPx", f"{content_size[0]}x{content_size[1]}")
+    meta.add_text("voxFitAspect", aspect_raw or "none")
+    meta.add_text("voxRemoval", removal)
+    return meta
+
+
+def process_one(raw_path, out_path, do_color, do_shadow, shadow_color, bg_mode,
+                get_session, fit_raw=None, min_content_px=0):
     print(f"processing {raw_path} -> {out_path}")
     src = Image.open(raw_path).convert("RGB")
 
@@ -279,10 +343,12 @@ def process_one(raw_path, out_path, do_color, do_shadow, shadow_color, bg_mode, 
 
     if chroma:
         print(f"  removal: chroma-key ({chroma} screen detected)")
+        removal = f"chroma-{chroma}"
         removed = chroma_key_remove(src, chroma)
     else:
         print("  removal: rembg fallback (no clean chroma screen detected)" if bg_mode == "auto"
               else "  removal: rembg (forced)")
+        removal = "rembg"
         removed = remove(src, session=get_session())  # RGBA — lazy: only downloads/loads the model if actually reached
 
     alpha = np.array(removed)[:, :, 3]
@@ -296,8 +362,29 @@ def process_one(raw_path, out_path, do_color, do_shadow, shadow_color, bg_mode, 
 
     styled = cropped if do_color else to_grayscale(cropped)
 
+    # Content resolution is measured HERE - after the tight crop, before the
+    # shadow offset and before any padding - because this is the number that
+    # decides whether the asset can fill its slot without being blown up.
+    content_size = cropped.size
+    print(f"  content: {content_size[0]}x{content_size[1]}px")
+    if min_content_px and min(content_size) < min_content_px:
+        sys.exit(
+            f"  FAIL {raw_path}: content is {content_size[0]}x{content_size[1]}px, "
+            f"under the --min-content-px {min_content_px} floor.\n"
+            f"  Re-generate this subject on its OWN single-cell board - a panel "
+            f"cropped out of a multi-cell board is low-resolution by construction "
+            f"and no re-cut fixes it (SKILL.md step 3)."
+        )
+
     final = add_drop_shadow(styled, shadow_color) if do_shadow else styled
-    final.save(out_path)
+
+    if fit_raw:
+        before = final.size
+        final = fit_to_aspect(final, parse_aspect(fit_raw))
+        print(f"  fit {fit_raw}: {before[0]}x{before[1]} -> {final.size[0]}x{final.size[1]} "
+              f"(transparent padding, no crop, no distortion)")
+
+    final.save(out_path, pnginfo=stamp(content_size, fit_raw, removal))
 
 
 if __name__ == "__main__":
@@ -312,6 +399,15 @@ if __name__ == "__main__":
                               "removal on a clean match, else falls back to rembg. Force green/"
                               "magenta to skip sampling; force rembg for real photos (Pexels).")
     parser.add_argument("--model", default="isnet-general-use")
+    parser.add_argument("--fit", default=None, metavar="W:H",
+                        help="pad with transparency to exactly this aspect ratio "
+                             "(e.g. 3:4). Never crops, never distorts. Required when "
+                             "the asset goes into a declared template slot - see "
+                             "asset_gate.py.")
+    parser.add_argument("--min-content-px", type=int, default=0, metavar="N",
+                        help="refuse an image whose content's SHORT side is under N px. "
+                             "Use the slot's render width: an asset smaller than its slot "
+                             "gets upscaled and reads soft.")
     args = parser.parse_args()
 
     if len(args.pairs) % 2 != 0:
@@ -334,4 +430,6 @@ if __name__ == "__main__":
             shadow_color=args.shadow_color,
             bg_mode=args.bg_mode,
             get_session=get_session,
+            fit_raw=args.fit,
+            min_content_px=args.min_content_px,
         )

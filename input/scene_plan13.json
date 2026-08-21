@@ -1,0 +1,588 @@
+{
+ "video": "V13",
+ "fps": 30,
+ "wordsFile": "input/words13_aligned.json",
+ "title": "Rat King - Hiện tượng khoa học khó giải thích (Phần 1)",
+ "status": "shipped",
+ "shotlistApproved": true,
+ "_howToUse": [
+  "Dựng theo shotlist người dùng cung cấp: input/test direction shotlist/shotlist_ratking_v12.md (VRATKING12).",
+  "Mốc cảnh lấy theo THỜI GIAN AUDIO THẬT (whisper segment), không theo timestamp gõ tay trong file .srt -",
+  "hai nguồn lệch tới 0.7s và phụ đề chạy theo audio, nên cắt theo .srt sẽ thấy lệch bằng mắt.",
+  "Cấu trúc 8 cảnh, thứ tự cue C1-C12 và ý đồ hình ảnh giữ đúng shotlist.",
+  "S4/S5 được kéo dài hơn câu thoại của chính nó (SKILL.md b2a: thời lượng chia theo comprehensionLoad)."
+ ],
+ "scenes": [
+  {
+   "id": "S1",
+   "startSec": 0.0,
+   "endSec": 4.233,
+   "narrativeFunction": "hook",
+   "viewerQuestion": "Những hiện tượng khoa học khó giải thích đó trông ra sao?",
+   "visualTransformation": "ba hiện tượng có thật cùng nằm trong một khung - đĩa băng xoay, quả cầu sáng trên đồng, mẫu vật trong lọ - rồi ba dấu ngoặc cam lần lượt khoanh từng cái lại, câu dẫn mơ hồ bị thay bằng ba bằng chứng người xem đếm được trên khung",
+   "contrastWithPrevious": "mở màn, chưa có gì trước đó - ảnh thật full khung thay vì một trang giấy trắng có chữ",
+   "density": "med",
+   "comprehensionLoad": "moderate",
+   "visualLanguage": [
+    "background-photo",
+    "annotated"
+   ],
+   "template": "bespoke: ảnh full khung + ba dấu ngoặc khoanh vật thể",
+   "backdrop": "photo",
+   "variant": "rise",
+   "assets": [
+    {
+     "role": "background",
+     "name": "Bg-Montage",
+     "src": "el13_science_montage.png",
+     "anchorPhrase": "hiện tượng khoa học",
+     "describes": [
+      "hiện tượng khoa học",
+      "khó giải thích"
+     ],
+     "delay": 0,
+     "visibleFor": 127
+    },
+    {
+     "role": "diagram",
+     "name": "Dia-Brackets",
+     "anchorPhrase": "khó giải thích",
+     "describes": [
+      "khó giải thích"
+     ],
+     "width": 1000,
+     "x": 40,
+     "y": 300,
+     "delay": 48,
+     "visibleFor": 101
+    }
+   ],
+   "punch": {
+    "lines": [
+     "CÓ THẬT.",
+     "CHƯA AI HIỂU."
+    ],
+    "anchorPhrase": "khó giải thích",
+    "describes": [
+     "khó giải thích"
+    ],
+    "top": 470,
+    "from": 48,
+    "visibleFor": 79
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "Bg-Montage vào full khung, đẩy nhẹ"
+    },
+    {
+     "frame": 48,
+     "what": "ba dấu ngoặc cam + dấu hỏi khoanh ba vật thể, punch xuống"
+    }
+   ],
+   "durationInFrames": 127,
+   "status": "reviewed"
+  },
+  {
+   "id": "S2",
+   "startSec": 4.233,
+   "endSec": 10.367,
+   "narrativeFunction": "paradox",
+   "viewerQuestion": "Nghe như siêu nhiên thì có nghĩa là phản khoa học không?",
+   "visualTransformation": "một quả cầu sáng kỳ dị đứng yên tại chỗ trong khi cách đọc nó đổi phe: nhãn bên trái bị gạch chéo cam, còn giá đo và cảm biến bên phải sáng lên - cùng một tấm ảnh, hai cách hiểu, chỉ một cái bị loại",
+   "contrastWithPrevious": "từ ba vật thể rời rạc thu về một hiện tượng duy nhất - nguyên một tấm ảnh mang hai cách đọc đặt cạnh nhau, không cắt khung",
+   "density": "med",
+   "comprehensionLoad": "moderate",
+   "visualLanguage": [
+    "split",
+    "annotated"
+   ],
+   "template": "bespoke: một ảnh nguyên khung, hai cách đọc đặt cạnh nhau, một cách bị gạch",
+   "backdrop": "spotlight",
+   "variant": "strike",
+   "assets": [
+    {
+     "role": "background",
+     "name": "Bg-Orb",
+     "src": "el13_luminous_orb.png",
+     "anchorPhrase": "siêu nhiên",
+     "describes": [
+      "siêu nhiên",
+      "phi khoa học"
+     ],
+     "delay": 0,
+     "visibleFor": 184
+    },
+    {
+     "role": "diagram",
+     "name": "Dia-Callouts",
+     "anchorPhrase": "không biết giải thích",
+     "describes": [
+      "phi khoa học",
+      "không biết giải thích"
+     ],
+     "width": 1000,
+     "x": 40,
+     "y": 260,
+     "delay": 0,
+     "visibleFor": 184
+    }
+   ],
+   "punch": {
+    "lines": [
+     "CHƯA CÓ",
+     "LỜI GIẢI"
+    ],
+    "anchorPhrase": "không biết giải thích",
+    "describes": [
+     "không biết giải thích"
+    ],
+    "top": 300,
+    "from": 75,
+    "visibleFor": 109
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "Bg-Orb + nhãn siêu nhiên trái / thiết bị đo phải"
+    },
+    {
+     "frame": 75,
+     "what": "nét gạch cam xoá phe siêu nhiên, punch CHƯA CÓ LỜI GIẢI xuống"
+    }
+   ],
+   "durationInFrames": 184,
+   "status": "reviewed"
+  },
+  {
+   "id": "S3",
+   "startSec": 10.367,
+   "endSec": 11.867,
+   "narrativeFunction": "transition",
+   "viewerQuestion": "Xong phần dẫn, vào ca đầu tiên chưa?",
+   "visualTransformation": "toàn bộ ảnh và nhãn của phần dẫn biến mất trong một khung, chỉ còn mặt giấy kẻ trống và một chữ đập vào giữa khung - nhịp bị bẻ gãy để mở ca đầu tiên",
+   "contrastWithPrevious": "ảnh full khung tối biến mất hoàn toàn, đổi sang giấy sáng trơn - cắt cứng, không fade",
+   "density": "low",
+   "comprehensionLoad": "simple",
+   "visualLanguage": "text-only",
+   "template": "bespoke: một chữ giữa khung giấy trống",
+   "backdrop": "grid",
+   "variant": "punch",
+   "transitionIn": "none",
+   "assets": [],
+   "punch": {
+    "lines": [
+     "BẮT ĐẦU"
+    ],
+    "anchorPhrase": "bắt đầu thôi",
+    "describes": [
+     "bắt đầu thôi"
+    ],
+    "top": 760,
+    "from": 0,
+    "visibleFor": 45
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "punch BẮT ĐẦU đập vào giữa khung, giấy kẻ trơn"
+    }
+   ],
+   "durationInFrames": 45,
+   "status": "reviewed"
+  },
+  {
+   "id": "S4",
+   "startSec": 11.867,
+   "endSec": 14.867,
+   "narrativeFunction": "definition",
+   "viewerQuestion": "Vua chuột là con gì?",
+   "visualTransformation": "cả cụm Vua chuột hiện nguyên hình trên thẻ hồ sơ, rồi một đường chỉ cam kéo từ chữ tới đúng cục đuôi ở giữa - cái tên vừa nghe được gắn thẳng vào chỗ khiến nó thành tên",
+   "contrastWithPrevious": "từ một chữ trên giấy trống nhảy sang vật thể thật lấp đầy khung",
+   "density": "med",
+   "comprehensionLoad": "moderate",
+   "visualLanguage": [
+    "document",
+    "cutout",
+    "annotated"
+   ],
+   "template": "bespoke: cutout trên thẻ hồ sơ + đường chỉ tới nút đuôi",
+   "backdrop": "card",
+   "variant": "flip",
+   "transitionIn": "none",
+   "assets": [
+    {
+     "role": "hero",
+     "name": "Hero-RatKing",
+     "src": "el13_ratking_hero.png",
+     "anchorPhrase": "Vua chuột",
+     "describes": [
+      "Vua chuột",
+      "Rat King"
+     ],
+     "width": 900,
+     "x": 90,
+     "y": 620,
+     "delay": 0,
+     "visibleFor": 90
+    }
+   ],
+   "punch": {
+    "lines": [
+     "VUA CHUỘT",
+     "RAT KING"
+    ],
+    "anchorPhrase": "Rat King",
+    "describes": [
+     "Rat King"
+    ],
+    "top": 250,
+    "from": 30,
+    "visibleFor": 60
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "Hero-RatKing lật vào giữa thẻ hồ sơ"
+    },
+    {
+     "frame": 30,
+     "what": "punch VUA CHUỘT / RAT KING + đường chỉ tới nút đuôi"
+    }
+   ],
+   "durationInFrames": 90,
+   "status": "reviewed"
+  },
+  {
+   "id": "S5",
+   "startSec": 14.867,
+   "endSec": 17.867,
+   "narrativeFunction": "evidence",
+   "viewerQuestion": "Chuyện này xảy ra ở loài chuột nào?",
+   "visualTransformation": "một con chuột đen đơn lẻ đứng giữa khung với nhãn HIẾM GẶP - loài thì cụ thể, và chính con vật hiếm đó đứng ngay trước mắt người xem thay vì một sơ đồ đếm số bịa ra con số lời thoại không hề nói",
+   "contrastWithPrevious": "từ cả cụm mắc kẹt tách ra còn đúng một con bình thường, và lần đầu có một đại lượng đếm được trong khung",
+   "density": "med",
+   "comprehensionLoad": "moderate",
+   "visualLanguage": "cutout",
+   "template": "bespoke: chuột đơn lẻ + nhãn HIẾM GẶP",
+   "backdrop": "grid",
+   "variant": "rise",
+   "assets": [
+    {
+     "role": "hero",
+     "name": "Hero-BlackRat",
+     "src": "el13_black_rat.png",
+     "anchorPhrase": "chuột đen",
+     "describes": [
+      "chuột đen",
+      "chuột Tàu"
+     ],
+     "width": 1000,
+     "x": 40,
+     "y": 700,
+     "delay": 0,
+     "visibleFor": 90
+    },
+    {
+     "role": "diagram",
+     "name": "Dia-Rarity",
+     "anchorPhrase": "chuột Tàu",
+     "describes": [
+      "chuột đen"
+     ],
+     "width": null,
+     "x": null,
+     "y": null,
+     "delay": 0,
+     "visibleFor": 90
+    }
+   ],
+   "punch": {
+    "lines": [
+     "CHUỘT ĐEN",
+     "CHUỘT TÀU"
+    ],
+    "anchorPhrase": "chuột đen",
+    "describes": [
+     "chuột đen",
+     "chuột Tàu"
+    ],
+    "top": 200,
+    "from": 45,
+    "visibleFor": 45
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "Hero-BlackRat trồi lên + lưới tần suất một ô cam"
+    },
+    {
+     "frame": 45,
+     "what": "punch CHUỘT ĐEN / CHUỘT TÀU + nhãn hiếm gặp"
+    }
+   ],
+   "durationInFrames": 90,
+   "status": "reviewed"
+  },
+  {
+   "id": "S6",
+   "startSec": 17.867,
+   "endSec": 20.867,
+   "narrativeFunction": "reversal",
+   "viewerQuestion": "Vậy Vua chuột KHÔNG phải là cái gì?",
+   "visualTransformation": "một con chuột đứng hai chân tạo dáng dạy võ rơi vào trong khung TV cùng bốn cái mai rùa - cách hiểu sai được dựng lên đủ hình đủ dạng trong khung màn hình rồi mới bị một dấu cấm cam trùm lên cả cái TV",
+   "contrastWithPrevious": "đang đo đếm nghiêm túc trên giấy kẻ thì mọi thứ bị nhốt vào một khung TV vẽ tay, rồi tự xoá chính nó",
+   "density": "med",
+   "comprehensionLoad": "moderate",
+   "visualLanguage": [
+    "mockup",
+    "cutout"
+   ],
+   "template": "bespoke: nhánh sai nhốt trong khung TV rồi bị gạch",
+   "backdrop": "card",
+   "variant": "dropSpin",
+   "assets": [
+    {
+     "role": "mockup",
+     "name": "Mock-TV",
+     "anchorPhrase": "chuột đột biến",
+     "describes": [
+      "chuột đột biến"
+     ],
+     "width": 900,
+     "x": 90,
+     "y": 430,
+     "delay": 0,
+     "visibleFor": 90
+    },
+    {
+     "role": "hero",
+     "name": "Hero-KarateRat",
+     "src": "el13_rat_karate.png",
+     "anchorPhrase": "dạy võ",
+     "describes": [
+      "chuột đột biến",
+      "dạy võ"
+     ],
+     "width": 440,
+     "x": 150,
+     "y": 560,
+     "delay": 6,
+     "visibleFor": 84
+    },
+    {
+     "role": "diagram",
+     "name": "Dia-Turtles",
+     "anchorPhrase": "bốn con rùa",
+     "describes": [
+      "bốn con rùa"
+     ],
+     "width": 360,
+     "x": 620,
+     "y": 780,
+     "delay": 6,
+     "visibleFor": 84
+    }
+   ],
+   "punch": {
+    "lines": [
+     "KHÔNG PHẢI CÁI NÀY"
+    ],
+    "anchorPhrase": "bốn con rùa",
+    "describes": [
+     "bốn con rùa"
+    ],
+    "top": 230,
+    "from": 45,
+    "visibleFor": 45
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "khung TV vẽ ra, chuột karate rơi xoay vào trong + bốn mai rùa bật ra cạnh nó"
+    },
+    {
+     "frame": 45,
+     "what": "dấu cấm cam trùm lên cả nhánh sai + punch KHÔNG PHẢI CÁI NÀY"
+    }
+   ],
+   "durationInFrames": 90,
+   "status": "reviewed"
+  },
+  {
+   "id": "S7",
+   "startSec": 20.867,
+   "endSec": 27.433,
+   "narrativeFunction": "mechanism",
+   "viewerQuestion": "Cái nút đuôi đó hình thành bằng cách nào?",
+   "visualTransformation": "cùng một góc chụp từ trên xuống, bốn cái đuôi đang bắt chéo nhau còn rời ra đổi thành một cục thắt chặt ở chính giữa, rồi bốn mũi tên kéo ra bốn phía mà cục thắt không nhúc nhích",
+   "contrastWithPrevious": "trò đùa tắt hẳn, khung hình đổi sang góc nhìn từ trên xuống và người xem phải theo dõi một quá trình chứ không nhìn một vật",
+   "density": "high",
+   "comprehensionLoad": "complex",
+   "visualLanguage": [
+    "diagram",
+    "background-photo",
+    "annotated"
+   ],
+   "template": "bespoke: hai trạng thái ảnh chồng nhau + dấu đánh trên đuôi thật",
+   "backdrop": "photo",
+   "variant": "grow",
+   "assets": [
+    {
+     "role": "background",
+     "name": "Bg-Crossing",
+     "src": "el13_tails_crossing.png",
+     "anchorPhrase": "mắc đuôi vào nhau",
+     "describes": [
+      "mắc đuôi vào nhau"
+     ],
+     "delay": 0,
+     "visibleFor": 81
+    },
+    {
+     "role": "background",
+     "name": "Bg-Knot",
+     "src": "el13_tails_knot.png",
+     "anchorPhrase": "xoắn lại",
+     "describes": [
+      "xoắn lại",
+      "không thể tách ra"
+     ],
+     "delay": 81,
+     "visibleFor": 116
+    },
+    {
+     "role": "diagram",
+     "name": "Dia-KnotMarks",
+     "anchorPhrase": "không thể tách ra",
+     "describes": [
+      "mắc đuôi vào nhau",
+      "xoắn lại"
+     ],
+     "width": 1000,
+     "x": 40,
+     "y": 420,
+     "delay": 12,
+     "visibleFor": 185
+    }
+   ],
+   "punch": {
+    "lines": [
+     "MỘT NÚT THẮT",
+     "KHÔNG THỂ GỠ"
+    ],
+    "anchorPhrase": "không thể tách ra",
+    "describes": [
+     "không thể tách ra"
+    ],
+    "top": 250,
+    "from": 138,
+    "visibleFor": 59
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "Bg-Crossing: bốn đuôi bắt chéo, hai điểm chéo được đánh dấu cam"
+    },
+    {
+     "frame": 81,
+     "what": "đổi sang Bg-Knot: cục thắt siết lại ở giữa, viền sáng ôm lấy nó"
+    },
+    {
+     "frame": 138,
+     "what": "bốn mũi tên kéo ngược ra bốn phía + punch MỘT NÚT THẮT"
+    }
+   ],
+   "durationInFrames": 197,
+   "status": "reviewed"
+  },
+  {
+   "id": "S8",
+   "startSec": 27.433,
+   "endSec": 32.067,
+   "narrativeFunction": "evidence",
+   "viewerQuestion": "Kẹt như vậy thì đi lại kiểu gì, và một Vua chuột to tới đâu?",
+   "visualTransformation": "cụm năm con đứng chôn chân với hai mũi tên bật ngược lại, rồi ngay cạnh nó mọc lên cụm mười tám con to gấp bội - hai con số nằm cùng một khung để người xem thấy khoảng cách chứ không phải nghe nó",
+   "contrastWithPrevious": "máy lùi ra xa thay vì đẩy vào, và lần đầu có hai cụm cùng lúc để so kích cỡ",
+   "density": "high",
+   "comprehensionLoad": "complex",
+   "visualLanguage": [
+    "data",
+    "cutout"
+   ],
+   "template": "bespoke: hai cụm cạnh nhau, số đếm dưới mỗi cụm",
+   "backdrop": "chart",
+   "variant": "grow",
+   "assets": [
+    {
+     "role": "hero",
+     "name": "Hero-Few",
+     "src": "el13_ratking_few.png",
+     "anchorPhrase": "di chuyển bình thường",
+     "describes": [
+      "di chuyển bình thường",
+      "vài con"
+     ],
+     "width": 420,
+     "x": 180,
+     "y": 520,
+     "delay": 0,
+     "visibleFor": 139
+    },
+    {
+     "role": "hero",
+     "name": "Hero-Many",
+     "src": "el13_ratking_many.png",
+     "anchorPhrase": "vài chục con",
+     "describes": [
+      "vài chục con"
+     ],
+     "width": 620,
+     "x": 420,
+     "y": 800,
+     "delay": 40,
+     "visibleFor": 99
+    },
+    {
+     "role": "chart",
+     "name": "Dia-Count",
+     "anchorPhrase": "vài con",
+     "describes": [
+      "vài con",
+      "vài chục con"
+     ],
+     "width": 900,
+     "x": 90,
+     "y": 1180,
+     "delay": 40,
+     "visibleFor": 99
+    }
+   ],
+   "punch": {
+    "lines": [
+     "VÀI CON",
+     "TỚI VÀI CHỤC"
+    ],
+    "anchorPhrase": "vài chục con",
+    "describes": [
+     "vài chục con"
+    ],
+    "top": 200,
+    "from": 40,
+    "visibleFor": 99
+   },
+   "visualEvents": [
+    {
+     "frame": 0,
+     "what": "Hero-Few + hai mũi tên kéo ra rồi bật ngược lại"
+    },
+    {
+     "frame": 40,
+     "what": "Hero-Many mọc lên cạnh nó + dãy số 5 đến 18+ và punch"
+    }
+   ],
+   "durationInFrames": 139,
+   "status": "reviewed"
+  }
+ ]
+}

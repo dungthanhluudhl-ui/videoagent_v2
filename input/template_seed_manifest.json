@@ -1,0 +1,919 @@
+[
+  {
+    "id": "S1",
+    "comp": "V10Scene1",
+    "total": 124,
+    "narrativeFunction": "hook",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      62
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene1_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 82,
+        "file": "input\\template_seed_frames\\V10Scene1_f82.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 118,
+        "file": "input\\template_seed_frames\\V10Scene1_f118.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Chuyện gì đã xảy ra ở đây?",
+    "visualTransformation": "một con hẻm đêm hiện dần ra từ bóng tối rồi ngày tháng đóng dấu lên nó",
+    "template": "bespoke: full-bleed night alley photo, date stamp landing over it",
+    "punch": ""
+  },
+  {
+    "id": "S2",
+    "comp": "V10Scene2",
+    "total": 134,
+    "narrativeFunction": "hook",
+    "visualLanguage": "map",
+    "beats": [
+      0,
+      65
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene2_f20.png",
+        "ok": true,
+        "tile404": 10
+      },
+      {
+        "frame": 85,
+        "file": "input\\template_seed_frames\\V10Scene2_f85.png",
+        "ok": true,
+        "tile404": 10
+      },
+      {
+        "frame": 128,
+        "file": "input\\template_seed_frames\\V10Scene2_f128.png",
+        "ok": true,
+        "tile404": 10
+      }
+    ],
+    "viewerQuestion": "Itaewon nằm ở đâu?",
+    "visualTransformation": "một điểm trên bản đồ Seoul thật được khoanh lại thành nơi xảy ra thảm họa",
+    "template": "bespoke: MapLibre map of Seoul, pin and label landing on Itaewon",
+    "punch": ""
+  },
+  {
+    "id": "S3",
+    "comp": "V10Scene3",
+    "total": 90,
+    "narrativeFunction": "hook",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      5
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene3_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 25,
+        "file": "input\\template_seed_frames\\V10Scene3_f25.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 84,
+        "file": "input\\template_seed_frames\\V10Scene3_f84.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Thảm họa lớn tới mức nào?",
+    "visualTransformation": "đám đông chật cứng lấp kín khung hình khi cụm chữ đập vào rồi giữ nguyên",
+    "template": "bespoke: dense night crowd photo full-bleed, headline onDark, held still",
+    "punch": ""
+  },
+  {
+    "id": "S4",
+    "comp": "V10Scene4",
+    "total": 135,
+    "narrativeFunction": "cause",
+    "visualLanguage": "diagram",
+    "beats": [
+      0,
+      38
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene4_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 58,
+        "file": "input\\template_seed_frames\\V10Scene4_f58.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 129,
+        "file": "input\\template_seed_frames\\V10Scene4_f129.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Con hẻm đó nhỏ đến mức nào?",
+    "visualTransformation": "mặt cắt con hẻm được vẽ ra với bề rộng thật 3,2m so với chiều cao người",
+    "template": "bespoke: alley cross-section drawn with a 3,2m dimension line, held long enough to read",
+    "punch": ""
+  },
+  {
+    "id": "S5",
+    "comp": "V10Scene5",
+    "total": 123,
+    "narrativeFunction": "mechanism",
+    "visualLanguage": "flow",
+    "beats": [
+      0,
+      57
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene5_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 77,
+        "file": "input\\template_seed_frames\\V10Scene5_f77.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 117,
+        "file": "input\\template_seed_frames\\V10Scene5_f117.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Vì sao kéo mạnh vẫn không rút được người ra?",
+    "visualTransformation": "lưới mật độ lấp kín rồi mũi tên lực kéo đâm vào và bật ngược lại",
+    "template": "bespoke: density grid locking, then a pulling-force arrow rebounding",
+    "punch": ""
+  },
+  {
+    "id": "S6",
+    "comp": "V10Scene6",
+    "total": 90,
+    "narrativeFunction": "evidence",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      27
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene6_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 47,
+        "file": "input\\template_seed_frames\\V10Scene6_f47.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 84,
+        "file": "input\\template_seed_frames\\V10Scene6_f84.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Người ở đó đã chứng kiến điều gì?",
+    "visualTransformation": "khung hình lặng xuống, ánh sáng rút dần khi từng người ngừng thở",
+    "template": "bespoke: somber street-level night photo, one quiet beat",
+    "punch": ""
+  },
+  {
+    "id": "S7",
+    "comp": "V10Scene7",
+    "total": 123,
+    "narrativeFunction": "evidence",
+    "visualLanguage": "data",
+    "beats": [
+      2,
+      28
+    ],
+    "frames": [
+      {
+        "frame": 22,
+        "file": "input\\template_seed_frames\\V10Scene7_f22.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 48,
+        "file": "input\\template_seed_frames\\V10Scene7_f48.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 117,
+        "file": "input\\template_seed_frames\\V10Scene7_f117.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Bao nhiêu người đã chết?",
+    "visualTransformation": "158 chấm tưởng niệm lấp dần khung hình cùng nhịp với con số đếm lên",
+    "template": "bespoke: 158 memorial dots filling as a counter ticks to 158",
+    "punch": ""
+  },
+  {
+    "id": "S8",
+    "comp": "V10Scene8",
+    "total": 127,
+    "narrativeFunction": "reversal",
+    "visualLanguage": "timeline",
+    "beats": [
+      0,
+      82
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene8_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 102,
+        "file": "input\\template_seed_frames\\V10Scene8_f102.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 121,
+        "file": "input\\template_seed_frames\\V10Scene8_f121.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Đã từng có thảm họa nào lớn như vậy chưa?",
+    "visualTransformation": "trục thời gian nối mốc 2014 sang mốc 2022 bằng một đường kẻ",
+    "template": "bespoke: two-marker timeline, Sewol 2014 to Itaewon 2022",
+    "punch": ""
+  },
+  {
+    "id": "S9",
+    "comp": "V10Scene9",
+    "total": 92,
+    "narrativeFunction": "paradox",
+    "visualLanguage": "cutout",
+    "beats": [
+      25,
+      62
+    ],
+    "frames": [
+      {
+        "frame": 45,
+        "file": "input\\template_seed_frames\\V10Scene9_f45.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 82,
+        "file": "input\\template_seed_frames\\V10Scene9_f82.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 86,
+        "file": "input\\template_seed_frames\\V10Scene9_f86.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Nhóm nạn nhân đó là ai?",
+    "visualTransformation": "nhóm nạn nhân 2022 hiện ra như một khối người trẻ",
+    "template": "bespoke: 2022 victim group as a single cut-out mass",
+    "punch": ""
+  },
+  {
+    "id": "S10",
+    "comp": "V10Scene10",
+    "total": 125,
+    "narrativeFunction": "paradox",
+    "visualLanguage": "split",
+    "beats": [
+      8,
+      44
+    ],
+    "frames": [
+      {
+        "frame": 28,
+        "file": "input\\template_seed_frames\\V10Scene10_f28.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 64,
+        "file": "input\\template_seed_frames\\V10Scene10_f64.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 119,
+        "file": "input\\template_seed_frames\\V10Scene10_f119.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Điểm trùng hợp rùng mình ở đây là gì?",
+    "visualTransformation": "hai nhóm cách nhau 8 năm xếp đối xứng, cùng một độ tuổi",
+    "template": "bespoke: mirrored split of two victim groups, same age bracket",
+    "punch": ""
+  },
+  {
+    "id": "S11",
+    "comp": "V10Scene11",
+    "total": 133,
+    "narrativeFunction": "question",
+    "visualLanguage": "flow",
+    "beats": [
+      0,
+      88
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene11_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 108,
+        "file": "input\\template_seed_frames\\V10Scene11_f108.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 127,
+        "file": "input\\template_seed_frames\\V10Scene11_f127.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Nếu tránh được thì tại sao vẫn xảy ra?",
+    "visualTransformation": "chuỗi mắt xích phòng ngừa tự vẽ ra rồi gãy, để lại một câu hỏi treo",
+    "template": "bespoke: preventive chain drawing itself then snapping, question lands",
+    "punch": ""
+  },
+  {
+    "id": "S12",
+    "comp": "V10Scene12",
+    "total": 97,
+    "narrativeFunction": "hook",
+    "visualLanguage": "map",
+    "beats": [
+      0,
+      44
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene12_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 64,
+        "file": "input\\template_seed_frames\\V10Scene12_f64.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 91,
+        "file": "input\\template_seed_frames\\V10Scene12_f91.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Chúng ta sẽ quay lại đâu?",
+    "visualTransformation": "bản đồ kéo trở lại Itaewon, đánh dấu mốc ngày hôm đó",
+    "template": "bespoke: map pulling back to Itaewon with a date marker",
+    "punch": ""
+  },
+  {
+    "id": "S13",
+    "comp": "V10Scene13",
+    "total": 104,
+    "narrativeFunction": "conclusion",
+    "visualLanguage": "document",
+    "beats": [
+      0,
+      77
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene13_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 97,
+        "file": "input\\template_seed_frames\\V10Scene13_f97.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 98,
+        "file": "input\\template_seed_frames\\V10Scene13_f98.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Đây là kênh nào?",
+    "visualTransformation": "dấu vết in xuống mặt giấy rồi thành tên kênh",
+    "template": "bespoke: stamped trace mark resolving into the channel name",
+    "punch": ""
+  },
+  {
+    "id": "S14",
+    "comp": "V10Scene14",
+    "total": 130,
+    "narrativeFunction": "conclusion",
+    "visualLanguage": "mockup",
+    "beats": [
+      1,
+      24
+    ],
+    "frames": [
+      {
+        "frame": 21,
+        "file": "input\\template_seed_frames\\V10Scene14_f21.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 44,
+        "file": "input\\template_seed_frames\\V10Scene14_f44.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 124,
+        "file": "input\\template_seed_frames\\V10Scene14_f124.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Tôi nên làm gì tiếp?",
+    "visualTransformation": "nút theo dõi rồi nút like được nhấn thật trên màn hình điện thoại",
+    "template": "bespoke: phone mockup, subscribe then like pressed in sequence",
+    "punch": ""
+  },
+  {
+    "id": "S15",
+    "comp": "V10Scene15",
+    "total": 101,
+    "narrativeFunction": "definition",
+    "visualLanguage": "split",
+    "beats": [
+      0,
+      40
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene15_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 60,
+        "file": "input\\template_seed_frames\\V10Scene15_f60.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 95,
+        "file": "input\\template_seed_frames\\V10Scene15_f95.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Itaewon là một con phố phải không?",
+    "visualTransformation": "biển tên một con phố bị gạch đi",
+    "template": "bespoke: a single street sign crossed out",
+    "punch": ""
+  },
+  {
+    "id": "S16",
+    "comp": "V10Scene16",
+    "total": 138,
+    "narrativeFunction": "definition",
+    "visualLanguage": "map",
+    "beats": [
+      0,
+      35
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene16_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 55,
+        "file": "input\\template_seed_frames\\V10Scene16_f55.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 132,
+        "file": "input\\template_seed_frames\\V10Scene16_f132.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Vậy Itaewon rộng bao nhiêu và ở đâu?",
+    "visualTransformation": "vòng tròn 1,37 km2 được vẽ đúng tỉ lệ lên bản đồ quận Yongsan",
+    "template": "bespoke: real-scale 1,37 km2 footprint circle over Yongsan",
+    "punch": ""
+  },
+  {
+    "id": "S17",
+    "comp": "V10Scene17",
+    "total": 110,
+    "narrativeFunction": "definition",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      4
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene17_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 24,
+        "file": "input\\template_seed_frames\\V10Scene17_f24.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 104,
+        "file": "input\\template_seed_frames\\V10Scene17_f104.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Khu này trông như thế nào?",
+    "visualTransformation": "phố thương mại ban ngày lấp kín khung hình",
+    "template": "bespoke: daytime commercial street photo full-bleed",
+    "punch": ""
+  },
+  {
+    "id": "S18",
+    "comp": "V10Scene18",
+    "total": 136,
+    "narrativeFunction": "list",
+    "visualLanguage": "diagram",
+    "beats": [
+      0,
+      55
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene18_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 75,
+        "file": "input\\template_seed_frames\\V10Scene18_f75.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 130,
+        "file": "input\\template_seed_frames\\V10Scene18_f130.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Dày đặc là dày cỡ nào?",
+    "visualTransformation": "dãy mặt tiền cửa hàng được vẽ liên tiếp, mỗi loại một nhãn",
+    "template": "bespoke: drawn street elevation, labelled shopfronts in a row",
+    "punch": ""
+  },
+  {
+    "id": "S19",
+    "comp": "V10Scene19",
+    "total": 90,
+    "narrativeFunction": "definition",
+    "visualLanguage": "annotated",
+    "beats": [
+      0,
+      28
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene19_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 48,
+        "file": "input\\template_seed_frames\\V10Scene19_f48.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 84,
+        "file": "input\\template_seed_frames\\V10Scene19_f84.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Ai sống ở đây?",
+    "visualTransformation": "các biển hiệu nhiều thứ tiếng trên cùng một mặt phố được chỉ ra từng cái",
+    "template": "bespoke: Itaewon signage photo with leader-lined language labels",
+    "punch": ""
+  },
+  {
+    "id": "S20",
+    "comp": "V10Scene20",
+    "total": 114,
+    "narrativeFunction": "cause",
+    "visualLanguage": "mockup",
+    "beats": [
+      4,
+      62
+    ],
+    "frames": [
+      {
+        "frame": 24,
+        "file": "input\\template_seed_frames\\V10Scene20_f24.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 82,
+        "file": "input\\template_seed_frames\\V10Scene20_f82.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 108,
+        "file": "input\\template_seed_frames\\V10Scene20_f108.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Vì sao giới trẻ đổ về đây?",
+    "visualTransformation": "màn hình phát cảnh phim, kéo ánh nhìn ra ngoài đời thật",
+    "template": "bespoke: TV mockup playing a drama frame set in Itaewon",
+    "punch": ""
+  },
+  {
+    "id": "S21",
+    "comp": "V10Scene21",
+    "total": 128,
+    "narrativeFunction": "evidence",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      82
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene21_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 102,
+        "file": "input\\template_seed_frames\\V10Scene21_f102.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 122,
+        "file": "input\\template_seed_frames\\V10Scene21_f122.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Không khí ở đây về đêm ra sao?",
+    "visualTransformation": "đèn neon và dòng người lấp kín khung hình",
+    "template": "bespoke: neon nightlife photo full-bleed",
+    "punch": ""
+  },
+  {
+    "id": "S22",
+    "comp": "V10Scene22",
+    "total": 94,
+    "narrativeFunction": "reversal",
+    "visualLanguage": "split",
+    "beats": [
+      0,
+      62
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene22_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 82,
+        "file": "input\\template_seed_frames\\V10Scene22_f82.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 88,
+        "file": "input\\template_seed_frames\\V10Scene22_f88.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Đằng sau sự phồn hoa là gì?",
+    "visualTransformation": "nửa khung hình rực rỡ bị một lớp tư liệu cũ đẩy lấn sang",
+    "template": "bespoke: bright present wiped over by a faded archival half",
+    "punch": ""
+  },
+  {
+    "id": "S23",
+    "comp": "V10Scene23",
+    "total": 145,
+    "narrativeFunction": "definition",
+    "visualLanguage": "document",
+    "beats": [
+      62,
+      104
+    ],
+    "frames": [
+      {
+        "frame": 82,
+        "file": "input\\template_seed_frames\\V10Scene23_f82.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 124,
+        "file": "input\\template_seed_frames\\V10Scene23_f124.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 139,
+        "file": "input\\template_seed_frames\\V10Scene23_f139.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Tên gọi đó nghĩa là gì?",
+    "visualTransformation": "chữ Lê Thái Viện hiện ra cùng nhành lê, nghĩa được giải ra",
+    "template": "bespoke: the name Lê Thái Viện set as a document with pear-blossom motif",
+    "punch": ""
+  },
+  {
+    "id": "S24",
+    "comp": "V10Scene24",
+    "total": 86,
+    "narrativeFunction": "reversal",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      38
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene24_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 58,
+        "file": "input\\template_seed_frames\\V10Scene24_f58.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 80,
+        "file": "input\\template_seed_frames\\V10Scene24_f80.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Ký ức đau thương nào?",
+    "visualTransformation": "cái tên thơ mộng chìm xuống dưới một lớp tối của chiến tranh",
+    "template": "bespoke: the poetic name swallowed by a rising dark layer",
+    "punch": ""
+  },
+  {
+    "id": "S25",
+    "comp": "V10Scene25",
+    "total": 152,
+    "narrativeFunction": "cause",
+    "visualLanguage": "timeline",
+    "beats": [
+      0,
+      40,
+      111
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene25_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 60,
+        "file": "input\\template_seed_frames\\V10Scene25_f60.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 131,
+        "file": "input\\template_seed_frames\\V10Scene25_f131.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 146,
+        "file": "input\\template_seed_frames\\V10Scene25_f146.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Chuyện xảy ra từ khi nào và ở đâu?",
+    "visualTransformation": "trục thời gian chạy ngược về cuối thế kỷ 16, rồi chính vùng 1,37 km2 lúc nãy bị phủ lớp chiếm đóng",
+    "template": "bespoke: timeline running back to the 16th century, then the same footprint shaded as occupied",
+    "punch": ""
+  },
+  {
+    "id": "S26",
+    "comp": "V10Scene26",
+    "total": 102,
+    "narrativeFunction": "conclusion",
+    "visualLanguage": "background-photo",
+    "beats": [
+      0,
+      81
+    ],
+    "frames": [
+      {
+        "frame": 20,
+        "file": "input\\template_seed_frames\\V10Scene26_f20.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 96,
+        "file": "input\\template_seed_frames\\V10Scene26_f96.png",
+        "ok": true,
+        "tile404": 0
+      },
+      {
+        "frame": 100,
+        "file": "input\\template_seed_frames\\V10Scene26_f100.png",
+        "ok": true,
+        "tile404": 0
+      }
+    ],
+    "viewerQuestion": "Hậu quả để lại là gì?",
+    "visualTransformation": "mái chùa cổ chìm dần trong bóng tối, khung hình lặng lại",
+    "template": "bespoke: ancient temple at dusk full-bleed, frame settling into silence",
+    "punch": ""
+  }
+]

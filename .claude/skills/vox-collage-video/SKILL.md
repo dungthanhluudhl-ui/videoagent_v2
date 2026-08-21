@@ -208,11 +208,37 @@ clean, rembg otherwise). **Read the `removal:` line it prints.** rembg does
 badly on busy scenes, architecture and flat-lay documents — for those, prefer
 `BackgroundPhoto` (no cutout needed at all) over fighting the mask.
 
+**Declare the shape when the asset goes into a slot.** `Hero`/`Support` take a
+`width` and nothing else — the rendered HEIGHT comes from the source PNG's own
+aspect ratio, and `crop_to_content` cuts every cutout tight to its subject, so
+that ratio is effectively random per image. Measured: the same `width=680`
+renders 383px tall for a 16:9 source and 907px for a 3:4 one — a 2.4× area
+difference from an identical layout number. That is why "put it in a fixed
+box" never stopped the tràn / đè / quá-nhỏ defects on its own.
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
+  input/raw_cache/x.png public/el13_x.png --color \
+  --fit 3:4 --min-content-px 560
+```
+
+`--fit` pads with transparency to exactly that ratio — never crops, never
+distorts — and stamps `voxContentPx` / `voxFitAspect` into the PNG so a gate
+can check it later. `--min-content-px` refuses a source too low-resolution for
+the slot **before** it is cut, which is the only cheap moment to find out.
+
 Then measure them instead of squinting at them:
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/cutout_gate.py public/ --video 11 --plan input/scene_plan11.json
+py -3 .claude/skills/vox-collage-video/scripts/asset_gate.py input/scene_plan11.json
 ```
+
+The two ask different questions. `cutout_gate` asks *is the edge clean*;
+`asset_gate` asks *does this image fit the box the plan puts it in* — the
+question nothing used to ask. Run against the shipped videos it reproduces
+the viewer's own verdict: V13 clean, V11 two failures, and V10/S25 flagged at
+1.22× — the exact asset the viewer reported as soft by eye, months earlier.
 
 This is the cheap half of the check, and it finds the defects eyes miss — it
 flags exactly the two shipped V10 assets a contact sheet had already "passed".
@@ -231,9 +257,48 @@ Remotion's own `<Audio>`. Wire each to the beat it belongs to, volume
 
 ## 6. Build the scenes
 
-One file per scene (`src/scenes/V<N>Scene<i>.jsx`). Use the primitives in
-`references/primitives.md`; compose bespoke arrangements freely — the seven
-named templates are starting points, not a menu.
+**Check the block library first.** `src/blocks/registry.json` holds five
+composed blocks extracted from the V10 scenes the viewer kept, each with its
+geometry and beat contract already solved. A scene built from a block is ~8
+lines of props instead of ~70 lines of JSX, and it cannot repeat the layout
+defects those blocks were measured against.
+
+You do **not** pick a block by reading its name — that is how the previous
+template library died (see below). You already declared `narrativeFunction`
+and `visualLanguage` in step 2a/2b; look those two up in `fits`:
+
+| block | fits | what it does |
+|---|---|---|
+| `PhotoClaim` | hook/evidence/conclusion/reversal × `background-photo` | full-bleed photo + one claim; the pacing breather |
+| `MapPlace` | hook/definition × `map` | real map + pin + claim |
+| `TimelineSpan` | reversal/cause × `timeline` | two dates + the gap between them named |
+| `DocFocus` | conclusion/definition/evidence × `document` | one artefact, attended to |
+| `ChannelOutro` | conclusion × `mockup` | the closing follow card |
+
+Read the block's **`whenNotToUse`** before using it — that field, not
+`whenToUse`, is what stops a block being picked to fill a slot.
+
+Declare it in the plan (`"block": "PhotoClaim", "arrangement": "top"`), or
+declare `"bespoke": true` with a `bespokeReason`. Bespoke is fine and expected
+— roughly half of V10 is bespoke and that was correct. What is not fine is a
+scene that declares neither, because then nobody can tell a choice from an
+oversight. `block_gate.py` enforces both, plus a 25% ceiling per block and
+≥2 arrangements once a block repeats three times.
+
+Blocks carry no absolute frames. Entrances come in through `beats` from
+`beat_sync.py`, so the same block fits a 90-frame scene and a 152-frame one.
+Punch entry is clamped to hold ≥48 frames (1.6s) — measured on V10, **6 of its
+14 block-mapped scenes** land a headline with less reading time than that.
+
+**Do not use `src/scenes/SceneTemplates.jsx`.** Its seven templates were used
+by V3–V9 and by **zero** scenes of V10–V13. They are one scene in seven
+arrangements — same `zoom 1→1.0x`, same `rise/grow/dropSpin`, same
+`idle="sway"`, same `visibleFor={durationInFrames}` — and they are named after
+layouts, which forces the pick to be made on layout. That is the documented
+root cause SKILL.md's top rule refers to.
+
+For everything else, use the primitives in `references/primitives.md`; compose
+bespoke arrangements freely.
 
 Reach for `iconVocabulary.jsx` before typing a label — every icon takes the
 same `x, y, size, delay` props, so swapping one for another is a one-word
@@ -264,6 +329,7 @@ Verify against the plan as you go:
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/scene_plan10.json --scene S13
+py -3 .claude/skills/vox-collage-video/scripts/block_gate.py input/scene_plan10.json
 py -3 .claude/skills/vox-collage-video/scripts/beat_sync.py verify input/words10_aligned.json ...
 ```
 
@@ -301,6 +367,53 @@ filename and say so — don't edit the generated file in place.
 Registration is handled by `assemble.py` (§7+8) — only hand-touch `Root.jsx`
 for things outside a video's plan (demos, probes).
 
+**Let the cheap model look FIRST. Then look yourself, only where it points.**
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/asset_vision.py input/scene_plan10.json
+py -3 .claude/skills/vox-collage-video/scripts/vision_check.py --plan input/scene_plan10.json
+py -3 .claude/skills/vox-collage-video/scripts/sheet_vision.py input/review_frames/contact_sheet.jpg --scenes 26
+# board cells, straight after generate_board.py crop-file:
+py -3 .claude/skills/vox-collage-video/scripts/asset_vision.py --board --files "cells/*.png"
+```
+
+`--board` is a **different check set**, not a flag on the same one. A board cell
+still has its chroma background — that is the point of it — so asking "has the
+background been removed" there is asking the wrong question at the wrong step.
+Run it on cells straight out of `crop-file`; it catches the tool watermark and
+a subject touching the cell edge, and it noticed a crop that returned the whole
+board as one "cell".
+
+`sheet_vision.py` answers the one criterion no single frame can: **varied**.
+Twenty-four scenes that differ on paper can still look identical on screen —
+V11 did, at 58% of scenes in one look, and the viewer called it exhausting.
+V10, which they liked, sits at 23–38%.
+
+Both route images to a small vision model; nothing enters your context but one
+line of JSON per image. `hook_gate` runs them for you at the end of a turn and
+prints the flags — they never block, and they go quiet when the router is down.
+
+This is not a saving of a few percent. Measured on the real token logs of four
+build sessions, 439 images entered context; in V11 they accounted for **55% of
+cache_read = $384 of a $979 session**. An image is not paid for once — it sits
+in context and is re-read on every later call.
+
+So: **budget about one still per scene that you look at yourself**, plus
+whatever the scripts flag. V11 looked at 9.8 images per scene. That is the
+single most expensive habit in this pipeline.
+
+What the cheap model cannot do — verified, not assumed: it flags *what is
+checkable* (text covered, text under the floor, subject eaten by the cutout,
+asset showing the wrong thing). It does **not** answer *is this scene
+illustrating the narration or just filling the frame*. That judgement is
+yours, and it is the only reason to spend context on a still.
+
+`vision_regress.py` is the regression set behind all of that — 26 labelled
+cases, every label sourced to the viewer's own verdict, to `text_gate`, or to
+a numeric measurement. Run it after touching a prompt, a model, or `encode()`.
+It exists because a "fix" to `encode()` silently destroyed a true positive
+during the very session that built these scripts.
+
 **The review pass is mandatory and gated:**
 
 ```bash
@@ -331,9 +444,20 @@ contact sheet. Only render an mp4 if the user asks for a file.
 
 ## Enforcement
 
-`.claude/settings.json` runs `hook_gate.py` on every scene edit and at the end
-of every turn, while a plan has `"status": "active"`. Violations block. Set
-the status to `"shipped"` when the video is done.
+`.claude/settings.json` runs `hook_gate.py` **before every `Read`**, on every
+scene edit, and at the end of every turn, while a plan has `"status":
+"active"`. Violations block. Set the status to `"shipped"` when the video is
+done.
+
+**The image budget is enforced, not advised.** Reading an image counts against
+`scenes + 8`. Past that you get a running count on every read; past twice that
+the read is blocked. This exists because §9 already said "look only where the
+scripts point" and that changed nothing: measured across four real build
+sessions, 439 images entered context, and in V11 they were 55% of cache_read —
+$384 of a $979 session. The Stop-hook advisory cannot help here either, because
+it runs after the images are already in context. If a budget block gets in the
+way of something the user actually asked for, **say so and let them decide** —
+do not raise the ceiling yourself.
 
 `selftest.py` runs the gates against deliberately-broken inputs and asserts
 each one fails. **Run it after touching any gate script** — it is the only

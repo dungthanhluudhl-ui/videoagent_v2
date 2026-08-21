@@ -260,6 +260,139 @@ Only `hero` and `support` assets are judged. A `background` photo is
 full-bleed on purpose and has no alpha channel; the first version of this gate
 reported 12 of them as broken, which was the rule being wrong, not the images.
 
+## block_gate.py — kho block có bị dùng thành công thức không?
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/block_gate.py input/scene_plan14.json
+```
+
+Dự án này **đã có một kho template và đã bỏ nó.** `src/scenes/SceneTemplates.jsx`
+có 7 template, V3–V9 dùng 4–7 cảnh mỗi video, V10–V13 dùng **zero** lần.
+
+Đọc lại 7 template đó thì thấy chúng không phải 7 template — chúng là **một
+cảnh với 7 cách xếp ảnh**: cả 7 đều `CameraGroup zoom 1 → 1.0x`, đều
+`Hero variant rise/grow/dropSpin`, đều `Support idle="sway"`, đều
+`visibleFor={durationInFrames}`. Và chúng được đặt tên theo **bố cục**
+(`Split`, `Collage`, `Map`), nên agent buộc phải chọn theo bố cục.
+
+Kho block mới sửa cả hai: tra cứu theo `narrativeFunction × visualLanguage`
+(hai trường plan đã bắt buộc khai), và mỗi block mang bộ chuyển động riêng.
+Nhưng **không có gì trong mã nguồn ngăn một agent dùng một block cho cả video** —
+gate này là thứ ngăn điều đó, bằng số chứ không bằng lời dặn.
+
+### Ngưỡng lấy từ đâu
+
+Đo trên V10 sau khi ánh xạ 14/26 cảnh của nó vào 5 block:
+
+| block | số cảnh | tỉ lệ |
+|---|---|---|
+| PhotoClaim | 6/26 | **23%** |
+| MapPlace | 3/26 | 12% |
+| TimelineSpan | 2/26 | 8% |
+| DocFocus | 2/26 | 8% |
+| ChannelOutro | 1/26 | 4% |
+
+Trần đặt ở **25%**, ngay trên mức đo được.
+
+> Đề xuất ban đầu là **"≤2 cảnh/video"** và nó **sai** — nó đánh trượt chính
+> V10 ở PhotoClaim (6 lần). Đây là lý do ngưỡng phải đo trước khi viết, không
+> phải đặt rồi sửa sau.
+
+### Các phép kiểm
+
+| kiểm | mức | căn cứ |
+|---|---|---|
+| block chiếm >25% số cảnh | **FAIL** | cao nhất đo được trên V10 là 23% |
+| block dùng ≥3 lần mà chỉ ở 1 thế | **FAIL** | V10 dùng PhotoClaim 6 lần ở **3 thế** — đó là lý do nó không đọc ra là lặp |
+| khai block không có trong registry | **FAIL** | bắt đúng trường hợp gõ tên template thế hệ cũ |
+| cảnh không khai `block` cũng không khai `bespoke` | **FAIL** | không phân biệt được lựa chọn với sự quên |
+| `bespoke: true` mà không có `bespokeReason` | **FAIL** | bespoke được phép; bespoke không giải thích thì không |
+| hai cảnh liên tiếp cùng block | WARN | V10 có đúng một lần (S21→S22) và không ai phàn nàn |
+| `nf × vl` không nằm trong `fits` của block | WARN | bắt đúng V10/S22: plan khai `split` trong khi bản dựng không hề chia đôi khung |
+| punch giữ dưới 48f | WARN | block sẽ tự kẹp, nhưng sửa mốc neo thì đúng hơn |
+| bespoke >60% số cảnh | WARN | V10 ở 46%; gần hết bespoke nghĩa là kho không được dùng |
+
+### Bespoke không bị cấm
+
+Khoảng **một nửa V10 là bespoke và đó là đúng**. Một kho block cấm bespoke sẽ
+tạo ra đúng thứ đơn điệu mà nó sinh ra để chặn. Cái bị chặn là bespoke **không
+khai** — vì khi đó không ai biết đấy là quyết định hay là bỏ sót.
+
+## asset_gate.py — có vừa cái hộp không?
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/asset_gate.py input/scene_plan13.json
+```
+
+`cutout_gate` hỏi *viền có sạch không*. Gate này hỏi câu khác hẳn, mà trước
+nay chưa có gate nào hỏi: **ảnh này có vừa cái hộp mà plan đặt nó vào không.**
+
+Lý do nó tồn tại nằm trong chính `shared.jsx`: `Hero`/`Support` nhận một
+`width` và không nhận gì khác, còn `<Img>` bên trong đặt `width: "100%"` —
+nên **chiều cao là hệ quả của tỉ lệ file PNG**, không ai đặt được. Mà
+`crop_to_content` trong `process_cutout.py` cắt sát chủ thể, nên tỉ lệ đó
+gần như ngẫu nhiên theo dáng từng ảnh. Đo thật: cùng `width=680`, ảnh 16:9
+cao 383px, ảnh 3:4 cao 907px — **chênh 2,4 lần diện tích từ một con số bố
+cục y hệt nhau**.
+
+Đó là lý do "đặt ảnh vào một khung cố định" tự nó không bao giờ chặn được
+lỗi tràn / đè / quá nhỏ. Thiếu mảnh còn lại: chưa có chỗ nào **khai** ảnh
+được phép mang hình dạng gì.
+
+### Hai lỗi nó bắt
+
+**1. Phóng to.** Ảnh render rộng hơn số điểm ảnh của chính nó thì bị kéo lên
+và đọc ra mờ. Ngưỡng **không phải đoán** — hiệu chỉnh theo phán quyết bằng mắt
+của chính người xem trên 33 asset thật của V10–V13:
+
+| tỉ lệ | asset | người xem nói gì |
+|---|---|---|
+| 1,68 | V10/S13 Doc-Trace | (chưa soi kỹ) |
+| 1,57 | V11/S10 Hero-Passports | V11 = video họ thấy đuối |
+| 1,23 | V10/S9 Sup-CrowdBehind | |
+| **1,22** | **V10/S25 Sup-Gate** | **BÁO LỖI BẰNG MẮT** |
+| 1,09 | V12/S2 Hero-Mother | không phàn nàn |
+| 1,05 | V10/S23 Doc-Name | không phàn nàn |
+
+Trung vị cả 33 asset: 0,69. Phàn nàn bắt đầu ở 1,22 và tắt ở 1,09, nên
+**FAIL đặt ở 1,15** — nằm đúng trong khe. Trên 1,00 thì cảnh báo.
+
+Lỗi này **cắt lại không cứu được**. Ảnh nhỏ là nhỏ; phải sinh lại chủ đề trên
+một board một ô riêng (SKILL.md bước 3).
+
+**2. Sai hình dạng so với slot.** Khi asset khai `slot.aspect`, file phải
+đúng là hình đó — tức phải được sinh ra bởi `process_cutout.py --fit W:H`.
+Gate đọc dấu `voxFitAspect` / `voxContentPx` mà `--fit` đóng thẳng vào PNG.
+
+Chọn dấu trong PNG thay vì file JSON kèm bên là có chủ ý: file kèm bên lệch
+ngay lần cắt lại đầu tiên mà không ai biết, và một file kèm bên đã lệch còn
+tệ hơn không có. Dấu trong PNG đi theo file và không thể lệch khỏi nó.
+
+Vì vậy gate **vẫn fail** khi tỉ lệ đúng nhưng file không mang dấu: đúng tỉ lệ
+một cách tình cờ thì lần cắt lại sau sẽ lệch, và khi đó không ai truy ra lý do.
+
+### Khai một slot
+
+```json
+{ "role": "support", "name": "Sup-Gate", "src": "el10_gate.png",
+  "width": 760,
+  "slot": { "aspect": "3:4" } }
+```
+
+`aspect` hiện là tuỳ chọn — không khai thì chỉ chạy phép kiểm phóng to, nên
+gate chạy an toàn trên mọi plan cũ. Khai rồi thì cả hai phép kiểm đều buộc.
+`--strict-slots` bắt mọi asset có file phải khai.
+
+Ảnh `background` được miễn cả hai: `BackgroundPhoto` là full-bleed
+`object-fit: cover`, không có slot để tràn và không có tỉ lệ phải giữ.
+
+### Vì sao không có ca "V10 phải PASS"
+
+Giống `cutout_gate`: **V10 thật sự đã ship với ba asset vượt trần** (S9, S13,
+S25). Ca "phải PASS" trong `selftest.py` chạy trên bản đã hạ `width` của
+đúng ba asset đó. Đừng nới ngưỡng để V10 xanh — video đã ship, ngưỡng thì
+không nên đổi theo nó.
+
 ## pixel_gate.py — does the render match what the code claims?
 
 ```bash
@@ -481,3 +614,52 @@ Nay gate **tự đo khung hình** rồi đối chất với lời khai:
 * Frame **cũ hơn** file .jsx của cảnh = bằng chứng ôi. Verdict trên bằng chứng
   ôi là verdict về một bản dựng không còn tồn tại. (Đã xảy ra: frame S8 cũ hơn
   bản dựng lại của nó.)
+
+---
+
+## Lớp nhìn bằng model rẻ — `vision_check.py`, `asset_vision.py`
+
+**Không phải gate. Không chặn.** `hook_gate` chạy chúng ở cuối lượt và in ra
+danh sách chỗ đáng nhìn; router tắt thì chúng im lặng.
+
+Vì sao không làm gate chặn, hai lý do đều đo được:
+
+1. Chúng gọi một dịch vụ ngoài (`localhost:20128`). Một gate chặn phụ thuộc
+   dịch vụ ngoài sẽ khoá cả repo mỗi lần dịch vụ đó tắt.
+2. Thứ chúng trả về là *"chỗ này cần nhìn"*, không phải *"chỗ này sai"*. Trên
+   bộ nhãn 26 ca: 25/26 đúng, 0 dương tính giả — nhưng cùng một lỗi lúc gọi
+   `text_overlap` lúc gọi `collision`, và một ca bắt được ở lần chạy này, trượt
+   ở lần sau, dù `temperature = 0`.
+
+Chúng lấp chỗ mù của các gate hiện có, không chồng lấn:
+
+| | đo gì |
+|---|---|
+| `cutout_gate` | hình học của việc tách nền — chroma, quầng alpha, mảnh vụn, chạm mép |
+| `asset_gate` | độ phân giải so với ô slot — phóng to bao nhiêu lần |
+| `text_gate` | cỡ chữ và số từ, dựng lại từ **mã nguồn** |
+| **`asset_vision`** | **nghĩa** — đúng vật không, minh hoạ đúng lời thoại không |
+| **`vision_check`** | **điểm ảnh** — chữ bị đồ hoạ đè, khung trống, chữ khó đọc |
+
+Ca chứng minh: V10/S7 có chữ tiêu đề bị các chấm tròn đè. `text_gate` mù vì
+chấm tròn là đồ hoạ component tự vẽ, không phải nhãn khai trong plan. Người xem
+bắt được; sáu gate cho qua; `vision_check` bắt được và mô tả đúng.
+
+### `vision_regress.py` — bộ hồi quy, và nó bắt buộc
+
+Chạy sau **mọi** thay đổi prompt, model, hay `encode()`:
+
+```bash
+py -3 .claude/skills/vox-collage-video/scripts/vision_regress.py
+```
+
+Nó tồn tại vì trong chính phiên xây hai script trên, một bản vá cho `encode()`
+đã **làm mất một dương tính đúng** đã được người xem xác nhận (V10/S25, cutout
+cổng chùa bị xoá nham nhở). Không có bộ này thì không ai biết.
+
+Mọi nhãn trong `vision_labels.json` phải ghi **nguồn sự thật**: phán quyết của
+người xem, `text_gate` (đọc mã nguồn, độc lập với ảnh), hoặc một phép đo số học.
+Nhãn đặt bằng cảm tính của agent chính là thứ hai script này sinh ra để thay thế.
+
+Mục `khong-dua-vao-bo-nay` trong file nhãn ghi những ca **đã thử và không dùng
+được**, kèm lý do — để không ai thêm lại rồi tưởng script hỏng.

@@ -15,6 +15,7 @@ away.
 
 Wired from .claude/settings.json:
 
+    PreToolUse  (Read)        py -3 hook_gate.py pre-read
     PostToolUse (Write|Edit)  py -3 hook_gate.py post-edit
     Stop                      py -3 hook_gate.py stop
 
@@ -72,7 +73,116 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 # protect against a gate that has VANISHED, which is a broken install.
 REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
                   "baseline_gate.py", "text_gate.py", "icon_gate.py",
-                  "cutout_gate.py", "pixel_gate.py", "assemble.py", "selftest.py")
+                  "cutout_gate.py", "asset_gate.py", "block_gate.py",
+                  "pixel_gate.py", "assemble.py", "selftest.py")
+
+
+IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp")
+# Bo dem thuoc ve DU AN, khong thuoc ban cai dat skill: hai du an khac nhau
+# dung chung mot skill thi khong duoc dung chung mot ngan sach anh. (Ban dau
+# no nam canh script va selftest lo ra ngay - sandbox ghi mot cho, guard doc
+# mot cho khac, nen chot chan im lang cho qua.)
+BUDGET_REL = pathlib.Path(".claude") / "skills" / "vox-collage-video" / "data" / ".image_budget.json"
+BUDGET_SLACK = 8          # dư cho các mục bị gắn cờ + vài lần đối chứng
+HARD_MULTIPLIER = 2       # dưới mức này chỉ nhắc; trên mức này mới chặn
+
+
+def guard_image_read(payload, root):
+    """Đếm - và cuối cùng là chặn - việc agent tự mở ảnh ra nhìn.
+
+    Vì sao guard này phải tồn tại, dù SKILL.md §9 đã dặn rõ: lượt trước đã đo
+    trên log token thật của bốn phiên dựng. 439 bức ảnh vào context; riêng phiên
+    V11 chúng chiếm 55% cache_read = 384 USD trong một phiên 979 USD. SKILL.md
+    lúc đó CŨNG đã có phần review, và nó không ngăn được gì - vì một dòng dặn dò
+    không phải một cái chặn.
+
+    Lớp tư vấn ở Stop hook cũng không đủ: nó chạy ở CUỐI lượt, tức sau khi tiền
+    đã tiêu. Chỗ duy nhất can thiệp kịp là ngay trước lệnh Read.
+
+    Ngân sách = số cảnh + 8. Lấy từ chỗ đo được, không đặt bừa: V10 (video người
+    xem thích) dùng 6,3 ảnh/cảnh, V11 (người xem nói "mệt") dùng 9,8. Mục tiêu
+    ~1 khung/cảnh cho câu hỏi mà model rẻ chưa được kiểm - "cảnh này có đang
+    minh hoạ gì cho lời thoại không" - cộng phần dư cho các mục bị gắn cờ.
+
+    Hai nấc có chủ ý: dưới ngân sách chỉ NHẮC (kèm số đếm, để mức trôi luôn nhìn
+    thấy được); trên gấp đôi mới CHẶN. Chặn sớm sẽ cản việc chính đáng, còn không
+    chặn gì thì đúng là thứ đã cho ra con số 384 USD.
+    """
+    if (payload.get("tool_name") or "") != "Read":
+        return 0
+    fp = str((payload.get("tool_input") or {}).get("file_path") or "")
+    if not fp.lower().endswith(IMAGE_EXT):
+        return 0
+
+    plan, _ = find_active_plan(root)
+    if not plan:
+        return 0
+    path, data = plan
+    video = str(data.get("video") or "V?")
+    n_scenes = len(data.get("scenes") or []) or 1
+    budget = n_scenes + BUDGET_SLACK
+
+    budget_file = root / BUDGET_REL
+    try:
+        state = json.loads(budget_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        state = {}
+    if state.get("video") != video:
+        state = {"video": video, "count": 0}
+    state["count"] = int(state.get("count", 0)) + 1
+    try:
+        budget_file.parent.mkdir(parents=True, exist_ok=True)
+        budget_file.write_text(json.dumps(state), encoding="utf-8")
+    except OSError:
+        pass                              # không ghi được thì thôi, đừng chặn oan
+
+    n = state["count"]
+    if n > budget * HARD_MULTIPLIER:
+        print(
+            f"[vox-image] {video}: đây là bức ảnh thứ {n} bạn tự mở trong video này, "
+            f"gấp hơn {HARD_MULTIPLIER} lần ngân sách {budget} ({n_scenes} cảnh + "
+            f"{BUDGET_SLACK}).\n\n"
+            f"Một bức ảnh KHÔNG tốn một lần rồi thôi - nó nằm lại trong context và bị "
+            f"đọc lại ở mọi lượt gọi sau đó. Đo trên phiên V11: 236 ảnh = 55% cache_read "
+            f"= 384 USD.\n\n"
+            f"Hãy để model rẻ nhìn trước, rồi CHỈ mở những mục nó gắn cờ:\n"
+            f"    py -3 {SCRIPTS.name}/vision_check.py --plan {path}\n"
+            f"    py -3 {SCRIPTS.name}/asset_vision.py {path}\n"
+            f"    py -3 {SCRIPTS.name}/sheet_vision.py input/review_frames/contact_sheet.jpg "
+            f"--scenes {n_scenes}\n\n"
+            f"Nếu người dùng đã trực tiếp yêu cầu bạn xem ảnh này, hãy NÓI VỚI HỌ rằng "
+            f"ngân sách ảnh đã cạn và để họ quyết định - đừng tự nâng ngân sách, và đừng "
+            f"tìm đường vòng.",
+            file=sys.stderr)
+        return 2
+
+    if n > budget:
+        print(f"[vox-image] {video}: ảnh thứ {n}/{budget} - đã vượt ngân sách "
+              f"({n_scenes} cảnh + {BUDGET_SLACK}). Từ đây chỉ nên mở những mục "
+              f"vision_check/asset_vision/sheet_vision đã gắn cờ. Sẽ chặn ở "
+              f"{budget * HARD_MULTIPLIER}.", file=sys.stderr)
+    elif n > budget * 0.6:
+        print(f"[vox-image] {video}: ảnh thứ {n}/{budget}.", file=sys.stderr)
+    return 0
+
+
+def vision_router_up(timeout=1.5):
+    """Router model rẻ có đang chạy không.
+
+    Kiểm bằng một cú mở socket chứ không bằng một lượt gọi thật: lớp tư vấn
+    phía dưới phải IM LẶNG khi router tắt, không được vừa chậm vừa in lỗi.
+    Không có router thì agent quay lại tự nhìn - đắt hơn, nhưng vẫn chạy được.
+    """
+    import os
+    import socket
+    import urllib.parse
+    base = os.environ.get("VOX_VISION_BASE", "http://localhost:20128/v1")
+    try:
+        u = urllib.parse.urlparse(base)
+        with socket.create_connection((u.hostname, u.port or 80), timeout=timeout):
+            return True
+    except (OSError, ValueError):
+        return False
 
 
 def find_active_plan(root):
@@ -383,6 +493,20 @@ def stop(root, plan):
         # Gate duy nhất nhìn thứ NGƯỜI XEM nhìn. Mọi gate chữ phía trên dựng
         # lại hình học từ mã nguồn; cái đó bắt được nhiều, nhưng lỗi nhãn bị
         # panel cắt cụt ở S6 đã lọt qua tất cả và chỉ lộ ra khi render still.
+        # cutout_gate hỏi "viền có sạch không". Gate này hỏi câu khác hẳn, mà
+        # trước nay chưa ai hỏi: ảnh này có VỪA cái hộp plan đặt nó vào không.
+        # Hero/Support chỉ nhận `width`, chiều cao do tỉ lệ file quyết định, mà
+        # crop_to_content cắt sát chủ thể nên tỉ lệ đó gần như ngẫu nhiên - nên
+        # một ảnh nhỏ hơn slot bị phóng lên và đọc ra mờ mà không gate nào thấy.
+        # Người xem báo đúng lỗi này ở V10/S25 (622px nhét vào slot 760px).
+        ("asset_gate.py", [str(plan_path)], "ảnh có vừa slot: tỉ lệ và độ phân giải"),
+        # Tầng chặn đơn điệu của kho block. Dự án ĐÃ CÓ một kho template và đã
+        # bỏ nó: SceneTemplates.jsx được V3-V9 dùng và V10-V13 dùng zero lần,
+        # vì 7 template đó thực chất là một cảnh với 7 cách xếp ảnh. Không có
+        # gì trong mã nguồn ngăn kho block mới đi lại đúng đường đó, nên trần
+        # 25%/block và yêu cầu ≥2 thế khi lặp phải do một gate giữ, không phải
+        # do một dòng dặn dò. Ngưỡng đo từ V10: block dày nhất ở 23%.
+        ("block_gate.py", [str(plan_path)], "kho block: trần dùng lại, thế lặp, bespoke có khai"),
         ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render"),
         # Phần CƠ KHÍ sinh từ plan: captions, master, đăng ký Root. Tự biết
         # "chưa tới lúc" khi cảnh còn thiếu, nhưng một khi mọi cảnh đã dựng thì
@@ -412,6 +536,56 @@ def stop(root, plan):
         code, out = run(script, *args)
         if code != 0:
             failures.append(f"### {label} ({script})\n{out.strip()}")
+
+    # --- Lớp tư vấn: để một model rẻ NHÌN thay agent -----------------------
+    # Hai script này KHÔNG chặn, và đó là chủ ý:
+    #
+    #  1. Chúng gọi một router bên ngoài (localhost:20128). Một gate chặn cứng
+    #     phụ thuộc dịch vụ ngoài sẽ khoá cả repo mỗi khi dịch vụ đó tắt.
+    #  2. Thứ chúng trả về là "chỗ này cần nhìn", không phải "chỗ này sai".
+    #     Đo trên bộ nhãn: 25/26 ca đúng, nhưng cùng một lỗi có lúc nó gọi là
+    #     `text_overlap` có lúc gọi `collision`. Cờ dùng để LỌC, không dùng để
+    #     phán quyết - biến nó thành gate chặn là dùng sai công cụ.
+    #
+    # Vì sao vẫn đặt ở đây thay vì để agent tự nhớ chạy: đo trên 439 bức ảnh
+    # của bốn phiên dựng, agent nhìn 5-10 ảnh mỗi cảnh, và riêng V11 khoản đó
+    # chiếm 55% cache_read = 384 USD. Một dòng dặn dò trong SKILL.md không đổi
+    # được thói quen đó; một danh sách cờ in sẵn ngay trước lúc agent định mở
+    # ảnh thì có.
+    advisories = []
+    if vision_router_up():
+        for script, args, label in (
+            ("asset_vision.py", [str(plan_path)],
+             "nghĩa của asset: đúng vật không, minh hoạ đúng lời thoại không"),
+            ("vision_check.py", ["--plan", str(plan_path)],
+             "khung hình đã render: chữ bị đè, chữ nhỏ, khung trống"),
+        ):
+            if not (SCRIPTS / script).exists():
+                continue
+            code, out = run(script, *args)
+            if code == 1 and out.strip():
+                advisories.append(f"### {label} ({script})\n{out.strip()}")
+
+        # Tiêu chí `varied` của người xem, và là tiêu chí DUY NHẤT không trả
+        # lời được bằng một khung hình - nó hỏi về quan hệ GIỮA các cảnh.
+        # `block_gate` đếm tỉ lệ block trên PLAN; hai mươi tư cảnh khai khác
+        # nhau trên giấy vẫn có thể trông giống hệt nhau trên màn hình, và V11
+        # đúng là như vậy: 58% số cảnh cùng một kiểu, người xem nói "mệt".
+        sheet = (root / "input" / "review_frames" / "contact_sheet.jpg")
+        if sheet.is_file() and (SCRIPTS / "sheet_vision.py").exists():
+            code, out = run("sheet_vision.py", str(sheet),
+                            "--scenes", str(len(plan_data.get("scenes") or [])))
+            if code == 1 and out.strip():
+                advisories.append(
+                    "### cả video đọc ra thành một công thức? (sheet_vision.py)\n"
+                    + out.strip())
+
+    if advisories:
+        print("[vox-vision] model rẻ đã soi hộ, những chỗ dưới đây đáng để bạn tự mở "
+              "ảnh ra xem - và CHỈ những chỗ này:\n\n" + "\n\n".join(advisories)
+              + "\n\nĐây là gợi ý, không phải lỗi. Đừng mở hết cả thư mục ảnh ra nhìn: "
+                "mỗi tấm ảnh vào context sẽ bị đọc lại ở mọi lượt gọi sau đó.",
+              file=sys.stderr)
 
     if not failures:
         if fingerprint and not skip_selftest:
@@ -444,6 +618,11 @@ def main():
         # These two run BEFORE the active-plan lookup on purpose: they are the
         # checks that have to work when there is no usable active plan, which
         # is exactly when the rest of the system used to fall silent.
+        # Chạy TRƯỚC lệnh Read, và là chỗ duy nhất can thiệp kịp: lớp tư vấn ở
+        # Stop hook chỉ nói được sau khi ảnh đã nằm trong context rồi.
+        if mode == "pre-read":
+            return guard_image_read(payload, root)
+
         if mode == "post-edit":
             for guard in (guard_planless_scene, guard_premature_shipped):
                 blocked = guard(payload, root)

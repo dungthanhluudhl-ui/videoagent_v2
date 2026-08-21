@@ -1,0 +1,84 @@
+{
+  "video": "V13",
+  "howToFill": "For each scene put 'pass' / 'fail' / 'n/a' against the four criteria after LOOKING at its frame. A 'fail' blocks until fixed, or until \"resolved\": true is set with a note explaining why it is acceptable.",
+  "criteria": {
+    "illustrated": "narration is shown, not left to the viewer's imagination",
+    "composed": "balanced, everything inside the frame and legible",
+    "varied": "not the same visual formula as its neighbours",
+    "purposeful": "every element is there for a reason, not filler"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames\\V13Scene1_f68.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames\\V13Scene2_f95.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames\\V13Scene3_f39.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "cố ý trơn - đúng ý đồ nhịp nghỉ"
+    },
+    {
+      "id": "S4",
+      "frame": "input\\review_frames\\V13Scene4_f50.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    },
+    {
+      "id": "S5",
+      "frame": "input\\review_frames\\V13Scene5_f65.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "đã phóng to lưới sau lần render đầu vì nửa dưới khung trống"
+    },
+    {
+      "id": "S6",
+      "frame": "input\\review_frames\\V13Scene6_f65.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "mai rùa vẽ tay cố tình chung chung, không dựng nhân vật có bản quyền"
+    },
+    {
+      "id": "S7",
+      "frame": "input\\review_frames\\V13Scene7_f158.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "đúng yêu cầu 'phải thấy đuôi hội tụ rồi mới thắt', không cắt thẳng vào ảnh nút thắt"
+    },
+    {
+      "id": "S8",
+      "frame": "input\\review_frames\\V13Scene8_f60.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": ""
+    }
+  ]
+}

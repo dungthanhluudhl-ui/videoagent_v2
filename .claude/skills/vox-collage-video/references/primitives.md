@@ -100,13 +100,31 @@ A map that fails to tile renders **successfully**, with a hole in it, because
 `MapGraphic` releases its `delayRender` handle on a deadline rather than
 hanging. Check the still, and check the render log for 404s.
 
-### `src/scenes/SceneTemplates.jsx` — starting layouts
+### `src/blocks/` — the block library (use this first)
+
+Five composed blocks extracted from the V10 scenes the viewer kept, each with
+geometry and beat contract already solved, each verified by rendering it back
+against the original scene (`BlockProbe.jsx`, 14 probes registered in Root).
+
+`PhotoClaim` · `MapPlace` · `TimelineSpan` · `DocFocus` · `ChannelOutro`
+
+`registry.json` is the machine-readable index: `fits` maps
+`narrativeFunction × visualLanguage` to a block, and **`whenNotToUse`** is the
+field that stops a block being picked to fill a slot. `block_gate.py` enforces
+a 25% ceiling per block and ≥2 arrangements once one repeats three times.
+
+Blocks hold **no absolute frames** — entrances arrive through `beats` from
+`beat_sync.py`, so one block fits a 90-frame scene and a 152-frame one.
+
+### `src/scenes/SceneTemplates.jsx` — DEAD, do not use
 
 Seven composed arrangements (`CollageScene`, `SplitCompareScene`,
 `StatCalloutScene`, `NewspaperSpotlightScene`, `QuoteBubbleScene`,
-`FlowDiagramScene`, `MapLocationScene`). They are **examples, not a menu** —
-compose a bespoke arrangement from the primitives whenever none fits. Roughly
-half of V10's scenes were bespoke and that was correct.
+`FlowDiagramScene`, `MapLocationScene`). Used by V3–V9; used by **zero** scenes of
+V10–V13. They are one scene in seven arrangements — same `zoom 1→1.0x`, same
+`rise/grow/dropSpin`, same `idle="sway"`, same `visibleFor={durationInFrames}`
+— and they are named after layouts, which forces the pick to be made on
+layout instead of on meaning. Superseded by `src/blocks/`.
 
 `MapLocationScene` renders a pin with no map. Prefer `MapGraphic`.
 

@@ -446,10 +446,179 @@ def post_edit_payload(plan_path):
         "file_path": str(tmp / "src" / "scenes" / "V10Scene1.jsx")}})
 
 
+def pre_read_payload(plan_path):
+    """Payload PreToolUse y nhu harness gui khi agent sap MO MOT BUC ANH."""
+    tmp = plan_path.parent.parent
+    return json.dumps({"cwd": str(tmp), "tool_name": "Read", "tool_input": {
+        "file_path": str(tmp / "input" / "review_frames" / "V10Scene1_f41.png")}})
+
+
+def _seed_image_budget(count):
+    """sandbox_hook: dat san so anh agent DA mo, de kiem nguong chan.
+
+    Ngan sach = so canh + 8. V10 co 26 canh -> 34, chan o 68. Nen 200 la qua
+    han ro rang, va 3 la chac chan duoi han.
+    """
+    def hook(tmp):
+        import json as _json
+        d = tmp / ".claude" / "skills" / "vox-collage-video" / "data"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / ".image_budget.json").write_text(
+            _json.dumps({"video": "V10", "count": count}), encoding="utf-8")
+    return hook
+
+
 def wordy_label(_plan):
     """A drawn sentence instead of a label - handled by mutating the SCENE file,
     not the plan, because that is where drawn text lives."""
     return _plan
+
+
+# --------------------------------------------------------------------------
+# asset_gate - does the sourced image fit the box the plan puts it in?
+# --------------------------------------------------------------------------
+# V10 shipped with three assets already over the upscale ceiling: S9
+# Sup-CrowdBehind 1.23x, S13 Doc-Trace 1.68x, S25 Sup-Gate 1.22x - and the
+# last of those is the one the viewer reported as broken by eye, before any
+# of this was measured. Every asset_gate case therefore repairs those three
+# first: otherwise the gate exits non-zero over defects the case did not
+# create, and a green case would prove nothing at all.
+_ASSET_REPAIRS = {"Sup-CrowdBehind": 640, "Doc-Trace": 480, "Sup-Gate": 560}
+
+# asset_gate reads real PNGs out of public/, which the sandbox does not copy.
+_asset_args = lambda p: [str(p), "--root", str(ROOT)]
+
+
+def _repair_shipped_upscales(plan):
+    for s in plan["scenes"]:
+        for a in s.get("assets", []):
+            if a.get("name") in _ASSET_REPAIRS:
+                a["width"] = _ASSET_REPAIRS[a["name"]]
+    return plan
+
+
+def _find_asset(plan, name):
+    for s in plan["scenes"]:
+        for a in s.get("assets", []):
+            if a.get("name") == name:
+                return a
+    raise AssertionError(f"asset {name} khong co trong plan tham chieu")
+
+
+def asset_upscaled(plan):
+    """Anh bi keo rong hon so diem anh cua chinh no - dung loi V10/S25."""
+    _repair_shipped_upscales(plan)
+    _find_asset(plan, "Hero-Youth")["width"] = 2000     # noi dung chi 1194px
+    return plan
+
+
+def asset_wrong_slot_shape(plan):
+    """Slot doi anh dung, file la anh ngang."""
+    _repair_shipped_upscales(plan)
+    _find_asset(plan, "Hero-Youth")["slot"] = {"aspect": "3:4"}
+    return plan
+
+
+def asset_slot_without_fit_stamp(plan):
+    """Ti le dung nhung tinh co: file chua tung di qua process_cutout --fit.
+
+    Ca nay ton tai vi kiem ti le KHONG DU. Mot file ngau nhien dung ti le se
+    lech ngay lan cat lai sau, va khi do khong ai biet vi sao - nen gate phai
+    doi ca dau --fit, khong chi doi con so."""
+    from PIL import Image      # cuc bo, dung kieu voi _fake_cutout o tren
+    _repair_shipped_upscales(plan)
+    a = _find_asset(plan, "Hero-Youth")
+    with Image.open(ROOT / "public" / a["src"]) as im:
+        w, h = im.size
+    a["slot"] = {"aspect": f"{w}:{h}"}                  # dung y het ti le file
+    return plan
+
+
+def asset_all_clean(plan):
+    return _repair_shipped_upscales(plan)
+
+
+# --------------------------------------------------------------------------
+# block_gate - tang chan don dieu cua kho block
+# --------------------------------------------------------------------------
+# V10 that khong khai `block` o canh nao (kho block ra doi sau no), nen moi ca
+# o day phai TU chu thich V10 truoc: anh xa 14/26 canh vao 5 block dung nhu ban
+# do da doi chung bang render, so con lai danh dau bespoke. Ban chu thich do
+# PASS voi 0 fail - do la ca "phai PASS" o duoi.
+_BLOCK_MAP = {
+    "S1": ("PhotoClaim", "middle"), "S3": ("PhotoClaim", "top"),
+    "S6": ("PhotoClaim", "bottom"), "S21": ("PhotoClaim", "top"),
+    "S26": ("PhotoClaim", "middle"), "S22": ("PhotoClaim", "top"),
+    "S2": ("MapPlace", "top"), "S12": ("MapPlace", "top"),
+    "S16": ("MapPlace", "bottom"), "S8": ("TimelineSpan", "paper"),
+    "S25": ("TimelineSpan", "photo"), "S13": ("DocFocus", "bottom"),
+    "S23": ("DocFocus", "top"), "S14": ("ChannelOutro", None),
+}
+
+# block_gate doc registry tu src/blocks/, ma sandbox co copy src/ sang - nhung
+# chi src/scenes/. Tro thang vao registry that cho chac.
+_block_args = lambda p: [str(p), "--registry", str(ROOT / "src" / "blocks" / "registry.json")]
+
+
+def _annotate_blocks(plan):
+    for s in plan["scenes"]:
+        m = _BLOCK_MAP.get(s["id"])
+        if m:
+            s["block"] = m[0]
+            if m[1]:
+                s["arrangement"] = m[1]
+        else:
+            s["bespoke"] = True
+            s["bespokeReason"] = "chua co block nao phu cau truc nay"
+    return plan
+
+
+def blocks_annotated(plan):
+    return _annotate_blocks(plan)
+
+
+def block_overused(plan):
+    """Mot block keo ca video - dung khuyet tat da giet SceneTemplates.jsx."""
+    _annotate_blocks(plan)
+    for s in plan["scenes"]:
+        if s["id"] in ("S4", "S5", "S7", "S9"):
+            s.pop("bespoke", None); s.pop("bespokeReason", None)
+            s["block"] = "PhotoClaim"; s["arrangement"] = "middle"
+    return plan
+
+
+def block_one_arrangement(plan):
+    """Dung 6 lan nhung deu o mot the: van duoi tran ty le, van doc ra la lap."""
+    _annotate_blocks(plan)
+    for s in plan["scenes"]:
+        if s.get("block") == "PhotoClaim":
+            s["arrangement"] = "top"
+    return plan
+
+
+def block_unknown(plan):
+    _annotate_blocks(plan)
+    for s in plan["scenes"]:
+        if s["id"] == "S3":
+            s["block"] = "SplitCompareScene"   # ten template the he cu
+    return plan
+
+
+def block_undeclared(plan):
+    """Canh khong noi no dang dung gi."""
+    _annotate_blocks(plan)
+    for s in plan["scenes"]:
+        if s["id"] == "S4":
+            s.pop("bespoke", None); s.pop("bespokeReason", None)
+    return plan
+
+
+def block_bespoke_no_reason(plan):
+    _annotate_blocks(plan)
+    for s in plan["scenes"]:
+        if s["id"] == "S4":
+            s["bespokeReason"] = ""
+    return plan
 
 
 CASES = [
@@ -627,6 +796,32 @@ CASES = [
     # Skipping that one gate here is not softening it - it is refusing to let a
     # rule written after V10 turn the reference into a wall. The debt is
     # recorded in references/lessons.md, not hidden.
+    # asset_gate KHONG co ca "V10 that phai PASS", cung ly do voi cutout_gate:
+    # V10 that su da ship voi ba asset vuot tran phong to. Ca "phai PASS" chay
+    # tren ban da ha width, de chung minh gate van biet cho qua.
+    Case("asset_gate: ảnh bị phóng to quá trần, đọc ra mờ", "asset_gate.py",
+         asset_upscaled, args=_asset_args,
+         expect_message=["Hero-Youth", "1.68x"]),
+    Case("asset_gate: ảnh sai tỉ lệ so với slot đã khai", "asset_gate.py",
+         asset_wrong_slot_shape, args=_asset_args,
+         expect_message=["Hero-Youth", "sai ti le slot"]),
+    Case("asset_gate: tỉ lệ đúng nhưng file chưa từng đi qua --fit", "asset_gate.py",
+         asset_slot_without_fit_stamp, args=_asset_args,
+         expect_message=["khong mang dau --fit"]),
+    Case("asset_gate: bản đã hạ width của V10 phải PASS", "asset_gate.py",
+         asset_all_clean, expect_fail=False, args=_asset_args),
+    Case("block_gate: một block kéo cả video", "block_gate.py",
+         block_overused, args=_block_args, expect_message=["vuot tran", "38%"]),
+    Case("block_gate: dùng nhiều lần nhưng chỉ một thế", "block_gate.py",
+         block_one_arrangement, args=_block_args, expect_message=["chi o 1 the"]),
+    Case("block_gate: khai một block không có trong kho", "block_gate.py",
+         block_unknown, args=_block_args, expect_message=["khong co trong registry"]),
+    Case("block_gate: cảnh không khai block cũng không khai bespoke", "block_gate.py",
+         block_undeclared, args=_block_args, expect_message=["cung khong khai"]),
+    Case("block_gate: bespoke không kèm lý do", "block_gate.py",
+         block_bespoke_no_reason, args=_block_args, expect_message=["bespokeReason"]),
+    Case("block_gate: bản V10 đã chú thích block phải PASS", "block_gate.py",
+         blocks_annotated, expect_fail=False, args=_block_args),
     Case("plan_gate: V10 thật phải PASS (trừ luật mới sau khi V10 ship)", "plan_gate.py",
          None, expect_fail=False, args=lambda p: [str(p), "--skip-lifetime"]),
     Case("build_gate: V10 thật phải PASS", "build_gate.py", None, expect_fail=False),
@@ -679,6 +874,27 @@ CASES = [
     Case("hook_gate: shot list đã duyệt thì dựng cảnh bình thường",
          "hook_gate.py", activate_approved, expect_fail=False,
          args=lambda p: ["post-edit"], stdin=post_edit_payload),
+    # Ngân sách ảnh. Lượt đo trên log token thật cho thấy SKILL.md §9 đã dặn
+    # "chỉ nhìn khi cần" và không ngăn được gì: 439 ảnh vào context qua bốn
+    # phiên, riêng V11 chiếm 55% cache_read = 384 USD. Một dòng dặn dò không
+    # phải một cái chặn, nên chốt này phải có test - và phải khoá CẢ HAI chiều,
+    # vì một chốt chỉ chặn mà không bao giờ cho qua sẽ bị gỡ ngay tuần sau.
+    Case("hook_gate: mở ảnh quá gấp đôi ngân sách thì bị chặn",
+         "hook_gate.py", activate_approved,
+         args=lambda p: ["pre-read"], stdin=pre_read_payload,
+         sandbox_hook=_seed_image_budget(200),
+         expect_message=["ngân sách", "vision_check"]),
+    Case("hook_gate: mở ảnh trong ngân sách thì KHÔNG chặn",
+         "hook_gate.py", activate_approved, expect_fail=False,
+         args=lambda p: ["pre-read"], stdin=pre_read_payload,
+         sandbox_hook=_seed_image_budget(3)),
+    Case("hook_gate: đọc file KHÔNG phải ảnh thì không bao giờ chặn",
+         "hook_gate.py", activate_approved, expect_fail=False,
+         args=lambda p: ["pre-read"],
+         stdin=lambda pp: json.dumps({
+             "cwd": str(pp.parent.parent), "tool_name": "Read",
+             "tool_input": {"file_path": str(pp.parent.parent / "src" / "Root.jsx")}}),
+         sandbox_hook=_seed_image_budget(200)),
     # init_video.align. KHÔNG phải hàm thuần (phiên sau sửa tay vài từ whisper
     # nghe đúng hơn kịch bản là việc NÊN làm), nên ca này khoá đúng thứ khoá
     # được: dựng lại từ transcript+kịch bản THẬT của V10 phải giống file đã

@@ -54,3 +54,13 @@ __pycache__/
 
 # Third-party skill archive (reference only, not part of this project)
 .claude/skills/*.zip
+# bo dem anh cua guard - trang thai cuc bo, khong phai ma nguon
+.claude/skills/vox-collage-video/data/.image_budget.json
+
+# Remotion bundle - sinh ra boi `npx remotion bundle`, 108MB, dung lai duoc
+# bat cu luc nao. Giu no trong git nghia la moi lan bundle lai se them mot ban
+# sao vao lich su vinh vien.
+build/
+
+# Khoa router model re - KHONG BAO GIO commit. Xem vision_check._load_key().
+.claude/skills/vox-collage-video/data/.vision_key
