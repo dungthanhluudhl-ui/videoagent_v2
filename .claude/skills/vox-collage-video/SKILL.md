@@ -257,15 +257,28 @@ Remotion's own `<Audio>`. Wire each to the beat it belongs to, volume
 
 ## 6. Build the scenes
 
-**Check the block library first.** `src/blocks/registry.json` holds five
-composed blocks extracted from the V10 scenes the viewer kept, each with its
-geometry and beat contract already solved. A scene built from a block is ~8
-lines of props instead of ~70 lines of JSX, and it cannot repeat the layout
-defects those blocks were measured against.
+**Build the scene bespoke. That is the default, and it needs no declaration.**
 
-You do **not** pick a block by reading its name — that is how the previous
-template library died (see below). You already declared `narrativeFunction`
-and `visualLanguage` in step 2a/2b; look those two up in `fits`:
+`src/blocks/` exists and is **parked** — a small convenience for the handful of
+scenes that genuinely land on one, not the route into a scene. The reason is
+measured, not stylistic:
+
+| block-library coverage | |
+|---|---|
+| V10 — the video the blocks were extracted FROM | 54% (overfit, not a result) |
+| **V11 — part 2 of that same story, same assets** | **25%** |
+| V13 — a different subject | 25% |
+
+A direct sequel gets the same coverage as an unrelated video. Three scenes in
+four will have no block that fits, so opening this step with "check the
+library" would put a lookup in front of the thinking for 75% of scenes — which
+is exactly the inversion the first rule of this skill forbids, and exactly how
+`SceneTemplates.jsx` died. Rebuilding two V13 scenes from blocks saved 24% of
+the lines, under the 40% that would have justified the detour.
+
+**Reach for a block only when both hold:** the `narrativeFunction ×
+visualLanguage` you already declared in 2a/2b lands in that block's `fits`,
+**and** its `whenNotToUse` does not describe your scene. Then:
 
 | block | fits | what it does |
 |---|---|---|
@@ -275,15 +288,20 @@ and `visualLanguage` in step 2a/2b; look those two up in `fits`:
 | `DocFocus` | conclusion/definition/evidence × `document` | one artefact, attended to |
 | `ChannelOutro` | conclusion × `mockup` | the closing follow card |
 
-Read the block's **`whenNotToUse`** before using it — that field, not
-`whenToUse`, is what stops a block being picked to fill a slot.
+`ChannelOutro` is the one exception worth reaching for by default: every video
+ends the same way, so it is reusable by construction rather than by evidence.
 
-Declare it in the plan (`"block": "PhotoClaim", "arrangement": "top"`), or
-declare `"bespoke": true` with a `bespokeReason`. Bespoke is fine and expected
-— roughly half of V10 is bespoke and that was correct. What is not fine is a
-scene that declares neither, because then nobody can tell a choice from an
-oversight. `block_gate.py` enforces both, plus a 25% ceiling per block and
-≥2 arrangements once a block repeats three times.
+Declare a block you actually used (`"block": "PhotoClaim", "arrangement":
+"top"`). **Declaring nothing means bespoke** — `block_gate.py` does not ask for
+a reason, because on an unseen video most scenes are bespoke and that is the
+correct state, not a lapse. It still holds a 25% ceiling per block and ≥2
+arrangements once one repeats three times, for the scenes that do use blocks.
+
+Monotony across the whole video is caught by measurement instead: after the
+contact sheet exists, `sheet_vision.py` reports the largest look-alike group
+(V10 23–38%, V11 54–67% — matching the viewer's "liked" / "exhausting"). Prefer
+that over a plan-time quota; the quota's constants failed to transfer twice
+(`mood` on V10/S22, `place` on V13/S1).
 
 Blocks carry no absolute frames. Entrances come in through `beats` from
 `beat_sync.py`, so the same block fits a 90-frame scene and a 152-frame one.

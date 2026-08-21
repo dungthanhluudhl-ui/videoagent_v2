@@ -100,21 +100,41 @@ A map that fails to tile renders **successfully**, with a hole in it, because
 `MapGraphic` releases its `delayRender` handle on a deadline rather than
 hanging. Check the still, and check the render log for 404s.
 
-### `src/blocks/` — the block library (use this first)
+### `src/blocks/` — PARKED. Build bespoke; a block is the exception.
 
-Five composed blocks extracted from the V10 scenes the viewer kept, each with
-geometry and beat contract already solved, each verified by rendering it back
-against the original scene (`BlockProbe.jsx`, 14 probes registered in Root).
+Five blocks extracted from the V10 scenes the viewer kept. They work, and they
+are **not** the default route into a scene. Measured coverage on plans:
 
-`PhotoClaim` · `MapPlace` · `TimelineSpan` · `DocFocus` · `ChannelOutro`
+| | |
+|---|---|
+| V10 — the video they were extracted FROM | 54% (overfit, not a result) |
+| **V11 — part 2 of that same story** | **25%** |
+| V13 — a different subject | 25% |
 
-`registry.json` is the machine-readable index: `fits` maps
-`narrativeFunction × visualLanguage` to a block, and **`whenNotToUse`** is the
-field that stops a block being picked to fill a slot. `block_gate.py` enforces
-a 25% ceiling per block and ≥2 arrangements once one repeats three times.
+On any video the blocks have not already seen — including a direct sequel with
+the same assets and style — three scenes in four have no block that fits. So
+the library is a small convenience, not a scaffold, and the build step must not
+open with "check the library".
+
+That framing is what killed `SceneTemplates.jsx`, and it contradicts this
+skill's own first rule: *meaning first, component second.*
+
+**Use one only when a scene's `narrativeFunction × visualLanguage` already
+lands in a block's `fits` AND its `whenNotToUse` does not describe your scene.**
+Then declare `"block": "..."` in the plan. Declaring nothing means bespoke, and
+that is the normal case — `block_gate.py` does not ask.
+
+`ChannelOutro` is the one worth reaching for by default: every video ends the
+same way, so it is reusable by construction rather than by evidence.
 
 Blocks hold **no absolute frames** — entrances arrive through `beats` from
 `beat_sync.py`, so one block fits a 90-frame scene and a 152-frame one.
+
+Monotony is now measured, not constrained: `sheet_vision.py` reads the rendered
+contact sheet and reports the largest look-alike group (V10 23–38%, V11 54–67%,
+matching the viewer's own "liked" / "exhausting"). That is a better instrument
+than a plan-time quota derived from one video — the derived constants failed to
+transfer twice (`mood` on V10/S22, `place` on V13/S1).
 
 ### `src/scenes/SceneTemplates.jsx` — DEAD, do not use
 
@@ -124,7 +144,7 @@ Seven composed arrangements (`CollageScene`, `SplitCompareScene`,
 V10–V13. They are one scene in seven arrangements — same `zoom 1→1.0x`, same
 `rise/grow/dropSpin`, same `idle="sway"`, same `visibleFor={durationInFrames}`
 — and they are named after layouts, which forces the pick to be made on
-layout instead of on meaning. Superseded by `src/blocks/`.
+layout instead of on meaning. Superseded by `src/blocks/`, which is itself parked - see above.
 
 `MapLocationScene` renders a pin with no map. Prefer `MapGraphic`.
 

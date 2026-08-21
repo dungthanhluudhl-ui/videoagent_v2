@@ -605,11 +605,32 @@ def block_unknown(plan):
 
 
 def block_undeclared(plan):
-    """Canh khong noi no dang dung gi."""
+    """Canh khong khai gi ca - PHAI duoc cho qua, vi khong khai = bespoke.
+
+    Truoc day day la mot ca "phai FAIL". Da doi chieu vi huong luc dat sai:
+    tren video chua tung thay kho block chi phu 25%, nen bat khai bien 3/4 so
+    canh thanh thu tuc giay to. Nay `bespoke` la mac dinh im lang.
+    """
     _annotate_blocks(plan)
     for s in plan["scenes"]:
         if s["id"] == "S4":
             s.pop("bespoke", None); s.pop("bespokeReason", None)
+    return plan
+
+
+def block_punch_too_short_no_block(plan):
+    """Nhip doc phai duoc kiem KE CA khi canh khong dung block nao.
+
+    Ca nay khoa dung cho de vo khi go yeu cau khai block: phep kiem punch von
+    nam ben trong nhanh "canh co khai block", nen go yeu cau la vo tinh tat
+    luon no. Do tren V10: 6/14 canh dat headline voi duoi 1,6 giay de doc.
+    """
+    for s in plan["scenes"]:
+        s.pop("block", None); s.pop("bespoke", None); s.pop("bespokeReason", None)
+    s = plan["scenes"][3]
+    dur = s.get("durationInFrames") or 120
+    s["durationInFrames"] = dur
+    s["punch"] = dict(s.get("punch") or {}, **{"from": dur - 12})   # 0,4s
     return plan
 
 
@@ -816,8 +837,11 @@ CASES = [
          block_one_arrangement, args=_block_args, expect_message=["chi o 1 the"]),
     Case("block_gate: khai một block không có trong kho", "block_gate.py",
          block_unknown, args=_block_args, expect_message=["khong co trong registry"]),
-    Case("block_gate: cảnh không khai block cũng không khai bespoke", "block_gate.py",
-         block_undeclared, args=_block_args, expect_message=["cung khong khai"]),
+    Case("block_gate: cảnh không khai gì thì KHÔNG bị chặn (không khai = bespoke)",
+         "block_gate.py", block_undeclared, expect_fail=False, args=_block_args),
+    Case("block_gate: nhịp đọc vẫn được kiểm khi cảnh không dùng block nào",
+         "block_gate.py", block_punch_too_short_no_block, expect_fail=False,
+         args=_block_args, expect_message=["duoi san 48f"]),
     Case("block_gate: bespoke không kèm lý do", "block_gate.py",
          block_bespoke_no_reason, args=_block_args, expect_message=["bespokeReason"]),
     Case("block_gate: bản V10 đã chú thích block phải PASS", "block_gate.py",

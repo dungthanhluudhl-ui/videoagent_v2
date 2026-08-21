@@ -260,7 +260,7 @@ Only `hero` and `support` assets are judged. A `background` photo is
 full-bleed on purpose and has no alpha channel; the first version of this gate
 reported 12 of them as broken, which was the rule being wrong, not the images.
 
-## block_gate.py — kho block có bị dùng thành công thức không?
+## block_gate.py — nhịp đọc của mọi cảnh + trần dùng lại cho cảnh CÓ dùng block
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/block_gate.py input/scene_plan14.json
@@ -277,8 +277,34 @@ cảnh với 7 cách xếp ảnh**: cả 7 đều `CameraGroup zoom 1 → 1.0x`,
 
 Kho block mới sửa cả hai: tra cứu theo `narrativeFunction × visualLanguage`
 (hai trường plan đã bắt buộc khai), và mỗi block mang bộ chuyển động riêng.
-Nhưng **không có gì trong mã nguồn ngăn một agent dùng một block cho cả video** —
-gate này là thứ ngăn điều đó, bằng số chứ không bằng lời dặn.
+
+### Kho block đã được ĐƯA VỀ TRẠNG THÁI NGOẠI LỆ
+
+Gate này **từng bắt mọi cảnh phải khai `block` hoặc `bespoke`**. Đã bỏ, vì đo
+lại cho thấy hướng lực đặt sai:
+
+| phủ của kho block trên plan | |
+|---|---|
+| V10 — chính video mà block được trích ra | 54% (overfit, không phải kết quả) |
+| **V11 — phần 2 của cùng câu chuyện, cùng kho asset** | **25%** |
+| V13 — chủ đề khác hẳn | 25% |
+
+Một phần tiếp theo trực tiếp cũng chỉ được phủ bằng một video xa lạ. Trên video
+chưa từng thấy, **3 trong 4 cảnh không có block nào hợp** — nên bắt khai biến
+3/4 số cảnh thành một dòng `bespokeReason` viết tay, đè lên công đoạn chỉ chiếm
+**3,3%** chi phí token.
+
+Và nó đảo ngược luật đầu tiên của skill: *meaning first, component second*.
+Một gate bắt mọi cảnh trả lời "mày dùng block nào" đặt cái tra cứu trước cái
+suy nghĩ — đúng thứ đã giết `SceneTemplates.jsx`.
+
+**Nay: không khai gì = bespoke, và gate im lặng.** Dựng bespoke là mặc định.
+
+Việc chống đơn điệu chuyển sang `sheet_vision.py`, và nó làm tốt hơn: **đo** độ
+lặp trên bản dựng thật (V10 23–38%, V11 54–67%, khớp đúng phán quyết
+"thích"/"mệt" của người xem) thay vì **ràng buộc** plan trước bằng hằng số rút
+từ một video duy nhất — hằng số đã hai lần không chuyển được sang video khác
+(`mood` với V10/S22, `place` với V13/S1).
 
 ### Ngưỡng lấy từ đâu
 
@@ -302,11 +328,12 @@ Trần đặt ở **25%**, ngay trên mức đo được.
 
 | kiểm | mức | căn cứ |
 |---|---|---|
+| **punch giữ dưới 48f (1,6s)** — **mọi cảnh, kể cả không dùng block** | WARN | đo trên V10: **6/14 cảnh** đặt headline dưới ngưỡng đọc; tệ nhất S26 giữ 0,70s cho bốn chữ |
 | block chiếm >25% số cảnh | **FAIL** | cao nhất đo được trên V10 là 23% |
 | block dùng ≥3 lần mà chỉ ở 1 thế | **FAIL** | V10 dùng PhotoClaim 6 lần ở **3 thế** — đó là lý do nó không đọc ra là lặp |
 | khai block không có trong registry | **FAIL** | bắt đúng trường hợp gõ tên template thế hệ cũ |
-| cảnh không khai `block` cũng không khai `bespoke` | **FAIL** | không phân biệt được lựa chọn với sự quên |
-| `bespoke: true` mà không có `bespokeReason` | **FAIL** | bespoke được phép; bespoke không giải thích thì không |
+| cảnh không khai gì | — | **không khai = bespoke, là trạng thái bình thường** |
+| `bespoke: true` mà không có `bespokeReason` | **FAIL** | khai rồi mà không giải thích thì tệ hơn không khai |
 | hai cảnh liên tiếp cùng block | WARN | V10 có đúng một lần (S21→S22) và không ai phàn nàn |
 | `nf × vl` không nằm trong `fits` của block | WARN | bắt đúng V10/S22: plan khai `split` trong khi bản dựng không hề chia đôi khung |
 | punch giữ dưới 48f | WARN | block sẽ tự kẹp, nhưng sửa mốc neo thì đúng hơn |

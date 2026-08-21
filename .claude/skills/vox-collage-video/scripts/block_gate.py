@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-block_gate.py - the tang chan don dieu cua kho block.
+block_gate.py - nhip doc cua moi canh, cong tran dung lai CHO CANH NAO CO DUNG BLOCK.
 
 Vi sao no ton tai
 -----------------
@@ -39,18 +39,44 @@ ly do nguong phai do truoc khi viet.
 V10 cung co dung MOT lan hai canh lien tiep cung cau truc (S21 -> S22) ma
 nguoi xem khong phan nan, nen phep kiem lien tiep la WARN chu khong FAIL.
 
-Khai trong scene_plan<N>.json
------------------------------
+KHONG KHAI GI = BESPOKE. Do la mac dinh.
+----------------------------------------
+Dung block la NGOAI LE co khai bao, khong phai buoc mac dinh:
+
     { "id": "S3", "block": "PhotoClaim", "arrangement": "top", ... }
 
-hoac, khi khong block nao hop:
+Mot canh khong khai gi thi gate nay IM LANG. Truoc day no FAIL, va do la mot
+sai lam ve huong luc da duoc do lai:
 
-    { "id": "S9", "bespoke": true,
-      "bespokeReason": "hai trang thai cua cung mot khung hinh; khong block nao lam duoc" }
+    kho block phu V10   54%   <- block trich TU V10, nen day la overfit
+    phu V11             25%   <- V11 la PHAN 2 cua chinh V10, cung chu de
+    phu V13             25%
 
-Bespoke KHONG bi cam va khong nen bi cam - khoang mot nua V10 la bespoke va do
-la dung. Cai bi cam la bespoke KHONG KHAI: mot canh khong noi no dang lam gi
-thi khong ai biet no la lua chon hay la quen.
+Tren mot video chua tung thay, 3/4 so canh khong co block nao hop. Bat khai
+nghia la 3/4 so canh phai mang mot dong `bespokeReason` viet tay - thu tuc
+thuan tuy, de len cong doan chi chiem 3,3% chi phi token cua ca phien.
+
+Neu VAN khai `bespoke: true` thi phai co `bespokeReason` - khai roi ma khong
+giai thich thi te hon la khong khai.
+
+Chong don dieu bay gio la viec cua ai
+-------------------------------------
+`sheet_vision.py`, va no lam tot hon file nay: no DO do lap tren BAN DUNG THAT
+thay vi rang buoc plan truoc bang hang so rut tu mot video duy nhat.
+
+    V10 (nguoi xem thich)   nhom bo cuc lon nhat 23-38%
+    V11 (nguoi xem "met")   nhom bo cuc lon nhat 54-67%
+
+Hang so rut tu mot video da HAI LAN khong chuyen duoc sang video khac (`mood`
+voi V10/S22, `place` voi V13/S1). Do thi chuyen duoc; rang buoc thi khong.
+
+Phan con lai cua file nay van co gia tri
+----------------------------------------
+1. NHIP DOC - chay cho MOI canh, khong can khai block gi. Do tren V10: 6 trong
+   14 canh dat headline voi duoi 1,6 giay de doc. Te nhat la S26: 0,7 giay cho
+   bon chu "MOT NGOI CHUA CO".
+2. Khi co canh THUC SU dung block, cac tran duoi day van ap: 25%/block, >=2 the
+   khi lap tu 3 lan, va block phai co trong registry.
 
 Usage:
     py -3 block_gate.py input/scene_plan14.json
@@ -69,7 +95,6 @@ MAX_SHARE = 0.25
 MIN_VARIANTS_WHEN_REPEATED = 2
 REPEAT_TRIGGER = 3
 MIN_PUNCH_HOLD = 48          # 1,6s - cung so voi clampPunch trong PhotoClaim.jsx
-MAX_BESPOKE_SHARE = 0.60
 
 
 def find_registry(plan_path):
@@ -111,10 +136,52 @@ def check(plan_path, registry_path=None):
         bid = sc.get("block")
         bespoke = sc.get("bespoke")
 
+        # --- NHIP DOC: chay cho MOI canh, khong phu thuoc block --------------
+        # Truoc day phep kiem nay nam ben trong nhanh "canh co khai block", nen
+        # go yeu cau khai block la vo tinh tat luon no. Ma no la phan co bang
+        # chung manh nhat trong ca file: do tren V10, 6 trong 14 canh dat
+        # headline voi duoi 1,6 giay de doc - mot thoi quen he thong, khong phai
+        # hai ca le. Vi du te nhat la S26: 0,7 giay cho bon chu "MOT NGOI CHUA
+        # CO". No khong lien quan gi den kho block.
+        dur = sc.get("durationInFrames")
+        if dur is None and sc.get("endSec") is not None:
+            dur = int(round((sc["endSec"] - sc.get("startSec", 0)) * plan.get("fps", 30)))
+        punch = sc.get("punch") or {}
+        pf = punch.get("from") if isinstance(punch, dict) else None
+        if dur and pf is not None and dur - pf < MIN_PUNCH_HOLD:
+            out.append(("WARN", sid,
+                        f"punch vao f{pf} chi giu duoc {dur - pf}f = "
+                        f"{(dur - pf) / 30:.2f}s, duoi san {MIN_PUNCH_HOLD}f = 1,6s. Sua moc "
+                        f"neo hoac diem cat canh - dung loi V10/S26 (0,7s cho bon chu)."))
+
         if not bid and not bespoke:
-            out.append(("FAIL", sid,
-                        "khong khai `block` cung khong khai `bespoke`. Mot canh khong "
-                        "noi no dang dung gi thi khong ai biet do la lua chon hay la quen."))
+            # KHONG khai gi = bespoke. Day la mac dinh, va no im lang.
+            #
+            # Truoc day cho nay FAIL: "mot canh khong noi no dang dung gi thi
+            # khong ai biet do la lua chon hay la quen". Nghe hop ly, va sai ve
+            # huong luc. Do lai tren du lieu that:
+            #
+            #   kho block phu V10  54%  <- nhung block TRICH TU V10, nen day la overfit
+            #   phu V11            25%  <- V11 la PHAN 2 cua chinh V10
+            #   phu V13            25%
+            #
+            # Tren mot video chua tung thay, 3/4 so canh se khong co block nao
+            # hop. Bat khai nghia la 3/4 so canh phai mang mot dong
+            # `bespokeReason` viet tay - thu tuc thuan tuy, de len cong doan chi
+            # chiem 3,3% chi phi token.
+            #
+            # Va no dat sai gia tri mac dinh. SKILL.md mo dau bang "Meaning
+            # first, component second - reversing that order is the documented
+            # root cause of every 'templated, repetitive' output this project
+            # has produced, twice". Mot gate bat MOI canh phai tra loi "may
+            # dung block nao" chinh la dao nguoc thu tu do.
+            #
+            # Viec chong don dieu nay do `sheet_vision.py` lam, va lam tot hon:
+            # no DO do lap tren ban dung that (V10 23-38%, V11 54-67%, khop dung
+            # phan quyet "thich"/"met" cua nguoi xem) thay vi RANG BUOC plan
+            # truoc bang hang so rut tu mot video duy nhat - hang so da hai lan
+            # khong chuyen duoc sang video khac (`mood` voi S22, `place` voi
+            # V13/S1).
             prev_block = None
             continue
 
@@ -154,10 +221,7 @@ def check(plan_path, registry_path=None):
                         f"khac, hoac nhan cua canh dang sai - V10/S22 khai la `split` "
                         f"trong khi ban dung cua no khong he chia doi khung."))
 
-        # --- thoi luong -----------------------------------------------------
-        dur = sc.get("durationInFrames")
-        if dur is None and sc.get("endSec") is not None:
-            dur = int(round((sc["endSec"] - sc.get("startSec", 0)) * plan.get("fps", 30)))
+        # --- thoi luong so voi hop dong cua block ---------------------------
         if dur:
             if dur < b.get("minDuration", 0):
                 out.append(("FAIL", sid,
@@ -167,14 +231,6 @@ def check(plan_path, registry_path=None):
                             f"{dur}f dai hon maxDuration {b['maxDuration']}f cua {bid} - "
                             f"kiem xem cuoi canh co khung hinh chet khong"))
 
-            punch = sc.get("punch") or {}
-            pf = punch.get("from")
-            if pf is not None and dur - pf < MIN_PUNCH_HOLD:
-                out.append(("WARN", sid,
-                            f"punch vao f{pf} chi giu duoc {dur - pf}f = "
-                            f"{(dur - pf) / 30:.2f}s, duoi san {MIN_PUNCH_HOLD}f. Block SE "
-                            f"tu keo som lai - sua moc neo hoac diem cat canh thi dung hon "
-                            f"la de block kep (dung loi V10/S26: 0,7s cho bon chu)."))
 
         if prev_block == bid:
             out.append(("WARN", sid,
@@ -200,13 +256,10 @@ def check(plan_path, registry_path=None):
                             f"{MIN_VARIANTS_WHEN_REPEATED}. V10 dung PhotoClaim 6 lan o 3 the "
                             f"khac nhau - do la ly do no khong doc ra la lap."))
 
-    n_bespoke = sum(1 for s in scenes if s.get("bespoke"))
-    if n_bespoke / n > MAX_BESPOKE_SHARE:
-        out.append(("WARN", "-",
-                    f"{n_bespoke}/{n} canh = {n_bespoke / n:.0%} la bespoke, tren "
-                    f"{MAX_BESPOKE_SHARE:.0%}. Bespoke khong sai - khoang mot nua V10 la "
-                    f"bespoke. Nhung neu gan het video la bespoke thi kho block dang khong "
-                    f"duoc dung, va chi phi dung se quay lai nhu cu."))
+    # Nguong "qua nhieu bespoke" DA BO. No dua tren gia dinh rang kho block
+    # phai duoc dung nhieu moi dang gia - gia dinh do da bi do lai va bac bo:
+    # tren video chua tung thay, kho chi phu 25%. Mot video 100% bespoke la
+    # trang thai BINH THUONG, khong phai dau hieu hong.
     return out
 
 
