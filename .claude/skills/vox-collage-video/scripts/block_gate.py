@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-block_gate.py - nhip doc cua moi canh, cong tran dung lai CHO CANH NAO CO DUNG BLOCK.
+block_gate.py - nhip doc cua moi canh, integrity cho CANH NAO CO DUNG BLOCK.
 
 Vi sao no ton tai
 -----------------
@@ -15,26 +15,9 @@ rise/grow/dropSpin`, deu `Support idle="sway"`, deu `visibleFor={duration}`.
 Chung duoc dat ten theo BO CUC ("Split", "Collage") chu khong theo viec tuong
 thuat, nen agent buoc phai chon theo bo cuc.
 
-Kho block moi sua ca hai dieu do: tra cuu theo `narrativeFunction x
-visualLanguage` (hai truong plan da bat buoc phai khai), va moi block mang bo
-chuyen dong rieng. Nhung khong co gi trong ma nguon ngan mot agent dung mot
-block cho ca video. File nay la thu ngan dieu do - bang so, khong bang loi
-dan, dung nguyen tac cua du an: mot luat khong co script kiem thi se troi.
-
-Nguong lay tu dau
------------------
-KHONG dat bua. Do tren V10 - video nguoi xem thich - sau khi anh xa 14/26 canh
-cua no vao 5 block:
-
-    PhotoClaim     6/26 = 23%
-    MapPlace       3/26 = 12%
-    TimelineSpan   2/26 =  8%
-    DocFocus       2/26 =  8%
-    ChannelOutro   1/26 =  4%
-
-Tran dat o 25%, ngay tren muc do duoc. Luu y: de xuat ban dau la "<=2
-canh/video" va no SAI - no se danh truot chinh V10 o PhotoClaim (6 lan). Do la
-ly do nguong phai do truoc khi viet.
+Block usage is optional. This gate validates a declared block's name,
+arrangement and timing contract; repetition is advisory and belongs to review
+of the rendered video, not a blocking percentage.
 
 V10 cung co dung MOT lan hai canh lien tiep cung cau truc (S21 -> S22) ma
 nguoi xem khong phan nan, nen phep kiem lien tiep la WARN chu khong FAIL.
@@ -75,8 +58,8 @@ Phan con lai cua file nay van co gia tri
 1. NHIP DOC - chay cho MOI canh, khong can khai block gi. Do tren V10: 6 trong
    14 canh dat headline voi duoi 1,6 giay de doc. Te nhat la S26: 0,7 giay cho
    bon chu "MOT NGOI CHUA CO".
-2. Khi co canh THUC SU dung block, cac tran duoi day van ap: 25%/block, >=2 the
-   khi lap tu 3 lan, va block phai co trong registry.
+2. Khi co canh THUC SU dung block, ten block/arrangement va hop dong thoi luong
+   van duoc kiem. Lap lai chi WARN de soi contact sheet.
 
 Usage:
     py -3 block_gate.py input/scene_plan14.json
@@ -91,8 +74,6 @@ import json
 import pathlib
 import sys
 
-MAX_SHARE = 0.25
-MIN_VARIANTS_WHEN_REPEATED = 2
 REPEAT_TRIGGER = 3
 MIN_PUNCH_HOLD = 48          # 1,6s - cung so voi clampPunch trong PhotoClaim.jsx
 
@@ -239,22 +220,22 @@ def check(plan_path, registry_path=None):
                         f"tiep tro len thi nguoi xem bat dau doc ra cong thuc."))
         prev_block = bid
 
-    # --- tran ty le -------------------------------------------------------
+    # Repetition is analytically useful, but a plan-time block percentage is an
+    # implementation-medium quota. `sheet_vision.py` judges finished-video
+    # repetition, so these findings are advisory only.
     for bid, k in used.most_common():
         share = k / n
-        if share > MAX_SHARE:
-            out.append(("FAIL", "-",
-                        f"{bid} dung {k}/{n} canh = {share:.0%}, vuot tran {MAX_SHARE:.0%}. "
-                        f"Muc cao nhat do duoc tren V10 la 23%. Dung ha tran de di qua - "
-                        f"mot ky thuat lap lai ca video doc ra la cong thuc du no tot."))
+        if k > 1:
+            out.append(("WARN", "-",
+                        f"{bid} dung {k}/{n} canh = {share:.0%}. Khong co quota block; "
+                        f"kiem tra do lap tren contact sheet/sheet_vision."))
         if k >= REPEAT_TRIGGER and blocks[bid].get("arrangements"):
             got = {a for a in arrangements[bid] if a}
-            if len(got) < MIN_VARIANTS_WHEN_REPEATED:
-                out.append(("FAIL", "-",
+            if len(got) < 2:
+                out.append(("WARN", "-",
                             f"{bid} dung {k} lan nhung chi o {len(got)} the "
-                            f"({', '.join(sorted(got)) or 'khong khai'}). Can it nhat "
-                            f"{MIN_VARIANTS_WHEN_REPEATED}. V10 dung PhotoClaim 6 lan o 3 the "
-                            f"khac nhau - do la ly do no khong doc ra la lap."))
+                            f"({', '.join(sorted(got)) or 'khong khai'}). Day la canh bao "
+                            f"de soi ban dung that, khong phai quota implementation."))
 
     # Nguong "qua nhieu bespoke" DA BO. No dua tren gia dinh rang kho block
     # phai duoc dung nhieu moi dang gia - gia dinh do da bi do lai va bac bo:

@@ -216,8 +216,8 @@ Hai lần chạy độc lập, cả hai video đều đúng. Ngưỡng `REPEAT_S
 giữa hai dải đo được (V10 tối đa 38%, V11 tối thiểu 54%), **không** phải một
 con số đẹp.
 
-Trùng khớp đáng chú ý: `block_gate.MAX_SHARE = 0.25`, rút độc lập từ V10 có
-block dày nhất ở 23%. Hai đường đo không biết nhau và gặp nhau ở cùng chỗ.
+Không dùng con số này làm quota block/icon/diagram hay media. Đây là phép đo
+trên bản dựng thật để chỉ reviewer tới dấu hiệu lặp, không phải yêu cầu cách dựng.
 
 **N = 2. Hai video không phải một phép hiệu chuẩn.** Có video thứ ba có phán
 quyết thì phải đo lại.

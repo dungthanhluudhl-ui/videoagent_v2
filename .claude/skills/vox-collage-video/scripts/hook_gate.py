@@ -470,12 +470,9 @@ def stop(root, plan):
         ("build_gate.py", [str(plan_path)], "built scenes vs plan"),
         ("review_gate.py", [str(plan_path)], "self-review pass"),
         ("text_gate.py", [str(plan_path)], "chữ vẽ: va chạm, độ dài, lặp narration"),
-        # The half of the symbol vocabulary that survives a fresh context
-        # window. @remotion/shapes sat installed and unused through eleven
-        # videos while references/primitives.md listed it the whole time -
-        # documentation is what a session reads if it happens to; this is what
-        # runs whether it read anything or not.
-        ("icon_gate.py", [str(plan_path)], "ký hiệu vẽ: dùng vốn từ thay vì viết chữ"),
+        # Icons are optional. This only catches a broken registry/import when a
+        # scene actually chooses to render one.
+        ("icon_gate.py", [str(plan_path)], "ký hiệu vẽ: registry/import khi có dùng"),
         # Compares this video against the FROZEN profile of one already judged
         # good, not against an absolute floor. Every gate above accepts a video
         # that sits just over the minimum; this is the one that notices the
@@ -500,13 +497,9 @@ def stop(root, plan):
         # một ảnh nhỏ hơn slot bị phóng lên và đọc ra mờ mà không gate nào thấy.
         # Người xem báo đúng lỗi này ở V10/S25 (622px nhét vào slot 760px).
         ("asset_gate.py", [str(plan_path)], "ảnh có vừa slot: tỉ lệ và độ phân giải"),
-        # Tầng chặn đơn điệu của kho block. Dự án ĐÃ CÓ một kho template và đã
-        # bỏ nó: SceneTemplates.jsx được V3-V9 dùng và V10-V13 dùng zero lần,
-        # vì 7 template đó thực chất là một cảnh với 7 cách xếp ảnh. Không có
-        # gì trong mã nguồn ngăn kho block mới đi lại đúng đường đó, nên trần
-        # 25%/block và yêu cầu ≥2 thế khi lặp phải do một gate giữ, không phải
-        # do một dòng dặn dò. Ngưỡng đo từ V10: block dày nhất ở 23%.
-        ("block_gate.py", [str(plan_path)], "kho block: trần dùng lại, thế lặp, bespoke có khai"),
+        # Block use is optional. Validate only declarations/contracts; rendered
+        # repetition is advisory through sheet_vision/review.
+        ("block_gate.py", [str(plan_path)], "kho block: integrity khi có dùng, bespoke tùy chọn"),
         ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render"),
         # Phần CƠ KHÍ sinh từ plan: captions, master, đăng ký Root. Tự biết
         # "chưa tới lúc" khi cảnh còn thiếu, nhưng một khi mọi cảnh đã dựng thì

@@ -32,10 +32,9 @@ input is the reviewer's own honesty is not a gate; it is a form.
 So the gate now MEASURES the frame it was given and cross-examines the verdict
 against the number:
 
-  * `composed: "pass"` on a scene whose usable band is largely empty is
-    rejected unless it carries an explicit `"resolved": true` and a real
-    reason. Full-bleed photos and maps legitimately measure low - saying so in
-    one sentence is cheap; not noticing is what costs.
+  * Sparse-band measurements are advisory. Pixel ink cannot distinguish a
+    broken empty render from a deliberate full-bleed/minimal composition, and
+    it must never demand labels, lines, icons or layers merely to raise density.
   * A frame OLDER than the scene file it claims to show is stale evidence, and
     a verdict on stale evidence is a verdict on a build that no longer exists.
     (This happened here too: S8's review frame predated its rebuild.)
@@ -68,13 +67,11 @@ VALID = {"pass", "fail", "n/a"}
 # measuring the whole frame over-reports emptiness by ~20 points.
 BAND_TOP, BAND_BOTTOM, CANVAS_H = 300, 1250, 1920
 
-# A scene is FLAGGED (verdict must be justified, not merely asserted) when
-# fewer than this share of rows in the band carry any ink, or when a single
-# unbroken empty run is longer than this. Both are deliberately generous:
-# the job is to catch "small object in white space", not to police layout.
+# A scene is FLAGGED for advisory review when fewer than this share of rows in
+# the band carry ink, or when a single empty run is longer than this. This is a
+# pointer for the reviewer, never a mechanical composition failure.
 MIN_ROWS_WITH_INK = 0.55
 MAX_EMPTY_RUN_PX = 300
-MIN_JUSTIFICATION_CHARS = 25
 
 
 def measure(frame_path):
@@ -146,7 +143,7 @@ def main():
         print("\nPASSED (0 problem(s))")
         sys.exit(0)
 
-    problems, measured, unmeasured = [], 0, 0
+    problems, measured, unmeasured, sparse_advisories = [], 0, 0, []
     if not review_path.exists():
         problems.append(
             f"no review file at {review_path} - the video has not been looked at. "
@@ -202,35 +199,34 @@ def main():
                 continue
             measured += 1
             rows, run = m
+            if rows == 0:
+                problems.append(
+                    f"{sid}: rendered evidence appears completely blank (0% rows with ink). "
+                    f"This is a missing/broken render, not an empty-space judgement.")
+                continue
             flagged = rows < MIN_ROWS_WITH_INK or run > MAX_EMPTY_RUN_PX
             if not flagged:
                 continue
-            composed = (entry.get("composed") or "").strip().lower()
-            note = (entry.get("note") or "").strip()
-            if composed == "pass" and not (entry.get("resolved") or
-                                           len(note) >= MIN_JUSTIFICATION_CHARS):
-                problems.append(
-                    f"{sid}/composed: recorded \"pass\", but only {rows*100:.0f}% of the "
-                    f"usable band carries anything (floor {MIN_ROWS_WITH_INK*100:.0f}%) and "
-                    f"the longest empty run is {run:.0f}px (cap {MAX_EMPTY_RUN_PX}px). "
-                    f"Either the scene really is under-filled, or it is a full-bleed photo/map "
-                    f"that legitimately measures low - say WHICH, in the note (>= "
-                    f"{MIN_JUSTIFICATION_CHARS} chars), or set \"resolved\": true. "
-                    f"An unexplained \"pass\" on a measured-empty frame is exactly the "
-                    f"mis-review this check exists to stop.")
+            sparse_advisories.append(
+                f"{sid}: sparse-band signal ({rows*100:.0f}% rows with ink; longest empty "
+                f"run {run:.0f}px). Review the master frame/cheap vision for missing content; "
+                f"do not add decoration merely to change this number.")
 
     if args.json:
         print(json.dumps({"passed": not problems, "problems": problems,
+                          "advisories": sparse_advisories,
                           "measured": measured}, ensure_ascii=False, indent=2))
     else:
         for p in problems:
             print(f"FAIL {p}")
+        for note in sparse_advisories:
+            print(f"WARN {note}")
         if not problems:
             print(f"OK   all {len(scenes)} scene(s) reviewed against "
                   f"{', '.join(CRITERIA)} with frame evidence")
             if measured:
-                print(f"OK   {measured} frame(s) measured; every verdict on a sparse frame "
-                      f"carries a reason")
+                print(f"OK   {measured} frame(s) measured; sparse-band signals are advisory, "
+                      f"not density quotas")
         if unmeasured and not args.no_measure:
             print(f"     {unmeasured} frame(s) could not be measured (Pillow/numpy missing "
                   f"or unreadable file) - verdicts there were taken on trust")

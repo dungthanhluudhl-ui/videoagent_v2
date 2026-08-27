@@ -44,11 +44,8 @@ py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/scene_plan10.j
 | `field '<x>' is empty` | A 2a/2b field was left blank | Fill it. An empty `visualTransformation` reliably produces a background+text scene |
 | `đó là lời khen, không phải một quyết định` | Ô đầy chữ nhưng rỗng nghĩa ("phù hợp", "sinh động", "trực quan") | Viết cái gì đổi thành cái gì, cạnh cái gì. Danh sách cụm sáo rỗng bắn 0 lần trên 53 cảnh đã ship — thêm cụm nào phải đo lại |
 | `quá ngắn để tả một quan hệ` | `visualTransformation` dưới 25 ký tự | Cảnh ngắn nhất đã ship là 31 ký tự. Dưới ngưỡng này là chưa quyết định gì |
-| `no illustrative asset` | Scene declares a visual language but has nothing to show | Add the asset, or declare `text-only` (capped) |
-| `text-only scenes = N (x%) > 15%` | Too much of the video is a blank page | Give those scenes a `background-photo`, `diagram`, or `map` |
-| `<field> repeats on consecutive scenes` | Two neighbours look the same | Change one — see `visual-language.md` |
-| `<x> on N/M scenes (>50%)` | One formula dominates the video | Diversify the languages |
-| `N/M scenes use a stock template (>60% cap)` | The plan was assembled off the menu | Compose bespoke arrangements from the primitives for the scenes none of the seven actually fits |
+| `no illustrative asset` | Scene declares an imagery-based language but has nothing to show | Add the missing asset, or intentionally declare `text-only` |
+| diversity advisory | Plan labels repeat | Inspect the rendered contact sheet / `sheet_vision.py`; do not change media merely to satisfy a percentage |
 | `'bespoke' must describe the arrangement` | `bespoke:TitleStamp` is a label, not a decision | Say what is being built: `bespoke: alley cross-section over a night background photo` |
 | `dead air Xs` | Nothing new appears while narration continues | Add a beat, or split the scene |
 | `only X% of runtime has a visual tied to what is being said` | The viewer hears claims with nothing on screen showing them | Add assets with `describes`, anchored near when the phrase is spoken |
@@ -203,7 +200,7 @@ saying why it is acceptable. This gate cannot judge quality — it makes
 V10 passed every automated check and the first person to watch it found four
 defects in the first minute.
 
-## text_gate.py / icon_gate.py — what the drawn text does
+## text_gate.py / icon_gate.py — text safety and optional-icon integrity
 
 ```bash
 py -3 .claude/skills/vox-collage-video/scripts/text_gate.py input/scene_plan11.json
@@ -224,9 +221,9 @@ metric went green.
 | `label … restates what the narration says` | Delete it. Three channels, one message, none of them a picture |
 | `label … overlaps image X while both are on screen` | Move it. Filling a gap by writing over the picture is not filling the gap |
 | `label … reaches y=N, inside the caption strip` | Move it up; the strip starts at y=1420 |
-| `label … spells out 'X', which the vocabulary already draws` | Render the named icon and cut the word |
-| `symbol floor: N/M scenes carry a drawn symbol` | Use the vocabulary. This floor exists because the word rule alone is satisfiable by never typing a trigger word |
-| `iconVocabulary.jsx: X is exported but missing from VOX_ICONS` | Register it. An unregistered icon is invisible to the word rule |
+| `IconX is rendered but is not registered` | Use a registered icon or add its export + `VOX_ICONS` entry |
+| `IconX is rendered but never imported` | Import it from `./iconVocabulary` before render |
+| zero icons | Valid. Icons are an available treatment, not a quality quota |
 
 `overlayOn="AssetName"` declares an overlay that is *meant* to be there — an
 exit number written across a deliberately blank sign. It names its target, so
@@ -306,44 +303,26 @@ lặp trên bản dựng thật (V10 23–38%, V11 54–67%, khớp đúng phán
 từ một video duy nhất — hằng số đã hai lần không chuyển được sang video khác
 (`mood` với V10/S22, `place` với V13/S1).
 
-### Ngưỡng lấy từ đâu
-
-Đo trên V10 sau khi ánh xạ 14/26 cảnh của nó vào 5 block:
-
-| block | số cảnh | tỉ lệ |
-|---|---|---|
-| PhotoClaim | 6/26 | **23%** |
-| MapPlace | 3/26 | 12% |
-| TimelineSpan | 2/26 | 8% |
-| DocFocus | 2/26 | 8% |
-| ChannelOutro | 1/26 | 4% |
-
-Trần đặt ở **25%**, ngay trên mức đo được.
-
-> Đề xuất ban đầu là **"≤2 cảnh/video"** và nó **sai** — nó đánh trượt chính
-> V10 ở PhotoClaim (6 lần). Đây là lý do ngưỡng phải đo trước khi viết, không
-> phải đặt rồi sửa sau.
-
 ### Các phép kiểm
 
 | kiểm | mức | căn cứ |
 |---|---|---|
 | **punch giữ dưới 48f (1,6s)** — **mọi cảnh, kể cả không dùng block** | WARN | đo trên V10: **6/14 cảnh** đặt headline dưới ngưỡng đọc; tệ nhất S26 giữ 0,70s cho bốn chữ |
-| block chiếm >25% số cảnh | **FAIL** | cao nhất đo được trên V10 là 23% |
-| block dùng ≥3 lần mà chỉ ở 1 thế | **FAIL** | V10 dùng PhotoClaim 6 lần ở **3 thế** — đó là lý do nó không đọc ra là lặp |
+| block lặp / chỉ một thế | **WARN** | soi bản dựng thật bằng review / `sheet_vision`; không dùng quota implementation |
 | khai block không có trong registry | **FAIL** | bắt đúng trường hợp gõ tên template thế hệ cũ |
 | cảnh không khai gì | — | **không khai = bespoke, là trạng thái bình thường** |
 | `bespoke: true` mà không có `bespokeReason` | **FAIL** | khai rồi mà không giải thích thì tệ hơn không khai |
 | hai cảnh liên tiếp cùng block | WARN | V10 có đúng một lần (S21→S22) và không ai phàn nàn |
 | `nf × vl` không nằm trong `fits` của block | WARN | bắt đúng V10/S22: plan khai `split` trong khi bản dựng không hề chia đôi khung |
 | punch giữ dưới 48f | WARN | block sẽ tự kẹp, nhưng sửa mốc neo thì đúng hơn |
-| bespoke >60% số cảnh | WARN | V10 ở 46%; gần hết bespoke nghĩa là kho không được dùng |
+| bespoke 0–100% | — | block là tùy chọn; 100% bespoke hợp lệ |
 
-### Bespoke không bị cấm
+### Bespoke là bình thường
 
 Khoảng **một nửa V10 là bespoke và đó là đúng**. Một kho block cấm bespoke sẽ
-tạo ra đúng thứ đơn điệu mà nó sinh ra để chặn. Cái bị chặn là bespoke **không
-khai** — vì khi đó không ai biết đấy là quyết định hay là bỏ sót.
+tạo ra đúng thứ đơn điệu mà nó sinh ra để chặn. Không khai block/template nghĩa
+là bespoke mặc định và hợp lệ; chỉ khi chủ động khai `bespoke: true` thì
+`bespokeReason` mới được kiểm cho khỏi thành nhãn rỗng.
 
 ## asset_gate.py — có vừa cái hộp không?
 
@@ -494,7 +473,8 @@ kiểu hỏng "chất lượng chênh lệch, không đồng nhất" mà trướ
 gì đo được.
 
 `baseline_gate` so video mới với **hồ sơ đã đóng băng** của một video từng
-được duyệt là đạt (`references/baseline.json`), không so với mức tối thiểu.
+được duyệt là đạt (`references/baseline.json`) ở các kết quả plan có ý nghĩa với
+người xem: độ phủ nội dung, thời gian đọc/tiếp nhận và khoảng chết thị giác.
 
 ```bash
 py -3 baseline_gate.py profile input/scene_plan11.json   # xem số của video này
@@ -502,25 +482,21 @@ py -3 baseline_gate.py check   input/scene_plan11.json   # gate
 py -3 baseline_gate.py freeze  input/scene_plan11.json   # đặt mốc chuẩn MỚI
 ```
 
-Mốc chuẩn hiện tại: **V10 Itaewon** (commit `ebf39b8`, tag `v10-restore-point`).
+Mốc chuẩn hiện tại: **V10 Itaewon** (commit `ebf39b8`, restore point trong local
+history; checkout hiện tại không có Git tag tương ứng).
 
 | Chỉ số | V10 | Cho phép tụt |
 |---|---|---|
 | độ phủ nội dung | 95,9% | 8 điểm |
 | giây/nhịp cảnh complex | 2,10 | 0,25 |
 | giây/nhịp cảnh moderate | 1,80 | 0,20 |
-| số ngôn ngữ hình ảnh | 11 | 2 |
-| tỉ lệ ngôn ngữ nhiều nhất | 26,9% | +8 điểm |
-| cảnh xếp chồng ≥2 vai trò | 42,3% | 12 điểm |
-| cảnh có hình vẽ bằng code | 65,4% | 12 điểm |
-| cảnh chỉ có ảnh nền | 23,1% | +10 điểm |
-| tài nguyên/cảnh | 1,62 | 0,35 |
 | khoảng cách sự kiện lớn nhất | 3,55s | +1,0s |
 
-**Một ngưỡng KHÔNG lấy từ V10:** `photo_only_last_third_pct` ≤ toàn video + 12
-điểm. Đóng băng hồ sơ cũng đóng băng cả điểm yếu của nó, và V10 hơi nghiêng về
-ảnh không khí ở đoạn cuối (25% ở 1/3 cuối so với 23% toàn video). Ngưỡng này
-đặt tuyệt đối để video sau không được nhạt dần về cuối.
+Các số `distinct_languages`, `max_language_share_pct`, `layered_pct`,
+`code_drawn_pct`, `photo_only_pct`, `photo_only_last_third_pct` và
+`assets_per_scene` vẫn hiện trong profile để chẩn đoán nhưng **không chặn**.
+Chúng mô tả cách dựng, không chứng minh chất lượng người xem. Độ lặp phải được
+đánh giá trên contact sheet bằng `sheet_vision.py` và review thực tế.
 
 ### Khi gate này FAIL
 
@@ -567,6 +543,14 @@ ship là bug, không phải cưỡng chế.
 Dựng khung plan bằng `new_video.py <N> --words input/words<N>_aligned.json`.
 Khung này để rỗng mọi trường biên tập **có chủ ý** — `plan_gate` fail 423 lỗi
 trên khung trắng, nên không thể nhầm khung với kế hoạch.
+
+## Empty space / density
+
+`review_gate.py` vẫn chặn review thiếu, verdict `fail` chưa giải quyết, frame
+mất/cũ và khung render hoàn toàn trắng. Số hàng có mực / khoảng trống dài chỉ là
+**WARN** để chỉ reviewer tới master frame hoặc cheap vision. Khoảng trống có chủ
+ý không phải lỗi; không thêm chữ, line, diagram, icon, bar hoặc box chỉ để tăng
+ink density.
 
 ## selftest.py — test cho chính bộ gate
 

@@ -87,11 +87,41 @@ def _repaint_frames(mode):
             w, h = Image.open(f).size
             if mode == "blank":                 # không còn mực ở bất cứ đâu
                 arr = np.full((h, w), 235, np.uint8)
+            elif mode == "sparse":              # có nội dung thật, nhưng nhiều khoảng thở
+                arr = np.full((h, w), 235, np.uint8)
+                arr[int(h * 0.28):int(h * 0.38), int(w * 0.15):int(w * 0.85)] = 35
             else:                               # có mực, nhưng chênh 31/255
                 arr = np.full((h, w), 200, np.uint8)
                 arr[::4, :] = 231
             Image.fromarray(arr, "L").convert("RGB").save(f)
     return hook
+
+
+def _materialize_synthetic_review_frames(tmp, review):
+    """Create deterministic mechanical fixtures when golden stills are absent.
+
+    This clone tracks review10.json but not the `input/review_frames` it points
+    to. Selftests must still exercise pixel/review mechanics without generating
+    or pretending to review a golden video. These checkerboards live only in
+    TemporaryDirectory sandboxes and mean exactly one thing: visible,
+    high-contrast pixels exist everywhere a source-derived text box may land.
+    Defect cases repaint them after this helper runs.
+    """
+    import numpy as np
+    from PIL import Image
+
+    h, w = 480, 270
+    yy, xx = np.indices((h, w))
+    arr = np.where(((xx // 4) + (yy // 4)) % 2, 235, 35).astype(np.uint8)
+    for entry in review.get("scenes", []):
+        rel = pathlib.Path(str(entry.get("frame") or "").replace("\\", "/"))
+        if not str(rel):
+            continue
+        path = tmp / rel
+        if path.exists():
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        Image.fromarray(arr, "L").convert("RGB").save(path)
 
 
 def cutout_case(**kw):
@@ -152,7 +182,7 @@ def drop_all_assets(plan):
 
 
 def one_language_everywhere(plan):
-    """"Templated, repetitive" - the complaint that started this skill."""
+    """A plan-time medium repeat is advisory; rendered repetition is sheet_vision's job."""
     for s in plan["scenes"]:
         s["visualLanguage"] = "cutout"
     return plan
@@ -217,18 +247,43 @@ def placeholder_fields(plan):
 
 
 def regress_below_baseline(plan):
-    """Passes plan_gate's floors, sits well under the reference video.
-
-    This is the case that had no gate at all before baseline_gate existed:
-    every scene keeps a language and an asset, nothing repeats back to back,
-    and the video is still visibly thinner than the one it follows."""
+    """Passes structural plan fields but drops actual narration coverage."""
     plan["video"] = "VTEST"
     for i, s in enumerate(plan["scenes"]):
-        if i % 3:
+        if i % 3 == 2:
             continue
-        keep = dict(s["assets"][0]) if s["assets"] else {}
-        keep.update({"role": "hero", "src": keep.get("src") or "x.png"})
-        s["assets"] = [keep] if keep else []
+        for asset in s.get("assets", []):
+            asset["describes"] = []
+        if isinstance(s.get("punch"), dict):
+            s["punch"]["describes"] = []
+    return plan
+
+
+def photo_led_zero_code(plan):
+    """A valid plan implemented entirely with sourced/photo assets."""
+    plan["video"] = "VPHOTO"
+    for s in plan["scenes"]:
+        for asset in s.get("assets", []):
+            asset["src"] = asset.get("src") or "photo-led-reference.jpg"
+            if asset.get("role") in {"diagram", "map", "timeline", "chart"}:
+                asset["role"] = "background"
+        langs = s.get("visualLanguage")
+        if isinstance(langs, list):
+            s["visualLanguage"] = ["background-photo" if v in
+                                   {"diagram", "map", "timeline", "flow", "data"} else v
+                                   for v in langs]
+        elif langs in {"diagram", "map", "timeline", "flow", "data"}:
+            s["visualLanguage"] = "background-photo"
+    return plan
+
+
+def no_template_declarations(plan):
+    """Bespoke is the undeclared default; no template/block field is required."""
+    for s in plan["scenes"]:
+        s.pop("template", None)
+        s.pop("block", None)
+        s.pop("bespoke", None)
+        s.pop("bespokeReason", None)
     return plan
 
 
@@ -350,6 +405,17 @@ def delete_icon_vocabulary(tmp):
     same lesson REQUIRED_GATES learned when a deleted gate script turned the
     Stop hook green."""
     (tmp / "src" / "scenes" / "iconVocabulary.jsx").unlink()
+
+
+def insert_unregistered_icon(tmp):
+    """Render an Icon* component that is absent from VOX_ICONS."""
+    path = tmp / "src" / "scenes" / "V10Scene1.jsx"
+    src = path.read_text(encoding="utf-8")
+    needle = "<AbsoluteFill"
+    if needle not in src:
+        raise AssertionError("V10Scene1 has no AbsoluteFill insertion point")
+    path.write_text(src.replace(needle, "<IconBrokenReference />\n    " + needle, 1),
+                    encoding="utf-8")
 
 
 def mark_every_scene_built(plan):
@@ -644,7 +710,9 @@ def block_bespoke_no_reason(plan):
 
 CASES = [
     Case("plan_gate: cảnh không có minh hoạ nào", "plan_gate.py", drop_all_assets),
-    Case("plan_gate: một ngôn ngữ dùng cho cả video", "plan_gate.py", one_language_everywhere),
+    Case("plan_gate: một medium khai lặp không tự động thành lỗi viewer",
+         "plan_gate.py", one_language_everywhere, expect_fail=False,
+         args=lambda p: [str(p), "--skip-lifetime"]),
     Case("plan_gate: cảnh khó bị bóp thời lượng", "plan_gate.py", starve_the_hard_scenes),
     Case("plan_gate: khoảng chết hình > 4s", "plan_gate.py", open_a_dead_gap),
     Case("plan_gate: nhịp khai khống, không có gì đằng sau", "plan_gate.py", unbacked_event),
@@ -793,22 +861,39 @@ CASES = [
     Case("plan_gate: khai density 'low' cho cảnh mang 3 nhịp",
          "plan_gate.py", calm_in_name_only,
          expect_message=["declared density \"low\" but carries 3 beats"]),
-    # The vocabulary rules. Rule 1 is the one that reaches a session which has
-    # never heard of iconVocabulary.jsx, so it is the one that must not rot.
-    Case("icon_gate: viết chữ cho khái niệm đã có ký hiệu vẽ sẵn", "icon_gate.py", None,
+    # Icons are optional; integrity still blocks an icon that is actually used
+    # but missing from the registry/import surface.
+    Case("icon_gate: khái niệm có icon vẫn được dùng chữ nếu biên tập chọn vậy",
+         "icon_gate.py", None,
          scene_edit=("V10Scene5.jsx", "KHỐI NGƯỜI BỊ KHOÁ CHẶT", "MẬT ĐỘ TĂNG"),
-         args=lambda p: [str(p), "--skip-floor"],
-         expect_message=["<IconDensity>"]),
-    Case("icon_gate: video dựng xong mà không dùng ký hiệu nào", "icon_gate.py", None,
-         expect_message=["symbol floor"]),
+         expect_fail=False),
+    Case("icon_gate: video hợp lệ dùng ZERO icon vẫn PASS", "icon_gate.py", None,
+         expect_fail=False, expect_message=["zero icons is valid"]),
+    Case("icon_gate: icon thực sự dùng nhưng chưa đăng ký vẫn FAIL", "icon_gate.py", None,
+         sandbox_hook=insert_unregistered_icon,
+         expect_message=["<IconBrokenReference>", "not registered"]),
     Case("icon_gate: xoá luôn file vốn từ ký hiệu", "icon_gate.py", None,
          sandbox_hook=delete_icon_vocabulary,
-         args=lambda p: [str(p), "--skip-floor"],
          expect_message=["iconVocabulary.jsx is missing"]),
     Case("baseline_gate: tụt so với video mốc", "baseline_gate.py", regress_below_baseline,
-         args=lambda p: ["check", str(p)]),
-    Case("review_gate: chấm 'pass' cho khung đo được là trống, không nêu lý do",
-         "review_gate.py", None, review=unexplained_pass_on_empty_frame),
+         args=lambda p: ["check", str(p)], expect_message=["độ phủ nội dung"]),
+    Case("baseline_gate: code-drawn=0 không chặn plan photo-led hợp lệ",
+         "baseline_gate.py", photo_led_zero_code, expect_fail=False,
+         args=lambda p: ["check", str(p)], expect_message=["tham khảo, không chặn"]),
+    Case("plan_gate: không có diagram vẫn PASS",
+         "plan_gate.py", photo_led_zero_code, expect_fail=False,
+         args=lambda p: [str(p), "--skip-lifetime"]),
+    Case("plan_gate: không khai template/block vẫn PASS (bespoke là mặc định)",
+         "plan_gate.py", no_template_declarations, expect_fail=False,
+         args=lambda p: [str(p), "--skip-lifetime"]),
+    Case("review_gate: sparse/minimal pass không bị ép thêm density",
+         "review_gate.py", None, expect_fail=False,
+         review=unexplained_pass_on_empty_frame,
+         sandbox_hook=_repaint_frames("sparse"),
+         expect_message=["sparse-band signals are advisory"]),
+    Case("review_gate: khung render hoàn toàn trắng vẫn FAIL",
+         "review_gate.py", None, review=unexplained_pass_on_empty_frame,
+         sandbox_hook=_repaint_frames("blank"), expect_message=["completely blank"]),
     Case("review_gate: video đã dựng nhưng thiếu file review", "review_gate.py",
          mark_every_scene_built, review=lambda r: {"video": "x", "scenes": []}),
     # The reference itself must survive all four. A gate that cannot pass is a
@@ -831,10 +916,12 @@ CASES = [
          expect_message=["khong mang dau --fit"]),
     Case("asset_gate: bản đã hạ width của V10 phải PASS", "asset_gate.py",
          asset_all_clean, expect_fail=False, args=_asset_args),
-    Case("block_gate: một block kéo cả video", "block_gate.py",
-         block_overused, args=_block_args, expect_message=["vuot tran", "38%"]),
-    Case("block_gate: dùng nhiều lần nhưng chỉ một thế", "block_gate.py",
-         block_one_arrangement, args=_block_args, expect_message=["chi o 1 the"]),
+    Case("block_gate: tỉ lệ block không phải quota chặn", "block_gate.py",
+         block_overused, expect_fail=False, args=_block_args,
+         expect_message=["Khong co quota block"]),
+    Case("block_gate: một thế lặp là cảnh báo, không phải quota chặn", "block_gate.py",
+         block_one_arrangement, expect_fail=False, args=_block_args,
+         expect_message=["canh bao"]),
     Case("block_gate: khai một block không có trong kho", "block_gate.py",
          block_unknown, args=_block_args, expect_message=["khong co trong registry"]),
     Case("block_gate: cảnh không khai gì thì KHÔNG bị chặn (không khai = bespoke)",
@@ -849,12 +936,8 @@ CASES = [
     Case("plan_gate: V10 thật phải PASS (trừ luật mới sau khi V10 ship)", "plan_gate.py",
          None, expect_fail=False, args=lambda p: [str(p), "--skip-lifetime"]),
     Case("build_gate: V10 thật phải PASS", "build_gate.py", None, expect_fail=False),
-    # V10 predates the vocabulary and uses none of it, so the FLOOR is skipped
-    # here for the same reason --skip-lifetime is above. Rules 1, 3 and 4 still
-    # apply: V10's 31 drawn words must not name anything the vocabulary draws.
-    Case("icon_gate: V10 thật phải PASS (trừ sàn ký hiệu ra đời sau V10)",
-         "icon_gate.py", None, expect_fail=False,
-         args=lambda p: [str(p), "--skip-floor"]),
+    Case("icon_gate: V10 zero-icon thật phải PASS", "icon_gate.py", None,
+         expect_fail=False),
     Case("review_gate: V10 thật phải PASS", "review_gate.py", None, expect_fail=False),
     Case("baseline_gate: V10 thật phải PASS", "baseline_gate.py", None, expect_fail=False,
          args=lambda p: ["check", str(p)]),
@@ -965,6 +1048,7 @@ def build_sandbox(tmp, plan_mut, review_mut, scene_edit=None, sandbox_hook=None)
             review = review_mut(copy.deepcopy(review))
         (tmp / "input" / "review10.json").write_text(
             json.dumps(review, ensure_ascii=False, indent=2), encoding="utf-8")
+        _materialize_synthetic_review_frames(tmp, review)
 
     for name in ("words10_aligned.json",):
         src = ROOT / "input" / name

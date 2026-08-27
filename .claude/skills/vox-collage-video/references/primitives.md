@@ -66,12 +66,10 @@ npx remotion still IconVocabularySheet input/icon_vocabulary.png --scale=0.5
 `IconDoc` · `IconFall` · `IconMoney` · `IconPerson` · `IconPhone` ·
 `IconPin` · `IconQuestion` · `IconRise` · `IconScale` · `IconWarning`
 
-**This one is enforced, not suggested.** `icon_gate.py` parses the `VOX_ICONS`
-registry out of the file itself and fails a scene whose drawn label spells out
-a concept an icon already draws, and a finished video that carries symbols in
-under a fifth of its scenes. Adding an icon means adding **both** the
-`export const` and the registry entry — either one alone is a failure, so the
-list above cannot drift out of date.
+**Icons are optional.** A video using zero icons is valid. `icon_gate.py` parses
+the `VOX_ICONS` registry and, when a scene actually renders an icon, checks that
+the component is registered/exported/imported. Adding an icon means adding both
+the `export const` and registry entry so the capability cannot drift.
 
 `IconScale` tilts toward the heavier side and `IconDensity` takes a real
 `fill` ratio: pass the actual values, so the drawing carries the claim instead
@@ -114,7 +112,8 @@ are **not** the default route into a scene. Measured coverage on plans:
 On any video the blocks have not already seen — including a direct sequel with
 the same assets and style — three scenes in four have no block that fits. So
 the library is a small convenience, not a scaffold, and the build step must not
-open with "check the library".
+open with "check the library". There is no minimum block share, no maximum
+bespoke share, and repetition percentages are advisory rather than blocking.
 
 That framing is what killed `SceneTemplates.jsx`, and it contradicts this
 skill's own first rule: *meaning first, component second.*
@@ -130,7 +129,8 @@ same way, so it is reusable by construction rather than by evidence.
 Blocks hold **no absolute frames** — entrances arrive through `beats` from
 `beat_sync.py`, so one block fits a 90-frame scene and a 152-frame one.
 
-Monotony is now measured, not constrained: `sheet_vision.py` reads the rendered
+Monotony is reviewed on output, not constrained by media quotas:
+`sheet_vision.py` reads the rendered
 contact sheet and reports the largest look-alike group (V10 23–38%, V11 54–67%,
 matching the viewer's own "liked" / "exhausting"). That is a better instrument
 than a plan-time quota derived from one video — the derived constants failed to

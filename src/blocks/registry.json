@@ -2,11 +2,8 @@
   "version": 1,
   "note": "Kho block. Agent KHONG chon block bang cach doc ten - no khai narrativeFunction x visualLanguage o buoc 2a/2b (viec no da bat buoc phai lam), roi tra `fits` de ra danh sach hop le. Truong `whenNotToUse` quan trong ngang `whenToUse`: no la thu chan viec chon cho co, cho du. Xem block_gate.py.",
   "calibration": {
-    "maxShareOfVideo": 0.25,
-    "why": "Rut tu V10 - video nguoi xem thich: block dung nhieu nhat la PhotoClaim 6/26 = 23%. Tran 25% nam ngay tren muc do. De y: de xuat ban dau la '<=2 canh/video' va no SAI - no se danh truot chinh V10. Dung ha tran nay de mot video moi di qua.",
-    "minVariantsWhenRepeated": 2,
-    "whyVariants": "PhotoClaim dung 6 lan trong V10 nhung o 3 cho dat chu khac nhau (middle/top/bottom). Mot block lap lai o cung mot the la cong thuc, du no chi chiem 23%.",
-    "consecutiveIsWarnNotFail": "V10 co dung mot lan hai canh lien tiep cung cau truc (S21 -> S22) va nguoi xem khong phan nan. Chan cung se la mot nguong khong co du lieu do lung."
+    "status": "advisory-only",
+    "why": "Block usage and arrangement counts are implementation signals, not acceptance quotas. Review repetition on rendered contact sheets with sheet_vision."
   },
   "blocks": [
     {

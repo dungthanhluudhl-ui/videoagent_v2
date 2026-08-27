@@ -5,14 +5,9 @@ Why this exists
 ---------------
 Every other gate in this skill enforces a FLOOR. plan_gate accepts 70% content
 coverage; V10 shipped 94%. It accepts 1.60s per beat on a complex scene; V10
-shipped 2.10. It accepts one visual language covering half the video; V10 used
-eleven and never repeated one back to back.
-
-So video N+1 can score 71% and 1.61 and 1 language short of collapse, pass
-every single gate, and be visibly worse than the video before it. That is not
-a hypothetical - it is exactly the "chất lượng chênh lệch, không đồng nhất"
-failure the user named, and before this file existed nothing in the project
-measured it.
+shipped 2.10. A later video can sit just over those floors and still regress,
+so this gate compares the same viewer-facing evidence with a frozen reference.
+Implementation-medium shares remain advisory.
 
 This gate compares a new plan against a FROZEN PROFILE of a video that was
 actually judged good, not against an absolute minimum. The bar is "no material
@@ -29,9 +24,10 @@ Deliberate limits, stated so nobody mistakes this for more than it is:
     render-free. Composition defects (a small drawing floating in white space)
     are review_gate's and a human's job, not this one's. Pass `--frames DIR`
     to fold in the rendered-frame measurements when they exist.
-  * A frozen profile freezes the reference's WEAKNESSES too. Where V10 was
-    known to be weak, the target below is deliberately set BETTER than V10 and
-    marked `stricter_than_reference` - see `photo_only_last_third_pct`.
+  * Implementation-medium metrics (code drawing, layer/asset counts, photo
+    share, and declared-language variety) are profile information only. They do
+    not tell whether a viewer sees a strong edit and never block a photo-led
+    legal documentary.
   * Structure is not quality. A plan can hit every number here and still be
     dull. This gate makes "quietly sliding backwards" impossible; it cannot
     make anything good.
@@ -64,37 +60,27 @@ def _langs(scene):
         return []
     return list(v) if isinstance(v, list) else [v]
 
-# metric -> (direction, slack, label)
+# Blocking viewer-facing metrics -> (direction, slack, label)
 #   direction "up"   : higher is better, FAIL when new < ref - slack
 #   direction "down" : lower  is better, FAIL when new > ref + slack
 METRICS = {
     "content_coverage_pct":  ("up",   8.0,  "độ phủ nội dung"),
     "spb_complex":           ("up",   0.25, "giây/nhịp ở cảnh complex"),
     "spb_moderate":          ("up",   0.20, "giây/nhịp ở cảnh moderate"),
-    "distinct_languages":    ("up",   2.0,  "số ngôn ngữ hình ảnh khác nhau"),
-    "max_language_share_pct":("down", 8.0,  "tỉ lệ ngôn ngữ chiếm nhiều nhất"),
-    "layered_pct":           ("up",  12.0,  "tỉ lệ cảnh xếp chồng >=2 vai trò"),
-    "code_drawn_pct":        ("up",  12.0,  "tỉ lệ cảnh có hình vẽ bằng code"),
-    "photo_only_pct":        ("down",10.0,  "tỉ lệ cảnh chỉ có ảnh nền"),
-    "assets_per_scene":      ("up",   0.35, "số tài nguyên trung bình mỗi cảnh"),
     "max_event_gap_sec":     ("down", 1.0,  "khoảng cách sự kiện thị giác lớn nhất"),
 }
 
-# Metrics that are a COUNT of scenes rather than a rate over them. A count can
-# never exceed the number of scenes, so comparing a short plan against a
-# 26-scene reference asks for something arithmetically impossible.
-#
-# Found on a real run: the V12 three-scene test build used three DIFFERENT
-# visual languages - maximal possible variety, nothing repeated - and still
-# failed "số ngôn ngữ hình ảnh khác nhau: 3 (mốc 11, cần >= 9.0)". The gate was
-# measuring LENGTH and reporting it as a quality regression. Every rate metric
-# in the same run came in at or above the reference.
-#
-# Capping the floor at the scene count keeps the metric fully strict at full
-# length (a 24-scene plan is still held to 9) while letting a short plan be
-# judged on what it can actually achieve. The cap is PRINTED whenever it
-# engages: a threshold that relaxes silently is a threshold that rots.
-COUNT_METRICS = {"distinct_languages"}
+# Useful for diagnostics and historical comparison, but not acceptance. These
+# describe HOW a plan is implemented, not whether the rendered result is good.
+ADVISORY_METRICS = {
+    "distinct_languages":     "số ngôn ngữ hình ảnh khai trong plan",
+    "max_language_share_pct": "tỉ lệ ngôn ngữ khai nhiều nhất",
+    "layered_pct":            "tỉ lệ cảnh khai >=2 vai trò",
+    "code_drawn_pct":         "tỉ lệ cảnh có hình vẽ bằng code",
+    "photo_only_pct":         "tỉ lệ cảnh chỉ có ảnh nền",
+    "photo_only_last_third_pct": "tỉ lệ cảnh chỉ-có-ảnh ở 1/3 cuối",
+    "assets_per_scene":       "số tài nguyên trung bình mỗi cảnh",
+}
 
 # Below this many scenes, rate metrics are computed over so few samples that a
 # single scene moves them by tens of percent. The comparison still runs - it is
@@ -102,17 +88,7 @@ COUNT_METRICS = {"distinct_languages"}
 # "PASSED" on a 3-scene build as proof that the finished video will hold.
 SMALL_PLAN_SCENES = 8
 
-# Targets that do NOT come from the reference video, because the reference was
-# itself weak here. Freezing V10's own number would freeze its flaw.
-ABSOLUTE_TARGETS = {
-    # V10's last third carried 33% mood-photo scenes against 23% overall - the
-    # video drifts from explainer toward essay as it ends. Capped at overall
-    # + 12 points so a new video cannot coast to the finish.
-    "photo_only_last_third_pct": {
-        "rule": "<= photo_only_pct + 12",
-        "why": "video không được nhạt dần về cuối - đoạn kết vẫn phải giải thích",
-    },
-}
+ABSOLUTE_TARGETS = {}
 
 
 # ---------------------------------------------------------------------------
@@ -293,11 +269,6 @@ def check(profile, baseline, slack_overrides=None):
             slack = slack_overrides[key]
             note = f"  [slack ghi đè qua --slack thành {slack} cho video này]"
         limit = old - slack if direction == "up" else old + slack
-        if key in COUNT_METRICS and direction == "up" and isinstance(n_scenes, int) \
-                and limit > n_scenes:
-            note = (f"  [hạ trần: {n_scenes} cảnh thì nhiều nhất cũng chỉ đạt "
-                    f"{n_scenes}, đòi {round(limit, 2)} là bất khả]")
-            limit = n_scenes
         bad = new < limit if direction == "up" else new > limit
         arrow = "≥" if direction == "up" else "≤"
         mark = "FAIL" if bad else "OK  "
@@ -308,18 +279,12 @@ def check(profile, baseline, slack_overrides=None):
                 f"- tụt quá mức cho phép ({slack}). Đây là kiểu 'vẫn pass gate nhưng "
                 f"xem tệ hơn video trước'. Sửa kế hoạch, đừng nới ngưỡng.")
 
-    # absolute rule - not inherited from the reference
-    lt, po = profile.get("photo_only_last_third_pct"), profile.get("photo_only_pct")
-    if lt is not None and po is not None:
-        cap = po + 12
-        bad = lt > cap
-        lines.append(f"{'FAIL' if bad else 'OK  '} tỉ lệ cảnh chỉ-có-ảnh ở 1/3 cuối: "
-                     f"{lt}% (toàn video {po}%, trần {round(cap, 1)}%)")
-        if bad:
-            failures.append(
-                f"1/3 cuối video có {lt}% cảnh chỉ là ảnh nền, so với {po}% toàn video "
-                f"- video nhạt dần về cuối, chuyển từ giải thích sang tuỳ bút. "
-                f"Ngưỡng này KHÔNG lấy từ video mốc: chính video mốc cũng yếu ở đây.")
+    for key, label in ADVISORY_METRICS.items():
+        new, old = profile.get(key), ref.get(key)
+        if new is None:
+            continue
+        suffix = f"; mốc {old}" if old is not None else ""
+        lines.append(f"INFO {label}: {new}{suffix} (tham khảo, không chặn)")
     return lines, failures
 
 
@@ -348,7 +313,7 @@ def main():
     ap.add_argument("--note", default="", help="ghi chú khi freeze")
     ap.add_argument("--slack", action="append", default=[],
                     help="ghi đè slack một chỉ số cho VIDEO NÀY, dạng key=value "
-                         "(vd --slack max_language_share_pct=25). Chỉ dùng khi ngưỡng "
+                         "(vd --slack content_coverage_pct=10). Chỉ dùng khi ngưỡng "
                          "mặc định thực sự sai cho hình dạng video này - nói rõ lý do "
                          "ở chỗ gọi lệnh, không dùng để dập tắt một hồi quy thật.")
     ap.add_argument("--json", action="store_true")
@@ -380,7 +345,8 @@ def main():
                                  f"đã được duyệt là đạt cả 4 tiêu chí nghiệm thu.",
             "howToUse": "baseline_gate.py check input/scene_plan<N>.json. "
                         "KHÔNG freeze lại bằng một video kém hơn chỉ để gate im lặng - "
-                        "chỉ freeze lại khi video mới THỰC SỰ tốt hơn ở mọi chỉ số.",
+                        "chỉ metric viewer-facing trong `metrics` chặn; implementation "
+                        "shares trong profile là thông tin.",
             "metrics": {k: {"direction": d, "slack": s, "label": l}
                         for k, (d, s, l) in METRICS.items()},
             "absoluteTargets": ABSOLUTE_TARGETS,

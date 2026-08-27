@@ -5,9 +5,9 @@ sheet_vision.py - hoi model re MOT cau ma khong gate nao hoi duoc:
 
 Vi sao no phai la mot script rieng
 ----------------------------------
-`vision_check.py` soi TUNG khung mot. `block_gate.py` dem ty le dung block tren
-PLAN. Ca hai deu mu truoc cau hoi bat dau tu ban dung THAT: hai muoi tu canh
-khai bao khac nhau tren giay van co the trong giong het nhau tren man hinh.
+`vision_check.py` soi TUNG khung mot. Plan labels va block percentages deu mu
+truoc cau hoi bat dau tu ban dung THAT: hai muoi tu canh khai bao khac nhau tren
+giay van co the trong giong het nhau tren man hinh.
 
 Do la dung tieu chi thu ba cua nguoi xem - `varied` - va no la tieu chi duy
 nhat khong the tra loi bang mot khung hinh, vi no la cau hoi VE QUAN HE GIUA
@@ -19,10 +19,6 @@ Do duoc, tren hai video co phan quyet that cua nguoi xem
          ba nhom: ban do 3, anh den trang 6, do hoa luoi 6  (nhom lon nhat 23%)
     V11  nguoi xem noi "met"   -> repetitive: TRUE
          mot nhom 14/24 = 58% cung mot kieu "nen kem luoi kem so do chu"
-
-Hai con so do trung khop voi thu duoc rut ra doc lap tu mot huong khac:
-`block_gate.MAX_SHARE = 0.25`, lay tu V10 co block day nhat o 23%. Hai duong
-do khong biet nhau va gap nhau o cung mot cho.
 
 CANH BAO THANG: N = 2. Hai video khong phai mot phep hieu chuan. Nguong
 REPEAT_SHARE duoi day nam giua 23% va 58% chu khong phai duoc do ra tu mot

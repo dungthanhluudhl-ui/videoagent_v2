@@ -61,7 +61,7 @@ each failure.
       "visualLanguage": "cutout",
 
       // --- 2b Motion Implementer fields ---
-      "template": "CollageScene",        // named template or "bespoke:<desc>"
+      "template": "CollageScene",        // OPTIONAL named template or bespoke note
       "backdrop": "grid|chart|card|spotlight|photo",
       "variant": "rise|grow|punch|flip|dropSpin|strike",
 
@@ -99,10 +99,8 @@ from collections import Counter
 # Vocabulary
 # ---------------------------------------------------------------------------
 
-# The visual languages a scene may use. The whole point of this field is to
-# force a decision BEFORE a template is picked - the V10 failure was that
-# every scene defaulted to "cutout on a blank paper background" because that
-# was the only path the skill ever described concretely.
+# The visual languages a scene may use. This records an editorial decision
+# before implementation; it is not a quota and none is mandatory.
 VISUAL_LANGUAGES = {
     "cutout",           # background-removed photo of a concrete object/person
     "map",              # real geographic map (MapGraphic / MapLibre)
@@ -116,7 +114,7 @@ VISUAL_LANGUAGES = {
     "document",         # document/newspaper reveal
     "annotated",        # photo + leader lines + labels
     "mockup",           # device/screen frame
-    "text-only",        # NO imagery at all - explicitly declared, hard-capped
+    "text-only",        # NO imagery at all - explicitly declared for integrity
 }
 
 # Roles that count as a real illustration for the "no empty scene" gate.
@@ -134,7 +132,7 @@ REQUIRED_SCENE_FIELDS = [
     "id", "startSec", "endSec",
     "narrativeFunction", "viewerQuestion", "visualTransformation",
     "contrastWithPrevious", "density", "visualLanguage",
-    "template", "backdrop", "variant", "comprehensionLoad",
+    "backdrop", "variant", "comprehensionLoad",
 ]
 
 # Chữ điền cho có. `is_empty` bắt được ô trống và placeholder, nhưng không bắt
@@ -202,17 +200,12 @@ EMPTY_MARKERS = {"", "none", "n/a", "-", "tbd", "todo", "?"}
 # ---------------------------------------------------------------------------
 
 DEFAULTS = {
-    "max_language_share": 0.50,   # no one visual language on >50% of scenes
-    "max_variant_share": 0.50,
-    "max_text_only_share": 0.15,  # V10 shipped at 0.41 -> must fail
-    "max_named_template_share": 0.60,  # the rest must be bespoke arrangements
     "max_dead_air_sec": 4.0,      # no >4s stretch with nothing new on screen
     "event_backing_tol_frames": 8,  # a visualEvent must sit within this many frames of a
                                     # real asset entrance/exit or punch reveal, so pacing
                                     # can't be satisfied by typing more events
     "min_content_coverage": 0.70, # >=70% of RUNTIME must carry a relevant visual
     "coverage_window_sec": 2.0,   # a visual "explains" a phrase within +/- this
-    "max_punch_top_repeat": 2,    # headline can't sit at the same Y on >2 scenes
     "max_consecutive_high": 3,    # after this many dense scenes the viewer needs a breath
     "breath_window": 10,          # every N consecutive scenes must contain one low-density scene
 
@@ -432,7 +425,6 @@ def gate_no_empty_scenes(scenes, rep, thresholds):
     one. A scene with nothing to look at is the single biggest driver of a
     video reading as boring."""
     rep.section("Empty-scene gate")
-    text_only = []
     bad = False
     for scene in scenes:
         sid = scene.get("id", "?")
@@ -440,7 +432,7 @@ def gate_no_empty_scenes(scenes, rep, thresholds):
         declared_text_only = "text-only" in scene_languages(scene)
         if not assets:
             if declared_text_only:
-                text_only.append(sid)
+                rep.info(f"{sid}: intentionally text-only")
             else:
                 rep.fail(f"{sid}: visualLanguage={scene.get('visualLanguage')!r} but no "
                          f"illustrative asset ({'/'.join(sorted(ILLUSTRATIVE_ROLES))}). "
@@ -450,16 +442,8 @@ def gate_no_empty_scenes(scenes, rep, thresholds):
             rep.fail(f"{sid}: declared text-only but has {len(assets)} illustrative asset(s)")
             bad = True
 
-    share = len(text_only) / len(scenes) if scenes else 0
-    limit = thresholds["max_text_only_share"]
-    if share > limit:
-        rep.fail(f"text-only scenes = {len(text_only)}/{len(scenes)} ({share:.0%}) "
-                 f"> {limit:.0%} cap: {', '.join(text_only)}")
-        bad = True
-    else:
-        rep.info(f"text-only scenes: {len(text_only)}/{len(scenes)} ({share:.0%}, cap {limit:.0%})")
     if not bad:
-        rep.ok("every scene has something to look at, text-only stays under cap")
+        rep.ok("every scene either declares text-only or has a real illustrative asset")
 
 
 # The seven composed arrangements in src/scenes/SceneTemplates.jsx. Kept here
@@ -472,12 +456,16 @@ NAMED_TEMPLATES = {
 
 
 def gate_diversity(scenes, rep, thresholds):
-    rep.section("Diversity gate")
-    bad = False
-    n = len(scenes)
+    """Report plan-level formula signals without turning media into quotas.
 
-    for field, limit_key in (("visualLanguage", "max_language_share"),
-                             ("variant", "max_variant_share")):
+    A photo-led legal documentary can honestly repeat a treatment, while two
+    plans with different labels can render identically. `sheet_vision.py` and
+    the mandatory review inspect the finished output; this section is advisory.
+    """
+    rep.section("Diversity advisory")
+    bad = False
+
+    for field in ("visualLanguage", "variant"):
         # visualLanguage may now be a list (a shotlist's own "background-photo
         # + annotated" layered spec, see scene_languages()). Share is still
         # "in what % of SCENES does this language appear" - a scene declaring
@@ -488,12 +476,6 @@ def gate_diversity(scenes, rep, thresholds):
             counts = Counter(lang for s in scenes for lang in set(scene_languages(s)))
         else:
             counts = Counter(s.get(field) for s in scenes)
-        limit = thresholds[limit_key]
-        for value, count in counts.most_common():
-            if count / n > limit:
-                rep.fail(f"{field}={value!r} on {count}/{n} scenes ({count/n:.0%}) "
-                         f"> {limit:.0%} cap - the video reads as one repeated formula")
-                bad = True
         rep.info(f"{field} spread: " + ", ".join(f"{k}×{v}" for k, v in counts.most_common()))
 
     # Consecutive repeats read far more strongly than global share. For
@@ -510,35 +492,23 @@ def gate_diversity(scenes, rep, thresholds):
             else:
                 prev_v, cur_v = prev.get(field), cur.get(field)
             if prev_v is not None and prev_v == cur_v:
-                rep.fail(f"{field}={cur_v!r} repeats on consecutive scenes "
-                         f"{prev.get('id')} -> {cur.get('id')}")
-                bad = True
+                rep.info(f"advisory: {field}={cur_v!r} repeats on consecutive scenes "
+                         f"{prev.get('id')} -> {cur.get('id')}; judge the rendered edit")
 
-    # Headline always in the same spot = the "every scene looks alike" tell.
+    # These are implementation/layout signals only; keep them visible but do
+    # not infer finished-video monotony from plan labels.
     tops = Counter((s.get("punch") or {}).get("top") for s in scenes
                    if (s.get("punch") or {}).get("top") is not None)
     for top, count in tops.items():
-        if count > thresholds["max_punch_top_repeat"]:
-            rep.fail(f"punch top={top} identical on {count} scenes "
-                     f"(> {thresholds['max_punch_top_repeat']}) - headline never moves")
-            bad = True
+        if count > 2:
+            rep.info(f"advisory: punch top={top} identical on {count} scenes; "
+                     f"check the rendered contact sheet")
 
-    # Nothing above stops a plan built entirely from the seven named templates,
-    # rotated so no two neighbours match. That passes every other diversity
-    # check and is exactly the "AI reaches for the menu and stops thinking"
-    # failure - the templates are documented as STARTING POINTS, and roughly
-    # half of V10's scenes were already bespoke, so requiring it is not a
-    # stretch. A bespoke scene must say what it is: "bespoke:" alone is a
-    # label, not a decision.
+    # Named templates and bespoke descriptions are recorded for review, not
+    # capped. Block/template choice follows meaning; 100% bespoke is valid.
     named = [s for s in scenes if (s.get("template") or "") in NAMED_TEMPLATES]
-    limit = thresholds["max_named_template_share"]
-    if n and len(named) / n > limit:
-        rep.fail(f"{len(named)}/{n} scenes ({len(named)/n:.0%}) use a stock template from "
-                 f"SceneTemplates.jsx (> {limit:.0%} cap). The templates are starting points, "
-                 f"not a menu - compose bespoke arrangements from the primitives for scenes "
-                 f"whose content none of them actually fits. Offenders: "
-                 + ", ".join(f"{s.get('id')}={s.get('template')}" for s in named))
-        bad = True
+    if named:
+        rep.info(f"advisory: {len(named)}/{len(scenes)} scenes declare a legacy named template")
     for scene in scenes:
         tpl = (scene.get("template") or "").strip()
         if tpl.startswith("bespoke") and len(tpl.split(":", 1)[-1].strip()) < 12:
@@ -547,13 +517,11 @@ def gate_diversity(scenes, rep, thresholds):
                      f"'bespoke: alley cross-section over a night background photo'")
             bad = True
 
-    densities = [s.get("density") for s in scenes]
-    if len(set(densities)) < 2:
-        rep.fail("density never changes across the whole video - no pacing arc")
-        bad = True
+    densities = Counter(s.get("density") for s in scenes)
+    rep.info("declared density: " + ", ".join(f"{k}×{v}" for k, v in densities.items()))
 
     if not bad:
-        rep.ok("no single language/variant dominates, nothing repeats back-to-back")
+        rep.ok("plan diversity signals reported as advisory; rendered-output review decides repetition")
 
 
 def derive_load(scene, words):

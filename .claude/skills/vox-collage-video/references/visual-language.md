@@ -13,10 +13,10 @@ stranded in white space. Measured afterwards, the worst scenes filled
 The viewer's verdict was blunt: boring, and the illustrations don't explain
 anything.
 
-So there is now a step BEFORE picking a template: decide which visual
-language the content actually calls for. `visualLanguage` is a required field
-in `scene_plan.json` and `plan_gate.py` fails the plan if one language covers
-more than half the video.
+So there is a step BEFORE picking a component: decide which treatment the
+content actually calls for. `visualLanguage` records that choice; its share is
+informational, not a style quota. Repetition is judged on rendered output by
+review and `sheet_vision.py`, not inferred from implementation labels.
 
 ## The languages
 
@@ -24,7 +24,7 @@ more than half the video.
 |---|---|---|
 | A specific object or person | `cutout` | `Hero` / `Support` (`shared.jsx`) |
 | A place, a location, a district | `map` | `MapGraphic` (`MapGraphic.jsx`) — real MapLibre map |
-| A layout, a size, a distance, a density | `diagram` | `DiagramCanvas` + `DrawnPath` / `DimensionLine` / `DensityGrid` / `SlopeIndicator` |
+| A relationship, legal structure, layout, size, distance, density | `diagram` | Use only when it explains more clearly than imagery; `DiagramCanvas` + relevant primitives |
 | A sequence of events in time | `timeline` | `Timeline` (`visualLanguage.jsx`) |
 | Cause → effect, a mechanism | `flow` | `FlowArrow`, `FlowDiagramScene` |
 | A number, a trend | `data` | `StatCounter`, `AnimatedLineChart` |
@@ -34,22 +34,19 @@ more than half the video.
 | A document, a record, an archive | `document` | `NewspaperSpotlightScene` |
 | A detail inside a wider image | `annotated` | `AnnotatedPhoto` — leader lines + labels |
 | A screen, a broadcast, a phone | `mockup` | `DeviceMockup` |
-| Nothing to show (rare, capped) | `text-only` | `PunchPhrase` alone |
+| Nothing useful to show (rare, intentional) | `text-only` | `PunchPhrase` alone; no percentage quota |
 
 ## Rules the gates enforce
 
-- **No language on more than 50% of scenes.** One technique repeated for a
-  whole video reads as a formula regardless of how good that technique is.
-- **`text-only` capped at 15% of scenes.** V10 ran at 29–47% depending on how
-  you count; that alone made half the video an empty page.
+- **No visual language, diagram, icon, code-drawn share, block share, layer
+  count or text-only share is a blocking style quota.**
 - **A scene declaring a language must actually contain it.** Declaring `map`
   and then rendering only a pin on blank paper is the exact V10 defect, and
   `plan_gate.py` now fails it.
-- **No language repeats on consecutive scenes.**
 - **Illustrations must fill ≥12% of the usable band** (`check_overlap.py`).
-  That floor was calibrated against scenes the user had already judged by
-  eye — it separates their verdicts exactly. Aim for the 25% advisory target;
-  12% is the line below which a scene reads as broken.
+  This technical floor catches a missing/tiny planned illustration, not a
+  demand for ink. Legitimate full-bleed/minimal scenes are judged from the
+  master frame; never add decoration to raise a density number.
 - **The visual mass must stay near the centre of the band**, not drift to an
   edge (`check_overlap.py`'s balance check). Filling the frame and centring
   it are different problems; a top-heavy scene passes coverage and still
@@ -58,11 +55,12 @@ more than half the video.
   entering or leaving, or the punch revealing. Pacing cannot be satisfied by
   declaring more events.
 
-## Layer languages, don't just pick one
+## Layer only when the second layer adds meaning
 
-The single most useful habit: most strong scenes are **two languages stacked**,
-not one used alone. A `Timeline` on blank paper is still a sparse frame; the
-same timeline over a `BackgroundPhoto` is a finished shot.
+A timeline over a relevant document/photo may clarify both time and context.
+That does not create a two-layer requirement: one authentic judgment page,
+photo or contextual frame can be the strongest composition. Empty space is not
+automatically a defect.
 
 Combinations that work:
 
@@ -71,6 +69,11 @@ Combinations that work:
 - `map` + `annotated` — where it is, then what to look at within it
 - `cutout` + `background-photo` — the subject stops floating
 - `timeline` + `background-photo` — chronology with a mood
+
+Every line must encode information: a relationship, cause, timeline, route,
+measurement, or legal-element connection. Do not add decorative orange paths,
+black filler lines, arbitrary underlines/scribbles/X marks, grids or unexplained
+connectors.
 
 ## Choosing honestly
 

@@ -29,21 +29,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 
-def icon_list():
-    """The symbol vocabulary, read live from the component file.
-
-    Read rather than hard-coded so a new icon reaches the next video's plan the
-    moment it is registered - a typed-out list is a list that goes stale, and a
-    stale list is how the vocabulary quietly shrinks back to what one session
-    happened to remember.
-    """
-    try:
-        from icon_gate import load_registry
-        registry, _exported, _problems = load_registry(pathlib.Path("."))
-        return ", ".join(sorted(registry)) or "(chưa đọc được registry)"
-    except Exception as exc:                                  # noqa: BLE001
-        return f"(chưa đọc được registry: {exc})"
-
 SKELETON_SCENE = {
     "id": "",
     "startSec": 0.0,
@@ -57,10 +42,8 @@ SKELETON_SCENE = {
     "density": "",                # low|med|high
     "comprehensionLoad": "",      # simple|moderate|complex - drives the pacing gate
     # --- 2b-0 Visual language ----------------------------------------------
-    "visualLanguage": "",         # see references/visual-language.md - do NOT default
-                                  # to cutout; most strong scenes layer TWO
+    "visualLanguage": "",         # records the chosen treatment; no medium quota
     # --- 2b Motion Implementer ---------------------------------------------
-    "template": "",               # named template, or "bespoke: <what it arranges>"
     "backdrop": "",               # grid|chart|card|spotlight|photo
     "variant": "",                # rise|grow|punch|flip|dropSpin|strike
     "assets": [],
@@ -161,7 +144,7 @@ def main():
         # end-to-end từ đầu).
         "shotlistApproved": False,
         "_howToUse": [
-            "Mọi trường rỗng ở đây đều PHẢI điền - plan_gate.py fail trên placeholder.",
+            "Mọi trường biên tập bắt buộc còn rỗng đều PHẢI điền; template/block là tùy chọn.",
             "Điền theo thứ tự 2a -> 2b-0 -> 2b trong SKILL.md. Nghĩa trước, component sau.",
             "startSec/endSec chỉ là điểm khởi đầu lấy từ segment của Whisper. "
             "Phải dời lại theo comprehensionLoad: cảnh người xem phải ĐỌC cần >=4s "
@@ -170,18 +153,11 @@ def main():
             "TRƯỚC khi source bất kỳ ảnh nào. User duyệt xong mới đặt "
             "shotlistApproved=true - hook chặn mọi file cảnh khi cờ còn false.",
             "Đặt status='shipped' khi xong video để hook im lặng.",
-            # Written INTO the plan file, not left in a reference doc, because
-            # the plan is the file that gets opened on every scene of every
-            # video. A capability nobody remembers is a capability nobody uses:
-            # @remotion/shapes sat installed and unused through eleven videos
-            # while primitives.md described it the whole time.
-            "Ưu tiên KÝ HIỆU thay cho câu chữ vẽ: caption đã chạy nguyên lời "
-            "thoại ở dưới rồi, chữ vẽ thêm là bắt người xem đọc hai lần. "
-            "Vốn ký hiệu dựng sẵn (src/scenes/iconVocabulary.jsx): " + icon_list()
-            + ". Xem mặt mũi từng ký hiệu: "
-            "npx remotion still IconVocabularySheet input/icon_vocabulary.png --scale=0.5",
-            "icon_gate.py chặn cả hai phía: viết chữ cho khái niệm đã có ký hiệu, "
-            "và cả video dựng xong mà không dùng ký hiệu nào.",
+            "Ảnh/tài liệu/hình ảnh thật là lựa chọn đầu tiên. Diagram và icon chỉ dùng khi "
+            "chúng giải thích quan hệ, quá trình, thời gian, số lượng, địa lý hoặc cấu trúc "
+            "pháp lý rõ hơn ảnh; video dùng 0 icon vẫn hợp lệ.",
+            "Không thêm chữ, icon, đường, mũi tên, lưới hoặc layer chỉ để lấp khoảng trống. "
+            "Khoảng trống có chủ ý không phải lỗi; mỗi thành phần phải nói được nó giải thích gì.",
         ],
         "scenes": scenes,
     }

@@ -427,18 +427,18 @@ the caption band. That is fine for a full-bleed photo (the chip has its own
 background) and wrong for anything with its own frame, screen or border. Check
 mockups, documents and device shots on a master still specifically.
 
-## A single element scene has no second layer to fall back on
+## A sparse scene is not repaired by a compulsory second layer
 
 V10/S20 is the weakest scene in the finished video, and the reason is
 structural rather than aesthetic: it uses ONE visual language (`mockup`) and
 one element. When that element is sized correctly there is still ~500px of
 bare paper under it, because nothing else was ever planned to be there.
 
-Measured across V10: scenes layering ≥2 asset roles are 42% of the video, and
-the two that do not (S8, S20) are the two that needed the most rescuing. The
-rule in `visual-language.md` — *most strong scenes are two languages stacked* —
-is not a style preference. It is what leaves you something to fill the frame
-with when the first idea turns out to be small.
+The failure was not "one layer" or a low ink number; it was a weak viewer-facing
+composition. A second treatment is valid only when it adds meaning. A relevant
+full-bleed photo, a larger authentic document, a stronger crop, or deliberate
+empty space may each be the right answer. Never add labels, lines, icons,
+diagrams, bars or boxes merely to make a density metric green.
 
 ## Recording a defect is not fixing it, but it is not nothing
 
@@ -451,7 +451,7 @@ They are written here rather than in a commit message because a commit message
 is read once, by whoever wrote it. This file is read at the start of the next
 build, which is when these patterns can still be avoided.
 
-## An installed package is not an available one
+## Optional capability must not become compulsory style
 
 `@remotion/shapes` and `@remotion/paths` were installed for eleven videos and
 imported by zero files. `primitives.md` listed them the whole time, marked
@@ -464,13 +464,9 @@ pressure using whatever it already has to hand. Typing a sentence is always
 the cheapest way to get a concept on screen, so the sentence wins every time
 the choice is left to judgement.
 
-Two things had to change together:
-
-* the drawn form had to become the cheap one — `iconVocabulary.jsx`, where
-  every symbol is `<IconX x={} y={} delay={} />` and takes less typing than the
-  label it replaces
-* forgetting had to become impossible — `icon_gate.py`, which names the icon at
-  the moment the label is being written
+`iconVocabulary.jsx` remains a cheap optional tool. `icon_gate.py` now protects
+only registry/export/import integrity when a scene actually uses an icon. A
+valid video may use zero icons, and textual concepts are not forcibly replaced.
 
 The registry is parsed out of the component file itself rather than kept as a
 manifest, and an entry with no component (or a component with no entry) is a
@@ -479,16 +475,14 @@ to fail open: stale, silent, and still passing.
 
 ## The V10 debt, written down rather than hidden
 
-Two rules were written after V10 shipped, and V10 breaks both:
+One retained technical rule was written after V10 shipped, and V10 breaks it:
 
 * **element lifetime** — 12 violations. Elements that appear and are gone
   before they can be read.
-* **symbol floor** — V10 uses no icons at all; the vocabulary did not exist.
 
-The selftest asserts V10 must PASS, because a gate that cannot pass is a wall
-and a wall gets removed. So those two cases run with `--skip-lifetime` and
-`--skip-floor` — used by exactly one selftest case each, never by `hook_gate`,
-so the ACTIVE plan can never reach them.
+The selftest asserts V10 must PASS, because a gate that cannot pass is a wall.
+The lifetime case still runs with `--skip-lifetime` as explicit historical
+debt. No icon exception is needed: zero icons is valid Videoagent 2 policy.
 
 This is the honest form of the compromise. The dishonest form — lowering the
 threshold until V10 passes — was available, would have taken one character,

@@ -151,7 +151,7 @@ let them cluster at the end. See `baseline.json`.
 | **Relationship** | Time running backwards, landing on the same ground the viewer already saw from above |
 | **Chosen** | Two languages stacked: aged-document photo (`wash="paper"`) as ground + timeline running back to TK 16 + a Korean gate cutout, then the same 1,37 km² footprint returns shaded as occupied |
 | **Rejected** | The timeline alone on plain paper. Correct information, no atmosphere, and the frame's lower half empty. |
-| **Rule extracted** | **Most strong scenes are two languages stacked, not one used well.** Measured on V10: 42% of scenes layer ≥2 asset roles, and the scenes that don't are the weakest in the video (S8, S20). |
+| **Rule extracted** | Layer only when the second treatment adds meaning. The document photo gives atmosphere/context and the timeline explains time; neither was added to satisfy a layer or density quota. |
 
 ## 12 · Two groups, eight years apart — S9 / S10
 
@@ -181,7 +181,7 @@ Copy these into your head before step 2a:
 9. Draw the container, source only the content.
 10. A reversal means something loses territory.
 11. `visualTransformation` is a promise — if nothing changes state, it's a lie.
-12. Two languages stacked beat one used well.
+12. Add a second treatment only when it adds meaning; no layer quota.
 13. A comparison spans the frame.
 
 Rules 2, 4, 7, 9 and 13 are not enforceable by any gate in this skill. They are

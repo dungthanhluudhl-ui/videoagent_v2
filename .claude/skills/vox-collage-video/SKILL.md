@@ -1,21 +1,36 @@
 ---
 name: vox-collage-video
-description: Build a Vox-style grayscale-collage motion-graphics short in this Remotion project from just an audio file + script — no further style questions needed. Use this whenever the user hands over a voiceover/narration audio file (mp3/wav) plus its script and asks for a video, or says things like "make me a video from this audio", "dựng video từ audio này", "same style as before", "another Vox-style clip", or references a prior grayscale/collage video in this project. Covers the full pipeline end to end: Whisper transcription, a gate-checked scene plan, sourcing images via AI generation (Gemini through OpenRouter, Pexels as fallback), cutouts, maps, drawn diagrams, a multi-scene Remotion build with word-synced captions, and a mandatory self-review pass.
+description: Videoagent 2 — legal / investigative documentary workflow. Build court-judgment analysis, precedent explainers, criminal or legal case narratives, investigations, and narrated documentary videos in the proven Remotion collage pipeline. Keeps script-authoritative Whisper timing, existing AI/Pexels sourcing, cutouts, maps, optional diagrams/icons, word-synced captions, transitions, and mandatory rendered-output review. Meaning and real evidence lead; no implementation-medium quota decides style.
 ---
 
-# Vox-collage video pipeline (grayscale + orange, 9:16)
+# Videoagent 2 — legal / investigative documentary workflow
 
 Windows project. Everything runs through Bash (Node/npm/npx available) and
 Python via `py -3`. Whisper, rembg, scipy and Pillow are installed.
 
-**The visual target** is the grayscale-collage look in
-`docs/Vox-Style_Motion_Graphics_Using_Only_Claude_Code___Remotion_frames/`:
-person cutouts desaturated with a baked-in offset orange drop shadow (no
-halftone — tried, rejected), object cutouts in full colour with no shadow,
-pale graph-paper background (grid `rgba(20,20,20,0.32)`, ~84px cells), bold
-black punch-phrase text, one timed highlight per scene. Canvas 1080×1920 @
-30fps unless the user asks for 16:9. **Style is already decided — don't
-re-ask.**
+Videoagent 2 selectively evolves the proven V3 pipeline; it is not a rewrite.
+Its visual DNA is the final accepted V10/V11 editorial collage language:
+real/sourced/generated imagery, documents, typography, cutouts, motion,
+transitions and mixed representation. Canvas remains 1080×1920 @ 30fps unless
+the user asks for 16:9. It must not default to diagrams, slides, compulsory
+icons, orange/black line decoration, grids, arrows or code-drawn graphics.
+
+**Product authority:** final accepted V10/V11 visual output plus the current
+legal-video requirements. **Implementation donor:** the current V3 repository.
+**Quality donor:** later fixes that caught observable timing, text/font,
+Vietnamese clipping, cutout, asset and pixel failures. V11/V12/V13 style
+failures are anti-pattern evidence, not a style source.
+
+No final V10/V11 MP4 is tracked locally. Strongest references are:
+
+* V10 `ItaewonRemDap` — 26 scenes / ~101s: `src/ItaewonRemDap.jsx`,
+  `src/scenes/V10Scene*.jsx`, `input/review10.json`, restore commit `ebf39b8`.
+* V11 `ItaewonHemNho` — 24 scenes: current `src/ItaewonHemNho.jsx` and
+  `src/scenes/V11Scene*.jsx` after the final text/measurement fixes, plus
+  `input/v11_contact_sheet.png`. Do not treat the first V11 build as final.
+
+These are visual quality references, never templates. Do not edit them to make
+new gates pass and do not reproduce their layouts mechanically.
 
 ## Read these when they apply
 
@@ -35,11 +50,38 @@ the installed package version (two real doc mismatches already found; see
 
 ## The one rule that matters most
 
-**Meaning first, component second.** Decide what the scene is narratively
-doing and what relationship the viewer must SEE FORM, then which visual
-language shows that, and only then which component builds it. Reversing that
-order is the documented root cause of every "templated, repetitive" output
-this project has produced — twice.
+**MEANING FIRST, COMPONENT SECOND. PHOTO / DOCUMENT / REAL VISUAL FIRST.**
+
+Use this order:
+
+**NARRATION MEANING → VISUAL TREATMENT → ASSET/INFORMATION NEED → COMPONENT.**
+
+Only after those decisions may an existing block be considered. A diagram is
+appropriate only when it explains a relationship, process, time, quantity,
+geography or legal structure more clearly than imagery can. Reversing this
+order is the documented root cause of templated, repetitive output.
+
+Small editorial treatment vocabulary (choices, never quotas):
+
+* `PHOTO_COLLAGE` — sourced/contextual imagery and cutouts carry the scene.
+* `DOCUMENT_FOCUS` — judgment/evidence/document crop, highlight and focus.
+* `CONTEXT_VIDEO` — real contextual footage or a moving photographic plate.
+* `RECONSTRUCTION` — restrained generated reconstruction where authentic media
+  is unavailable.
+* `MAP_ROUTE` — location or route when geography is part of the meaning.
+* `EXPLANATORY_GRAPHIC` — only when relationships are clearer than imagery.
+
+Source priority: authentic/user-provided/official source; relevant real or
+contextual imagery; generated reconstruction; document/map/UI treatment; then
+explanatory graphic. Do not build a PDF extraction system here—document crops
+and highlights are editorial treatments, not a new Milestone 1 architecture.
+
+**Every line must encode information.** Allowed: relationship connector,
+causal arrow, timeline path, route, measurement, or legal-element connection.
+Not allowed by default: decorative orange paths, black filler lines, arbitrary
+underlines/scribbles/X marks/grids, or a connector whose meaning cannot be
+explained. Existing collision checks still apply whenever a meaningful line is
+used.
 
 ---
 
@@ -108,26 +150,26 @@ and ≥1.6s per beat; a scene they only have to *look at* does not. The first
 rebuild of V10 ignored this and gave its three hardest scenes the least time
 in the whole video (see `gates.md`).
 
-**2b-0 — Visual language.** Which of the 13 languages in
-`references/visual-language.md` does this content actually call for? Do NOT
-default to `cutout` for content that isn't a physical object. Most strong
-scenes **layer two languages** (e.g. `background-photo` + `diagram`).
+**2b-0 — Visual treatment.** Start from authentic/official material, then
+relevant imagery or reconstruction. Use `PHOTO_COLLAGE`, `DOCUMENT_FOCUS`,
+`CONTEXT_VIDEO`, `RECONSTRUCTION`, `MAP_ROUTE`, or `EXPLANATORY_GRAPHIC` as
+editorial thinking—not schema values or quotas. Existing `visualLanguage`
+records how the chosen treatment will be built; it does not decide the idea.
+One strong image or document may be enough. Add another layer only when it adds
+meaning, never to satisfy density.
 
-**2b-1 — Symbols, not sentences.** The caption bar already runs the narration
-word-by-word along the bottom of every frame. Anything else you write on
-screen is a second text competing with it while the voice says the same thing
-a third time — measured: V10, which the viewer liked, carried **31** drawn
-words across 26 scenes; V11, which they found exhausting, carried **265**
-across 24.
-
-So a drawn label is capped at **4 words** and may not restate the narration
-(`text_gate.py`), and a concept the vocabulary already draws must be drawn
-(`icon_gate.py`). Fifteen symbols exist in `src/scenes/iconVocabulary.jsx` —
-look at them before writing a label:
+**2b-1 — Keep overlays purposeful.** The caption bar already runs narration
+word-by-word. A drawn label is capped at **4 words** and may not restate the
+narration (`text_gate.py`). Icons are optional. Fifteen symbols remain in
+`src/scenes/iconVocabulary.jsx`; use one only when it communicates more clearly
+than the available image/document/text treatment:
 
 ```bash
 npx remotion still IconVocabularySheet input/icon_vocabulary.png --scale=0.5
 ```
+
+`icon_gate.py` validates registry/export/import integrity when an icon is used.
+A finished zero-icon video passes.
 
 **2b — Motion Implementer.** `template` · `backdrop` · `variant` · assets ·
 punch phrase.
@@ -151,8 +193,10 @@ py -3 .claude/skills/vox-collage-video/scripts/baseline_gate.py check input/scen
 
 `plan_gate` checks the floor. `baseline_gate` checks this video against the
 frozen profile of one already judged good (`references/baseline.json`) — it is
-the only thing that notices a build sliding backwards while still technically
-passing. Never re-`freeze` the baseline with a weaker video just to quieten it.
+limited to viewer-facing plan evidence such as content coverage, readable
+pacing and dead air. Code-drawn, icon, block, layer, asset-count and photo-share
+statistics never block; they describe implementation rather than quality.
+Never re-`freeze` the baseline with a weaker video merely to quieten it.
 
 Fix every failure. **Present the shot list to the user for approval** before
 sourcing anything — this checkpoint is where a wrong creative direction is
@@ -257,7 +301,8 @@ Remotion's own `<Audio>`. Wire each to the beat it belongs to, volume
 
 ## 6. Build the scenes
 
-**Build the scene bespoke. That is the default, and it needs no declaration.**
+**Build the scene bespoke when that is what the meaning needs. That is the
+default, and it needs no declaration. 100% bespoke is valid.**
 
 `src/blocks/` exists and is **parked** — a small convenience for the handful of
 scenes that genuinely land on one, not the route into a scene. The reason is
@@ -276,7 +321,8 @@ is exactly the inversion the first rule of this skill forbids, and exactly how
 `SceneTemplates.jsx` died. Rebuilding two V13 scenes from blocks saved 24% of
 the lines, under the 40% that would have justified the detour.
 
-**Reach for a block only when both hold:** the `narrativeFunction ×
+**Only after the treatment and asset/information need are clear, reach for a
+block when both hold:** the `narrativeFunction ×
 visualLanguage` you already declared in 2a/2b lands in that block's `fits`,
 **and** its `whenNotToUse` does not describe your scene. Then:
 
@@ -294,8 +340,8 @@ ends the same way, so it is reusable by construction rather than by evidence.
 Declare a block you actually used (`"block": "PhotoClaim", "arrangement":
 "top"`). **Declaring nothing means bespoke** — `block_gate.py` does not ask for
 a reason, because on an unseen video most scenes are bespoke and that is the
-correct state, not a lapse. It still holds a 25% ceiling per block and ≥2
-arrangements once one repeats three times, for the scenes that do use blocks.
+correct state, not a lapse. Repetition and arrangement counts are advisory;
+judge them on the rendered contact sheet rather than through a block quota.
 
 Monotony across the whole video is caught by measurement instead: after the
 contact sheet exists, `sheet_vision.py` reports the largest look-alike group
@@ -402,14 +448,16 @@ Run it on cells straight out of `crop-file`; it catches the tool watermark and
 a subject touching the cell edge, and it noticed a crop that returned the whole
 board as one "cell".
 
-`sheet_vision.py` answers the one criterion no single frame can: **varied**.
+`sheet_vision.py` is the preferred mechanism for the one criterion no single
+frame can answer: **varied**.
 Twenty-four scenes that differ on paper can still look identical on screen —
 V11 did, at 58% of scenes in one look, and the viewer called it exhausting.
 V10, which they liked, sits at 23–38%.
 
 Both route images to a small vision model; nothing enters your context but one
 line of JSON per image. `hook_gate` runs them for you at the end of a turn and
-prints the flags — they never block, and they go quiet when the router is down.
+prints the flags — subjective editorial findings are advisory, never diagram or
+icon quotas, and the scripts go quiet when the router is down.
 
 This is not a saving of a few percent. Measured on the real token logs of four
 build sessions, 439 images entered context; in V11 they accounted for **55% of
@@ -452,10 +500,16 @@ band a scene has to fill is y≈160→1250; below that belongs to the caption
 bar. Before rebuilding a scene around an empty lower frame, confirm it on a
 master still (`ItaewonRemDap --frame=<startSec*30 + local>`).
 
-**Filling a frame must not add beats.** An element added to kill white space
-goes on an EXISTING `visualEvent` — same frame as the hero it sits behind or
-the punch it annotates. Give it its own beat and the pacing gate will fail
-the scene, correctly: more to look at is not more to read.
+**EMPTY SPACE IS NOT AUTOMATICALLY A DEFECT.** Under-composed is a viewer-facing
+judgement, not low pixel ink. Never add labels, lines, diagrams, icons, bars,
+boxes or layers merely to make density numbers pass. `review_gate` keeps blank
+or broken render detection but reports sparse-band measurements as advisory;
+check the master frame and cheap vision before changing a legitimate
+full-bleed/minimal scene.
+
+If a semantically necessary element is added, give it an existing
+`visualEvent` when it arrives with that same beat. Do not invent an event just
+to decorate empty space.
 
 Preview with stills (`--scale=0.25`, `--gl=angle` for maps) combined into one
 contact sheet. Only render an mp4 if the user asks for a file.
