@@ -1,0 +1,81 @@
+{
+  "video": "V14",
+  "howToFill": "For each scene put 'pass' / 'fail' / 'n/a' against the four criteria after LOOKING at its frame. A 'fail' blocks until fixed, or until \"resolved\": true is set with a note explaining why it is acceptable.",
+  "criteria": {
+    "illustrated": "narration is shown, not left to the viewer's imagination",
+    "composed": "balanced, everything inside the frame and legible",
+    "varied": "not the same visual formula as its neighbours",
+    "purposeful": "every element is there for a reason, not filler"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames\\V14Scene1_f276.png",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Warehouse reconstruction, restraint and compelled-call action are readable; cheap vision found no settled-frame defect."
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames\\V14Scene2_f140.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Authentic noon-demand paragraph now uses the correct upper page-3 region, but source body text remains small on a phone.",
+      "resolved": true
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames\\V14Scene3_f235.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "fail",
+      "purposeful": "pass",
+      "note": "Authentic page-three evidence is present, but body text is small and the document-plus-person formula begins to repeat.",
+      "resolved": true
+    },
+    {
+      "id": "S4",
+      "frame": "input\\review_frames\\V14Scene4_f184.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Debt-versus-restraint paradox is clear, but the source paragraph is too small for comfortable phone reading.",
+      "resolved": true
+    },
+    {
+      "id": "S5",
+      "frame": "input\\review_frames\\V14Scene5_f159.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Official authority replaces reconstruction as intended, but the second source-focus card overlaps the first awkwardly.",
+      "resolved": true
+    },
+    {
+      "id": "S6",
+      "frame": "input\\review_frames\\V14Scene6_f178.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "fail",
+      "purposeful": "pass",
+      "note": "Paragraph [7] and the restraint cluster are semantically correct; document text is small and the document-plus-person treatment repeats.",
+      "resolved": true
+    },
+    {
+      "id": "S7",
+      "frame": "input\\review_frames\\V14Scene7_f114.png",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The money-for-release conclusion is present, but cheap vision found excessive empty space, clipped source context and small body text.",
+      "resolved": true
+    }
+  ]
+}

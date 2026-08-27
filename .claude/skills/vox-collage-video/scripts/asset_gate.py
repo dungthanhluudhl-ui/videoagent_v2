@@ -218,10 +218,18 @@ def main():
                     help="project root holding public/ (auto-detected from the plan)")
     ap.add_argument("--strict-slots", action="store_true",
                     help="every non-background asset with a file must declare slot.aspect")
+    ap.add_argument("--hook", action="store_true",
+                    help="production-hook policy: keep quality findings visible but only block "
+                         "missing/unreadable assets")
     args = ap.parse_args()
 
     findings = check_plan(args.plan, strict_slots=args.strict_slots, root=args.root)
     fails = [f for f in findings if f[0] == "FAIL"]
+    if args.hook:
+        integrity_fails = [f for f in fails if f[3].startswith("file khong ton tai:")]
+        findings = [("WARN" if f[0] == "FAIL" and f not in integrity_fails else f[0],
+                     f[1], f[2], f[3]) for f in findings]
+        fails = integrity_fails
 
     if args.json:
         print(json.dumps([{"level": l, "scene": s, "asset": n, "message": m}

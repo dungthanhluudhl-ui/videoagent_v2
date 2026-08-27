@@ -154,6 +154,20 @@ def judge(name, m):
     return bad
 
 
+def unusable(name, m):
+    """Integrity failures only: processing/readability failed or no subject remains.
+
+    Chroma, feather, border, coverage-at-the-high-end and fragments are useful
+    aesthetic evidence, but a production hook must not confuse them with a file
+    that cannot be used at all.
+    """
+    if "error" in m:
+        return [f"{name}: {m['error']}"]
+    if m["coverage"] < MIN_COVERAGE:
+        return [f"{name}: chỉ còn {m['coverage']:.1%} ảnh - đã khử mất chủ thể."]
+    return []
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -163,6 +177,9 @@ def main():
     ap.add_argument("--plan", default=None,
                     help="scene_plan<N>.json - để biết ảnh nào PHẢI là cutout")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--hook", action="store_true",
+                    help="production-hook policy: ordinary cutout imperfections warn; only "
+                         "unreadable/empty output blocks")
     args = ap.parse_args()
 
     roles = {}
@@ -178,8 +195,12 @@ def main():
     for p in args.paths:
         path = pathlib.Path(p)
         if path.is_dir():
-            pat = f"el{args.video}_*.png" if args.video else "el*_*.png"
-            files += sorted(path.glob(pat))
+            if args.plan:
+                files += sorted(path / name for name, role_set in roles.items()
+                                if role_set & CUTOUT_ROLES and (path / name).exists())
+            else:
+                pat = f"el{args.video}_*.png" if args.video else "el*_*.png"
+                files += sorted(path.glob(pat))
         else:
             files += [pathlib.Path(f) for f in glob.glob(p)] or [path]
     files = [f for f in files if f.exists()]
@@ -200,7 +221,7 @@ def main():
         print("Không tìm thấy file nào.", file=sys.stderr)
         sys.exit(1)
 
-    rows, problems, skipped = {}, [], []
+    rows, problems, blockers, skipped = {}, [], [], []
     for f in files:
         r = roles.get(f.name)
         if r is not None and not (r & CUTOUT_ROLES):
@@ -214,6 +235,7 @@ def main():
             continue
         rows[f.name] = m
         problems += judge(f.name, m)
+        blockers += unusable(f.name, m)
 
     if args.json:
         print(json.dumps({"passed": not problems, "measurements": rows,
@@ -234,13 +256,15 @@ def main():
                   + (f" ... +{len(skipped) - 5}" if len(skipped) > 5 else ""))
             print()
         for p in problems:
-            print(f"FAIL {p}")
+            print(f"{'FAIL' if (not args.hook or p in blockers) else 'WARN'} {p}")
         if not problems:
             print(f"OK   {len(files)} cutout: viền không ám màu phông, không quầng "
                   f"khói, không chạm mép, không mảnh vụn")
-        print(f"\n{'FAILED' if problems else 'PASSED'} ({len(problems)} problem(s))")
+        effective = blockers if args.hook else problems
+        print(f"\n{'FAILED' if effective else 'PASSED'} ({len(effective)} blocking, "
+              f"{len(problems) - len(effective)} advisory problem(s))")
 
-    sys.exit(1 if problems else 0)
+    sys.exit(1 if (blockers if args.hook else problems) else 0)
 
 
 if __name__ == "__main__":

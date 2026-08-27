@@ -1,0 +1,7 @@
+Copy exactly these 3 returned generation files into this directory:
+
+1. anle64_warehouse_vertical.png
+2. _board_anle64_victim_restrained_seated.png   (RAW WHOLE BOARD — DO NOT CROP)
+3. _board_anle64_handcuffs.png                  (RAW WHOLE BOARD — DO NOT CROP)
+
+Full instructions: D:\VideoAgent 2\input\anle64input\mvp\IMAGE_HANDOFF.md

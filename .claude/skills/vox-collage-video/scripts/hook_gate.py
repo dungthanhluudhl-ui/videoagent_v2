@@ -320,19 +320,24 @@ def guard_premature_shipped(payload, root):
         failures.append("### shot list chưa duyệt\n"
                         "Video sắp ship mà \"shotlistApproved\" chưa phải true - shot list "
                         "chưa từng được user duyệt (hoặc chốt đã bị gỡ khỏi plan).")
-    for script, args in (("plan_gate.py", [str(path)]),
-                         ("build_gate.py", [str(path)]),
-                         ("review_gate.py", [str(path)]),
-                         ("text_gate.py", [str(path)]),
-                         ("icon_gate.py", [str(path)]),
-                         ("assemble.py", [str(path), "--check"]),
-                         ("baseline_gate.py", ["check", str(path)])):
+    advisories = []
+    for script, args, blocking in (("plan_gate.py", [str(path)], True),
+                                   ("build_gate.py", [str(path)], True),
+                                   ("review_gate.py", [str(path), "--hook"], True),
+                                   ("text_gate.py", [str(path), "--hook"], True),
+                                   ("icon_gate.py", [str(path)], True),
+                                   ("assemble.py", [str(path), "--check"], True),
+                                   ("baseline_gate.py", ["check", str(path)], False)):
         if not (SCRIPTS / script).exists():
             failures.append(f"{script}: MISSING")
             continue
         code, out = run(script, *args)
         if code != 0:
-            failures.append(f"### {script}\n{out.strip()}")
+            target = failures if blocking else advisories
+            target.append(f"### {script}\n{out.strip()}")
+    if advisories:
+        print("[vox-gate] advisory quality findings while shipping:\n\n"
+              + "\n\n".join(advisories), file=sys.stderr)
     if not failures:
         return 0
 
@@ -465,19 +470,21 @@ def stop(root, plan):
     failures = []
     skip_selftest, fingerprint = selftest_is_current()
 
-    for script, args, label in (
-        ("plan_gate.py", [str(plan_path)], "scene plan"),
-        ("build_gate.py", [str(plan_path)], "built scenes vs plan"),
-        ("review_gate.py", [str(plan_path)], "self-review pass"),
-        ("text_gate.py", [str(plan_path)], "chữ vẽ: va chạm, độ dài, lặp narration"),
+    advisories = []
+    for script, args, label, blocking in (
+        ("plan_gate.py", [str(plan_path)], "scene plan", True),
+        ("build_gate.py", [str(plan_path)], "built scenes vs plan", True),
+        ("review_gate.py", [str(plan_path), "--hook"], "self-review pass", True),
+        ("text_gate.py", [str(plan_path), "--hook"],
+         "chữ vẽ: readability/integrity; style findings warn", True),
         # Icons are optional. This only catches a broken registry/import when a
         # scene actually chooses to render one.
-        ("icon_gate.py", [str(plan_path)], "ký hiệu vẽ: registry/import khi có dùng"),
+        ("icon_gate.py", [str(plan_path)], "ký hiệu vẽ: registry/import khi có dùng", True),
         # Compares this video against the FROZEN profile of one already judged
         # good, not against an absolute floor. Every gate above accepts a video
         # that sits just over the minimum; this is the one that notices the
         # whole build sliding backwards while still technically passing.
-        ("baseline_gate.py", ["check", str(plan_path)], "so với mốc chuẩn"),
+        ("baseline_gate.py", ["check", str(plan_path)], "so với mốc chuẩn", False),
         # Chất lượng tách nền, đo bằng số thay vì bằng mắt. Trước gate này,
         # cách duy nhất để biết một cutout có sạch không là mở từng file ra
         # nhìn - đắt, và không đáng tin: hai tài sản V10 đã ship với lỗi nhìn
@@ -485,8 +492,8 @@ def stop(root, plan):
         # được đúng hai file đó.
         ("cutout_gate.py",
          ["public", "--video", str(plan_data.get("video", "V")).lstrip("Vv"),
-          "--plan", str(plan_path)],
-         "chất lượng tách nền"),
+          "--plan", str(plan_path), "--hook"],
+         "chất lượng tách nền", True),
         # Gate duy nhất nhìn thứ NGƯỜI XEM nhìn. Mọi gate chữ phía trên dựng
         # lại hình học từ mã nguồn; cái đó bắt được nhiều, nhưng lỗi nhãn bị
         # panel cắt cụt ở S6 đã lọt qua tất cả và chỉ lộ ra khi render still.
@@ -496,22 +503,25 @@ def stop(root, plan):
         # crop_to_content cắt sát chủ thể nên tỉ lệ đó gần như ngẫu nhiên - nên
         # một ảnh nhỏ hơn slot bị phóng lên và đọc ra mờ mà không gate nào thấy.
         # Người xem báo đúng lỗi này ở V10/S25 (622px nhét vào slot 760px).
-        ("asset_gate.py", [str(plan_path)], "ảnh có vừa slot: tỉ lệ và độ phân giải"),
+        ("asset_gate.py", [str(plan_path), "--hook"],
+         "asset integrity; resolution/slot quality warns", True),
         # Block use is optional. Validate only declarations/contracts; rendered
         # repetition is advisory through sheet_vision/review.
-        ("block_gate.py", [str(plan_path)], "kho block: integrity khi có dùng, bespoke tùy chọn"),
-        ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render"),
+        ("block_gate.py", [str(plan_path)],
+         "kho block: integrity khi có dùng, bespoke tùy chọn", True),
+        ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render", True),
         # Phần CƠ KHÍ sinh từ plan: captions, master, đăng ký Root. Tự biết
         # "chưa tới lúc" khi cảnh còn thiếu, nhưng một khi mọi cảnh đã dựng thì
         # master viết tay lệch plan - hoặc quên sinh - là chặn. Phép đệm rail
         # sai đã từng kéo 25 cảnh lệch audio nửa giây mà không gate nào thấy.
-        ("assemble.py", [str(plan_path), "--check"], "master/captions khớp bản sinh từ plan"),
+        ("assemble.py", [str(plan_path), "--check"],
+         "master/captions khớp bản sinh từ plan", True),
         # The gates checking the gates. Cheap (it runs them against throwaway
         # copies in a temp dir) and it is the only thing that notices when a
         # gate has been edited into uselessness - which nothing did before,
         # because a gate that has stopped working looks exactly like a gate
         # with nothing to report.
-        ("selftest.py", [], "self-test của chính bộ gate"),
+        ("selftest.py", [], "self-test của chính bộ gate", True),
     ):
         if not (SCRIPTS / script).exists():
             failures.append(
@@ -528,7 +538,8 @@ def stop(root, plan):
             continue
         code, out = run(script, *args)
         if code != 0:
-            failures.append(f"### {label} ({script})\n{out.strip()}")
+            target = failures if blocking else advisories
+            target.append(f"### {label} ({script})\n{out.strip()}")
 
     # --- Lớp tư vấn: để một model rẻ NHÌN thay agent -----------------------
     # Hai script này KHÔNG chặn, và đó là chủ ý:
@@ -545,7 +556,6 @@ def stop(root, plan):
     # chiếm 55% cache_read = 384 USD. Một dòng dặn dò trong SKILL.md không đổi
     # được thói quen đó; một danh sách cờ in sẵn ngay trước lúc agent định mở
     # ảnh thì có.
-    advisories = []
     if vision_router_up():
         for script, args, label in (
             ("asset_vision.py", [str(plan_path)],

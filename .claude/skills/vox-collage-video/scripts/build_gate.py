@@ -240,6 +240,11 @@ def compare(scene, built, tolerance):
                 f"add it to the plan (with a `describes`) or remove it from the scene")
 
     p_punch, b_punch = scene.get("punch"), built.get("punch")
+    # The plan schema carries an explicit empty punch object on scenes that do
+    # not use typography. It is absence, not a promise to render a zero-size
+    # component (which pixel_gate correctly reads as missing content).
+    if p_punch and not (p_punch.get("lines") or []):
+        p_punch = None
     if p_punch and not b_punch:
         problems.append(f"{sid}: plan has a punch phrase {p_punch.get('lines')} but the build has none")
     elif b_punch and not p_punch:

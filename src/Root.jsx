@@ -167,6 +167,17 @@ import { V13Scene8, V13SCENE8_DURATION } from "./scenes/V13Scene8";
 import { V13Master, MASTER13_DURATION } from "./V13Master";
 // ===== /ASSEMBLE:V13 imports =====
 
+// ===== ASSEMBLE:V14 imports - khối máy sinh, đừng sửa tay =====
+import { V14Scene1, V14SCENE1_DURATION } from "./scenes/V14Scene1";
+import { V14Scene2, V14SCENE2_DURATION } from "./scenes/V14Scene2";
+import { V14Scene3, V14SCENE3_DURATION } from "./scenes/V14Scene3";
+import { V14Scene4, V14SCENE4_DURATION } from "./scenes/V14Scene4";
+import { V14Scene5, V14SCENE5_DURATION } from "./scenes/V14Scene5";
+import { V14Scene6, V14SCENE6_DURATION } from "./scenes/V14Scene6";
+import { V14Scene7, V14SCENE7_DURATION } from "./scenes/V14Scene7";
+import { V14Master, MASTER14_DURATION } from "./V14Master";
+// ===== /ASSEMBLE:V14 imports =====
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -448,6 +459,19 @@ export const RemotionRoot = () => {
       </Folder>
       <Composition id="V13Master" component={V13Master} durationInFrames={MASTER13_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       {/* ===== /ASSEMBLE:V13 ===== */}
+
+      {/* ===== ASSEMBLE:V14 - khối máy sinh, đừng sửa tay ===== */}
+      <Folder name="V14-Scenes">
+        <Composition id="V14Scene1" component={V14Scene1} durationInFrames={V14SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V14Scene2" component={V14Scene2} durationInFrames={V14SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V14Scene3" component={V14Scene3} durationInFrames={V14SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V14Scene4" component={V14Scene4} durationInFrames={V14SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V14Scene5" component={V14Scene5} durationInFrames={V14SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V14Scene6" component={V14Scene6} durationInFrames={V14SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V14Scene7" component={V14Scene7} durationInFrames={V14SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+      <Composition id="V14Master" component={V14Master} durationInFrames={MASTER14_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      {/* ===== /ASSEMBLE:V14 ===== */}
 
     </>
   );

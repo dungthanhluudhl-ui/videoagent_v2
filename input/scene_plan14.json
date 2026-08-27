@@ -1,0 +1,617 @@
+{
+  "video": "V14",
+  "title": "Án lệ 64 — MVP diagnostic slice",
+  "fps": 30,
+  "audioFile": "audio14.mp3",
+  "wordsFile": "input/words14_aligned.json",
+  "status": "active",
+  "shotlistApproved": true,
+  "_howToUse": [
+    "M2A stops before scene JSX: generated assets are intentionally absent until the customer returns the three manual generations.",
+    "Meaning first. The authentic Án lệ PDF supplies facts and legal authority; anonymous reconstruction supplies only actions the record supports.",
+    "No icon, diagram, map, block, template, code-drawn, or layer quota applies. Do not add decorative lines, labels, arrows, grids, or narration-duplicating text.",
+    "PDF source metadata is editorial crop guidance for M2B, not a new asset-manifest or PDF-processing architecture.",
+    "Generated board files remain whole until V3 generate_board.py crop-file is used in M2B."
+  ],
+  "scenes": [
+    {
+      "id": "S1",
+      "startSec": 0.0,
+      "endSec": 11.62,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Việc giữ anh T đã tiếp diễn ở đâu và bằng cách nào?",
+      "visualTransformation": "một kho phế liệu tối mở ra toàn khung; người đàn ông ẩn danh bị giữ thấp trong khung rồi còng và dây trói nhập vào cụm tiền cảnh, biến địa điểm thành nơi giam giữ có chủ ý",
+      "contrastWithPrevious": "mở thẳng vào hậu quả vật lý, không có hook chữ hay thẻ giới thiệu; ảnh không gian lớn dẫn trước các cutout",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "background-photo",
+        "cutout"
+      ],
+      "template": "bespoke: full-bleed warehouse reconstruction with an anonymous restrained-subject cluster low in frame",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Warehouse",
+          "src": "anle64_warehouse_vertical.png",
+          "describes": [
+            "câu chuyện chưa dừng ở đó",
+            "kho tập kết phế liệu"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 349
+        },
+        {
+          "role": "hero",
+          "name": "Hero-VictimRestrained",
+          "src": "anle64_victim_restrained_seated.png",
+          "anchorPhrase": "Tại đây, anh tiếp tục bị trói",
+          "describes": [
+            "Tại đây, anh tiếp tục bị trói",
+            "bị khóa còng, bị giữ lại",
+            "gây áp lực"
+          ],
+          "width": 760,
+          "x": 160,
+          "y": 430,
+          "delay": 110,
+          "visibleFor": 239
+        },
+        {
+          "role": "support",
+          "name": "Sup-Handcuffs",
+          "src": "anle64_handcuffs.png",
+          "anchorPhrase": "bị khóa còng",
+          "describes": [
+            "bị khóa còng"
+          ],
+          "width": 300,
+          "x": 690,
+          "y": 850,
+          "delay": 146,
+          "visibleFor": 203
+        },
+        {
+          "role": "support",
+          "name": "Sup-RestraintRope",
+          "src": "anle64_restraint_rope.png",
+          "anchorPhrase": "bị trói",
+          "describes": [
+            "bị trói"
+          ],
+          "width": 270,
+          "x": 40,
+          "y": 900,
+          "delay": 146,
+          "visibleFor": 203
+        },
+        {
+          "role": "hero",
+          "name": "Hero-VictimPhone-Preview",
+          "src": "anle64_victim_phone_under_duress.png",
+          "anchorPhrase": "gây áp lực",
+          "describes": [
+            "gây áp lực",
+            "buộc anh T phải gọi về cho gia đình"
+          ],
+          "width": 680,
+          "x": 180,
+          "y": 450,
+          "delay": 256,
+          "visibleFor": 93
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 110,
+          "what": "Hero-VictimRestrained enters low in frame as the continuing restraint is spoken"
+        },
+        {
+          "frame": 146,
+          "what": "handcuffs and rope close the foreground confinement cluster"
+        },
+        {
+          "frame": 256,
+          "what": "the phone-under-duress pose replaces the seated pose as coercive pressure is spoken"
+        }
+      ],
+      "durationInFrames": 349,
+      "status": "built"
+    },
+    {
+      "id": "S2",
+      "startSec": 11.62,
+      "endSec": 19.48,
+      "narrativeFunction": "causal-chain",
+      "viewerQuestion": "Khoản nợ 150 triệu được biến thành điều kiện thả người như thế nào?",
+      "visualTransformation": "trên cùng nền kho, người bị giữ chuyển sang tư thế gọi điện dưới sức ép; đến mốc trưa hôm sau, đoạn hồ sơ thật trượt vào che một phần reconstruction để xác nhận yêu cầu chuyển tiền là chi tiết của hồ sơ",
+      "contrastWithPrevious": "giữ liên tục không gian nhưng đổi hành động từ bị trói sang bị buộc gọi điện, rồi chuyển quyền kể chuyện từ reconstruction sang tài liệu thật",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "background-photo",
+        "cutout",
+        "document"
+      ],
+      "template": "bespoke: reused warehouse backdrop and phone-under-duress pose yielding to a real case-paragraph crop",
+      "backdrop": "photo",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Bg-Warehouse-Reuse",
+          "src": "anle64_warehouse_vertical.png",
+          "describes": [
+            "người thân tìm cách chuyển tiền"
+          ],
+          "width": 1080,
+          "x": "50%",
+          "y": 0,
+          "delay": 0,
+          "visibleFor": 236
+        },
+        {
+          "role": "hero",
+          "name": "Hero-VictimPhone",
+          "src": "anle64_victim_phone_under_duress.png",
+          "anchorPhrase": "người thân tìm cách chuyển tiền",
+          "describes": [
+            "người thân tìm cách chuyển tiền",
+            "trả khoản nợ 150 triệu đồng",
+            "N còn yêu cầu anh T gọi về nhà"
+          ],
+          "width": 760,
+          "x": 70,
+          "y": 430,
+          "delay": 0,
+          "visibleFor": 236
+        },
+        {
+          "role": "document",
+          "name": "Doc-Page3-NoonDemand",
+          "anchorPhrase": "Thậm chí đến trưa hôm sau",
+          "describes": [
+            "Thậm chí đến trưa hôm sau",
+            "N còn yêu cầu anh T gọi về nhà"
+          ],
+          "width": 560,
+          "x": 460,
+          "y": 260,
+          "delay": 120,
+          "visibleFor": 116,
+          "src": "anle64_pdf_p3_noon_demand.png"
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hero-VictimPhone replaces the restrained pose on the continuous warehouse plate"
+        },
+        {
+          "frame": 120,
+          "what": "authentic PDF page 3 paragraph enters and takes visual priority over the reconstruction"
+        }
+      ],
+      "durationInFrames": 236,
+      "status": "built"
+    },
+    {
+      "id": "S3",
+      "startSec": 19.48,
+      "endSec": 30.07,
+      "narrativeFunction": "transition",
+      "viewerQuestion": "Việc ép chuyển tiền kéo dài tới mức nào, và câu hỏi pháp lý nào bắt đầu xuất hiện?",
+      "visualTransformation": "trang hồ sơ thật mở rộng từ crop thành tài liệu nhận diện được; hình người bị giữ quay lại ở rìa dưới khi thời gian kéo dài, rồi toàn bộ collage lùi nhẹ để chừa một nhịp hỏi pháp lý thay vì thêm thông tin mới",
+      "contrastWithPrevious": "tài liệu từ lớp phụ trở thành nền chính; nhịp cuối thưa đi để người xem đổi từ theo dõi sự kiện sang đặt câu hỏi",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "document",
+        "cutout"
+      ],
+      "template": "bespoke: authentic page-three document expanding to full hierarchy with one reused anonymous cutout at the edge",
+      "backdrop": "spotlight",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Page3-PressureContinues",
+          "anchorPhrase": "nói gia đình phải chuyển đủ 150 triệu đồng",
+          "describes": [
+            "nói gia đình phải chuyển đủ 150 triệu đồng",
+            "việc giữ người và ép chuyển tiền vẫn tiếp diễn"
+          ],
+          "width": 980,
+          "x": 50,
+          "y": 210,
+          "delay": 0,
+          "visibleFor": 299,
+          "src": "anle64_pdf_p3_pressure_continues.png"
+        },
+        {
+          "role": "hero",
+          "name": "Hero-VictimRestrained-Reuse",
+          "src": "anle64_victim_restrained_seated.png",
+          "anchorPhrase": "Những ngày sau đó",
+          "describes": [
+            "Những ngày sau đó",
+            "việc giữ người và ép chuyển tiền vẫn tiếp diễn"
+          ],
+          "width": 430,
+          "x": 610,
+          "y": 810,
+          "delay": 120,
+          "visibleFor": 198
+        }
+      ],
+      "punch": {
+        "lines": [
+          "CÂU HỎI PHÁP LÝ"
+        ],
+        "anchorPhrase": "Nghe đến đây, nhiều anh em chắc sẽ thắc mắc",
+        "from": 215,
+        "describes": [
+          "Nghe đến đây, nhiều anh em chắc sẽ thắc mắc"
+        ],
+        "visibleFor": 103
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "page 3 expands to an identifiable authentic-source composition"
+        },
+        {
+          "frame": 120,
+          "what": "the restrained anonymous figure returns at the document edge as the detention continues"
+        },
+        {
+          "frame": 215,
+          "what": "the collage breathes back and the short legal-question heading lands"
+        }
+      ],
+      "durationInFrames": 318,
+      "status": "built"
+    },
+    {
+      "id": "S4",
+      "startSec": 30.07,
+      "endSec": 38.86,
+      "narrativeFunction": "paradox",
+      "viewerQuestion": "Nếu khoản nợ là thật, vì sao đây không chỉ là giữ người trái pháp luật?",
+      "visualTransformation": "đoạn hồ sơ xác nhận khoản vay 150 triệu giữ nửa trái; còng số 8 chiếm nửa phải rồi người bị giữ xuất hiện phía sau nó, buộc khoản nợ thật, công cụ và hậu quả cưỡng ép cùng tồn tại trong một khung",
+      "contrastWithPrevious": "từ một nguồn tài liệu chiếm toàn khung sang đối chiếu ngang giữa bằng chứng khoản nợ và công cụ giữ người, không dùng chân dung trung tâm",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "split",
+        "document",
+        "cutout"
+      ],
+      "template": "bespoke: debt paragraph on the left and a large handcuff cutout entering on the right without decorative divider",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Page2-RealDebt",
+          "anchorPhrase": "150 triệu đó đúng là khoản nợ",
+          "describes": [
+            "150 triệu đó đúng là khoản nợ anh T chưa trả cho N",
+            "lấy lại tiền của mình"
+          ],
+          "width": 560,
+          "x": 40,
+          "y": 300,
+          "delay": 0,
+          "visibleFor": 264,
+          "src": "anle64_pdf_p2_real_debt.png"
+        },
+        {
+          "role": "hero",
+          "name": "Hero-HandcuffsLarge",
+          "src": "anle64_handcuffs.png",
+          "anchorPhrase": "N đang tìm cách lấy lại tiền",
+          "describes": [
+            "N đang tìm cách lấy lại tiền",
+            "bắt giữ người trái pháp luật"
+          ],
+          "width": 520,
+          "x": 540,
+          "y": 560,
+          "delay": 109,
+          "visibleFor": 155
+        },
+        {
+          "role": "hero",
+          "name": "Hero-VictimRestrained-Paradox",
+          "src": "anle64_victim_restrained_seated.png",
+          "anchorPhrase": "Cùng lắm thì xử lý",
+          "describes": [
+            "bắt giữ người trái pháp luật"
+          ],
+          "width": 430,
+          "x": 610,
+          "y": 760,
+          "delay": 164,
+          "visibleFor": 100
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "authentic loan paragraph establishes the real debt on the left"
+        },
+        {
+          "frame": 109,
+          "what": "large handcuffs intrude on the repayment rationale, exposing the coercive method"
+        },
+        {
+          "frame": 164,
+          "what": "the restrained anonymous figure appears behind the handcuffs as the unlawful-detention alternative begins"
+        }
+      ],
+      "durationInFrames": 264,
+      "status": "built"
+    },
+    {
+      "id": "S5",
+      "startSec": 38.86,
+      "endSec": 47.46,
+      "narrativeFunction": "definition",
+      "viewerQuestion": "Nguồn pháp lý nào trả lời câu hỏi này?",
+      "visualTransformation": "bìa trang một của văn bản thật thay toàn bộ collage; khung nhìn tiến từ tiêu đề tội danh xuống định danh Án lệ 64/2023/AL, để chính nguồn chính thức mở phần giải thích",
+      "contrastWithPrevious": "cắt khỏi reconstruction và đối chiếu vật thể sang một tài liệu duy nhất, chậm hơn và có khoảng thở để đọc nguồn",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "document",
+      "template": "bespoke: authentic first page with a restrained source-preserving push from offense title to precedent identifier",
+      "backdrop": "spotlight",
+      "variant": "grow",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Page1-Authority",
+          "anchorPhrase": "Bắt cóc nhằm chiếm đoạt tài sản",
+          "describes": [
+            "Bắt cóc nhằm chiếm đoạt tài sản",
+            "điểm pháp lý cực kỳ đáng chú ý"
+          ],
+          "width": 980,
+          "x": 50,
+          "y": 190,
+          "delay": 23,
+          "visibleFor": 157,
+          "src": "anle64_pdf_p1_authority.png"
+        },
+        {
+          "role": "document",
+          "name": "Doc-Page1-TitleFocus",
+          "anchorPhrase": "Đây mới chính là điểm pháp lý",
+          "describes": [
+            "Đây mới chính là điểm pháp lý",
+            "Án lệ số 64 năm 2023"
+          ],
+          "width": 900,
+          "x": 90,
+          "y": 230,
+          "delay": 139,
+          "visibleFor": 119,
+          "src": "anle64_pdf_p1_title_focus.png"
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 20,
+          "what": "the authentic first page replaces the reconstruction as the offense title is spoken"
+        },
+        {
+          "frame": 139,
+          "what": "camera focus tightens on the official precedent identifier when its legal significance is spoken"
+        }
+      ],
+      "durationInFrames": 258,
+      "status": "built"
+    },
+    {
+      "id": "S6",
+      "startSec": 47.46,
+      "endSec": 54.22,
+      "narrativeFunction": "evidence",
+      "viewerQuestion": "Án lệ nối khoản nợ thật với hành vi bạo lực ra sao?",
+      "visualTransformation": "đoạn [7] trên trang tám xuất hiện nguyên dạng rồi vùng hành vi bắt giữ, trói, nhốt được đưa vào tiêu điểm; người bị giữ và còng tái xuất ở mép dưới như lớp reconstruction phụ, không che nguồn",
+      "contrastWithPrevious": "từ trang bìa quyền uy sang đúng đoạn phân tích; tài liệu vẫn dẫn, reconstruction chỉ làm rõ động từ vật lý",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "document",
+        "cutout"
+      ],
+      "template": "bespoke: paragraph [7] as the dominant source with a restrained anonymous reconstruction cluster below it",
+      "backdrop": "spotlight",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Page8-Paragraph7-Actions",
+          "anchorPhrase": "Dù giữa hai bên có một khoản nợ thật",
+          "describes": [
+            "Dù giữa hai bên có một khoản nợ thật",
+            "bắt giữ, trói, nhốt",
+            "dùng bạo lực đối với con nợ"
+          ],
+          "width": 980,
+          "x": 50,
+          "y": 190,
+          "delay": 0,
+          "visibleFor": 203,
+          "src": "anle64_pdf_p8_p7_actions.png"
+        },
+        {
+          "role": "hero",
+          "name": "Hero-VictimRestrained-Legal",
+          "src": "anle64_victim_restrained_seated.png",
+          "anchorPhrase": "bắt giữ, trói, nhốt",
+          "describes": [
+            "bắt giữ, trói, nhốt",
+            "dùng bạo lực đối với con nợ"
+          ],
+          "width": 500,
+          "x": 470,
+          "y": 860,
+          "delay": 76,
+          "visibleFor": 127
+        },
+        {
+          "role": "support",
+          "name": "Sup-Handcuffs-Legal",
+          "src": "anle64_handcuffs.png",
+          "anchorPhrase": "bắt giữ, trói, nhốt",
+          "describes": [
+            "bắt giữ, trói, nhốt"
+          ],
+          "width": 260,
+          "x": 120,
+          "y": 980,
+          "delay": 76,
+          "visibleFor": 127
+        },
+        {
+          "role": "document",
+          "name": "Doc-Page8-Paragraph7-PressureFocus",
+          "anchorPhrase": "gây áp lực",
+          "describes": [
+            "gây áp lực"
+          ],
+          "width": 980,
+          "x": 50,
+          "y": 190,
+          "delay": 158,
+          "visibleFor": 67,
+          "src": "anle64_pdf_p8_p7_pressure.png"
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "authentic page 8 paragraph [7] enters as the dominant legal evidence"
+        },
+        {
+          "frame": 76,
+          "what": "anonymous restrained figure and handcuffs form beneath the highlighted action verbs"
+        },
+        {
+          "frame": 158,
+          "what": "document focus moves to the coercive-pressure clause as those words are spoken"
+        }
+      ],
+      "durationInFrames": 203,
+      "status": "built"
+    },
+    {
+      "id": "S7",
+      "startSec": 54.22,
+      "endSec": 60.02,
+      "narrativeFunction": "conclusion",
+      "viewerQuestion": "Điều kiện giao tiền để được thả làm thay đổi bản chất pháp lý thế nào?",
+      "visualTransformation": "vẫn trên đoạn [7], vùng sáng rời khỏi các động từ bạo lực để bám theo mệnh đề gia đình giao tiền thì mới thả; ở câu chốt, phần còn lại lùi tối để chính quan hệ tiền đổi lấy tự do giữ khung hình",
+      "contrastWithPrevious": "bỏ toàn bộ cutout và giảm lớp; kết bằng một nguồn thật duy nhất với tiêu điểm chuyển nghĩa, không thêm sơ đồ hay khẩu hiệu lặp lời thoại",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "template": "bespoke: the same authentic paragraph [7] with one moving editorial focus from money-for-release to the legal conclusion",
+      "backdrop": "spotlight",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Doc-Page8-Paragraph7-ReleaseCondition",
+          "anchorPhrase": "gia đình hoặc người thân phải giao tiền",
+          "describes": [
+            "gia đình hoặc người thân phải giao tiền",
+            "mới thả người"
+          ],
+          "width": 980,
+          "x": 50,
+          "y": 260,
+          "delay": 0,
+          "visibleFor": 174,
+          "src": "anle64_pdf_p8_p7_release_condition.png"
+        },
+        {
+          "role": "document",
+          "name": "Doc-Page8-Paragraph7-ConclusionFocus",
+          "anchorPhrase": "thì việc",
+          "describes": [
+            "thì việc \"đòi nợ\" đó không còn đơn giản",
+            "tranh chấp tiền bạc nữa"
+          ],
+          "width": 980,
+          "x": 50,
+          "y": 260,
+          "delay": 94,
+          "visibleFor": 80,
+          "src": "anle64_pdf_p8_p7_conclusion.png"
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "paragraph [7] holds alone with the money-for-release clause in focus"
+        },
+        {
+          "frame": 94,
+          "what": "focus shifts to the concluding legal distinction while surrounding text recedes"
+        }
+      ],
+      "durationInFrames": 174,
+      "status": "built"
+    }
+  ]
+}

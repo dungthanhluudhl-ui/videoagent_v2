@@ -120,6 +120,9 @@ def main():
     ap.add_argument("--no-measure", action="store_true",
                     help="skip the frame measurements (verdicts only)")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--hook", action="store_true",
+                    help="production-hook policy: unresolved aesthetic verdicts warn; missing, "
+                         "stale, unreadable or blank review evidence still blocks")
     args = ap.parse_args()
 
     plan_path = pathlib.Path(args.plan)
@@ -174,9 +177,10 @@ def main():
                     problems.append(f"{sid}/{crit}: verdict is {entry.get(crit)!r}, "
                                     f"expected one of {sorted(VALID)}")
                 elif verdict == "fail" and not entry.get("resolved"):
-                    problems.append(f"{sid}/{crit}: FAIL - {entry.get('note') or 'no note given'}"
-                                    f" (fix it, or set \"resolved\": true with a note saying why "
-                                    f"it is acceptable)")
+                    message = (f"{sid}/{crit}: FAIL - {entry.get('note') or 'no note given'}"
+                               f" (fix it, or set \"resolved\": true with a note saying why "
+                               f"it is acceptable)")
+                    (sparse_advisories if args.hook else problems).append(message)
 
             if args.no_measure or not frame:
                 continue

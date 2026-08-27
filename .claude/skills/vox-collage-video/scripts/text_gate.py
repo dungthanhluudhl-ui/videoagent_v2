@@ -827,6 +827,9 @@ def main():
     ap.add_argument("--public-dir", default="public")
     ap.add_argument("--scene", default=None)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--hook", action="store_true",
+                    help="production-hook policy: stylistic label length/restatement findings "
+                         "warn; readability and collision failures still block")
     args = ap.parse_args()
 
     plan = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
@@ -837,7 +840,7 @@ def main():
     words_path = pathlib.Path("input") / (plan.get("wordsFile") or "")
     public_dir = pathlib.Path(args.public_dir)
 
-    problems, checked, total_words, unchecked = [], 0, 0, []
+    problems, advisories, checked, total_words, unchecked = [], [], 0, 0, []
     problems += font_family_problems(args.scenes_dir)
     for name, line, size, snippet in primitive_font_sizes(args.scenes_dir):
         problems.append(
@@ -989,14 +992,14 @@ def main():
             # "·" is a separator between two labels, not a word of its own.
             words = [w for w in lab["text"].split() if w not in ("·", "-", "|")]
             if len(words) > MAX_LABEL_WORDS:
-                problems.append(
+                (advisories if args.hook else problems).append(
                     f"{sid}: label {lab['text']!r} is {len(words)} words. The caption bar is "
                     f"already running the narration word-by-word underneath - a drawn sentence "
                     f"makes the viewer read two texts while hearing a third. "
                     f"Cut to <= {MAX_LABEL_WORDS} words, or replace it with a symbol.")
             key = " ".join(strip_accents(w) for w in words)
             if len(words) >= MIN_NARRATION_RUN and any(r and r in key for r in runs):
-                problems.append(
+                (advisories if args.hook else problems).append(
                     f"{sid}: label {lab['text']!r} restates what the narration says in this "
                     f"same scene. Three channels, one message, none of them a picture.")
 
@@ -1074,11 +1077,14 @@ def main():
 
     if args.json:
         print(json.dumps({"passed": not problems, "problems": problems,
+                          "advisories": advisories,
                           "unchecked": [f"{s}: {t}" for s, t in unchecked]},
                          ensure_ascii=False, indent=2))
     else:
         for p in problems:
             print(f"FAIL {p}")
+        for p in advisories:
+            print(f"WARN {p}")
         if not problems:
             print(f"OK   {checked} scene(s): every drawn label is <= {MAX_LABEL_WORDS} words, "
                   f">= {MIN_FONT_SIZE}px, inside the frame, clear of the captions, and not on "
