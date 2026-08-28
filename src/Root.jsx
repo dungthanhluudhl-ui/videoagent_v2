@@ -178,6 +178,37 @@ import { V14Scene7, V14SCENE7_DURATION } from "./scenes/V14Scene7";
 import { V14Master, MASTER14_DURATION } from "./V14Master";
 // ===== /ASSEMBLE:V14 imports =====
 
+// ===== ASSEMBLE:V15 imports - khối máy sinh, đừng sửa tay =====
+import { V15Scene1, V15SCENE1_DURATION } from "./scenes/V15Scene1";
+import { V15Scene2, V15SCENE2_DURATION } from "./scenes/V15Scene2";
+import { V15Scene3, V15SCENE3_DURATION } from "./scenes/V15Scene3";
+import { V15Scene4, V15SCENE4_DURATION } from "./scenes/V15Scene4";
+import { V15Scene5, V15SCENE5_DURATION } from "./scenes/V15Scene5";
+import { V15Scene6, V15SCENE6_DURATION } from "./scenes/V15Scene6";
+import { V15Scene7, V15SCENE7_DURATION } from "./scenes/V15Scene7";
+import { V15Scene8, V15SCENE8_DURATION } from "./scenes/V15Scene8";
+import { V15Scene9, V15SCENE9_DURATION } from "./scenes/V15Scene9";
+import { V15Scene10, V15SCENE10_DURATION } from "./scenes/V15Scene10";
+import { V15Master, MASTER15_DURATION } from "./V15Master";
+// ===== /ASSEMBLE:V15 imports =====
+
+// ===== ASSEMBLE:V16 imports - khối máy sinh, đừng sửa tay =====
+import { V16Scene1, V16SCENE1_DURATION } from "./scenes/V16Scene1";
+import { V16Scene2, V16SCENE2_DURATION } from "./scenes/V16Scene2";
+import { V16Scene3, V16SCENE3_DURATION } from "./scenes/V16Scene3";
+import { V16Scene4, V16SCENE4_DURATION } from "./scenes/V16Scene4";
+import { V16Scene5, V16SCENE5_DURATION } from "./scenes/V16Scene5";
+import { V16Scene6, V16SCENE6_DURATION } from "./scenes/V16Scene6";
+import { V16Scene7, V16SCENE7_DURATION } from "./scenes/V16Scene7";
+import { V16Scene8, V16SCENE8_DURATION } from "./scenes/V16Scene8";
+import { V16Scene9, V16SCENE9_DURATION } from "./scenes/V16Scene9";
+import { V16Scene10, V16SCENE10_DURATION } from "./scenes/V16Scene10";
+import { V16Scene11, V16SCENE11_DURATION } from "./scenes/V16Scene11";
+import { V16Scene12, V16SCENE12_DURATION } from "./scenes/V16Scene12";
+import { V16Scene13, V16SCENE13_DURATION } from "./scenes/V16Scene13";
+import { V16Master, MASTER16_DURATION } from "./V16Master";
+// ===== /ASSEMBLE:V16 imports =====
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -472,6 +503,41 @@ export const RemotionRoot = () => {
       </Folder>
       <Composition id="V14Master" component={V14Master} durationInFrames={MASTER14_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       {/* ===== /ASSEMBLE:V14 ===== */}
+
+      {/* ===== ASSEMBLE:V15 - khối máy sinh, đừng sửa tay ===== */}
+      <Folder name="V15-Scenes">
+        <Composition id="V15Scene1" component={V15Scene1} durationInFrames={V15SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene2" component={V15Scene2} durationInFrames={V15SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene3" component={V15Scene3} durationInFrames={V15SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene4" component={V15Scene4} durationInFrames={V15SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene5" component={V15Scene5} durationInFrames={V15SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene6" component={V15Scene6} durationInFrames={V15SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene7" component={V15Scene7} durationInFrames={V15SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene8" component={V15Scene8} durationInFrames={V15SCENE8_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene9" component={V15Scene9} durationInFrames={V15SCENE9_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V15Scene10" component={V15Scene10} durationInFrames={V15SCENE10_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+      <Composition id="V15Master" component={V15Master} durationInFrames={MASTER15_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      {/* ===== /ASSEMBLE:V15 ===== */}
+
+      {/* ===== ASSEMBLE:V16 - khối máy sinh, đừng sửa tay ===== */}
+      <Folder name="V16-Scenes">
+        <Composition id="V16Scene1" component={V16Scene1} durationInFrames={V16SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene2" component={V16Scene2} durationInFrames={V16SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene3" component={V16Scene3} durationInFrames={V16SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene4" component={V16Scene4} durationInFrames={V16SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene5" component={V16Scene5} durationInFrames={V16SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene6" component={V16Scene6} durationInFrames={V16SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene7" component={V16Scene7} durationInFrames={V16SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene8" component={V16Scene8} durationInFrames={V16SCENE8_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene9" component={V16Scene9} durationInFrames={V16SCENE9_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene10" component={V16Scene10} durationInFrames={V16SCENE10_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene11" component={V16Scene11} durationInFrames={V16SCENE11_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene12" component={V16Scene12} durationInFrames={V16SCENE12_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V16Scene13" component={V16Scene13} durationInFrames={V16SCENE13_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+      <Composition id="V16Master" component={V16Master} durationInFrames={MASTER16_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      {/* ===== /ASSEMBLE:V16 ===== */}
 
     </>
   );

@@ -59,6 +59,9 @@ import json
 import pathlib
 import sys
 
+import render_review_sheet as review_evidence
+import stage_state as state
+
 CRITERIA = ["illustrated", "composed", "varied", "purposeful"]
 VALID = {"pass", "fail", "n/a"}
 
@@ -171,31 +174,60 @@ def main():
                 problems.append(f"{sid}: no `frame` path recorded - a verdict with no frame "
                                 f"behind it is a guess, not a review")
 
+            evidence_frames = entry.get("frames") or ([frame] if frame else [])
+            evidence_meta = {str(item.get("path", "")).replace("\\", "/"): item
+                             for item in entry.get("evidence") or []}
+            if not isinstance(evidence_frames, list):
+                problems.append(f"{sid}: `frames` must be a list of sampled evidence paths")
+                evidence_frames = []
+
             for crit in CRITERIA:
                 verdict = (entry.get(crit) or "").strip().lower()
                 if verdict not in VALID:
                     problems.append(f"{sid}/{crit}: verdict is {entry.get(crit)!r}, "
                                     f"expected one of {sorted(VALID)}")
-                elif verdict == "fail" and not entry.get("resolved"):
-                    message = (f"{sid}/{crit}: FAIL - {entry.get('note') or 'no note given'}"
-                               f" (fix it, or set \"resolved\": true with a note saying why "
-                               f"it is acceptable)")
-                    (sparse_advisories if args.hook else problems).append(message)
+                elif verdict == "fail":
+                    accepted = entry.get("resolved") is True
+                    message = (f"{sid}/{crit}: FAIL"
+                               + (" (acknowledged / accepted quality debt)" if accepted else "")
+                               + f" - {entry.get('note') or 'no note given'}")
+                    if accepted or args.hook:
+                        sparse_advisories.append(message)
+                    else:
+                        problems.append(message + " (fix it, or explicitly acknowledge the debt)")
+
+            src = scene_source(plan, sid)
+            valid_paths = []
+            for evidence in evidence_frames:
+                fpath = pathlib.Path(str(evidence).replace("\\", "/"))
+                if not fpath.exists():
+                    problems.append(f"{sid}: frame {fpath} does not exist - temporal review "
+                                    f"evidence is incomplete. Re-run render_review_sheet.py.")
+                    continue
+                valid_paths.append(fpath)
+                meta = evidence_meta.get(str(evidence).replace("\\", "/"), {})
+                source_fp = meta.get("sourceFingerprint")
+                if source_fp:
+                    try:
+                        current_source = review_evidence.sample_source_proof(
+                            state.project_root(plan_path), plan_path, plan, meta,
+                            review.get("renderParameters") or {})
+                    except (KeyError, StopIteration, OSError, ValueError):
+                        current_source = None
+                    if current_source is None or state.digest(current_source) != source_fp:
+                        problems.append(
+                            f"{sid}: source contract changed after {fpath.name} was extracted - "
+                            "this actual-master evidence is stale. Re-run render_review_sheet.py.")
+                elif src and src.stat().st_mtime > fpath.stat().st_mtime + 1:
+                    problems.append(
+                        f"{sid}: {src.name} was edited AFTER {fpath.name} was rendered - this "
+                        f"verdict describes a build that no longer exists. Re-render the frame.")
 
             if args.no_measure or not frame:
                 continue
             fpath = pathlib.Path(str(frame).replace("\\", "/"))
-            if not fpath.exists():
-                problems.append(f"{sid}: frame {fpath} does not exist - the evidence for this "
-                                f"verdict is gone. Re-run render_review_sheet.py.")
+            if fpath not in valid_paths:
                 continue
-
-            # Stale evidence: a verdict about a build that has since changed.
-            src = scene_source(plan, sid)
-            if src and src.stat().st_mtime > fpath.stat().st_mtime + 1:
-                problems.append(
-                    f"{sid}: {src.name} was edited AFTER {fpath.name} was rendered - this "
-                    f"verdict describes a build that no longer exists. Re-render the frame.")
 
             m = measure(fpath)
             if m is None:

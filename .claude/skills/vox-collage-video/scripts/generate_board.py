@@ -129,12 +129,15 @@ import sys
 import urllib.request
 import urllib.error
 
+import stage_state as state
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "google/gemini-3.1-flash-lite-image"
+PROMPT_VERSION = "generate-board-prompt-v1"
 
 # Single source of truth for chroma-key background wording/color, shared
 # with process_cutout.py's auto-detection (keep the RGB values identical
@@ -438,6 +441,61 @@ def flatten_prompt(text):
     return " ".join(line.strip() for line in text.splitlines() if line.strip())
 
 
+def assembled_prompt(cells, args):
+    if len(cells) == 1:
+        _name, prompt = cells[0]
+        tail = FULL_BLEED_CLAUSE if args.full_bleed else bg_clause(args.bg)
+        return flatten_prompt(f"{prompt}, {QUALITY_REGISTER}.\n{tail}")
+    cols = args.cols or math.ceil(math.sqrt(len(cells)))
+    rows = math.ceil(len(cells) / cols)
+    return flatten_prompt(build_grid_prompt(cells, cols, rows, args.consistent_subject,
+                                            args.bg, args.context))
+
+
+def generation_id(cells, args, full_prompt):
+    return args.generation_id or state.digest({
+        "cells": cells, "prompt": full_prompt, "model": args.model,
+        "background": args.bg, "fullBleed": args.full_bleed,
+    })[:16]
+
+
+def lineage_path(args, cells):
+    if args.lineage:
+        return pathlib.Path(args.lineage)
+    names = " ".join(name for name, _ in cells)
+    m = __import__("re").search(r"(?:el|anle)(\d+)", names, __import__("re").I)
+    suffix = m.group(1) if m else ""
+    return pathlib.Path("input") / f"asset_lineage{suffix}.json"
+
+
+def record_generation(args, cells, full_prompt, expected, actual=(), returned_source=None):
+    path = lineage_path(args, cells)
+    data = state.read_json(path, {"schema": 1, "generations": {}})
+    gid = generation_id(cells, args, full_prompt)
+    entry = data.setdefault("generations", {}).get(gid, {})
+    entry.update({
+        "generationId": gid,
+        "semanticBriefs": [{"asset": n, "brief": p,
+                            "briefId": state.digest({"asset": n, "brief": p})}
+                           for n, p in cells],
+        "styleContract": {"background": args.bg, "fullBleed": args.full_bleed,
+                          "consistentSubject": args.consistent_subject, "context": args.context},
+        "finalPrompt": full_prompt, "promptId": state.digest(full_prompt),
+        "formatterVersion": PROMPT_VERSION, "model": args.model,
+        "expectedFiles": [str(p) for p in expected],
+    })
+    if actual:
+        entry["actualReturnedFiles"] = [state.file_input(p) for p in actual]
+        if returned_source:
+            entry["returnedSourceFile"] = state.file_input(returned_source)
+        entry["handoffState"] = "RETURNED"
+    else:
+        entry.setdefault("handoffState", "AWAITING_RETURN")
+    data["generations"][gid] = entry
+    state.write_json(path, data)
+    return path, gid, entry
+
+
 def cmd_board(args):
     cells = []
     for raw in args.cell:
@@ -450,6 +508,9 @@ def cmd_board(args):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     n = len(cells)
+    full_prompt = assembled_prompt(cells, args)
+    expected_name = cells[0][0] if n == 1 else f"_board_{cells[0][0]}"
+    expected = [out_dir / f"{expected_name}.png"]
 
     if not args.live:
         # No API call - print the exact final prompt text (same wording the
@@ -458,21 +519,20 @@ def cmd_board(args):
         # under the user's own quota. A board's several panels still count
         # as ONE prompt/ONE generation here, matching the API path's single
         # grid call - only the delivery mechanism changes.
-        if n == 1:
-            name, prompt = cells[0]
-            tail = FULL_BLEED_CLAUSE if args.full_bleed else bg_clause(args.bg)
-            full_prompt = flatten_prompt(f"{prompt}, {QUALITY_REGISTER}.\n{tail}")
-        else:
-            cols = args.cols or math.ceil(math.sqrt(n))
-            rows = math.ceil(n / cols)
-            name = f"_board_{cells[0][0]}"
-            full_prompt = flatten_prompt(build_grid_prompt(cells, cols, rows, args.consistent_subject, args.bg, args.context))
-        print(f"# save the resulting image as: {out_dir / (name + '.png')}")
+        lineage, gid, _entry = record_generation(args, cells, full_prompt, expected)
+        print(f"# generation: {gid}; save as: {expected[0]}")
         print(full_prompt)
         if args.prompts_out:
-            with open(args.prompts_out, "a", encoding="utf-8") as f:
-                f.write(full_prompt + "\n")
-            print(f"(appended to {args.prompts_out})", file=sys.stderr)
+            prompt_path = pathlib.Path(args.prompts_out)
+            existing = prompt_path.read_text(encoding="utf-8").splitlines() if prompt_path.exists() else []
+            if full_prompt not in existing:
+                prompt_path.parent.mkdir(parents=True, exist_ok=True)
+                with prompt_path.open("a", encoding="utf-8") as f:
+                    f.write(full_prompt + "\n")
+                action = "appended"
+            else:
+                action = "REUSE unchanged prompt"
+            print(f"({action}: {prompt_path}; lineage: {lineage})", file=sys.stderr)
         return
 
     if n == 1:
@@ -484,6 +544,7 @@ def cmd_board(args):
         image_bytes = generate(full_prompt, args.model)
         dest = out_dir / f"{name}.png"
         dest.write_bytes(image_bytes)
+        record_generation(args, cells, full_prompt, [dest], [dest])
         print(f"Saved {dest} ({len(image_bytes)} bytes)")
         return
 
@@ -492,6 +553,8 @@ def cmd_board(args):
     prompt = build_grid_prompt(cells, cols, rows, args.consistent_subject, args.bg, args.context)
     board_bytes = generate(prompt, args.model)
     crop_board(board_bytes, cells, out_dir, args.bg)
+    actual = [out_dir / f"{name}.png" for name, _ in cells]
+    record_generation(args, cells, full_prompt, expected, [p for p in actual if p.is_file()])
 
 
 def cmd_crop(args):
@@ -506,15 +569,27 @@ def cmd_crop(args):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     board_bytes = pathlib.Path(args.board_file).read_bytes()
+    # Reconstruct the exact production prompt contract; prompt text in --cell is
+    # semantic lineage here even though crop math itself does not consume it.
+    args.model = getattr(args, "model", DEFAULT_MODEL)
+    args.full_bleed = False
+    args.cols = getattr(args, "cols", None)
+    args.consistent_subject = getattr(args, "consistent_subject", None)
+    args.context = getattr(args, "context", None)
+    full_prompt = assembled_prompt(cells, args)
     if len(cells) == 1:
         # N=1 was never a grid - the user's downloaded file IS the final
         # image, just save it under the expected name directly.
         name, _prompt = cells[0]
         dest = out_dir / f"{name}.png"
         dest.write_bytes(board_bytes)
+        record_generation(args, cells, full_prompt, [dest], [dest], args.board_file)
         print(f"Saved {dest} ({len(board_bytes)} bytes) - single cell, no crop needed")
         return
     crop_board(board_bytes, cells, out_dir, args.bg)
+    actual = [out_dir / f"{name}.png" for name, _ in cells]
+    record_generation(args, cells, full_prompt, actual,
+                      [p for p in actual if p.is_file()], args.board_file)
 
 
 if __name__ == "__main__":
@@ -557,6 +632,9 @@ if __name__ == "__main__":
                                "to this file (creates it if missing) - call once per "
                                "cell/board across a whole video to build one batch-paste "
                                "list.")
+    p_board.add_argument("--generation-id", default=None)
+    p_board.add_argument("--lineage", default=None,
+                         help="small per-video lineage JSON; defaults to input/asset_lineage<N>.json when name contains N")
     p_board.set_defaults(func=cmd_board)
 
     p_crop = sub.add_parser("crop-file", help="Crop an externally-generated board image "
@@ -569,6 +647,9 @@ if __name__ == "__main__":
     p_crop.add_argument("--out-dir", required=True)
     p_crop.add_argument("--bg", choices=list(CHROMA_SPECS), default="green",
                          help="chroma-key color actually used when the prompt was generated")
+    p_crop.add_argument("--model", default=DEFAULT_MODEL)
+    p_crop.add_argument("--generation-id", default=None)
+    p_crop.add_argument("--lineage", default=None)
     p_crop.set_defaults(func=cmd_crop)
 
     args = parser.parse_args()

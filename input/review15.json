@@ -1,0 +1,178 @@
+{
+  "video": "V15",
+  "howToFill": "For each scene put 'pass' / 'fail' / 'n/a' against the four criteria after LOOKING across its sampled frames. 'fail' remains a quality failure; \"resolved\": true records acknowledged/accepted quality debt and does not turn it into a pass.",
+  "criteria": {
+    "illustrated": "narration is shown, not left to the viewer's imagination",
+    "composed": "balanced, everything inside the frame and legible",
+    "varied": "not the same visual formula as its neighbours",
+    "purposeful": "every element is there for a reason, not filler"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames_v15\\V15Scene1_f148.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene1_f20.png",
+        "input\\review_frames_v15\\V15Scene1_f99.png",
+        "input\\review_frames_v15\\V15Scene1_f148.png",
+        "input\\review_frames_v15\\V15Scene1_f213.png"
+      ],
+      "visualTransformation": "kho phế liệu tối hiện ra toàn khung rồi hình người bị giữ phủ lên, dây trói và còng khóa chặt lối thoát",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Warehouse-to-restraint transformation is clear, but the reused restrained-person cutout retains a visible orange/edge artifact near the lower silhouette.",
+      "resolved": true
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames_v15\\V15Scene2_f195.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene2_f20.png",
+        "input\\review_frames_v15\\V15Scene2_f99.png",
+        "input\\review_frames_v15\\V15Scene2_f195.png",
+        "input\\review_frames_v15\\V15Scene2_f247.png"
+      ],
+      "visualTransformation": "cuộc gọi bị ép buộc xuất hiện lớn, một đường điều kiện nối số tiền 150 triệu với cánh cửa chỉ mở khi người bị giữ được thả",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Compelled call and money-for-release condition read clearly after the pass; reused phone cutout still contains the cheap-vision watermark/edge-quality warning.",
+      "resolved": true
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames_v15\\V15Scene3_f160.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene3_f20.png",
+        "input\\review_frames_v15\\V15Scene3_f90.png",
+        "input\\review_frames_v15\\V15Scene3_f160.png",
+        "input\\review_frames_v15\\V15Scene3_f228.png"
+      ],
+      "visualTransformation": "trích đoạn hồ sơ chính thức mở ở yêu cầu buổi trưa, mốc thời gian tiến sang tài khoản rồi số 150 triệu được đóng khung",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Official excerpt, noon chronology and amount remain inside frame; endpoint clipping from the first draft is removed."
+    },
+    {
+      "id": "S4",
+      "frame": "input\\review_frames_v15\\V15Scene4_f133.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene4_f20.png",
+        "input\\review_frames_v15\\V15Scene4_f133.png",
+        "input\\review_frames_v15\\V15Scene4_f171.png"
+      ],
+      "visualTransformation": "một chuỗi ngày nối dài bằng các mốc giữ người và ép tiền rồi cả chuỗi dừng lại trước dấu hỏi của người xem",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Sparse chronology is intentional and readable; timeline endpoint labels are no longer clipped."
+    },
+    {
+      "id": "S5",
+      "frame": "input\\review_frames_v15\\V15Scene5_f39.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene5_f20.png",
+        "input\\review_frames_v15\\V15Scene5_f39.png",
+        "input\\review_frames_v15\\V15Scene5_f122.png"
+      ],
+      "visualTransformation": "hồ sơ khoản nợ thật trượt vào như một tiền đề hợp lý rồi dấu xác nhận đóng lên đúng con số 150 triệu",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The real-debt premise and stamp are clear, but official body text remains dense and only partly readable at mobile/contact-sheet scale.",
+      "resolved": true
+    },
+    {
+      "id": "S6",
+      "frame": "input\\review_frames_v15\\V15Scene6_f118.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene6_f20.png",
+        "input\\review_frames_v15\\V15Scene6_f42.png",
+        "input\\review_frames_v15\\V15Scene6_f118.png",
+        "input\\review_frames_v15\\V15Scene6_f149.png"
+      ],
+      "visualTransformation": "mảnh hồ sơ đòi nợ chiếm một nửa khung, chiếc còng đáp xuống nửa còn lại và tạo ra kết luận trực giác về bắt giữ trái pháp luật",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Debt evidence and handcuffs create the intended split, but the document body remains small and the handcuff hold is brief.",
+      "resolved": true
+    },
+    {
+      "id": "S7",
+      "frame": "input\\review_frames_v15\\V15Scene7_f43.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene7_f20.png",
+        "input\\review_frames_v15\\V15Scene7_f43.png",
+        "input\\review_frames_v15\\V15Scene7_f74.png"
+      ],
+      "visualTransformation": "nhãn bắt giữ trái pháp luật bị đẩy khỏi tâm khung khi nhãn bắt cóc nhằm chiếm đoạt tài sản mở rộng và chiếm vị trí pháp lý trung tâm",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The classification takeover is visually clear and unclipped, but the full legal phrase is compressed into a 2.67-second scene and remains a pacing/readability risk.",
+      "resolved": true
+    },
+    {
+      "id": "S8",
+      "frame": "input\\review_frames_v15\\V15Scene8_f120.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene8_f20.png",
+        "input\\review_frames_v15\\V15Scene8_f51.png",
+        "input\\review_frames_v15\\V15Scene8_f120.png",
+        "input\\review_frames_v15\\V15Scene8_f172.png"
+      ],
+      "visualTransformation": "tiêu đề Án lệ 64 mở ra toàn trang, vùng tên án lệ được soi sáng rồi phần thẩm quyền chính thức tiến vào để khóa nguồn giải thích",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Official title and authority are authentic and larger after correction, but dense source body text still reads as evidence texture more than fully legible copy.",
+      "resolved": true
+    },
+    {
+      "id": "S9",
+      "frame": "input\\review_frames_v15\\V15Scene9_f128.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene9_f20.png",
+        "input\\review_frames_v15\\V15Scene9_f96.png",
+        "input\\review_frames_v15\\V15Scene9_f128.png",
+        "input\\review_frames_v15\\V15Scene9_f197.png"
+      ],
+      "visualTransformation": "mệnh đề khoản nợ thật đứng nguyên ở nền hồ sơ trong khi người bị trói xuất hiện phía trước và một dấu bất đẳng thức tách nợ khỏi quyền giữ người",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The first-draft headline collision is removed and the claim holds longer; reused subject edges and dense source text remain visible quality debt.",
+      "resolved": true
+    },
+    {
+      "id": "S10",
+      "frame": "input\\review_frames_v15\\V15Scene10_f139.png",
+      "frames": [
+        "input\\review_frames_v15\\V15Scene10_f20.png",
+        "input\\review_frames_v15\\V15Scene10_f79.png",
+        "input\\review_frames_v15\\V15Scene10_f139.png",
+        "input\\review_frames_v15\\V15Scene10_f167.png"
+      ],
+      "visualTransformation": "trích đoạn điều kiện thả người được khóa sáng, đường tiền chạy từ gia đình sang người bị giữ rồi nhãn tranh chấp tiền bạc bị gạch bỏ để lộ bản chất chiếm đoạt",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Uncropped official conclusion, three-step flow and final claim are readable as a mechanism; source body text remains small at mobile scale.",
+      "resolved": true
+    }
+  ],
+  "howChecked": "Reviewed the workflow-generated 37-frame event-sampled final contact sheet after one broad correction pass. Cheap frame vision flagged first-draft clipping, tiny document text and collisions; asset vision flagged the reused phone watermark and a truncated source crop. Sheet vision was unreliable and explicitly skipped. No second aesthetic correction loop was performed."
+}

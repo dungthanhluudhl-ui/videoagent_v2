@@ -22,7 +22,7 @@ review and `sheet_vision.py`, not inferred from implementation labels.
 
 | If the narration is about… | visualLanguage | Build it with |
 |---|---|---|
-| A specific object or person | `cutout` | `Hero` / `Support` (`shared.jsx`) |
+| A specific object or person | `cutout` | `EditorialHero` / `EditorialSupport` (`shared.jsx`); settled by default |
 | A place, a location, a district | `map` | `MapGraphic` (`MapGraphic.jsx`) — real MapLibre map |
 | A relationship, legal structure, layout, size, distance, density | `diagram` | Use only when it explains more clearly than imagery; `DiagramCanvas` + relevant primitives |
 | A sequence of events in time | `timeline` | `Timeline` (`visualLanguage.jsx`) |
@@ -31,7 +31,7 @@ review and `sheet_vision.py`, not inferred from implementation labels.
 | Atmosphere, setting, a moment | `background-photo` | `BackgroundPhoto` — full-bleed |
 | Two things set against each other | `split` | `SplitCompareScene` |
 | Someone's words | `quote` | `SpeechBubbleQuote`, `QuoteBubbleScene` |
-| A document, a record, an archive | `document` | `NewspaperSpotlightScene` |
+| A document, a record, an archive | `document` | `DocumentEvidence` (`visualLanguage.jsx`) — authentic raster source, timed crop/focus/highlight regions |
 | A detail inside a wider image | `annotated` | `AnnotatedPhoto` — leader lines + labels |
 | A screen, a broadcast, a phone | `mockup` | `DeviceMockup` |
 | Nothing useful to show (rare, intentional) | `text-only` | `PunchPhrase` alone; no percentage quota |
@@ -89,3 +89,18 @@ cocktail glass for "quán bar ở Itaewon" and a stack of passports for "ngườ
 nước ngoài" both passed every mechanical check and both read as stock filler,
 because they illustrate the category rather than the place. When the subject
 is culturally or geographically specific, the prompt has to be too.
+
+First decide the document's editorial intent. **Context/authority** (title,
+precedent, issuing body) may use the full source or a truthful crop and does not
+require exact regions. **Cited evidence** should normally declare optional
+`evidenceRegions: [{anchorPhrase, region:[x,y,w,h]}]` on the document asset.
+`beat_sync.py evidence-regions` derives each local start frame from the existing
+aligned narration; the mapping duplicates no timing. Pass its returned regions
+to `DocumentEvidence`, which preserves the raster, dims surrounding material,
+highlights exact evidence, and moves when narration reaches another clause. It
+does not choose evidence, rewrite source text, or force every document into the
+same composition.
+
+Rendered variety is judged from the scene-summary sheet, not from apparently
+different `visualLanguage` labels. Do not relabel scenes or add media/layout/
+transition quotas to make a number look varied.

@@ -1,9 +1,9 @@
 # Entrance animation variants
 
-Give every scene's hero cutout a genuinely different entrance. Never let two
-consecutive scenes share one — reusing the same animation reads as flat.
-After the entrance settles, layer a small continuous idle bob/sway/breathe
-on top for the rest of the scene so nothing looks like a frozen photo.
+Choose an entrance that serves the event or meaning. The normal sequence is
+**entrance → settle → hold**. New scenes use `EditorialHero` and
+`EditorialSupport`, which settle by default; do not keep an element moving
+merely to avoid a static frame.
 
 All examples assume `frame` is local to the scene (subtract the scene's
 start frame first) and use `spring`/`interpolate` from `remotion`.
@@ -96,15 +96,23 @@ const scale = interpolate(frame, [8, 9, 13], [1, 1.06, 1], { extrapolateLeft: "c
 ```
 SFX: a hard click/thud exactly on the landing frame, not frame 0.
 
-## Idle motion (after any entrance)
-Vary the MODE across elements on screen, not just the phase — reusing one
-sine wiggle everywhere reads as flat the same way one entrance does:
-- `sway` (default) — gentle rotation, `sin(frame/22) * 3deg`.
+## Continuous motion (exceptional opt-in)
+Use continuous motion only when it communicates an ongoing state: nervousness,
+hanging/suspended movement, vibration, instability, or another specific event.
+Pass `idle` explicitly to an editorial wrapper:
+- `sway` — gentle rotation, `sin(frame/22) * 3deg`.
 - `tremble` — faster, smaller, less-smooth jitter (nervous energy):
   `sin(frame/4)*1.1 + sin(frame/2.3)*0.6`, degrees.
 - `bob` — slow vertical drift instead of rotation (fits a hanging/flag-
   like prop): `sin(frame/18) * 6`, px.
 
-Offset the phase per element so multiple cutouts on screen never move in
-sync, regardless of which mode. A few px / 1-2deg is enough — more reads
-as sloppy, not alive.
+If several justified moving elements share a frame, offset their phase. Keep
+amplitude small. `Hero`/`Support` retain their old sway default only for legacy
+composition compatibility; they are not the default construction path.
+
+## Camera movement (exceptional opt-in)
+
+The normal camera is stable; `BackgroundPhoto` defaults to `drift=0`. Do not
+replace idle cutout wobble with a universal slow zoom. Camera movement belongs
+to a semantic event—context → detail, evidence focus, reveal, authority takeover,
+or spatial displacement. Existing shipped scenes may retain explicit motion.

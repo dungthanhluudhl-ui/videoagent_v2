@@ -76,6 +76,8 @@ import json
 import pathlib
 import sys
 
+import stage_state as state
+
 try:
     from PIL import Image
 except ImportError:
@@ -230,6 +232,31 @@ def main():
         findings = [("WARN" if f[0] == "FAIL" and f not in integrity_fails else f[0],
                      f[1], f[2], f[3]) for f in findings]
         fails = integrity_fails
+
+    plan_data = state.read_json(args.plan, {})
+    manifest_path = state.manifest_path_for_plan(args.plan, plan_data)
+    by_name = {}
+    for level, sid, name, message in findings:
+        by_name.setdefault((sid, name), []).append((level, message))
+    root = pathlib.Path(args.root) if args.root else find_root(args.plan)
+    for scene in plan_data.get("scenes") or []:
+        for asset in scene.get("assets") or []:
+            if not asset.get("src"):
+                continue
+            name = asset.get("name") or asset["src"]
+            path = root / "public" / asset["src"]
+            issues = by_name.get((scene.get("id"), name), [])
+            hard = any(level == "FAIL" and message.startswith("file khong ton tai:")
+                       for level, message in issues)
+            qa = "HARD_UNUSABLE" if hard else (
+                "ACCEPTED_WITH_ADVISORY" if issues else "ACCEPTED")
+            brief = state.asset_contract(scene, asset)
+            identity = state.digest({"file": state.file_input(path), "brief": brief})
+            state.update_manifest(manifest_path, plan_data.get("video"),
+                                  state.asset_usage_id(scene, asset),
+                                  {"sourceFile": state.file_input(path), "briefId": state.digest(brief),
+                                   "mechanicalQA": qa,
+                                   "mechanicalAdvisory": "; ".join(m for _l, m in issues)}, identity)
 
     if args.json:
         print(json.dumps([{"level": l, "scene": s, "asset": n, "message": m}

@@ -25,8 +25,11 @@ REPEAT_SHARE duoi day nam giua 23% va 58% chu khong phai duoc do ra tu mot
 phan bo. Khi co video thu ba co phan quyet, hay do lai.
 
 Usage:
-    py -3 sheet_vision.py input/v11_contact_sheet.png
-    py -3 sheet_vision.py sheet.png --json out.json
+    py -3 sheet_vision.py input/review_frames/scene_summary_sheet.jpg --scenes 24
+    py -3 sheet_vision.py sheet.png --scenes 24 --json out.json
+
+Input ontology: exactly one representative frame per scene. Temporal sheets
+with several states per scene belong to transformation review, not this query.
 """
 
 import argparse
@@ -67,7 +70,8 @@ REPEAT_SHARE = 0.45
 RUNS = 3
 
 PROMPT = (
-    "Anh nay la BANG TIEP XUC cua mot video doc: cac khung hinh cua NHIEU CANH khac nhau "
+    "Anh nay la BANG TOM TAT CANH cua mot video doc: MOI CANH CHI CO DUNG MOT KHUNG DAI DIEN; "
+    "cac khung hinh cua NHIEU CANH khac nhau "
     "trong cung mot video, xep thanh luoi theo thu tu doc tu trai sang phai, tren xuong duoi.\n\n"
     "Cau hoi DUY NHAT: video nay co bi LAP LAI VE THI GIAC khong - tuc nhieu canh trong "
     "giong nhau den muc nguoi xem doc ra mot cong thuc va thay chan?\n\n"
@@ -77,6 +81,24 @@ PROMPT = (
     "Chi liet ke nhung nhom co TU 2 CANH tro len trong giong nhau. Dung dem cac canh khac "
     "kieu. Neu moi canh moi kieu thi repetitive=false va groups rong."
 )
+
+
+def valid_run(run, total_scenes):
+    """Return a normalized model run, or None when counts are impossible."""
+    groups = run.get("groups")
+    if not isinstance(groups, list):
+        return None
+    clean = []
+    for group in groups:
+        count = group.get("count") if isinstance(group, dict) else None
+        if isinstance(count, bool) or not isinstance(count, int) or count < 2:
+            return None
+        if total_scenes and count > total_scenes:
+            return None
+        clean.append(group)
+    normalized = dict(run)
+    normalized["groups"] = clean
+    return normalized
 
 # DUNG "CAI TIEN" LOI NHAC TREN.
 #
@@ -145,10 +167,13 @@ def main():
     import concurrent.futures as cf
     with cf.ThreadPoolExecutor(max_workers=args.runs) as ex:
         runs = list(ex.map(lambda _: check(args.sheet, args.model), range(args.runs)))
-    ok = [r for r in runs if "_error" not in r]
+    parsed = [r for r in runs if "_error" not in r]
+    ok = [valid_run(r, args.scenes) for r in parsed]
+    ok = [r for r in ok if r is not None]
     if not ok:
-        print("LOI: " + runs[0].get("_error", "?")[:200], file=sys.stderr)
-        return 2
+        print("WARN sheet vision unreliable: no run returned valid scene counts; "
+              "quality advisory skipped", file=sys.stderr)
+        return 0
 
     toks = sum(r.get("_tokens", 0) for r in ok)
     shares, best = [], None

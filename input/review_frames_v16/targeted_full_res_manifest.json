@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "video": "V16",
+  "composition": "V16Master",
+  "requests": [
+    {
+      "id": "S5-f116",
+      "scene": "S5",
+      "localFrame": 116,
+      "masterFrame": 701,
+      "masterTimeSec": 23.366667,
+      "path": "input\\review_frames_v16\\V16Master_S5_f116_m701.png",
+      "visualTransformation": "the authentic court excerpt starts as a readable paragraph, then the narration-linked demand region takes over the frame and its 150,000,000 figure receives a single evidence stroke",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S6-f139",
+      "scene": "S6",
+      "localFrame": 139,
+      "masterFrame": 846,
+      "masterTimeSec": 28.2,
+      "path": "input\\review_frames_v16\\V16Master_S6_f139_m846.png",
+      "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S8-f87",
+      "scene": "S8",
+      "localFrame": 87,
+      "masterFrame": 1099,
+      "masterTimeSec": 36.633333,
+      "path": "input\\review_frames_v16\\V16Master_S8_f87_m1099.png",
+      "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S10-f121",
+      "scene": "S10",
+      "localFrame": 121,
+      "masterFrame": 1368,
+      "masterTimeSec": 45.6,
+      "path": "input\\review_frames_v16\\V16Master_S10_f121_m1368.png",
+      "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S11-f115",
+      "scene": "S11",
+      "localFrame": 115,
+      "masterFrame": 1540,
+      "masterTimeSec": 51.333333,
+      "path": "input\\review_frames_v16\\V16Master_S11_f115_m1540.png",
+      "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S12-f47",
+      "scene": "S12",
+      "localFrame": 47,
+      "masterFrame": 1658,
+      "masterTimeSec": 55.266667,
+      "path": "input\\review_frames_v16\\V16Master_S12_f47_m1658.png",
+      "visualTransformation": "the source clause 'family or relatives must hand over money' focuses first; a release door remains visibly locked until the money path reaches it",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S13-f32",
+      "scene": "S13",
+      "localFrame": 32,
+      "masterFrame": 1738,
+      "masterTimeSec": 57.933333,
+      "path": "input\\review_frames_v16\\V16Master_S13_f32_m1738.png",
+      "visualTransformation": "the authentic conclusion excerpt rises behind two labels; 'tranh chấp tiền bạc' recedes while the source-backed criminal classification remains in sharp foreground",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    }
+  ],
+  "singleProcessCommand": [
+    "npx",
+    "remotion",
+    "render",
+    "V16Master",
+    "input\\review_frames_v16\\targeted_full_res",
+    "--sequence",
+    "--frames=701,846,1099,1368,1540,1658,1738",
+    "--image-format=png",
+    "--overwrite"
+  ]
+}

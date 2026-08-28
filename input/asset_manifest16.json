@@ -1,0 +1,458 @@
+{
+  "schema": 1,
+  "video": "V16",
+  "assets": {
+    "S1:Scrap-Warehouse-Location": {
+      "identity": "d27fda74d1199d5d95dcecdfc4d19cc2dcfff66b6b79f2c975e0d662cf745c76",
+      "acceptance": "ACCEPTED_WITH_ADVISORY",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_warehouse_vertical.png",
+        "size": 1321674,
+        "sha256": "fa09ee9f3f9eb4ad580f3b6413c6e9693d064410fe59fb85575ae3b421cecf7d"
+      },
+      "brief": {
+        "scene": "S1",
+        "name": "Scrap-Warehouse-Location",
+        "src": "anle64_warehouse_vertical.png",
+        "role": "background",
+        "describes": [
+          "câu chuyện chưa dừng ở đó",
+          "kho tập kết phế liệu"
+        ],
+        "anchorPhrase": "kho tập kết phế liệu",
+        "slot": null,
+        "visualTransformation": "a dark scrap warehouse expands from a narrow central doorway into a full-height oppressive location, establishing the new setting before any person appears",
+        "template": "bespoke full-bleed location reveal",
+        "generationId": null
+      },
+      "briefId": "ff324e5f4eb97fefb822389eb7907e3802a0cb7db7c1692a371da4d3d4b0c7a3",
+      "updatedAt": "2026-08-28T17:21:43.746735+00:00",
+      "cheapSemanticQA": "ACCEPTED_WITH_ADVISORY",
+      "advisory": "Ảnh bị dính viền trắng ở cạnh dưới.",
+      "editorialEscalation": null,
+      "visionCacheKey": "241a3330ec304eb9e9354331653f66c75410f5db7518a8169903802a5996284d"
+    },
+    "S2:Warehouse-Continuity": {
+      "identity": "d572526974b2b31c890ad38e8b0964ee3103296feb6d2fd4854b67fb30d44fb6",
+      "acceptance": "ACCEPTED_WITH_ADVISORY",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_warehouse_vertical.png",
+        "size": 1321674,
+        "sha256": "fa09ee9f3f9eb4ad580f3b6413c6e9693d064410fe59fb85575ae3b421cecf7d"
+      },
+      "brief": {
+        "scene": "S2",
+        "name": "Warehouse-Continuity",
+        "src": "anle64_warehouse_vertical.png",
+        "role": "background",
+        "describes": [
+          "Tại đây",
+          "bị giữ lại"
+        ],
+        "anchorPhrase": "Tại đây",
+        "slot": null,
+        "visualTransformation": "the anonymous restrained subject settles large in front of the warehouse while a steel restraint closes the remaining open side of the frame",
+        "template": "bespoke asymmetric foreground restraint composition",
+        "generationId": null
+      },
+      "briefId": "bc079fbcfdc98591cd50d4eaed4ee9582495d6e463c197a79f528cfe6ee927b4",
+      "updatedAt": "2026-08-28T17:21:43.763569+00:00",
+      "cheapSemanticQA": "ACCEPTED_WITH_ADVISORY",
+      "advisory": "Ảnh bị dính viền trắng đục lớn ở cạnh dưới cùng.",
+      "editorialEscalation": null,
+      "visionCacheKey": "9558703b95e2a05011649e6a6cc27d9cb3876867bf0bdcd07a5a018ef2beff9d"
+    },
+    "S2:Restrained-Subject": {
+      "identity": "bcb425452e9bb908eb6b07b923903b38e39a86e80d2b1c8573dd552d5da40619",
+      "acceptance": "ACCEPTED_WITH_ADVISORY",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_victim_restrained_seated.png",
+        "size": 503446,
+        "sha256": "144ff414801347876aad30b1d0dbf39f379da0b7d4a1f4b62ba919c500b83c6b"
+      },
+      "brief": {
+        "scene": "S2",
+        "name": "Restrained-Subject",
+        "src": "anle64_victim_restrained_seated.png",
+        "role": "hero",
+        "describes": [
+          "tiếp tục bị trói",
+          "bị giữ lại",
+          "không thể bỏ trốn"
+        ],
+        "anchorPhrase": "tiếp tục bị trói",
+        "slot": null,
+        "visualTransformation": "the anonymous restrained subject settles large in front of the warehouse while a steel restraint closes the remaining open side of the frame",
+        "template": "bespoke asymmetric foreground restraint composition",
+        "generationId": null
+      },
+      "briefId": "9dca85d3f0bcf24f0ace61aeb7608c7c3278c1449c0929506a62e1715215df01",
+      "updatedAt": "2026-08-28T17:21:43.778150+00:00",
+      "cheapSemanticQA": "ACCEPTED_WITH_ADVISORY",
+      "advisory": "Chủ thể bị cắt cụt mất phần chân ở mép dưới bên trái khung hình.",
+      "editorialEscalation": "MAIN_EDITORIAL_JUDGMENT",
+      "visionCacheKey": "beed35b80744df25c591d0f422303e17e532f99954288245f797cb3edcd116b1"
+    },
+    "S2:Steel-Restraint": {
+      "identity": "42fa8a720b8808f126046351d4fc11cbf05a24de289e01c436c7b8029aa46e32",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_handcuffs.png",
+        "size": 339471,
+        "sha256": "9c6bcb90faf924f5e13fd2fecd0cd651436f638a5f910d5ffa16daaa7ce7c583"
+      },
+      "brief": {
+        "scene": "S2",
+        "name": "Steel-Restraint",
+        "src": "anle64_handcuffs.png",
+        "role": "support",
+        "describes": [
+          "bị khóa còng"
+        ],
+        "anchorPhrase": "bị khóa còng",
+        "slot": null,
+        "visualTransformation": "the anonymous restrained subject settles large in front of the warehouse while a steel restraint closes the remaining open side of the frame",
+        "template": "bespoke asymmetric foreground restraint composition",
+        "generationId": null
+      },
+      "briefId": "723d61a8606999cd092ef67867645d44b38f92bd8b464e2b0b6e4fa513f875a5",
+      "updatedAt": "2026-08-28T16:41:27.649123+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "76b9f31088e1062461a70ec157a84c454ad1ca36f8eed36d6f262aae86a0bd2a"
+    },
+    "S3:Compelled-Caller": {
+      "identity": "b1e6891366fd7b1212be2168b19a0f64d368e1e44ae8310fbb86ff434960601d",
+      "acceptance": "ACCEPTED_WITH_ADVISORY",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_victim_phone_under_duress.png",
+        "size": 271464,
+        "sha256": "b6198cf086a312b64ef7748e7e7435e52d901349d37ca1e2e3e97da3703fef15"
+      },
+      "brief": {
+        "scene": "S3",
+        "name": "Compelled-Caller",
+        "src": "anle64_victim_phone_under_duress.png",
+        "role": "hero",
+        "describes": [
+          "gây áp lực",
+          "gọi về cho gia đình"
+        ],
+        "anchorPhrase": "gọi về cho gia đình",
+        "slot": null,
+        "visualTransformation": "a compelled caller enters alone; concentric call waves travel outward and terminate at a family threshold, making the direction of pressure visible",
+        "template": "bespoke diagonal compelled-call transmission",
+        "generationId": null
+      },
+      "briefId": "e1558cb93acdefecf84eb850dd5d22a30e73c990268dad240e101aa4126e4c2b",
+      "updatedAt": "2026-08-28T17:21:43.792009+00:00",
+      "cheapSemanticQA": "ACCEPTED_WITH_ADVISORY",
+      "advisory": "Phần chân và thân dưới của nhân vật bị cắt cụt ở cạnh đáy.",
+      "editorialEscalation": "MAIN_EDITORIAL_JUDGMENT",
+      "visionCacheKey": "d3359ac510fb7cad0cd6885002fc178e4c03cd03988dad209e3e56c7149b07a2"
+    },
+    "S5:Official-Noon-Demand": {
+      "identity": "7a17d58d485236012eb70fd030ed686dd5d4dc81eaacd41f09041be90642d7cb",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p3_noon_demand.png",
+        "size": 677652,
+        "sha256": "1512032dc21932ca76915a5f9057860f4e49e69d3b358b2c820c9405dfb58f5e"
+      },
+      "brief": {
+        "scene": "S5",
+        "name": "Official-Noon-Demand",
+        "src": "anle64_pdf_p3_noon_demand.png",
+        "role": "document",
+        "describes": [
+          "gia đình phải chuyển đủ 150 triệu đồng",
+          "vào tài khoản của anh T"
+        ],
+        "anchorPhrase": "chuyển đủ 150 triệu đồng",
+        "slot": null,
+        "visualTransformation": "the authentic court excerpt starts as a readable paragraph, then the narration-linked demand region takes over the frame and its 150,000,000 figure receives a single evidence stroke",
+        "template": "bespoke source-first evidence focus",
+        "generationId": null
+      },
+      "briefId": "99ed40ed059eb5ccf827be6e197c7508364b8eee139f646429593cad89837f59",
+      "updatedAt": "2026-08-28T17:21:43.796636+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "625a943fa7f92d018fca72498ff7c380557b62e3913c3c6ac48008ce04bc3289"
+    },
+    "S6:Continued-Pressure-Record": {
+      "identity": "95311caca4960459ff9b1cdfe7e44911d428ca2fea26bc508e33d3930416a245",
+      "acceptance": "ACCEPTED_WITH_ADVISORY",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p3_pressure_continues.png",
+        "size": 947380,
+        "sha256": "57626294d2a4a36d76ea78392c1dc2e4e3d07e9076a98cea14dc78552d8c89dc"
+      },
+      "brief": {
+        "scene": "S6",
+        "name": "Continued-Pressure-Record",
+        "src": "anle64_pdf_p3_pressure_continues.png",
+        "role": "document",
+        "describes": [
+          "Những ngày sau đó",
+          "việc giữ người và ép chuyển tiền vẫn tiếp diễn"
+        ],
+        "anchorPhrase": "Những ngày sau đó",
+        "slot": null,
+        "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+        "template": "bespoke persistent-record timeline opening into a question",
+        "generationId": null
+      },
+      "briefId": "51ebb53c9f7f8c9f59ff66c97d4222ac6b4c5424d01d12c04689d4819dee86ed",
+      "updatedAt": "2026-08-28T17:21:43.817329+00:00",
+      "cheapSemanticQA": "ACCEPTED_WITH_ADVISORY",
+      "advisory": "Văn bản bị cắt ngang dở dang ở dòng chữ dưới cùng của trang.",
+      "editorialEscalation": "MAIN_EDITORIAL_JUDGMENT",
+      "visionCacheKey": "d45e987e6a370348ec4709628de73b6921e86f6eeaab2c80214821603d673024"
+    },
+    "S8:Authentic-Real-Debt-Premise": {
+      "identity": "d46743576d0a4d55adb2a776f903386ab017de270110ee787c911e3bb80ac760",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p2_real_debt.png",
+        "size": 499939,
+        "sha256": "e7d501735c27b255db5eac7353aa7036db972a79dd8e3a5dfaf3507f94966804"
+      },
+      "brief": {
+        "scene": "S8",
+        "name": "Authentic-Real-Debt-Premise",
+        "src": "anle64_pdf_p2_real_debt.png",
+        "role": "document",
+        "describes": [
+          "lấy lại tiền của mình"
+        ],
+        "anchorPhrase": "lấy lại tiền của mình",
+        "slot": null,
+        "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+        "template": "bespoke evidence-versus-offense split",
+        "generationId": null
+      },
+      "briefId": "12c3d0b417d62010f15f9acf86c42701fc6d416533b0cc93e63c2485d88fc827",
+      "updatedAt": "2026-08-28T17:21:43.829840+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "9bd90be9f5b2b52ace89a03ea613923ecb698ee15abff52ece42e5ff6e8dc6b9"
+    },
+    "S8:Unlawful-Detention-Side": {
+      "identity": "efa4701040b1c655f0ce506e9f570ada07b5a401e3f98389b9cb5eeaf1f68fa3",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_handcuffs.png",
+        "size": 339471,
+        "sha256": "9c6bcb90faf924f5e13fd2fecd0cd651436f638a5f910d5ffa16daaa7ce7c583"
+      },
+      "brief": {
+        "scene": "S8",
+        "name": "Unlawful-Detention-Side",
+        "src": "anle64_handcuffs.png",
+        "role": "support",
+        "describes": [
+          "bắt giữ người trái pháp luật"
+        ],
+        "anchorPhrase": "bắt giữ người trái pháp luật",
+        "slot": null,
+        "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+        "template": "bespoke evidence-versus-offense split",
+        "generationId": null
+      },
+      "briefId": "be5b4c7367b3f63f07b4060e953d6feb7de3adda94aad3557650eb0d19e1b654",
+      "updatedAt": "2026-08-28T16:41:27.761841+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "9e5a35571f647d14a6ee9b9a75145bd3c1ca35c1bd8930da4872fa04a68ffe4a"
+    },
+    "S10:Official-Precedent-Title": {
+      "identity": "6aaff43cee549ca1df0dbf50ceef4e83da736af0700e0c8d2ed95cc1ad912875",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p1_title_focus.png",
+        "size": 327495,
+        "sha256": "e6f60f9bc0907db462fc1645aa400a31c73c0ce163c3f4270a08a7b06bb8a654"
+      },
+      "brief": {
+        "scene": "S10",
+        "name": "Official-Precedent-Title",
+        "src": "anle64_pdf_p1_title_focus.png",
+        "role": "document",
+        "describes": [
+          "điểm pháp lý cực kỳ đáng chú ý",
+          "Án lệ số 64 năm 2023"
+        ],
+        "anchorPhrase": "Án lệ số 64 năm 2023",
+        "slot": null,
+        "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+        "template": "bespoke title-to-authority source move",
+        "generationId": null
+      },
+      "briefId": "b2b9ddd1329982d39143bbfcf2f4a9b10665495da36dbdfc2869052f15f15250",
+      "updatedAt": "2026-08-28T17:21:43.843450+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "1603fc103035c262e4dda6a1b1598a2d8d19cdda750a01a9a2825f6ccc05b44d"
+    },
+    "S10:Official-Precedent-Authority": {
+      "identity": "bfca1084ecd1d191bea15ab81e23dbc788b402ba9f96d06862755a68aea1a7e2",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p1_authority.png",
+        "size": 382953,
+        "sha256": "fb323f6b3a5da1b65ad51850dbf41a9029d1ff3bf4bb94c8af426467828ce202"
+      },
+      "brief": {
+        "scene": "S10",
+        "name": "Official-Precedent-Authority",
+        "src": "anle64_pdf_p1_authority.png",
+        "role": "document",
+        "describes": [
+          "Án lệ số 64 năm 2023",
+          "Thứ nhất"
+        ],
+        "anchorPhrase": "Thứ nhất",
+        "slot": null,
+        "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+        "template": "bespoke title-to-authority source move",
+        "generationId": null
+      },
+      "briefId": "ebb155f01387a6b18ea1f8daacf9a704f61d2e9b8cc57721c848fb5927964ccc",
+      "updatedAt": "2026-08-28T17:21:43.854135+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "6778ba485517497b155dae19d9dfe884c1d676a72b676f3f306aa93c02cd803b"
+    },
+    "S11:Official-Coercive-Actions": {
+      "identity": "35931942a34b69148530b7570b0453a892cd94c61aba29b6a70dc5dd52bb2c66",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p8_p7_actions.png",
+        "size": 1077998,
+        "sha256": "36d6b050f4ea8ddc66243745d925e00cd19cdfe886f039b5f4de0ea6305143ca"
+      },
+      "brief": {
+        "scene": "S11",
+        "name": "Official-Coercive-Actions",
+        "src": "anle64_pdf_p8_p7_actions.png",
+        "role": "document",
+        "describes": [
+          "một khoản nợ thật",
+          "bắt giữ, trói, nhốt",
+          "dùng bạo lực đối với con nợ",
+          "gây áp lực"
+        ],
+        "anchorPhrase": "một khoản nợ thật",
+        "slot": null,
+        "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+        "template": "bespoke moving evidence field with conduct accumulation",
+        "generationId": null
+      },
+      "briefId": "e9351a45d5ab996d8ccec2e2c6732c75ed08780f1ce76a2c4c64b853a8919603",
+      "updatedAt": "2026-08-28T17:21:43.869339+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "2ae19f01c26903e7e5a23696e72f1983e5ce704fcc583f777fe8e24c180ca6ae"
+    },
+    "S11:Coercion-Subject": {
+      "identity": "135ca6bc8fc36332e8c33a60a5a44ba0f6a3679d35922cc7c9ebe841d9a3e37d",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_victim_restrained_seated.png",
+        "size": 503446,
+        "sha256": "144ff414801347876aad30b1d0dbf39f379da0b7d4a1f4b62ba919c500b83c6b"
+      },
+      "brief": {
+        "scene": "S11",
+        "name": "Coercion-Subject",
+        "src": "anle64_victim_restrained_seated.png",
+        "role": "hero",
+        "describes": [
+          "bắt giữ",
+          "trói",
+          "nhốt",
+          "bạo lực đối với con nợ"
+        ],
+        "anchorPhrase": "bắt giữ, trói, nhốt",
+        "slot": null,
+        "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+        "template": "bespoke moving evidence field with conduct accumulation",
+        "generationId": null
+      },
+      "briefId": "5cf1469bc64b0af7e860dcd533b3964c3d6aa7433a6117548ab1628e007b3f07",
+      "updatedAt": "2026-08-28T17:21:43.887488+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "14a58d93187af9151c3caf33aadae9df1a5cd319eb8bddc14649f7ab791d6081"
+    },
+    "S12:Official-Release-Condition": {
+      "identity": "78bd1f6ba258bd1eaa4b9dad3d1dacd04aa4b3b796d7988363d0d2d3e9d50092",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p8_p7_release_condition.png",
+        "size": 981232,
+        "sha256": "8b664a6e5eac09a2f0e93da73092eb5d305f0d8cf804e650ff6b0fd70dfb550b"
+      },
+      "brief": {
+        "scene": "S12",
+        "name": "Official-Release-Condition",
+        "src": "anle64_pdf_p8_p7_release_condition.png",
+        "role": "document",
+        "describes": [
+          "gia đình hoặc người thân phải giao tiền",
+          "mới thả người"
+        ],
+        "anchorPhrase": "gia đình hoặc người thân phải giao tiền",
+        "slot": null,
+        "visualTransformation": "the source clause 'family or relatives must hand over money' focuses first; a release door remains visibly locked until the money path reaches it",
+        "template": "bespoke exact-clause evidence with conditional door",
+        "generationId": null
+      },
+      "briefId": "89af4a123956da9da90bf47cd5e321752183a2d42c2f1179dc30bcb00532a817",
+      "updatedAt": "2026-08-28T17:21:43.903263+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "b5475a7c69eeddb9bc56a815849db5201d2f5494327f4b2d860e8bb916b631fb"
+    },
+    "S13:Official-Legal-Conclusion": {
+      "identity": "47268bd0203e5d48a2c2144fda0782aeafe652a8147d35af83f3f7bbd5adf5a1",
+      "acceptance": "ACCEPTED",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p8_p7_conclusion.png",
+        "size": 768274,
+        "sha256": "93b07994b061619391f2cc95ab27387c6c7e6d378d17e62fe4051c1942d9bc3c"
+      },
+      "brief": {
+        "scene": "S13",
+        "name": "Official-Legal-Conclusion",
+        "src": "anle64_pdf_p8_p7_conclusion.png",
+        "role": "document",
+        "describes": [
+          "đòi nợ",
+          "không còn đơn giản là một tranh chấp tiền bạc"
+        ],
+        "anchorPhrase": "không còn đơn giản là một tranh chấp tiền bạc",
+        "slot": null,
+        "visualTransformation": "the authentic conclusion excerpt rises behind two labels; 'tranh chấp tiền bạc' recedes while the source-backed criminal classification remains in sharp foreground",
+        "template": "bespoke source-backed final legal boundary",
+        "generationId": null
+      },
+      "briefId": "430895213720be98c272f9ed7bb6666dab7212f38810041a5feb0aa405317ebc",
+      "updatedAt": "2026-08-28T17:21:43.920675+00:00",
+      "cheapSemanticQA": "ACCEPTED",
+      "advisory": "",
+      "editorialEscalation": null,
+      "visionCacheKey": "b02390c034d37e52e2d18aa7a35eb03178ee00b3fad8c3a52fd403525a572e6d"
+    }
+  }
+}

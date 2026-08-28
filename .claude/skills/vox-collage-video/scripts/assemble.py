@@ -24,8 +24,9 @@ Chạy từ GỐC dự án. Mặc định chạy cả ba bước, mỗi bước 
 - register: chèn/làm mới khối giữa hai marker ASSEMBLE:V<N> trong Root.jsx;
   cảnh nào đã được đăng ký tay bên ngoài khối thì không đăng ký lại.
 
-Transition: mặc định fade 15 khung giữa mọi cảnh. Một cảnh có thể khai
-"transitionIn": "none" trong plan để cắt thẳng (không transition trước nó).
+Transition: mặc định cắt thẳng. Chỉ khai "transitionIn": "fade" khi quan hệ
+giữa hai cảnh thật sự cần giữ cảm giác liên tục; "none" vẫn được chấp nhận như
+tên cũ của cắt thẳng.
 Muốn thứ gì cầu kỳ hơn thì viết master bằng tay - và file tay KHÔNG BAO GIỜ
 bị script này đè: mọi file sinh ra đều mang dấu AUTO-GENERATED, gặp file
 không có dấu là dừng (trừ khi --force).
@@ -76,7 +77,7 @@ def scene_parts(plan, n):
     out = []
     for s in plan["scenes"]:
         num = s["id"].lstrip("S")
-        tin = s.get("transitionIn", "fade")
+        tin = s.get("transitionIn", "none")
         if tin not in ("fade", "none"):
             die(f'{s["id"]}: transitionIn={tin!r} - chỉ hỗ trợ "fade"/"none"; '
                 "kiểu khác thì viết master bằng tay")

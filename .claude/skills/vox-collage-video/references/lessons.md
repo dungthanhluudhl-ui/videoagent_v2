@@ -112,9 +112,9 @@ Each entry is here because it cost a rebuild. None of them are hypothetical.
   likely (positioning several supports relative to the hero/canvas
   center, not just hand-picked pixel offsets). Fixed by copying the exact
   same `marginLeft` formula into `Support`.
-- A cutout that's static after its entrance finishes looks frozen/dead —
-  layer continuous low-amplitude idle motion (vary the TYPE — sway vs.
-  tremble vs. bob — not just the phase).
+- **SUPERSEDED:** the historical rule required continuous cutout idle motion.
+  Current product evidence reversed it: new editorial cutouts enter, settle and
+  hold. Continuous sway/tremble/bob is now an explicit meaning-led exception.
 - rembg does badly on busy/complex-background photos, large architecture,
   and flat-lay documents — route around this at the sourcing stage
   (step 3), not by fighting the mask after the fact.
@@ -360,16 +360,16 @@ a neighbouring `visualEvent` rather than lowering the threshold.
 
 ## Judge composition on a MASTER frame, not a scene still
 
-`render_review_sheet.py` renders each scene composition on its own. Captions
-are mounted at master level, so they are **absent** from every frame on the
-contact sheet — which makes the band at y≈1300–1500 look permanently empty
-and over-reports "trống ở dưới". Half the emptiness measured on the V10
-contact sheet was the caption bar's own space.
+The old `render_review_sheet.py` rendered each scene composition on its own.
+Captions were mounted at master level, so they were absent from every contact-
+sheet frame and over-reported "trống ở dưới". Half the emptiness measured on
+the V10 sheet was the caption bar's own space.
 
-The band a scene actually has to fill is y≈160→1250. Below that belongs to
-the captions. Confirm any composition verdict against
-`npx remotion still ItaewonRemDap --frame=<startSec*30 + local>` before
-rebuilding a scene around a hole that is not there.
+The normal path now samples the actual medium-resolution master draft, so
+captions, transitions and master composition are present without one Remotion
+startup per frame. Use targeted full-resolution evidence—not every temporal
+sample—for document text, tiny typography, crop/pixel collisions and cutout or
+watermark edges before rebuilding around a defect.
 
 ## `tint` on BackgroundPhoto is opacity, not brightness
 

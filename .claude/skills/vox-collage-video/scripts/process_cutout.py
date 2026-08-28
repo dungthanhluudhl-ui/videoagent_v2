@@ -84,7 +84,12 @@ Flags (apply to every pair in the call — run separately for mixed needs):
 """
 
 import argparse
+import importlib.metadata
+import pathlib
+import re
 import sys
+
+import stage_state as state
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -94,6 +99,7 @@ from scipy import ndimage
 
 MARGIN_FRAC = 0.04
 MIN_BLOB_FRAC = 0.02  # drop connected components smaller than this fraction of the largest blob
+PROCESS_VERSION = "cutout-processing-v1"
 
 # Must match generate_board.py's CHROMA_SPECS RGB values exactly - that
 # script paints the background, this one detects and keys it back out.
@@ -385,6 +391,37 @@ def process_one(raw_path, out_path, do_color, do_shadow, shadow_color, bg_mode,
               f"(transparent padding, no crop, no distortion)")
 
     final.save(out_path, pnginfo=stamp(content_size, fit_raw, removal))
+    return {"removal": removal, "contentPx": list(content_size),
+            "fit": fit_raw or "none", "outputPx": list(final.size)}
+
+
+def _pkg_version(name):
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return "UNKNOWN"
+
+
+def _video_id(args, output):
+    if args.video:
+        return str(args.video) if str(args.video).startswith("V") else f"V{args.video}"
+    m = re.search(r"(?:el|anle)(\d+)", pathlib.Path(output).name, re.I)
+    return f"V{m.group(1)}" if m else "VUNKNOWN"
+
+
+def _contract(args, raw_path, out_path, do_shadow):
+    params = {"color": args.color, "shadow": do_shadow, "shadowColor": args.shadow_color,
+              "bgMode": args.bg_mode, "model": args.model, "fit": args.fit,
+              "minContentPx": args.min_content_px}
+    inputs = {"source": state.file_input(raw_path)}
+    tool = state.tool_identity(pathlib.Path(__file__), versions={
+        "implementation": PROCESS_VERSION, "rembg": _pkg_version("rembg"),
+        "Pillow": _pkg_version("Pillow")})
+    root = state.project_root(pathlib.Path.cwd())
+    video = _video_id(args, out_path)
+    key = state.digest({"output": str(pathlib.Path(out_path).resolve())})[:20]
+    receipt_path = state.runtime_dir(root, video) / "receipts" / "cutout" / f"{key}.json"
+    return root, video, receipt_path, inputs, tool, params
 
 
 if __name__ == "__main__":
@@ -408,6 +445,10 @@ if __name__ == "__main__":
                         help="refuse an image whose content's SHORT side is under N px. "
                              "Use the slot's render width: an asset smaller than its slot "
                              "gets upscaled and reads soft.")
+    parser.add_argument("--video", default=None,
+                        help="video id for receipts/manifest (otherwise inferred from output filename)")
+    parser.add_argument("--manifest", default=None,
+                        help="optional per-video asset manifest to update")
     args = parser.parse_args()
 
     if len(args.pairs) % 2 != 0:
@@ -423,8 +464,29 @@ if __name__ == "__main__":
         return _session_cache["s"]
 
     for i in range(0, len(args.pairs), 2):
-        process_one(
-            args.pairs[i], args.pairs[i + 1],
+        raw_path, out_path = args.pairs[i], args.pairs[i + 1]
+        root, video, rpath, inputs, tool, params = _contract(args, raw_path, out_path, do_shadow)
+        current, receipt = state.receipt_current(
+            rpath, "cutout", inputs, tool, params, require_outputs=True)
+        if current:
+            print(f"REUSE {raw_path} -> {out_path} ({receipt['receiptId'][:12]})")
+            state.append_telemetry(root, video, {"stage": "cutout", "owner": "script",
+                                   "cache": "hit", "subprocessCount": 0,
+                                   "affectedItems": 1, "receiptId": receipt["receiptId"]})
+            manifest = args.manifest or str(pathlib.Path("input") /
+                                            f"asset_manifest{video.lstrip('Vv')}.json")
+            if video != "VUNKNOWN":
+                lineage_path, generation_id = state.find_generation(root, inputs["source"])
+                identity = state.digest({"source": inputs["source"], "parameters": params})
+                state.update_manifest(manifest, video, f"SOURCE:{pathlib.Path(out_path).name}",
+                                      {"source": inputs["source"], "processingReceipt": str(rpath),
+                                       "processedFile": state.file_input(out_path),
+                                       "generationId": generation_id,
+                                       "lineagePath": str(lineage_path) if lineage_path else None},
+                                      identity)
+            continue
+        meta = process_one(
+            raw_path, out_path,
             do_color=args.color,
             do_shadow=do_shadow,
             shadow_color=args.shadow_color,
@@ -433,3 +495,24 @@ if __name__ == "__main__":
             fit_raw=args.fit,
             min_content_px=args.min_content_px,
         )
+        receipt = state.make_receipt(rpath, "cutout", inputs, tool, params,
+                                     [out_path], metadata=meta)
+        lineage_path, generation_id = state.find_generation(root, inputs["source"])
+        if generation_id:
+            state.update_generation(root, generation_id, {
+                "processing": {"receipt": str(rpath), "result": state.file_input(out_path),
+                               "parameters": params}, "processingState": "CLOSED"})
+        state.append_telemetry(root, video, {"stage": "cutout", "owner": "script",
+                               "cache": "miss", "subprocessCount": 0,
+                               "affectedItems": 1, "output": str(out_path),
+                               "outputSize": pathlib.Path(out_path).stat().st_size,
+                               "receiptId": receipt["receiptId"]})
+        manifest = args.manifest or str(pathlib.Path("input") /
+                                        f"asset_manifest{video.lstrip('Vv')}.json")
+        if video != "VUNKNOWN":
+            identity = state.digest({"source": inputs["source"], "parameters": params})
+            state.update_manifest(manifest, video, f"SOURCE:{pathlib.Path(out_path).name}",
+                                  {"source": inputs["source"], "processingReceipt": str(rpath),
+                                   "processedFile": state.file_input(out_path),
+                                   "generationId": generation_id,
+                                   "lineagePath": str(lineage_path) if lineage_path else None}, identity)

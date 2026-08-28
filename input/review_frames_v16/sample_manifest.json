@@ -1,0 +1,491 @@
+{
+  "schema": 1,
+  "version": "master-draft-extraction-v1",
+  "video": "V16",
+  "fps": 30,
+  "composition": "V16Master",
+  "samples": [
+    {
+      "id": "S1-f20",
+      "scene": "S1",
+      "localFrame": 20,
+      "masterFrame": 20,
+      "masterTimeSec": 0.666667,
+      "path": "input\\review_frames_v16\\V16Master_S1_f20_m20.png",
+      "visualTransformation": "a dark scrap warehouse expands from a narrow central doorway into a full-height oppressive location, establishing the new setting before any person appears",
+      "sourceFingerprint": "ee4ab4070ca07759f428cd561f0b0f23f0cc3c98044317a5cdef56034d69254c"
+    },
+    {
+      "id": "S1-f67",
+      "scene": "S1",
+      "localFrame": 67,
+      "masterFrame": 67,
+      "masterTimeSec": 2.233333,
+      "path": "input\\review_frames_v16\\V16Master_S1_f67_m67.png",
+      "visualTransformation": "a dark scrap warehouse expands from a narrow central doorway into a full-height oppressive location, establishing the new setting before any person appears",
+      "sourceFingerprint": "caa25772768d2658c4d2827bf4389af534ea02ee9a6bb1130b703bb37fa54ea4"
+    },
+    {
+      "id": "S1-f104",
+      "scene": "S1",
+      "localFrame": 104,
+      "masterFrame": 104,
+      "masterTimeSec": 3.466667,
+      "path": "input\\review_frames_v16\\V16Master_S1_f104_m104.png",
+      "visualTransformation": "a dark scrap warehouse expands from a narrow central doorway into a full-height oppressive location, establishing the new setting before any person appears",
+      "sourceFingerprint": "1e04052fdc5b4a148772c6cc33daaa74839798fd770afdfafcd721c297664f31"
+    },
+    {
+      "id": "S2-f30",
+      "scene": "S2",
+      "localFrame": 30,
+      "masterFrame": 140,
+      "masterTimeSec": 4.666667,
+      "path": "input\\review_frames_v16\\V16Master_S2_f30_m140.png",
+      "visualTransformation": "the anonymous restrained subject settles large in front of the warehouse while a steel restraint closes the remaining open side of the frame",
+      "sourceFingerprint": "529ddcae5890695fc239239d83af8dbfa7dffb2f9d777b59b4de0f754f9d1423"
+    },
+    {
+      "id": "S2-f63",
+      "scene": "S2",
+      "localFrame": 63,
+      "masterFrame": 173,
+      "masterTimeSec": 5.766667,
+      "path": "input\\review_frames_v16\\V16Master_S2_f63_m173.png",
+      "visualTransformation": "the anonymous restrained subject settles large in front of the warehouse while a steel restraint closes the remaining open side of the frame",
+      "sourceFingerprint": "6c1369e6709f998cace9bb9d03a8385eea2929243c42acbabdaba4a9e01a38ee"
+    },
+    {
+      "id": "S2-f104",
+      "scene": "S2",
+      "localFrame": 104,
+      "masterFrame": 214,
+      "masterTimeSec": 7.133333,
+      "path": "input\\review_frames_v16\\V16Master_S2_f104_m214.png",
+      "visualTransformation": "the anonymous restrained subject settles large in front of the warehouse while a steel restraint closes the remaining open side of the frame",
+      "sourceFingerprint": "2060febe2cb66a12ab6aad2d72147fd15e9abcc911c88352bbc9a2577984a9e9"
+    },
+    {
+      "id": "S3-f20",
+      "scene": "S3",
+      "localFrame": 20,
+      "masterFrame": 240,
+      "masterTimeSec": 8.0,
+      "path": "input\\review_frames_v16\\V16Master_S3_f20_m240.png",
+      "visualTransformation": "a compelled caller enters alone; concentric call waves travel outward and terminate at a family threshold, making the direction of pressure visible",
+      "sourceFingerprint": "92ee13c68daed0fb566b1dbd0b77ff86264c50ded65937cd7515af152a453c2b"
+    },
+    {
+      "id": "S3-f62",
+      "scene": "S3",
+      "localFrame": 62,
+      "masterFrame": 282,
+      "masterTimeSec": 9.4,
+      "path": "input\\review_frames_v16\\V16Master_S3_f62_m282.png",
+      "visualTransformation": "a compelled caller enters alone; concentric call waves travel outward and terminate at a family threshold, making the direction of pressure visible",
+      "sourceFingerprint": "97a97184dc974dda9b956f6e154c0cbed829378341b1a85b7eaecc05a2dec830"
+    },
+    {
+      "id": "S3-f123",
+      "scene": "S3",
+      "localFrame": 123,
+      "masterFrame": 343,
+      "masterTimeSec": 11.433333,
+      "path": "input\\review_frames_v16\\V16Master_S3_f123_m343.png",
+      "visualTransformation": "a compelled caller enters alone; concentric call waves travel outward and terminate at a family threshold, making the direction of pressure visible",
+      "sourceFingerprint": "eddb97ebaef932340209af6fe4ce02550706d26045c2e70a5185ea15c1faff27"
+    },
+    {
+      "id": "S4-f20",
+      "scene": "S4",
+      "localFrame": 20,
+      "masterFrame": 369,
+      "masterTimeSec": 12.3,
+      "path": "input\\review_frames_v16\\V16Master_S4_f20_m369.png",
+      "visualTransformation": "a 150-million demand weighs down one side of a drawn conditional balance while a locked release gate stays shut; the calendar advances to the following noon without the gate opening",
+      "sourceFingerprint": "39a086188bf7296552984b34a4d7c1368e63168a02ac04e7af18782eadaf9d52"
+    },
+    {
+      "id": "S4-f79",
+      "scene": "S4",
+      "localFrame": 79,
+      "masterFrame": 428,
+      "masterTimeSec": 14.266667,
+      "path": "input\\review_frames_v16\\V16Master_S4_f79_m428.png",
+      "visualTransformation": "a 150-million demand weighs down one side of a drawn conditional balance while a locked release gate stays shut; the calendar advances to the following noon without the gate opening",
+      "sourceFingerprint": "7f17280e1c2916c9ac9c2205e7fdd200d3ab518bd9d9acb23c1e5581e95aab4e"
+    },
+    {
+      "id": "S4-f188",
+      "scene": "S4",
+      "localFrame": 188,
+      "masterFrame": 537,
+      "masterTimeSec": 17.9,
+      "path": "input\\review_frames_v16\\V16Master_S4_f188_m537.png",
+      "visualTransformation": "a 150-million demand weighs down one side of a drawn conditional balance while a locked release gate stays shut; the calendar advances to the following noon without the gate opening",
+      "sourceFingerprint": "60bcf2bc31d63988e6b672d9a31bd5e84020088fd3b6896b510e88f50c70874a"
+    },
+    {
+      "id": "S4-f230",
+      "scene": "S4",
+      "localFrame": 230,
+      "masterFrame": 579,
+      "masterTimeSec": 19.3,
+      "path": "input\\review_frames_v16\\V16Master_S4_f230_m579.png",
+      "visualTransformation": "a 150-million demand weighs down one side of a drawn conditional balance while a locked release gate stays shut; the calendar advances to the following noon without the gate opening",
+      "sourceFingerprint": "7a0a931f5ab1c6a30dba429f5fdc9bfa7c366a3ae247df83bd2e913353e01543"
+    },
+    {
+      "id": "S5-f20",
+      "scene": "S5",
+      "localFrame": 20,
+      "masterFrame": 605,
+      "masterTimeSec": 20.166667,
+      "path": "input\\review_frames_v16\\V16Master_S5_f20_m605.png",
+      "visualTransformation": "the authentic court excerpt starts as a readable paragraph, then the narration-linked demand region takes over the frame and its 150,000,000 figure receives a single evidence stroke",
+      "sourceFingerprint": "87a43598b932343e7612a7081a8cac4342e50ebfdc4a5768d62bce7e8317a4fe"
+    },
+    {
+      "id": "S5-f116",
+      "scene": "S5",
+      "localFrame": 116,
+      "masterFrame": 701,
+      "masterTimeSec": 23.366667,
+      "path": "input\\review_frames_v16\\V16Master_S5_f116_m701.png",
+      "visualTransformation": "the authentic court excerpt starts as a readable paragraph, then the narration-linked demand region takes over the frame and its 150,000,000 figure receives a single evidence stroke",
+      "sourceFingerprint": "60c86dc194a276f12e680d4ec0435857efd048bbe56ad0a26cafdcb20120e460"
+    },
+    {
+      "id": "S6-f20",
+      "scene": "S6",
+      "localFrame": 20,
+      "masterFrame": 727,
+      "masterTimeSec": 24.233333,
+      "path": "input\\review_frames_v16\\V16Master_S6_f20_m727.png",
+      "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+      "sourceFingerprint": "0c6d93924999e31801d900497ef759d504e4717c17b05fa180507079eb30d6b5"
+    },
+    {
+      "id": "S6-f54",
+      "scene": "S6",
+      "localFrame": 54,
+      "masterFrame": 761,
+      "masterTimeSec": 25.366667,
+      "path": "input\\review_frames_v16\\V16Master_S6_f54_m761.png",
+      "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+      "sourceFingerprint": "5e012ef67f7512094f22a43ec3d67df95c07e8c24f658bb89c75d5b2c6c75b56"
+    },
+    {
+      "id": "S6-f139",
+      "scene": "S6",
+      "localFrame": 139,
+      "masterFrame": 846,
+      "masterTimeSec": 28.2,
+      "path": "input\\review_frames_v16\\V16Master_S6_f139_m846.png",
+      "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+      "sourceFingerprint": "c9e002d065fc088a99b2db99ea00b586e21143df11425788202c723848a09583"
+    },
+    {
+      "id": "S6-f171",
+      "scene": "S6",
+      "localFrame": 171,
+      "masterFrame": 878,
+      "masterTimeSec": 29.266667,
+      "path": "input\\review_frames_v16\\V16Master_S6_f171_m878.png",
+      "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+      "sourceFingerprint": "17e79ac27627b11347e67fcd6a849944a2fd1c5e330383ddbefc74dad9669abb"
+    },
+    {
+      "id": "S7-f20",
+      "scene": "S7",
+      "localFrame": 20,
+      "masterFrame": 904,
+      "masterTimeSec": 30.133333,
+      "path": "input\\review_frames_v16\\V16Master_S7_f20_m904.png",
+      "visualTransformation": "the objection appears as a conversational torn-paper note; a real 150-million debt stamp lands beneath it, validating the premise before the legal reversal",
+      "sourceFingerprint": "11ef8e638c6a5b6522f03d7052ab4e04f101ce053000628be86159dcc0797c95"
+    },
+    {
+      "id": "S7-f69",
+      "scene": "S7",
+      "localFrame": 69,
+      "masterFrame": 953,
+      "masterTimeSec": 31.766667,
+      "path": "input\\review_frames_v16\\V16Master_S7_f69_m953.png",
+      "visualTransformation": "the objection appears as a conversational torn-paper note; a real 150-million debt stamp lands beneath it, validating the premise before the legal reversal",
+      "sourceFingerprint": "8eac938d7d913a5888a2ee48a76b228dff63c347c2641918820a2cddcfc81f7f"
+    },
+    {
+      "id": "S7-f122",
+      "scene": "S7",
+      "localFrame": 122,
+      "masterFrame": 1006,
+      "masterTimeSec": 33.533333,
+      "path": "input\\review_frames_v16\\V16Master_S7_f122_m1006.png",
+      "visualTransformation": "the objection appears as a conversational torn-paper note; a real 150-million debt stamp lands beneath it, validating the premise before the legal reversal",
+      "sourceFingerprint": "b694671822258fa4c28ebec7d9a1b0d8ab3740b749418aaa54051ddf32dc6602"
+    },
+    {
+      "id": "S8-f20",
+      "scene": "S8",
+      "localFrame": 20,
+      "masterFrame": 1032,
+      "masterTimeSec": 34.4,
+      "path": "input\\review_frames_v16\\V16Master_S8_f20_m1032.png",
+      "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+      "sourceFingerprint": "ea4266524fde1efa92b2e2806cc89f670c889667d0b1308787d69054270855a9"
+    },
+    {
+      "id": "S8-f87",
+      "scene": "S8",
+      "localFrame": 87,
+      "masterFrame": 1099,
+      "masterTimeSec": 36.633333,
+      "path": "input\\review_frames_v16\\V16Master_S8_f87_m1099.png",
+      "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+      "sourceFingerprint": "040e094dd6fb8b63363c5494019912b86e6311b39148c17a9cf8c3004ad5f384"
+    },
+    {
+      "id": "S8-f149",
+      "scene": "S8",
+      "localFrame": 149,
+      "masterFrame": 1161,
+      "masterTimeSec": 38.7,
+      "path": "input\\review_frames_v16\\V16Master_S8_f149_m1161.png",
+      "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+      "sourceFingerprint": "b7eb5410fbaf281038fec2e5f1641ad473cea1754e8cf40e4aa4d345a4ab0cf8"
+    },
+    {
+      "id": "S9-f20",
+      "scene": "S9",
+      "localFrame": 20,
+      "masterFrame": 1187,
+      "masterTimeSec": 39.566667,
+      "path": "input\\review_frames_v16\\V16Master_S9_f20_m1187.png",
+      "visualTransformation": "the phrase 'đòi nợ' is physically crossed through and displaced upward as the larger offense name unfolds underneath",
+      "sourceFingerprint": "a2717fa3425907019a0b0fe7800a3786bf10cbde00ce61e85623966d1c4d15a4"
+    },
+    {
+      "id": "S9-f41",
+      "scene": "S9",
+      "localFrame": 41,
+      "masterFrame": 1208,
+      "masterTimeSec": 40.266667,
+      "path": "input\\review_frames_v16\\V16Master_S9_f41_m1208.png",
+      "visualTransformation": "the phrase 'đòi nợ' is physically crossed through and displaced upward as the larger offense name unfolds underneath",
+      "sourceFingerprint": "6c9ead7a3674cd3882995bdcc638684fba3894b913aac1faf5d0cfcda9aae2a3"
+    },
+    {
+      "id": "S9-f74",
+      "scene": "S9",
+      "localFrame": 74,
+      "masterFrame": 1241,
+      "masterTimeSec": 41.366667,
+      "path": "input\\review_frames_v16\\V16Master_S9_f74_m1241.png",
+      "visualTransformation": "the phrase 'đòi nợ' is physically crossed through and displaced upward as the larger offense name unfolds underneath",
+      "sourceFingerprint": "92dc3c8cd362c5d6c1489a8c6167c5e3c14b17ddf10c0ec77417234a8477adff"
+    },
+    {
+      "id": "S10-f20",
+      "scene": "S10",
+      "localFrame": 20,
+      "masterFrame": 1267,
+      "masterTimeSec": 42.233333,
+      "path": "input\\review_frames_v16\\V16Master_S10_f20_m1267.png",
+      "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+      "sourceFingerprint": "2950db19a714b8a92c1ac6ca340850de6ce7c176bbb0c269450d78e40ab9e4ab"
+    },
+    {
+      "id": "S10-f65",
+      "scene": "S10",
+      "localFrame": 65,
+      "masterFrame": 1312,
+      "masterTimeSec": 43.733333,
+      "path": "input\\review_frames_v16\\V16Master_S10_f65_m1312.png",
+      "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+      "sourceFingerprint": "aea3762137e38bc52270cfbc374e0e118ba9d50182b1afdc27ab1147f92b31de"
+    },
+    {
+      "id": "S10-f121",
+      "scene": "S10",
+      "localFrame": 121,
+      "masterFrame": 1368,
+      "masterTimeSec": 45.6,
+      "path": "input\\review_frames_v16\\V16Master_S10_f121_m1368.png",
+      "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+      "sourceFingerprint": "58a620feeb8a5ab5e058fc66c8a793f42494229991d56b355538006cf70b9b96"
+    },
+    {
+      "id": "S10-f172",
+      "scene": "S10",
+      "localFrame": 172,
+      "masterFrame": 1419,
+      "masterTimeSec": 47.3,
+      "path": "input\\review_frames_v16\\V16Master_S10_f172_m1419.png",
+      "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+      "sourceFingerprint": "f26a28043171fc5dd8efa2aae0bedf9901a3e98db14cbf74f71f6d1753e21e45"
+    },
+    {
+      "id": "S11-f20",
+      "scene": "S11",
+      "localFrame": 20,
+      "masterFrame": 1445,
+      "masterTimeSec": 48.166667,
+      "path": "input\\review_frames_v16\\V16Master_S11_f20_m1445.png",
+      "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+      "sourceFingerprint": "e9146fd2d9def3b4e55252680b3a673089b0242cfeed084b30cea9224757a1c7"
+    },
+    {
+      "id": "S11-f115",
+      "scene": "S11",
+      "localFrame": 115,
+      "masterFrame": 1540,
+      "masterTimeSec": 51.333333,
+      "path": "input\\review_frames_v16\\V16Master_S11_f115_m1540.png",
+      "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+      "sourceFingerprint": "69626935975e9f315f72d871a3702b3c874fa98169bc4d2f269be1f9c59e8ba3"
+    },
+    {
+      "id": "S11-f180",
+      "scene": "S11",
+      "localFrame": 180,
+      "masterFrame": 1605,
+      "masterTimeSec": 53.5,
+      "path": "input\\review_frames_v16\\V16Master_S11_f180_m1605.png",
+      "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+      "sourceFingerprint": "fccddc543a91da2209cfda641fa45852cf5d6a0ec245bd5e49c6cdaba30c6bba"
+    },
+    {
+      "id": "S12-f20",
+      "scene": "S12",
+      "localFrame": 20,
+      "masterFrame": 1631,
+      "masterTimeSec": 54.366667,
+      "path": "input\\review_frames_v16\\V16Master_S12_f20_m1631.png",
+      "visualTransformation": "the source clause 'family or relatives must hand over money' focuses first; a release door remains visibly locked until the money path reaches it",
+      "sourceFingerprint": "9fc6eb642ffe14a05b847f8301bf3068dafcf8cd544c0bf4483ace256d453f56"
+    },
+    {
+      "id": "S12-f47",
+      "scene": "S12",
+      "localFrame": 47,
+      "masterFrame": 1658,
+      "masterTimeSec": 55.266667,
+      "path": "input\\review_frames_v16\\V16Master_S12_f47_m1658.png",
+      "visualTransformation": "the source clause 'family or relatives must hand over money' focuses first; a release door remains visibly locked until the money path reaches it",
+      "sourceFingerprint": "c68600fe33011f58ed26076bc49bd7d1a29e4e7b82a97b53dae6ae03f3b9acb5"
+    },
+    {
+      "id": "S12-f89",
+      "scene": "S12",
+      "localFrame": 89,
+      "masterFrame": 1700,
+      "masterTimeSec": 56.666667,
+      "path": "input\\review_frames_v16\\V16Master_S12_f89_m1700.png",
+      "visualTransformation": "the source clause 'family or relatives must hand over money' focuses first; a release door remains visibly locked until the money path reaches it",
+      "sourceFingerprint": "bf8af2b195cb5628b42551a72f2de3390555ef58ca99c87eb268f51f24a7364f"
+    },
+    {
+      "id": "S13-f20",
+      "scene": "S13",
+      "localFrame": 20,
+      "masterFrame": 1726,
+      "masterTimeSec": 57.533333,
+      "path": "input\\review_frames_v16\\V16Master_S13_f20_m1726.png",
+      "visualTransformation": "the authentic conclusion excerpt rises behind two labels; 'tranh chấp tiền bạc' recedes while the source-backed criminal classification remains in sharp foreground",
+      "sourceFingerprint": "cd1d534b4a0f1d41fd7e5af4f12fe12bdf65dc833efc313a44a0d42bfb434470"
+    },
+    {
+      "id": "S13-f32",
+      "scene": "S13",
+      "localFrame": 32,
+      "masterFrame": 1738,
+      "masterTimeSec": 57.933333,
+      "path": "input\\review_frames_v16\\V16Master_S13_f32_m1738.png",
+      "visualTransformation": "the authentic conclusion excerpt rises behind two labels; 'tranh chấp tiền bạc' recedes while the source-backed criminal classification remains in sharp foreground",
+      "sourceFingerprint": "af2dd8edf63613c9e6576b7754a24e8694e75beca0a908d9792fa366cbb02111"
+    },
+    {
+      "id": "S13-f89",
+      "scene": "S13",
+      "localFrame": 89,
+      "masterFrame": 1795,
+      "masterTimeSec": 59.833333,
+      "path": "input\\review_frames_v16\\V16Master_S13_f89_m1795.png",
+      "visualTransformation": "the authentic conclusion excerpt rises behind two labels; 'tranh chấp tiền bạc' recedes while the source-backed criminal classification remains in sharp foreground",
+      "sourceFingerprint": "72d46ed0e4792bffc64d69c08a261f8c5f3f859c2afd1b783c0b3bfd715c3c4e"
+    }
+  ],
+  "targetedFullResolution": [
+    {
+      "id": "S5-f116",
+      "scene": "S5",
+      "localFrame": 116,
+      "masterFrame": 701,
+      "masterTimeSec": 23.366667,
+      "path": "input\\review_frames_v16\\V16Master_S5_f116_m701.png",
+      "visualTransformation": "the authentic court excerpt starts as a readable paragraph, then the narration-linked demand region takes over the frame and its 150,000,000 figure receives a single evidence stroke",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S6-f139",
+      "scene": "S6",
+      "localFrame": 139,
+      "masterFrame": 846,
+      "masterTimeSec": 28.2,
+      "path": "input\\review_frames_v16\\V16Master_S6_f139_m846.png",
+      "visualTransformation": "successive dated bands pass behind the authentic record while a continuous restraint line refuses to break; the frame then clears around one large question mark",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S8-f87",
+      "scene": "S8",
+      "localFrame": 87,
+      "masterFrame": 1099,
+      "masterTimeSec": 36.633333,
+      "path": "input\\review_frames_v16\\V16Master_S8_f87_m1099.png",
+      "visualTransformation": "an authentic debt excerpt occupies one side while a steel restraint occupies the other; the two remain visibly separate under a provisional 'only?' bracket",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S10-f121",
+      "scene": "S10",
+      "localFrame": 121,
+      "masterFrame": 1368,
+      "masterTimeSec": 45.6,
+      "path": "input\\review_frames_v16\\V16Master_S10_f121_m1368.png",
+      "visualTransformation": "the official title excerpt enters edge-to-edge, then contracts into a docket-like authority card as the 2023 publication line becomes the visual anchor",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S11-f115",
+      "scene": "S11",
+      "localFrame": 115,
+      "masterFrame": 1540,
+      "masterTimeSec": 51.333333,
+      "path": "input\\review_frames_v16\\V16Master_S11_f115_m1540.png",
+      "visualTransformation": "the authentic actions paragraph begins with the real-debt concession, then the frame shifts down the source as restraint, confinement and violence accumulate around one anonymous subject",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S12-f47",
+      "scene": "S12",
+      "localFrame": 47,
+      "masterFrame": 1658,
+      "masterTimeSec": 55.266667,
+      "path": "input\\review_frames_v16\\V16Master_S12_f47_m1658.png",
+      "visualTransformation": "the source clause 'family or relatives must hand over money' focuses first; a release door remains visibly locked until the money path reaches it",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S13-f32",
+      "scene": "S13",
+      "localFrame": 32,
+      "masterFrame": 1738,
+      "masterTimeSec": 57.933333,
+      "path": "input\\review_frames_v16\\V16Master_S13_f32_m1738.png",
+      "visualTransformation": "the authentic conclusion excerpt rises behind two labels; 'tranh chấp tiền bạc' recedes while the source-backed criminal classification remains in sharp foreground",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    }
+  ]
+}

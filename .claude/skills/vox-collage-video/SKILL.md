@@ -1,555 +1,146 @@
 ---
 name: vox-collage-video
-description: Videoagent 2 — legal / investigative documentary workflow. Build court-judgment analysis, precedent explainers, criminal or legal case narratives, investigations, and narrated documentary videos in the proven Remotion collage pipeline. Keeps script-authoritative Whisper timing, existing AI/Pexels sourcing, cutouts, maps, optional diagrams/icons, word-synced captions, transitions, and mandatory rendered-output review. Meaning and real evidence lead; no implementation-medium quota decides style.
+description: Videoagent 2 workflow for narrated legal and investigative documentary videos in Remotion. Meaning and authentic evidence lead; integrity is hard, quality is advisory.
 ---
 
-# Videoagent 2 — legal / investigative documentary workflow
-
-Windows project. Everything runs through Bash (Node/npm/npx available) and
-Python via `py -3`. Whisper, rembg, scipy and Pillow are installed.
-
-Videoagent 2 selectively evolves the proven V3 pipeline; it is not a rewrite.
-Its visual DNA is the final accepted V10/V11 editorial collage language:
-real/sourced/generated imagery, documents, typography, cutouts, motion,
-transitions and mixed representation. Canvas remains 1080×1920 @ 30fps unless
-the user asks for 16:9. It must not default to diagrams, slides, compulsory
-icons, orange/black line decoration, grids, arrows or code-drawn graphics.
-
-**Product authority:** final accepted V10/V11 visual output plus the current
-legal-video requirements. **Implementation donor:** the current V3 repository.
-**Quality donor:** later fixes that caught observable timing, text/font,
-Vietnamese clipping, cutout, asset and pixel failures. V11/V12/V13 style
-failures are anti-pattern evidence, not a style source.
-
-No final V10/V11 MP4 is tracked locally. Strongest references are:
-
-* V10 `ItaewonRemDap` — 26 scenes / ~101s: `src/ItaewonRemDap.jsx`,
-  `src/scenes/V10Scene*.jsx`, `input/review10.json`, restore commit `ebf39b8`.
-* V11 `ItaewonHemNho` — 24 scenes: current `src/ItaewonHemNho.jsx` and
-  `src/scenes/V11Scene*.jsx` after the final text/measurement fixes, plus
-  `input/v11_contact_sheet.png`. Do not treat the first V11 build as final.
-
-These are visual quality references, never templates. Do not edit them to make
-new gates pass and do not reproduce their layouts mechanically.
-
-## Read these when they apply
-
-| File | When |
-|---|---|
-| `references/worked-examples.md` | **Every video, at step 2a.** 12 real narration lines -> the visual decision, and the obvious answer that was rejected. Read BEFORE writing any `visualTransformation` |
-| `references/visual-language.md` | **Every video, at step 2.** How to decide what a scene should look like |
-| `references/primitives.md` | Before writing any component — check what exists first |
-| `references/gates.md` | When a gate fails, or to understand what's enforced |
-| `references/lessons.md` | Defects already paid for once |
-| `references/animation-variants.md` | Entrance animations |
-
-For Remotion markup, transitions, sfx, maps: defer to the official
-`remotion-dev/skills` under `.agents/skills/` — but verify examples against
-the installed package version (two real doc mismatches already found; see
-`primitives.md`).
-
-## The one rule that matters most
-
-**MEANING FIRST, COMPONENT SECOND. PHOTO / DOCUMENT / REAL VISUAL FIRST.**
-
-Use this order:
-
-**NARRATION MEANING → VISUAL TREATMENT → ASSET/INFORMATION NEED → COMPONENT.**
-
-Only after those decisions may an existing block be considered. A diagram is
-appropriate only when it explains a relationship, process, time, quantity,
-geography or legal structure more clearly than imagery can. Reversing this
-order is the documented root cause of templated, repetitive output.
-
-Small editorial treatment vocabulary (choices, never quotas):
-
-* `PHOTO_COLLAGE` — sourced/contextual imagery and cutouts carry the scene.
-* `DOCUMENT_FOCUS` — judgment/evidence/document crop, highlight and focus.
-* `CONTEXT_VIDEO` — real contextual footage or a moving photographic plate.
-* `RECONSTRUCTION` — restrained generated reconstruction where authentic media
-  is unavailable.
-* `MAP_ROUTE` — location or route when geography is part of the meaning.
-* `EXPLANATORY_GRAPHIC` — only when relationships are clearer than imagery.
-
-Source priority: authentic/user-provided/official source; relevant real or
-contextual imagery; generated reconstruction; document/map/UI treatment; then
-explanatory graphic. Do not build a PDF extraction system here—document crops
-and highlights are editorial treatments, not a new Milestone 1 architecture.
-
-**Every line must encode information.** Allowed: relationship connector,
-causal arrow, timeline path, route, measurement, or legal-element connection.
-Not allowed by default: decorative orange paths, black filler lines, arbitrary
-underlines/scribbles/X marks/grids, or a connector whose meaning cannot be
-explained. Existing collision checks still apply whenever a meaningful line is
-used.
-
----
-
-## 0+1. Environment, transcribe, align — ONE command
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/init_video.py 13 \
-  --audio "D:/path/Audio13.mp3" --script "D:/path/Script13.txt"
-```
-
-Checks the six packages, copies the audio to `public/audio<N>.mp3`, runs
-Whisper with word timestamps into `input/transcript<N>.json`, and writes
-`input/words<N>_aligned.json` as `{"words": [[text, start, end, segIdx], ...]}`.
-Each step skips itself if its output already exists (`--force` to redo).
-
-**Trust the user's script for WHAT is said, Whisper for WHEN.** The script
-takes the words from the script and the segment boundaries from Whisper
-(matched with `difflib`, not a global offset — Whisper mis-hears proper nouns
-and "Itaewon" became "Y Tự Quận", so every offset is wrong from the first
-mis-hearing on), then spreads each segment's words evenly across its span.
-
-It refuses outright when the pair doesn't correspond: >15% word-count drift
-against Whisper, or a words-per-second outside normal speech. That check
-exists because the wrong audio/script pair poisons every later stage silently.
-
-**This is a draft, not a finished artifact.** Whisper is sometimes right where
-the script is wrong ("bà" → "bar", "mặt độ" → "mật độ"); read the output and
-hand-correct those. The script never overwrites an existing aligned file
-without `--force`, and `--check` reports the difference as acceptable as long
-as the two still match ≥90% (measured: 99.3% on V10, 96.5% on V11).
-
-`OPENROUTER_API_KEY` and `PEXELS_API_KEY` live in `.env` (gitignored).
-
-## 2. Plan the scenes — write `input/scene_plan<N>.json`
-
-The plan is a **file**, not chat text. It is the contract every later gate
-checks the build against. Schema is documented at the top of
-`scripts/plan_gate.py`.
-
-**Scaffold it first — a scene file cannot be written before its plan exists**
-(`hook_gate.py` blocks it):
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/new_video.py 11 --words input/words11_aligned.json
-```
-
-Scene boundaries follow Whisper's segments. Don't force a scene count — but
-note that a 6–9s average reads far better than 13s+ (the reference cuts about
-every 6.5s), and the opening 15 seconds deserve several distinct beats, not
-one long establishing shot.
-
-**Per scene, in this order:**
-
-**2a — Editorial Director.** `narrativeFunction` (hook / question / paradox /
-cause / causal-chain / list / definition / mechanism / evidence / reversal /
-conclusion) · `viewerQuestion` · **`visualTransformation`** (the relationship
-the viewer must watch form — leaving this vague is what produces a
-background+text scene) · `contrastWithPrevious` · `density` (sketch the whole
-video's low/med/high arc as one column first) · **`comprehensionLoad`**.
-
-**Do not let the narration's segments decide the cuts.** Screen time does not
-have to equal speaking time: a drawing may hold past the sentence that
-introduced it, and an easy mood shot may be cut short to pay for it. Allocate
-seconds by `comprehensionLoad` — a scene the viewer has to *read* needs ≥4s
-and ≥1.6s per beat; a scene they only have to *look at* does not. The first
-rebuild of V10 ignored this and gave its three hardest scenes the least time
-in the whole video (see `gates.md`).
-
-**2b-0 — Visual treatment.** Start from authentic/official material, then
-relevant imagery or reconstruction. Use `PHOTO_COLLAGE`, `DOCUMENT_FOCUS`,
-`CONTEXT_VIDEO`, `RECONSTRUCTION`, `MAP_ROUTE`, or `EXPLANATORY_GRAPHIC` as
-editorial thinking—not schema values or quotas. Existing `visualLanguage`
-records how the chosen treatment will be built; it does not decide the idea.
-One strong image or document may be enough. Add another layer only when it adds
-meaning, never to satisfy density.
-
-**2b-1 — Keep overlays purposeful.** The caption bar already runs narration
-word-by-word. A drawn label is capped at **4 words** and may not restate the
-narration (`text_gate.py`). Icons are optional. Fifteen symbols remain in
-`src/scenes/iconVocabulary.jsx`; use one only when it communicates more clearly
-than the available image/document/text treatment:
-
-```bash
-npx remotion still IconVocabularySheet input/icon_vocabulary.png --scale=0.5
-```
-
-`icon_gate.py` validates registry/export/import integrity when an icon is used.
-A finished zero-icon video passes.
-
-**2b — Motion Implementer.** `template` · `backdrop` · `variant` · assets ·
-punch phrase.
-
-**Per asset:** a `describes` list naming the exact phrases (verbatim from the
-aligned transcript) it illustrates. An asset that can't name what it
-illustrates is filler. Compute entrance frames with `beat_sync.py frame`
-(always pass `--scene-end` — short phrases repeat), never by feel. Set
-`visibleFor` so a beat hands off to the next one (`next.delay - this.delay +
-~10`) instead of piling up.
-
-**`visualEvents`:** every frame something new appears or changes. Drives the
-dead-air gate.
-
-Then:
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/scene_plan10.json
-py -3 .claude/skills/vox-collage-video/scripts/baseline_gate.py check input/scene_plan10.json
-```
-
-`plan_gate` checks the floor. `baseline_gate` checks this video against the
-frozen profile of one already judged good (`references/baseline.json`) — it is
-limited to viewer-facing plan evidence such as content coverage, readable
-pacing and dead air. Code-drawn, icon, block, layer, asset-count and photo-share
-statistics never block; they describe implementation rather than quality.
-Never re-`freeze` the baseline with a weaker video merely to quieten it.
-
-Fix every failure. **Present the shot list to the user for approval** before
-sourcing anything — this checkpoint is where a wrong creative direction is
-still cheap to fix. Approval is recorded IN the plan: set
-`"shotlistApproved": true` only after the user has actually approved (or told
-you up front to run end-to-end). The PostToolUse hook blocks every scene file
-of the video while the flag is not true, so this checkpoint can no longer be
-silently skipped — setting the flag without asking is deliberate deception,
-not forgetfulness.
-
-## 3. Source the images
-
-`scripts/generate_board.py` — **default is plan-only** (prints prompts, spends
-no credit; the user runs them under their own Google AI Studio quota). Only
-pass `--live` when they explicitly ask. Accumulate every prompt into one
-`--prompts-out input/prompts<N>.txt`.
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/generate_board.py board \
-  --cell "name=subject description" \
-  --out-dir input/raw_cache --prompts-out input/prompts10.txt
-```
-
-Background is a chroma screen chosen with `--bg` (`green` default, `magenta`
-when the subject contains green, `blue` when it conflicts with both) — the
-script writes the background wording itself; describe only the SUBJECT.
-
-**Be specific.** "A cocktail glass" for a scene about bars in Itaewon
-illustrates the category, not the place, and reads as stock filler. When the
-subject is culturally or geographically specific, say so in the prompt.
-
-**Hero assets get their own single-cell board.** Panels cropped from a
-multi-cell board are low-resolution and landscape-shaped; used as a hero they
-render short and soft (a `width=560` landscape crop is only ~310px tall).
-
-**Open every cropped cell before use** — a matching panel count does not
-prove a correct name↔image mapping.
-
-`scripts/fetch_pexels.py` remains the fallback when a real photograph of a
-real place is genuinely what's needed.
-
-## 4. Cutouts
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
-  input/raw_cache/x.png public/el10_x.png --color        # objects: colour, no shadow
-py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
-  input/raw_cache/p.png public/el10_p.png                # people: grayscale + shadow
-```
-
-Removal method is auto-detected per image (chroma-key when the corners sample
-clean, rembg otherwise). **Read the `removal:` line it prints.** rembg does
-badly on busy scenes, architecture and flat-lay documents — for those, prefer
-`BackgroundPhoto` (no cutout needed at all) over fighting the mask.
-
-**Declare the shape when the asset goes into a slot.** `Hero`/`Support` take a
-`width` and nothing else — the rendered HEIGHT comes from the source PNG's own
-aspect ratio, and `crop_to_content` cuts every cutout tight to its subject, so
-that ratio is effectively random per image. Measured: the same `width=680`
-renders 383px tall for a 16:9 source and 907px for a 3:4 one — a 2.4× area
-difference from an identical layout number. That is why "put it in a fixed
-box" never stopped the tràn / đè / quá-nhỏ defects on its own.
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/process_cutout.py \
-  input/raw_cache/x.png public/el13_x.png --color \
-  --fit 3:4 --min-content-px 560
-```
-
-`--fit` pads with transparency to exactly that ratio — never crops, never
-distorts — and stamps `voxContentPx` / `voxFitAspect` into the PNG so a gate
-can check it later. `--min-content-px` refuses a source too low-resolution for
-the slot **before** it is cut, which is the only cheap moment to find out.
-
-Then measure them instead of squinting at them:
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/cutout_gate.py public/ --video 11 --plan input/scene_plan11.json
-py -3 .claude/skills/vox-collage-video/scripts/asset_gate.py input/scene_plan11.json
-```
-
-The two ask different questions. `cutout_gate` asks *is the edge clean*;
-`asset_gate` asks *does this image fit the box the plan puts it in* — the
-question nothing used to ask. Run against the shipped videos it reproduces
-the viewer's own verdict: V13 clean, V11 two failures, and V10/S25 flagged at
-1.22× — the exact asset the viewer reported as soft by eye, months earlier.
-
-This is the cheap half of the check, and it finds the defects eyes miss — it
-flags exactly the two shipped V10 assets a contact sheet had already "passed".
-A `viền ảnh vẫn đặc` failure means the SOURCE is wrong (subject running off
-frame); no model switch fixes it, so regenerate rather than re-cut.
-
-**Then inspect what it passes, composited at full size, not in a thumbnail
-grid.** The gate answers "is the edge clean"; it cannot answer "is this the
-right picture".
-
-## 5. SFX
-
-`@remotion/sfx` exports URL strings, not components — play them with
-Remotion's own `<Audio>`. Wire each to the beat it belongs to, volume
-0.3–0.5, and vary them across scenes.
-
-## 6. Build the scenes
-
-**Build the scene bespoke when that is what the meaning needs. That is the
-default, and it needs no declaration. 100% bespoke is valid.**
-
-`src/blocks/` exists and is **parked** — a small convenience for the handful of
-scenes that genuinely land on one, not the route into a scene. The reason is
-measured, not stylistic:
-
-| block-library coverage | |
-|---|---|
-| V10 — the video the blocks were extracted FROM | 54% (overfit, not a result) |
-| **V11 — part 2 of that same story, same assets** | **25%** |
-| V13 — a different subject | 25% |
-
-A direct sequel gets the same coverage as an unrelated video. Three scenes in
-four will have no block that fits, so opening this step with "check the
-library" would put a lookup in front of the thinking for 75% of scenes — which
-is exactly the inversion the first rule of this skill forbids, and exactly how
-`SceneTemplates.jsx` died. Rebuilding two V13 scenes from blocks saved 24% of
-the lines, under the 40% that would have justified the detour.
-
-**Only after the treatment and asset/information need are clear, reach for a
-block when both hold:** the `narrativeFunction ×
-visualLanguage` you already declared in 2a/2b lands in that block's `fits`,
-**and** its `whenNotToUse` does not describe your scene. Then:
-
-| block | fits | what it does |
-|---|---|---|
-| `PhotoClaim` | hook/evidence/conclusion/reversal × `background-photo` | full-bleed photo + one claim; the pacing breather |
-| `MapPlace` | hook/definition × `map` | real map + pin + claim |
-| `TimelineSpan` | reversal/cause × `timeline` | two dates + the gap between them named |
-| `DocFocus` | conclusion/definition/evidence × `document` | one artefact, attended to |
-| `ChannelOutro` | conclusion × `mockup` | the closing follow card |
-
-`ChannelOutro` is the one exception worth reaching for by default: every video
-ends the same way, so it is reusable by construction rather than by evidence.
-
-Declare a block you actually used (`"block": "PhotoClaim", "arrangement":
-"top"`). **Declaring nothing means bespoke** — `block_gate.py` does not ask for
-a reason, because on an unseen video most scenes are bespoke and that is the
-correct state, not a lapse. Repetition and arrangement counts are advisory;
-judge them on the rendered contact sheet rather than through a block quota.
-
-Monotony across the whole video is caught by measurement instead: after the
-contact sheet exists, `sheet_vision.py` reports the largest look-alike group
-(V10 23–38%, V11 54–67% — matching the viewer's "liked" / "exhausting"). Prefer
-that over a plan-time quota; the quota's constants failed to transfer twice
-(`mood` on V10/S22, `place` on V13/S1).
-
-Blocks carry no absolute frames. Entrances come in through `beats` from
-`beat_sync.py`, so the same block fits a 90-frame scene and a 152-frame one.
-Punch entry is clamped to hold ≥48 frames (1.6s) — measured on V10, **6 of its
-14 block-mapped scenes** land a headline with less reading time than that.
-
-**Do not use `src/scenes/SceneTemplates.jsx`.** Its seven templates were used
-by V3–V9 and by **zero** scenes of V10–V13. They are one scene in seven
-arrangements — same `zoom 1→1.0x`, same `rise/grow/dropSpin`, same
-`idle="sway"`, same `visibleFor={durationInFrames}` — and they are named after
-layouts, which forces the pick to be made on layout. That is the documented
-root cause SKILL.md's top rule refers to.
-
-For everything else, use the primitives in `references/primitives.md`; compose
-bespoke arrangements freely.
-
-Reach for `iconVocabulary.jsx` before typing a label — every icon takes the
-same `x, y, size, delay` props, so swapping one for another is a one-word
-edit. Give `DrawnText` `plate` whenever it sits over a photo or a cutout;
-ink text on grid paper is legible and the same text over a dark doorway is a
-smudge.
-
-**Size heroes by rendered height, not a guessed width.** Target 45–55% of the
-usable band (y≈160→1460); check with:
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/check_overlap.py --elem "..." --elem "..."
-```
-
-Pass the headline and any code-drawn area as `box:WxH` elements too, or the
-balance check only sees cutouts. For a map scene, cache the tiles first
-(`cache_map_tiles.py`) and use `LOCAL_RASTER_STYLE` — a map that fails to tile
-renders successfully with a hole in it.
-
-**Place the headline against where the hero cluster actually lands**, not at a
-fixed `top`. Use `onDark` for headlines over a `BackgroundPhoto`.
-
-When a component takes its own `delay` (`DocumentStamp`, `FlowArrow`,
-`VoxMapPin`) inside a `<Sequence from={X}>`, pass `delay={0}` — otherwise X is
-subtracted twice and the element can silently never appear.
-
-Verify against the plan as you go:
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/scene_plan10.json --scene S13
-py -3 .claude/skills/vox-collage-video/scripts/block_gate.py input/scene_plan10.json
-py -3 .claude/skills/vox-collage-video/scripts/beat_sync.py verify input/words10_aligned.json ...
-```
-
-## 7+8. Master timeline, captions, registration — GENERATED, not written
-
-Do NOT hand-write the master timeline, `captionData<M>.js`, or the Root.jsx
-registration block. All three are pure functions of the plan + words file, and
-all three are generated by one idempotent command — run it after building each
-scene, and again when the last scene lands:
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/scene_plan10.json
-```
-
-- **captions**: 4 words/line, reset at segment boundaries, `round(t*fps)` —
-  byte-identical to the shipped hand-written files (locked by a selftest case).
-  Mounted ONCE at master level, AFTER the `TransitionSeries`, at `bottom: 440`.
-- **master** (`src/V<N>Master.jsx`): appears automatically once every scene in
-  the plan exists. Rail math is the generator's job now — the "first rail
-  unpadded, every scene half a second early" bug that shipped once on V10
-  cannot recur by hand-slip. Default transition is fade 15; a scene may declare
-  `"transitionIn": "none"` in the plan for a hard cut. Anything fancier means
-  hand-writing the master — which is fine: assemble never overwrites a file
-  that lacks its AUTO-GENERATED stamp.
-- **register**: manages the `ASSEMBLE:V<N>` marker block in `src/Root.jsx`;
-  scenes already registered by hand are left alone.
-
-`assemble.py --check` re-derives all three and exits 1 on drift; the Stop hook
-runs it, so a hand-edited or stale master blocks the turn. If the generated
-master is genuinely wrong for a video, hand-write it under a different
-filename and say so — don't edit the generated file in place.
-
-## 9. Register, review, preview
-
-Registration is handled by `assemble.py` (§7+8) — only hand-touch `Root.jsx`
-for things outside a video's plan (demos, probes).
-
-**Let the cheap model look FIRST. Then look yourself, only where it points.**
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/asset_vision.py input/scene_plan10.json
-py -3 .claude/skills/vox-collage-video/scripts/vision_check.py --plan input/scene_plan10.json
-py -3 .claude/skills/vox-collage-video/scripts/sheet_vision.py input/review_frames/contact_sheet.jpg --scenes 26
-# board cells, straight after generate_board.py crop-file:
-py -3 .claude/skills/vox-collage-video/scripts/asset_vision.py --board --files "cells/*.png"
-```
-
-`--board` is a **different check set**, not a flag on the same one. A board cell
-still has its chroma background — that is the point of it — so asking "has the
-background been removed" there is asking the wrong question at the wrong step.
-Run it on cells straight out of `crop-file`; it catches the tool watermark and
-a subject touching the cell edge, and it noticed a crop that returned the whole
-board as one "cell".
-
-`sheet_vision.py` is the preferred mechanism for the one criterion no single
-frame can answer: **varied**.
-Twenty-four scenes that differ on paper can still look identical on screen —
-V11 did, at 58% of scenes in one look, and the viewer called it exhausting.
-V10, which they liked, sits at 23–38%.
-
-Both route images to a small vision model; nothing enters your context but one
-line of JSON per image. `hook_gate` runs them for you at the end of a turn and
-prints the flags — subjective editorial findings are advisory, never diagram or
-icon quotas, and the scripts go quiet when the router is down.
-
-This is not a saving of a few percent. Measured on the real token logs of four
-build sessions, 439 images entered context; in V11 they accounted for **55% of
-cache_read = $384 of a $979 session**. An image is not paid for once — it sits
-in context and is re-read on every later call.
-
-So: **budget about one still per scene that you look at yourself**, plus
-whatever the scripts flag. V11 looked at 9.8 images per scene. That is the
-single most expensive habit in this pipeline.
-
-What the cheap model cannot do — verified, not assumed: it flags *what is
-checkable* (text covered, text under the floor, subject eaten by the cutout,
-asset showing the wrong thing). It does **not** answer *is this scene
-illustrating the narration or just filling the frame*. That judgement is
-yours, and it is the only reason to spend context on a still.
-
-`vision_regress.py` is the regression set behind all of that — 26 labelled
-cases, every label sourced to the viewer's own verdict, to `text_gate`, or to
-a numeric measurement. Run it after touching a prompt, a model, or `encode()`.
-It exists because a "fix" to `encode()` silently destroyed a true positive
-during the very session that built these scripts.
-
-**The review pass is mandatory and gated:**
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/scene_plan10.json
-# LOOK at the contact sheet, then fill in input/review10.json
-py -3 .claude/skills/vox-collage-video/scripts/review_gate.py input/scene_plan10.json
-# and check the render against what the code claims is drawn there:
-py -3 .claude/skills/vox-collage-video/scripts/pixel_gate.py input/scene_plan10.json
-```
-
-Judge every scene on the user's four criteria — illustrated / composed /
-varied / purposeful — with the frame as evidence. This exists because a video
-once passed every automated check and the first person to watch it found four
-defects in the first minute.
-
-**Scene stills carry no captions** — those are mounted at master level. The
-band a scene has to fill is y≈160→1250; below that belongs to the caption
-bar. Before rebuilding a scene around an empty lower frame, confirm it on a
-master still (`ItaewonRemDap --frame=<startSec*30 + local>`).
-
-**EMPTY SPACE IS NOT AUTOMATICALLY A DEFECT.** Under-composed is a viewer-facing
-judgement, not low pixel ink. Never add labels, lines, diagrams, icons, bars,
-boxes or layers merely to make density numbers pass. `review_gate` keeps blank
-or broken render detection but reports sparse-band measurements as advisory;
-check the master frame and cheap vision before changing a legitimate
-full-bleed/minimal scene.
-
-If a semantically necessary element is added, give it an existing
-`visualEvent` when it arrives with that same beat. Do not invent an event just
-to decorate empty space.
-
-Preview with stills (`--scale=0.25`, `--gl=angle` for maps) combined into one
-contact sheet. Only render an mp4 if the user asks for a file.
-
-## Enforcement
-
-`.claude/settings.json` runs `hook_gate.py` **before every `Read`**, on every
-scene edit, and at the end of every turn, while a plan has `"status":
-"active"`. Violations block. Set the status to `"shipped"` when the video is
-done.
-
-**The image budget is enforced, not advised.** Reading an image counts against
-`scenes + 8`. Past that you get a running count on every read; past twice that
-the read is blocked. This exists because §9 already said "look only where the
-scripts point" and that changed nothing: measured across four real build
-sessions, 439 images entered context, and in V11 they were 55% of cache_read —
-$384 of a $979 session. The Stop-hook advisory cannot help here either, because
-it runs after the images are already in context. If a budget block gets in the
-way of something the user actually asked for, **say so and let them decide** —
-do not raise the ceiling yourself.
-
-`selftest.py` runs the gates against deliberately-broken inputs and asserts
-each one fails. **Run it after touching any gate script** — it is the only
-thing that notices a gate edited into uselessness:
-
-```bash
-py -3 .claude/skills/vox-collage-video/scripts/selftest.py
-```
-
-Two things are enforced regardless of any plan's status:
-
-* **No scene file for a new video before its plan exists.** Building from a
-  shot list that only lives in chat is the original defect this skill exists
-  to prevent, and it was reachable simply by doing things in the wrong order.
-* **No regression against `references/baseline.json`.** The Stop hook runs
-  `baseline_gate.py check` alongside the others.
-
-Four ways this system used to switch itself off silently now block instead: a
-missing gate file, a plan with broken JSON, `"status": "shipped"` typed before
-the video passes, and a gate edited to always return 0. See `gates.md`.
-
-**Never make a gate quiet by thinning the plan.** If a threshold is genuinely
-wrong for a video, change it explicitly and say why.
+# Videoagent 2
+
+## Authority
+
+This file orchestrates the workflow. Current scripts and component code are the
+mechanical truth. References are lazy-loaded by topic; they are not a mandatory
+reading bundle.
+
+Final accepted V10/V11 output is the product-quality reference, never a literal
+template. Do not edit shipped V10/V11 sources or golden media to make new work
+pass. Build new scenes bespoke by default; the parked block library is optional.
+
+**Policy: integrity is HARD. Quality and aesthetics are ADVISORY.** A gate may
+block broken plans, missing assets, plan/build drift, invalid imports, malformed
+assembly, or missing/stale/blank review evidence. Pacing, density, repetition,
+composition and other quality signals remain visible but rendered evidence and
+editorial judgment decide them.
+
+## Core editorial order
+
+**NARRATION MEANING → VISUAL TREATMENT → EVIDENCE/ASSET NEED → COMPONENT.**
+
+Prefer authentic, relevant visuals: source documents, real places, specific
+people/objects, maps, and source-preserving crops. Generated imagery must still
+be relevant and honest. Do not use generic symbols, decorative diagrams, icons,
+lines, grids, labels, or extra layers as filler. Zero-icon videos are valid.
+
+Write each scene's `visualTransformation`: what the viewer watches change or
+become clear. Then select a visual language. Use a diagram only when a relation,
+process, geography, quantity, or legal structure is clearer drawn than shown.
+
+New cutouts use `EditorialHero` / `EditorialSupport`: entrance, settle, hold.
+Continuous sway/tremble/bob is explicit opt-in for an editorial reason. Legacy
+`Hero` / `Support` remain available for shipped composition compatibility.
+The camera is also stable by default: no automatic Ken Burns drift or slow zoom.
+Move it only for a semantic event such as context → detail/evidence, reveal,
+authority takeover, or spatial displacement.
+
+## Pipeline and state
+
+Disk is authoritative pipeline memory. Receipts under `input/.videoagent/<V>/`
+bind true inputs/tool/config to outputs. After closure, load only the compact
+contract, required artifacts and editorial exceptions—not prior logs, prompt
+packs, clean reports, unrelated code or reasoning. Changed inputs reopen only
+their stage.
+
+1. **Initialize timing**
+   - New work: `init_video.py <N> --audio <file> --script <file>`.
+   - Script-authoritative alignment supplies timing. Content receipts close
+     audio/transcription/alignment; script-only changes reuse transcription and
+     reopen alignment. Never overwrite/rebind manual alignment without acceptance.
+
+2. **Plan**
+   - Scaffold with `new_video.py <N> --words input/words<N>_aligned.json`.
+   - Fill editorial meaning, timing, visual language, assets/anchors, real
+     `visualEvents`, and implementation intent.
+   - A document used only for context/authority may stay whole or cropped. A
+     document cited as proof should normally map exact narrated phrases to
+     normalized source `evidenceRegions`; timing comes from aligned words.
+   - Run `plan_gate.py input/scene_plan<N>.json --hook`: integrity failures
+     block; quality/editorial heuristics warn. Use strict standalone mode only
+     for deliberate diagnostics.
+   - Present the shot list before sourcing unless the user explicitly requested
+     end-to-end execution. Set `shotlistApproved` only after approval.
+   - `pipeline_contracts.py approve-plan <plan>` closes a valid approved plan
+     against narration/timing, sources, style and content. Advisories do not loop.
+
+3. **Source**
+   - Manual image mode is default: `generate_board.py` prepares prompts/crops;
+   - Lineage connects brief → generation/prompt → expected/returned file.
+     `asset_manifest.py` carries processing, QA, acceptance and replacements;
+     same-name byte changes invalidate. Batch cutouts skip unchanged source/config;
+     cheap vision caches each file+brief+prompt/model independently.
+   - Reuse valid artifacts. Record source and preserve authentic document text.
+   - Process only assets that actually need cutouts.
+
+4. **Build**
+   - Freeze global plan/visual/authenticity, then emit bounded adjacent-scene
+     `worker-packet`s. Native subagents may own non-overlapping chunks; otherwise
+     use packets sequentially—no custom scheduler. Bespoke JSX stays first-class;
+     the main agent retains global summary/rhythm/repetition/final judgment.
+   - Build bespoke scene compositions from current primitives.
+   - Anchor entrances to aligned narration using `beat_sync.py frame`.
+   - Keep plan and source synchronized; PostEdit runs immediate build/contract
+     integrity only. Text/icon/asset/cutout checks run later as a batch.
+   - Use `assemble.py input/scene_plan<N>.json`; generated master/captions remain
+     plan-derived and script-authoritative.
+   - Omitted `transitionIn` means an editorial hard cut. Request the existing
+     `fade` only when continuity/passage of time benefits; other meaning-driven
+     transitions belong in a deliberate handwritten master, not a variety quota.
+
+5. **Review rendered evidence**
+   - `render_video.py --mode draft` makes one medium-resolution actual-master
+     draft at normal FPS. `render_review_sheet.py` maps event samples to master
+     frames, extracts stale items in one ffmpeg process, then derives temporal +
+     summary sheets. No normal per-frame Remotion still fan-out.
+   - Targeted full-res evidence selects document/text/pixel-sensitive declarations
+     and manual escalations; draft pixels never replace source/text/edge inspection.
+   - Inspect temporal evidence against `visualTransformation` and the summary
+     sheet for cross-scene composition. In the one broad correction pass, read
+     these pixel findings together with outstanding plan pacing/comprehension/
+     dead-air advisories and acknowledged quality debt. Warnings are clues, not
+     score targets, and may remain when narrative/rendered evidence supports it.
+   - Prioritize defects that materially affect comprehension, evidence location,
+     source honesty, visible transformation, legal-conclusion timing, or major
+     composition repetition before minor cosmetic debt.
+   - A resolved quality fail is acknowledged/accepted debt, not a pass. Missing,
+     stale, unreadable, or blank evidence is hard failure.
+   - Cheap vision remains an advisory filter at review stage. Open only flagged
+     images; the pre-read image-context budget remains hard.
+
+6. **Finish**
+   - `assemble.py --check` must pass.
+   - Close the one broad correction with `pipeline_contracts.py close-correction`.
+     Render exactly one final full-resolution MP4 with `render_video.py --mode final`
+     when requested; final scale remains 1.0 and normal production quality.
+   - Mark `status: "shipped"` only after mandatory mechanical artifacts are
+     complete and review evidence exists. It records pipeline/build completion;
+     it is not by itself user or product-quality approval.
+   - Never commit or push unless explicitly approved.
+
+Scene state progresses `planned → built → reviewed`; top-level workflow state is
+`active → shipped`. Existing artifacts infer the hook phase; do not add a second
+phase system.
+
+Scripts/workers return `STATUS`, `HARD`, `ADVISORY`, changed artifacts, unresolved
+questions, details and receipt; hard issues stay explicit, successful logs/reasoning
+stay on disk. `economics.jsonl` records timing/cache/subprocess/vision/render facts;
+unavailable main-token usage is `UNKNOWN`.
+
+## Reference routing
+
+Read `.claude/skills/vox-collage-video/references/README.md` for the existing
+index. Load only the topic that applies: visual language while choosing a
+treatment, primitives while implementing, animation variants while designing
+motion, gates while troubleshooting enforcement, and lessons by searching for a
+relevant known defect. Official Remotion skills under `.agents/skills/` apply to
+their specific topics and must match the installed Remotion version.
+
+Use each script's `--help` for current commands/options. Do not duplicate its
+thresholds or turn this file back into a procedural manual.

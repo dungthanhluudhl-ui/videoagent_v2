@@ -21,6 +21,9 @@ Usage:
       --anchor "Hero-Worried=Mượn tiền ngân hàng=0" \
       --anchor "Support-Warning=sập bẫy=55"
 
+  # turn optional document evidenceRegions into DocumentEvidence `regions`
+  py -3 beat_sync.py evidence-regions input/scene_plan<N>.json
+
 `--scene-start` is the real Whisper timestamp (seconds) of the scene's first
 word — the same number used to compute that scene's arrival frame in the
 master timeline. Phrases match case-insensitively and ignore punctuation, but
@@ -30,6 +33,7 @@ hand.
 """
 import argparse
 import json
+import pathlib
 import sys
 
 
@@ -100,6 +104,57 @@ def cmd_verify(args):
         sys.exit(1)
 
 
+def resolve_evidence_regions(plan, words):
+    """Resolve plan phrase->source mappings through the same aligned words used
+    by every other beat. The plan stores no timing; returned `from` values are
+    scene-local frames ready for DocumentEvidence's existing `regions` prop."""
+    fps = int(plan.get("fps") or 30)
+    resolved = []
+    for scene in plan.get("scenes") or []:
+        start, end = scene.get("startSec", 0), scene.get("endSec")
+        for asset in scene.get("assets") or []:
+            mappings = asset.get("evidenceRegions")
+            if not mappings:
+                continue
+            regions = []
+            for mapping in mappings:
+                phrase = mapping.get("anchorPhrase") or ""
+                match = find_phrase(words, phrase, start, end)
+                if not match:
+                    raise ValueError(
+                        f"{scene.get('id')}/{asset.get('name') or 'document'}: "
+                        f"evidence anchorPhrase {phrase!r} not found in scene")
+                x, y, width, height = mapping["region"]
+                region = {
+                    "from": to_frame(match[0][1], start, fps),
+                    "x": x, "y": y, "width": width, "height": height,
+                }
+                if mapping.get("zoom") is not None:
+                    region["zoom"] = mapping["zoom"]
+                regions.append(region)
+            resolved.append({
+                "scene": scene.get("id"),
+                "asset": asset.get("name") or asset.get("src"),
+                "regions": regions,
+            })
+    return resolved
+
+
+def cmd_evidence_regions(args):
+    plan_path = pathlib.Path(args.plan)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    words_path = pathlib.Path(plan.get("wordsFile") or "")
+    if not words_path.is_absolute() and not words_path.is_file():
+        words_path = plan_path.parent.parent / words_path
+    words = load_words(words_path)
+    try:
+        resolved = resolve_evidence_regions(plan, words)
+    except (KeyError, TypeError, ValueError) as exc:
+        print(f"evidence-regions: {exc}", file=sys.stderr)
+        sys.exit(1)
+    print(json.dumps(resolved, ensure_ascii=False, indent=2))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -120,6 +175,12 @@ def main():
     pv.add_argument("--tolerance", type=int, default=6, help="allowed frame drift (~0.2s) before flagging a mismatch")
     pv.add_argument("--anchor", action="append", required=True, help="name=phrase=assigned_frame")
     pv.set_defaults(func=cmd_verify)
+
+    pe = sub.add_parser(
+        "evidence-regions",
+        help="resolve optional document evidenceRegions to DocumentEvidence local frames")
+    pe.add_argument("plan")
+    pe.set_defaults(func=cmd_evidence_regions)
 
     args = p.parse_args()
     args.func(args)

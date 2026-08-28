@@ -14,13 +14,14 @@ never touched: at the time of the V10 review only **3 of 12** available
 |---|---|
 | `SceneBackground` | Paper backdrop; `variant`: `grid` / `chart` / `card` / `spotlight` |
 | `BottomBar` | The always-present orange bar. Render OUTSIDE `CameraGroup` |
-| `CameraGroup` | Per-scene zoom / pan / `shake` beats |
-| `Hero` / `Support` | Cutouts; entrance `variant`, `idle` motion, `visibleFor` exit |
+| `CameraGroup` | Stable unless a semantic event calls for zoom / pan / `shake` |
+| `EditorialHero` / `EditorialSupport` | Default cutouts for new scenes: entrance → settle → hold; continuous `idle` is explicit opt-in |
+| `Hero` / `Support` | Legacy/low-level cutouts retaining historical sway behavior; existing shipped scenes or intentional explicit use only |
 | `PunchPhrase` | The one headline per scene. **`onDark`** for photo backgrounds |
 | `SpeechBubble` / `SpeechBubbleQuote` | Dialogue and pull-quotes |
 | `StatCounter` | One number ticking up |
 | `AnimatedLineChart` | A value across several points |
-| `NewspaperSpotlight` | Document with highlighter stroke |
+| `NewspaperSpotlight` | Legacy/simple document card with one highlighter stroke; not the default evidence path |
 | `DocumentStamp` | Ink stamp with spring landing |
 | `VoxMapPin` | Pin badge — **only over a real map**, see `MapGraphic` |
 | `FlowArrow` | Self-drawing cause→effect arrow |
@@ -32,7 +33,8 @@ never touched: at the time of the V10 review only **3 of 12** available
 
 | Component | Use |
 |---|---|
-| `BackgroundPhoto` | Full-bleed photo, tinted to palette. The fastest cure for an empty frame |
+| `BackgroundPhoto` | Full-bleed photo, tinted to palette; `drift=0` by default |
+| `DocumentEvidence` | Default authentic document evidence: raster source, timed focus regions, crop/pan/zoom, surrounding dim, exact-region highlight |
 | `DiagramCanvas` | SVG container in a 1080×1300 space for drawn reconstructions |
 | `DrawnPath` | Progressive stroke reveal |
 | `DimensionLine` | Measurement line with end ticks and a label ("3,2m") |
@@ -51,6 +53,20 @@ never touched: at the time of the V10 review only **3 of 12** available
 viewBox tracks the `height` you pass. Draw across the full width and height
 you asked for — content sized for a smaller box floats in the middle of a
 bigger one.
+
+For a document that is **cited evidence**, an asset may optionally declare:
+
+```json
+"evidenceRegions": [
+  {"anchorPhrase": "verbatim narration phrase", "region": [0.08, 0.18, 0.84, 0.12]}
+]
+```
+
+Coordinates are normalized to the authentic source raster. Do not put timing in
+this mapping: `beat_sync.py evidence-regions <plan>` resolves each phrase through
+the existing aligned transcript and returns scene-local `regions` for
+`DocumentEvidence`. A document used only as context/authority remains valid
+without `evidenceRegions`. Never retype source text as a substitute.
 
 ### `src/scenes/iconVocabulary.jsx` — the symbol vocabulary
 
@@ -130,8 +146,8 @@ Blocks hold **no absolute frames** — entrances arrive through `beats` from
 `beat_sync.py`, so one block fits a 90-frame scene and a 152-frame one.
 
 Monotony is reviewed on output, not constrained by media quotas:
-`sheet_vision.py` reads the rendered
-contact sheet and reports the largest look-alike group (V10 23–38%, V11 54–67%,
+`sheet_vision.py` reads the rendered scene-summary sheet (one representative
+frame per scene) and reports the largest look-alike group (V10 23–38%, V11 54–67%,
 matching the viewer's own "liked" / "exhausting"). That is a better instrument
 than a plan-time quota derived from one video — the derived constants failed to
 transfer twice (`mood` on V10/S22, `place` on V13/S1).

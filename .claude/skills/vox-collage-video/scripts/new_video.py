@@ -152,7 +152,8 @@ def main():
             "Chạy plan_gate.py, rồi baseline_gate.py check, rồi đưa shot list cho user duyệt "
             "TRƯỚC khi source bất kỳ ảnh nào. User duyệt xong mới đặt "
             "shotlistApproved=true - hook chặn mọi file cảnh khi cờ còn false.",
-            "Đặt status='shipped' khi xong video để hook im lặng.",
+            "Đặt status='shipped' khi pipeline/build và review artifact đã hoàn tất để hook "
+            "im lặng; trạng thái này tự nó không có nghĩa user đã duyệt chất lượng sản phẩm.",
             "Ảnh/tài liệu/hình ảnh thật là lựa chọn đầu tiên. Diagram và icon chỉ dùng khi "
             "chúng giải thích quan hệ, quá trình, thời gian, số lượng, địa lý hoặc cấu trúc "
             "pháp lý rõ hơn ảnh; video dùng 0 icon vẫn hợp lệ.",

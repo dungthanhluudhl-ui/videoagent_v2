@@ -49,8 +49,11 @@ import sys
 import urllib.error
 import urllib.request
 
+import stage_state as state
+
 BASE = os.environ.get("VOX_VISION_BASE", "http://localhost:20128/v1")
 MODEL = os.environ.get("VOX_VISION_MODEL", "ag/gemini-3.7-flash-low")
+VISION_VERSION = "review-frame-v1"
 
 # Khoa KHONG duoc nam trong ma nguon. Repo nay la public, va mot khoa nhet lam
 # gia tri mac dinh se di thang len GitHub trong lan push dau tien - ke ca khoa
@@ -243,29 +246,115 @@ def ask(path, model=MODEL, retries=2):
     return {"_error": last}
 
 
+def review_brief(path, review_map=None):
+    entry = (review_map or {}).get(str(path)) or {}
+    return {"scene": entry.get("id"),
+            "visualTransformation": entry.get("visualTransformation", ""),
+            "masterFrame": entry.get("masterFrame"),
+            "localFrame": entry.get("localFrame")}
+
+
+def frame_cache_key(path, brief, model, settle):
+    return state.digest({"file": state.file_input(path), "brief": brief,
+                         "prompt": PROMPT, "promptVersion": VISION_VERSION,
+                         "model": model, "settle": settle,
+                         "implementation": state.file_input(pathlib.Path(__file__))})
+
+
+def cached_ask(root, video, path, brief, model, settle):
+    key = frame_cache_key(path, brief, model, settle)
+    cached = state.cache_get(root, video, "frame-vision", key)
+    if cached is not None:
+        return cached, True, key
+    result = ask(path, model)
+    if "_error" not in result:
+        state.cache_put(root, video, "frame-vision", key, result,
+                        {"path": path, "brief": brief, "model": model})
+    return result, False, key
+
+
+def review_path_for_plan(plan_path):
+    return pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+
+
+def _review_evidence(review_path):
+    """Read exactly the evidence named by the review artifact.
+
+    `frames` is temporal evidence; old `frame`-only artifacts remain valid.
+    Relative paths are normally workspace-relative, with review-relative paths
+    retained as a practical fallback for older artifacts.
+    """
+    review = json.loads(review_path.read_text(encoding="utf-8"))
+    workspace = review_path.resolve().parent.parent
+    paths = []
+    for entry in review.get("scenes") or []:
+        evidence = entry.get("frames") or ([entry.get("frame")] if entry.get("frame") else [])
+        for raw in evidence:
+            path = pathlib.Path(str(raw).replace("\\", "/"))
+            candidates = [path] if path.is_absolute() else [workspace / path, review_path.parent / path]
+            found = next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+            paths.append(str(found))
+    return paths
+
+
 def collect(frames, plan):
     paths = []
     for f in frames:
         paths.extend(sorted(glob.glob(f)) if any(c in f for c in "*?[") else [f])
     if plan:
-        p = json.loads(pathlib.Path(plan).read_text(encoding="utf-8"))
-        vid = str(p.get("video") or "").lstrip("Vv")
-        root = pathlib.Path(plan).resolve().parent / "review_frames"
-        for sc in p.get("scenes", []):
-            paths.extend(sorted(str(x) for x in
-                                root.glob("V%sScene%s_f*.png" % (vid, sc["id"][1:]))))
+        plan_path = pathlib.Path(plan)
+        review_path = review_path_for_plan(plan_path)
+        if review_path.is_file():
+            paths.extend(_review_evidence(review_path))
+        else:
+            # Backward compatibility for pre-review-artifact workflows only.
+            p = json.loads(plan_path.read_text(encoding="utf-8"))
+            vid = str(p.get("video") or "").lstrip("Vv")
+            root = plan_path.resolve().parent / "review_frames"
+            for sc in p.get("scenes", []):
+                paths.extend(sorted(str(x) for x in
+                                    root.glob("V%sScene%s_f*.png" % (vid, sc["id"][1:]))))
     return [p for p in dict.fromkeys(paths) if pathlib.Path(p).is_file()]
+
+
+def review_brief_map(plan_path):
+    if not plan_path:
+        return {}, {}, None
+    plan = state.read_json(plan_path, {})
+    review_path = review_path_for_plan(pathlib.Path(plan_path))
+    review = state.read_json(review_path, {})
+    workspace = review_path.resolve().parent.parent
+    mapped = {}
+    for entry in review.get("scenes") or []:
+        evidence = entry.get("evidence") or []
+        if evidence:
+            for item in evidence:
+                raw = item.get("path")
+                if raw:
+                    p = pathlib.Path(str(raw).replace("\\", "/"))
+                    p = p if p.is_absolute() else workspace / p
+                    mapped[str(p)] = {**entry, **item}
+        else:
+            for raw in entry.get("frames") or ([entry.get("frame")] if entry.get("frame") else []):
+                p = pathlib.Path(str(raw).replace("\\", "/"))
+                p = p if p.is_absolute() else workspace / p
+                mapped[str(p)] = entry
+    return mapped, plan, review_path
 
 
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("frames", nargs="*")
-    ap.add_argument("--plan", help="scene_plan<N>.json - tu tim khung trong input/review_frames")
+    ap.add_argument("--plan", help="scene_plan<N>.json - read evidence paths from review<N>.json")
     ap.add_argument("--model", default=MODEL)
     ap.add_argument("--json", dest="out", help="ghi ket qua day du ra file")
     ap.add_argument("--all", action="store_true", help="in ca khung sach")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--video", default=None,
+                    help="video id for cache/telemetry when checking direct frame paths")
+    ap.add_argument("--new-only", action="store_true",
+                    help="compact hook mode: do not re-emit unchanged cached advisories")
     ap.add_argument("--settle", type=int, default=SETTLE_FRAME,
                     help="truoc frame nay khong xet empty/element_tiny (phan tu con dang bay vao)")
     args = ap.parse_args()
@@ -275,16 +364,23 @@ def main():
         print("khong co khung nao de kiem", file=sys.stderr)
         return 2
 
+    brief_map, plan_data, review_path = review_brief_map(args.plan)
+    root = state.project_root(pathlib.Path(args.plan) if args.plan else pathlib.Path.cwd())
+    video = plan_data.get("video") or args.video or "VUNKNOWN"
     results = {}
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        for p, r in zip(paths, ex.map(lambda q: ask(q, args.model), paths)):
+        packed = list(ex.map(lambda q: cached_ask(root, video, q,
+                                                  review_brief(q, brief_map),
+                                                  args.model, args.settle), paths))
+        for p, (r, _hit, _key) in zip(paths, packed):
             results[p] = r
 
     keys = [k for k, _ in CHECKS]
     flagged, clean, errs, toks, muted = [], [], [], 0, 0
+    hit_by_path = {p: packed[i][1] for i, p in enumerate(paths)}
     for p in paths:
         r = results[p]
-        toks += r.get("_tokens", 0)
+        toks += 0 if hit_by_path[p] else r.get("_tokens", 0)
         if "_error" in r:
             errs.append((p, r["_error"]))
             continue
@@ -297,7 +393,8 @@ def main():
                 hits = [k for k in hits if k not in LATE_ONLY]
         (flagged if hits else clean).append((p, hits, r.get("note", "")))
 
-    for p, hits, note in flagged:
+    visible_flagged = [item for item in flagged if not args.new_only or not hit_by_path[item[0]]]
+    for p, hits, note in visible_flagged:
         print("CO   %-34s %s" % (pathlib.Path(p).name, ",".join(hits)))
         if note:
             print("     " + note)
@@ -311,11 +408,18 @@ def main():
         pathlib.Path(args.out).write_text(
             json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print("\n%d/%d khung bi gan co%s%s   (~%s token cua model re, KHONG vao context agent)"
-          % (len(flagged), len(paths), (", %d loi" % len(errs)) if errs else "",
+    print("\n%d new/material (%d total cached/current)/%d khung bi gan co%s%s   "
+          "(~%s token cua model re, KHONG vao context agent)"
+          % (len(visible_flagged), len(flagged), len(paths),
+             (", %d loi" % len(errs)) if errs else "",
              (", %d co bo qua vi khung som hon f%d" % (muted, args.settle)) if muted else "",
              format(toks, ",")))
-    return 1 if flagged else 0
+    hits = sum(1 for _r, hit, _key in packed if hit)
+    state.append_telemetry(root, video, {"stage": "review-frame-vision",
+                           "owner": "cheap vision", "cache": f"{hits} hit/{len(paths)-hits} miss",
+                           "affectedItems": len(paths), "visionCalls": len(paths) - hits,
+                           "visionTokens": toks, "subprocessCount": 0, "output": args.out})
+    return 1 if (visible_flagged if args.new_only else flagged) else 0
 
 
 if __name__ == "__main__":

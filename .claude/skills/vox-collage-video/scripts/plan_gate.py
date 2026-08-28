@@ -70,6 +70,10 @@ each failure.
          "name": "Hero-Crowd",
          "src": "el10_crowd.png",        // omit for code-drawn assets (diagram/chart/map)
          "anchorPhrase": "con hẻm nhỏ",  // verbatim from the aligned transcript, or null
+         // optional for cited document evidence; normalized source coordinates,
+         // timing comes from each phrase through beat_sync.py (never store it here)
+         "evidenceRegions": [{"anchorPhrase": "exact spoken phrase",
+                               "region": [0.08, 0.18, 0.84, 0.12]}],
          "width": 700, "x": "50%", "y": 420,
          "delay": 0, "visibleFor": 83}
       ],
@@ -373,6 +377,9 @@ class Report:
         self.failures.append(msg)
         self.lines.append(f"FAIL {msg}")
 
+    def warn(self, msg):
+        self.lines.append(f"WARN {msg}")
+
     def info(self, msg):
         self.lines.append(f"     {msg}")
 
@@ -559,7 +566,7 @@ def derive_load(scene, words):
     return load
 
 
-def gate_pacing(scenes, words, rep, thresholds, fps):
+def gate_pacing(scenes, words, rep, thresholds, fps, advisory=False):
     """Serves the criterion the other gates all miss: a video is not better
     for cutting more often. It is better when the time each scene gets
     MATCHES how hard that scene is to understand.
@@ -621,7 +628,7 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
             continue
         floor = derive_load(scene, words)
         if LOADS.index(declared) < LOADS.index(floor):
-            rep.fail(f"{sid}: declared comprehensionLoad={declared!r} but the content "
+            (rep.warn if advisory else rep.fail)(f"{sid}: declared comprehensionLoad={declared!r} but the content "
                      f"derives {floor!r} (a spoken number, a drawn visual language, or an "
                      f"explanatory function). You may raise a load, never lower it.")
             bad = True
@@ -632,18 +639,18 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
         min_dwell, min_dur = LOAD_RULES[declared]
 
         if dwell < min_dwell:
-            rep.fail(f"{sid}: {dwell:.2f}s per visual beat ({beats} beats in {duration:.1f}s), "
+            (rep.warn if advisory else rep.fail)(f"{sid}: {dwell:.2f}s per visual beat ({beats} beats in {duration:.1f}s), "
                      f"under the {min_dwell:.1f}s floor for a {declared!r} scene - the viewer "
                      f"cannot read one element before the next lands. Give the scene more "
                      f"time, or move a beat into a neighbour.")
             bad = True
         if duration < min_dur:
-            rep.fail(f"{sid}: {duration:.1f}s is under the {min_dur:.1f}s minimum for a "
+            (rep.warn if advisory else rep.fail)(f"{sid}: {duration:.1f}s is under the {min_dur:.1f}s minimum for a "
                      f"{declared!r} scene - hard content shown briefly is content the viewer "
                      f"does not get.")
             bad = True
         if declared == "complex" and easy and duration < easy_median - frame:
-            rep.fail(f"{sid}: a complex scene at {duration:.1f}s is SHORTER than the typical "
+            (rep.warn if advisory else rep.fail)(f"{sid}: a complex scene at {duration:.1f}s is SHORTER than the typical "
                      f"easy scene ({easy_median:.1f}s) - the video is spending its time on what "
                      f"is easy to look at instead of what is hard to understand.")
             bad = True
@@ -655,7 +662,7 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
         mean = sum(chunk) / run
         if mean > 0 and all(abs(d - mean) <= tol * mean for d in chunk):
             ids = ", ".join(s.get("id") for s in scenes[i:i + run])
-            rep.fail(f"{run} consecutive scenes within +/-{tol:.0%} of the same length "
+            (rep.warn if advisory else rep.fail)(f"{run} consecutive scenes within +/-{tol:.0%} of the same length "
                      f"({ids}: " + ", ".join(f"{d:.1f}s" for d in chunk) + ") - cutting on a "
                      f"metronome. Rhythm has to come from the content, not a fixed interval.")
             bad = True
@@ -665,7 +672,7 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
     for scene in scenes:
         streak = streak + 1 if scene.get("density") == "high" else 0
         if streak > thresholds["max_consecutive_high"]:
-            rep.fail(f"{scene.get('id')}: {streak} consecutive high-density scenes "
+            (rep.warn if advisory else rep.fail)(f"{scene.get('id')}: {streak} consecutive high-density scenes "
                      f"(cap {thresholds['max_consecutive_high']}) - no room to breathe")
             bad = True
 
@@ -673,7 +680,7 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
     for i in range(len(scenes) - win + 1):
         chunk = scenes[i:i + win]
         if not any(s.get("density") == "low" for s in chunk):
-            rep.fail(f"{chunk[0].get('id')}..{chunk[-1].get('id')}: {win} consecutive scenes "
+            (rep.warn if advisory else rep.fail)(f"{chunk[0].get('id')}..{chunk[-1].get('id')}: {win} consecutive scenes "
                      f"with no low-density beat - the video never pauses for thought")
             bad = True
 
@@ -689,7 +696,7 @@ def gate_pacing(scenes, words, rep, thresholds, fps):
                "and the cutting rhythm varies with the content")
 
 
-def gate_breathing(scenes, rep, thresholds):
+def gate_breathing(scenes, rep, thresholds, advisory=False):
     """Room to think, counted rather than claimed.
 
     The viewer's words about V11 were "không có khoảng nghỉ như V10 vì scene
@@ -728,7 +735,7 @@ def gate_breathing(scenes, rep, thresholds):
         elif not dense and start is not None:
             length = i - start
             if length > run_cap:
-                rep.fail(f"{scenes[start].get('id')}..{scenes[i - 1].get('id')}: {length} "
+                (rep.warn if advisory else rep.fail)(f"{scenes[start].get('id')}..{scenes[i - 1].get('id')}: {length} "
                          f"scenes in a row carrying more than {cap} beats, with no calm "
                          f"scene between them. The viewer is asked to take in something new "
                          f"every couple of seconds for {length} scenes straight. Thin one of "
@@ -738,7 +745,7 @@ def gate_breathing(scenes, rep, thresholds):
 
     for scene, n in zip(scenes, beats):
         if scene.get("density") == "low" and n > cap:
-            rep.fail(f"{scene.get('id')}: declared density \"low\" but carries {n} beats. "
+            (rep.warn if advisory else rep.fail)(f"{scene.get('id')}: declared density \"low\" but carries {n} beats. "
                      f"The label is what the breathing rule would count; the beats are what "
                      f"the viewer would feel. Either thin the scene or stop calling it low.")
             bad = True
@@ -751,7 +758,7 @@ def gate_breathing(scenes, rep, thresholds):
                f"called calm actually is")
 
 
-def gate_dead_air(scenes, rep, thresholds, fps):
+def gate_dead_air(scenes, rep, thresholds, fps, advisory=False):
     """Serves the user's #1 criterion: 'audio nói đến đâu có minh họa đến đó'.
 
     Flattens every scene's visualEvents onto the absolute timeline and looks
@@ -817,7 +824,7 @@ def gate_dead_air(scenes, rep, thresholds, fps):
         gap = b - a
         worst = max(worst, gap)
         if gap > limit:
-            rep.fail(f"dead air {gap:.1f}s ({a:.1f}s -> {b:.1f}s): nothing new appears "
+            (rep.warn if advisory else rep.fail)(f"dead air {gap:.1f}s ({a:.1f}s -> {b:.1f}s): nothing new appears "
                      f"on screen while narration continues (cap {limit:.1f}s)")
             bad = True
     rep.info(f"largest gap between visual events: {worst:.1f}s (cap {limit:.1f}s)")
@@ -826,7 +833,7 @@ def gate_dead_air(scenes, rep, thresholds, fps):
                f"{limit:.0f}s across the whole video")
 
 
-def gate_element_lifetime(scenes, rep, thresholds, fps):
+def gate_element_lifetime(scenes, rep, thresholds, fps, advisory=False):
     """Did it STAY long enough to be read?
 
     Every other gate in this file asks whether something APPEARED. None asked
@@ -861,7 +868,7 @@ def gate_element_lifetime(scenes, rep, thresholds, fps):
                 continue
             if int(vis) < floor:
                 name = asset.get("name") or asset.get("src") or "?"
-                rep.fail(
+                (rep.warn if advisory else rep.fail)(
                     f"{sid}/{name}: visibleFor={int(vis)} frames. Hero/Support fade in over "
                     f"~10 and start fading out {overhead - 10} frames before the end, so this "
                     f"is roughly {max(0, int(vis) - overhead) / fps:.2f}s at full opacity - "
@@ -873,7 +880,7 @@ def gate_element_lifetime(scenes, rep, thresholds, fps):
         if events and dur:
             last = max(int(e.get("frame") or 0) for e in events)
             if dur - last < last_min:
-                rep.fail(
+                (rep.warn if advisory else rep.fail)(
                     f"{sid}: last beat at frame {last} of {dur} leaves only "
                     f"{(dur - last) / fps:.2f}s before the cut - it flashes and is gone. "
                     f"Move it to <= frame {dur - last_min}.")
@@ -882,7 +889,7 @@ def gate_element_lifetime(scenes, rep, thresholds, fps):
         cap = (thresholds["max_beats_closing"] if i == len(scenes) - 1
                else caps.get(scene.get("comprehensionLoad"), 2))
         if len(events) > cap:
-            rep.fail(
+            (rep.warn if advisory else rep.fail)(
                 f"{sid}: {len(events)} beats in one {dur / fps:.1f}s scene "
                 f"(cap {cap} for load={scene.get('comprehensionLoad')}). The approved V10 cut "
                 f"averaged 2.04 beats/scene; the cut that read as relentless averaged 2.62 at "
@@ -894,7 +901,7 @@ def gate_element_lifetime(scenes, rep, thresholds, fps):
                f">= {last_min / fps:.1f}s before its cut, no scene over its beat cap")
 
 
-def gate_content_coverage(scenes, words, rep, thresholds, fps):
+def gate_content_coverage(scenes, words, rep, thresholds, fps, advisory=False):
     """The gate for the user's #1 criterion: "audio nói đến đâu có minh họa
     đến đó" - measured as a PERCENTAGE OF RUNNING TIME, not a keyword score.
 
@@ -1003,7 +1010,7 @@ def gate_content_coverage(scenes, words, rep, thresholds, fps):
 
     coverage = covered_total / duration_total if duration_total else 0
     if coverage < limit:
-        rep.fail(f"only {coverage:.0%} of runtime has a visual tied to what is being said "
+        (rep.warn if advisory else rep.fail)(f"only {coverage:.0%} of runtime has a visual tied to what is being said "
                  f"(floor {limit:.0%}) - for {(1-coverage)*(duration_total):.0f}s of this video "
                  f"the viewer hears a claim with nothing on screen to show it")
     else:
@@ -1016,26 +1023,60 @@ def gate_anchors(scenes, words, rep):
     different scene - a real defect found on VayTinChap (support appeared ~6s
     before the words it illustrated)."""
     rep.section("Anchor-phrase gate")
-    if not words:
-        rep.info("skipped - no --words file given")
-        return
     bad = False
     for scene in scenes:
         start, end = scene.get("startSec", 0), scene.get("endSec", 0)
-        spoken = normalize(" ".join(w[0] for w in words if start <= w[1] < end))
-        targets = [(a.get("name", a.get("role", "?")), a.get("anchorPhrase"))
-                   for a in scene.get("assets", [])]
+        spoken = normalize(" ".join(w[0] for w in (words or []) if start <= w[1] < end))
+        targets = []
+        for asset in scene.get("assets", []):
+            name = asset.get("name", asset.get("role", "?"))
+            targets.append((name, asset.get("anchorPhrase")))
+            mappings = asset.get("evidenceRegions")
+            if mappings is None:
+                continue
+            if asset.get("role") != "document":
+                rep.fail(f"{scene.get('id')}/{name}: evidenceRegions is only valid on a "
+                         "document asset")
+                bad = True
+                continue
+            if not isinstance(mappings, list):
+                rep.fail(f"{scene.get('id')}/{name}: evidenceRegions must be a list")
+                bad = True
+                continue
+            for index, mapping in enumerate(mappings):
+                label = f"{name}/evidenceRegions[{index}]"
+                if not isinstance(mapping, dict) or not mapping.get("anchorPhrase"):
+                    rep.fail(f"{scene.get('id')}/{label}: anchorPhrase is required")
+                    bad = True
+                    continue
+                region = mapping.get("region")
+                valid_region = (isinstance(region, list) and len(region) == 4
+                                and all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                                        for v in region))
+                if not valid_region:
+                    rep.fail(f"{scene.get('id')}/{label}: region must be [x,y,w,h] numbers")
+                    bad = True
+                else:
+                    x, y, width, height = region
+                    if (x < 0 or y < 0 or width <= 0 or height <= 0
+                            or x + width > 1 or y + height > 1):
+                        rep.fail(f"{scene.get('id')}/{label}: region must stay inside normalized "
+                                 "source coordinates 0..1")
+                        bad = True
+                targets.append((label, mapping.get("anchorPhrase")))
         punch = scene.get("punch") or {}
         if punch.get("anchorPhrase"):
             targets.append(("punch", punch["anchorPhrase"]))
         for name, phrase in targets:
             if not phrase:
                 continue
-            if normalize(phrase).strip() not in spoken:
+            if words and normalize(phrase).strip() not in spoken:
                 rep.fail(f"{scene.get('id')}/{name}: anchorPhrase {phrase!r} is not spoken "
                          f"between {start:.2f}s and {end:.2f}s")
                 bad = True
-    if not bad:
+    if not words:
+        rep.info("evidence-region structure checked; phrase timing skipped - no words file given")
+    elif not bad:
         rep.ok("every anchor phrase is really spoken inside its own scene window")
 
 
@@ -1076,6 +1117,9 @@ def main():
                          "references/lessons.md. hook_gate never passes this flag, so the "
                          "ACTIVE plan can never use it.")
     ap.add_argument("--json", action="store_true", help="emit machine-readable results")
+    ap.add_argument("--hook", action="store_true",
+                    help="production-hook policy: contract/integrity failures block; pacing, "
+                         "coverage and other editorial thresholds remain visible as warnings")
     for key, value in DEFAULTS.items():
         ap.add_argument(f"--{key.replace('_', '-')}", type=float, default=value)
     args = ap.parse_args()
@@ -1100,13 +1144,13 @@ def main():
         gate_timeline_continuity(scenes, rep)
         gate_no_empty_scenes(scenes, rep, thresholds)
         gate_diversity(scenes, rep, thresholds)
-        gate_dead_air(scenes, rep, thresholds, fps)
-        gate_pacing(scenes, words, rep, thresholds, fps)
-        gate_breathing(scenes, rep, thresholds)
+        gate_dead_air(scenes, rep, thresholds, fps, advisory=args.hook)
+        gate_pacing(scenes, words, rep, thresholds, fps, advisory=args.hook)
+        gate_breathing(scenes, rep, thresholds, advisory=args.hook)
         if not args.skip_lifetime:
-            gate_element_lifetime(scenes, rep, thresholds, fps)
+            gate_element_lifetime(scenes, rep, thresholds, fps, advisory=args.hook)
         gate_anchors(scenes, words, rep)
-        gate_content_coverage(scenes, words, rep, thresholds, fps)
+        gate_content_coverage(scenes, words, rep, thresholds, fps, advisory=args.hook)
 
     if args.json:
         print(json.dumps({"passed": not rep.failures,

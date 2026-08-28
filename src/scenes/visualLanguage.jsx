@@ -67,8 +67,9 @@ export const SUBLABEL_SIZE = 36;
  * clothes rack in V10.
  *
  * `focus` pans the crop within the frame so a tall subject isn't beheaded by
- * `object-fit: cover`; `drift` is a slow Ken Burns push, kept subtle because
- * the camera is usually already moving via CameraGroup.
+ * `object-fit: cover`. The camera is stable by default. Opt into `drift` only
+ * for a semantic move such as context -> detail or a reveal, not to keep a
+ * still frame generically alive.
  */
 export const BackgroundPhoto = ({
   src,
@@ -76,7 +77,7 @@ export const BackgroundPhoto = ({
   tint = 0.42,
   grayscale = 0.85,
   focus = "50% 50%",
-  drift = 0.06,
+  drift = 0,
   from = 0,
   fadeIn = 18,
   // "ink" washes the photo DARK (rgba(18,16,14,tint)) so pale headlines read
@@ -139,6 +140,93 @@ export const BackgroundPhoto = ({
         }}
       />
     </AbsoluteFill>
+  );
+};
+
+/* ========================================================================
+ * DocumentEvidence - direct attention within authentic source material
+ * ======================================================================== */
+
+const regionAtFrame = (regions, frame) => {
+  const ordered = [...regions].sort((a, b) => (a.from ?? 0) - (b.from ?? 0));
+  return ordered.reduce((active, region) => frame >= (region.from ?? 0) ? region : active,
+    ordered[0] ?? { x: 0, y: 0, width: 1, height: 1 });
+};
+
+/**
+ * Displays a rasterized source page without recreating its text, and moves
+ * focus as narration moves through evidence.
+ *
+ * Regions use normalized source coordinates (0..1). For cited evidence, put
+ * `{anchorPhrase, region:[x,y,w,h]}` in the plan asset's optional
+ * `evidenceRegions`, then resolve it with `beat_sync.py evidence-regions`; pass
+ * that asset's returned `regions` here. Timing is derived from aligned words,
+ * not stored in the mapping:
+ *   [{from: 0, x: .08, y: .18, width: .84, height: .12, zoom: 1.8}, ...]
+ * The active region is highlighted; surrounding source is dimmed. `from`
+ * values are local frames. Region changes ease over `transitionFrames`. Pass
+ * the raster's real width/height ratio as `sourceAspect` to preserve geometry.
+ */
+export const DocumentEvidence = ({
+  src,
+  regions = [],
+  x = 60,
+  y = 220,
+  width = 960,
+  height = 1120,
+  transitionFrames = 18,
+  dim = 0.58,
+  highlight = ORANGE,
+  sourceAspect = 1 / Math.sqrt(2),
+}) => {
+  const frame = useCurrentFrame();
+  const active = regionAtFrame(regions, frame);
+  const previous = regionAtFrame(regions, Math.max(0, (active.from ?? 0) - 1));
+  const progress = interpolate(frame, [active.from ?? 0, (active.from ?? 0) + transitionFrames], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const mix = (key) => previous[key] + (active[key] - previous[key]) * progress;
+  const rx = mix("x");
+  const ry = mix("y");
+  const rw = mix("width");
+  const rh = mix("height");
+  const regionZoom = (previous.zoom ?? 1) + ((active.zoom ?? 1) - (previous.zoom ?? 1)) * progress;
+  const pageWidth = Math.min(width, height * sourceAspect);
+  const pageHeight = pageWidth / sourceAspect;
+  const scale = Math.min(width / Math.max(rw * pageWidth, 0.001),
+    height / Math.max(rh * pageHeight, 0.001)) * regionZoom;
+  const cx = rx + rw / 2;
+  const cy = ry + rh / 2;
+  const shownWidth = pageWidth * scale;
+  const shownHeight = pageHeight * scale;
+  const pageLeft = width / 2 - cx * shownWidth;
+  const pageTop = height / 2 - cy * shownHeight;
+  const focusLeft = pageLeft + rx * shownWidth;
+  const focusTop = pageTop + ry * shownHeight;
+  const focusWidth = rw * shownWidth;
+  const focusHeight = rh * shownHeight;
+  const shade = `rgba(15,15,15,${dim})`;
+
+  return (
+    <div name="DocumentEvidence" style={{ position: "absolute", left: x, top: y, width, height,
+      overflow: "hidden", background: "#fff", border: `2px solid ${INK}`,
+      boxShadow: "0 18px 50px rgba(0,0,0,0.28)" }}>
+      <Img src={staticFile(src)} style={{ position: "absolute", left: pageLeft, top: pageTop,
+        width: shownWidth, height: shownHeight }} />
+      <div style={{ position: "absolute", left: 0, top: 0, width,
+        height: Math.max(0, focusTop), background: shade }} />
+      <div style={{ position: "absolute", left: 0, top: focusTop,
+        width: Math.max(0, focusLeft), height: focusHeight, background: shade }} />
+      <div style={{ position: "absolute", left: focusLeft + focusWidth, top: focusTop,
+        right: 0, height: focusHeight, background: shade }} />
+      <div style={{ position: "absolute", left: 0, top: focusTop + focusHeight,
+        width, bottom: 0, background: shade }} />
+      <div style={{ position: "absolute", left: focusLeft, top: focusTop,
+        width: focusWidth, height: focusHeight, border: `5px solid ${highlight}`,
+        boxSizing: "border-box", boxShadow: `0 0 0 2px rgba(255,255,255,0.75)` }} />
+    </div>
   );
 };
 

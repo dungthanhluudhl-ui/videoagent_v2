@@ -50,12 +50,15 @@ số từ lệch quá 2%) - chứ không bắt lỗi mấy chỗ sửa tay hợp
 
 import argparse
 import difflib
+import importlib.metadata
 import json
 import pathlib
 import re
 import shutil
 import subprocess
 import sys
+
+import stage_state as state
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -65,6 +68,24 @@ except AttributeError:
 
 NEEDED = ("whisper", "rembg", "scipy", "PIL", "numpy", "requests")
 ROUND = 3
+AUDIO_VERSION = "audio-copy-v1"
+TRANSCRIBE_VERSION = "whisper-word-timestamps-v1"
+ALIGN_VERSION = "script-authoritative-segment-alignment-v1"
+
+
+def _root():
+    return state.project_root(pathlib.Path.cwd())
+
+
+def _receipt(n, name):
+    return state.runtime_dir(_root(), f"V{n}") / "receipts" / f"{name}.json"
+
+
+def _package_version(name):
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return "UNKNOWN"
 
 
 def norm(w):
@@ -102,12 +123,24 @@ def step_audio(n, audio_src, force):
     if not src.exists():
         print(f"audio: không thấy {src}.")
         return False
-    if dest.exists() and not force and dest.stat().st_size == src.stat().st_size:
-        print(f"audio: {dest} đã khớp nguồn, bỏ qua.")
+    inputs = {"sourceAudio": state.file_input(src)}
+    tool = state.tool_identity(pathlib.Path(__file__), versions={"copy": AUDIO_VERSION})
+    current, receipt = state.receipt_current(
+        _receipt(n, "audio"), "audio-copy", inputs, tool, {}, require_outputs=True)
+    if current and not force:
+        print(f"audio: CLOSED / REUSE {dest} ({receipt['receiptId'][:12]}).")
+        state.append_telemetry(_root(), f"V{n}", {"stage": "audio-copy", "owner": "script",
+                               "cache": "hit", "subprocessCount": 0,
+                               "affectedItems": 1, "receiptId": receipt["receiptId"]})
         return True
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dest)
-    print(f"audio: đã chép {src.name} -> {dest}.")
+    receipt = state.make_receipt(_receipt(n, "audio"), "audio-copy", inputs, tool, {}, [dest])
+    state.append_telemetry(_root(), f"V{n}", {"stage": "audio-copy", "owner": "script",
+                           "cache": "miss", "subprocessCount": 0, "affectedItems": 1,
+                           "output": str(dest), "outputSize": dest.stat().st_size,
+                           "receiptId": receipt["receiptId"]})
+    print(f"audio: CLOSED / chép {src.name} -> {dest} ({receipt['receiptId'][:12]}).")
     return True
 
 
@@ -115,24 +148,39 @@ def step_audio(n, audio_src, force):
 
 def step_transcribe(n, language, model_name, force):
     out = pathlib.Path(f"input/transcript{n}.json")
-    if out.exists() and not force:
-        print(f"transcribe: đã có {out}, bỏ qua (dùng --force để chạy lại).")
-        return True
     audio = pathlib.Path(f"public/audio{n}.mp3")
     if not audio.exists():
         print(f"transcribe: chưa có {audio} - chạy bước audio trước.")
         return False
+    inputs = {"audio": state.file_input(audio)}
+    params = {"model": model_name, "language": language, "wordTimestamps": True}
+    tool = state.tool_identity(pathlib.Path(__file__), versions={
+        "implementation": TRANSCRIBE_VERSION,
+        "openai-whisper": _package_version("openai-whisper")})
+    current, receipt = state.receipt_current(
+        _receipt(n, "transcription"), "transcription", inputs, tool, params)
+    if current and not force:
+        print(f"transcribe: CLOSED / REUSE {out} ({receipt['receiptId'][:12]}).")
+        state.append_telemetry(_root(), f"V{n}", {"stage": "transcription", "owner": "script",
+                               "cache": "hit", "subprocessCount": 0,
+                               "affectedItems": 1, "receiptId": receipt["receiptId"]})
+        return True
     try:
         import whisper
     except ImportError:
         print("transcribe: chưa cài whisper.")
         return False
-    print(f"transcribe: đang chạy whisper '{model_name}' trên {audio} "
-          f"(mất vài phút, đừng ngắt)...")
-    model = whisper.load_model(model_name)
-    result = model.transcribe(str(audio), word_timestamps=True, language=language)
+    print(f"transcribe: cache MISS; chạy whisper '{model_name}' trên {audio}...")
+    with state.timed_stage(_root(), f"V{n}", "transcription", cache="miss",
+                           subprocessCount=0, affectedItems=1) as telem:
+        model = whisper.load_model(model_name)
+        result = model.transcribe(str(audio), word_timestamps=True, language=language)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    receipt = state.make_receipt(_receipt(n, "transcription"), "transcription",
+                                 inputs, tool, params, [out])
+    telem.update({"output": str(out), "outputSize": out.stat().st_size,
+                  "receiptId": receipt["receiptId"]})
     nseg = len(result.get("segments", []))
     print(f"transcribe: đã ghi {out} ({nseg} segment, ngôn ngữ '{result.get('language')}').")
     return True
@@ -196,7 +244,7 @@ def align(transcript, script_text):
     return out
 
 
-def step_align(n, script_path, check, force):
+def step_align(n, script_path, check, force, accept_existing=False):
     tpath = pathlib.Path(f"input/transcript{n}.json")
     out = pathlib.Path(f"input/words{n}_aligned.json")
     if not tpath.exists():
@@ -209,6 +257,19 @@ def step_align(n, script_path, check, force):
     if not spath.exists():
         print(f"align: không thấy {spath}.")
         return False
+
+    inputs = {"script": state.file_input(spath), "transcript": state.json_input(tpath)}
+    tool = state.tool_identity(pathlib.Path(__file__), versions={"implementation": ALIGN_VERSION})
+    params = {"roundDigits": ROUND, "manualAcceptancePreserved": True}
+    current, receipt = state.receipt_current(
+        _receipt(n, "alignment"), "alignment", inputs, tool, params)
+    if current and not force:
+        marker = "manual accepted" if (receipt.get("accepted") or {}).get("manual") else "accepted"
+        print(f"align: CLOSED / REUSE {out} ({marker}; {receipt['receiptId'][:12]}).")
+        state.append_telemetry(_root(), f"V{n}", {"stage": "alignment", "owner": "script",
+                               "cache": "hit", "subprocessCount": 0,
+                               "affectedItems": 1, "receiptId": receipt["receiptId"]})
+        return True
 
     transcript = json.loads(tpath.read_text(encoding="utf-8"))
     words = align(transcript, spath.read_text(encoding="utf-8"))
@@ -254,17 +315,34 @@ def step_align(n, script_path, check, force):
             return True
         if same:
             print(f"align: {out} đã đúng, không đổi.")
+            state.make_receipt(_receipt(n, "alignment"), "alignment", inputs, tool,
+                               params, [out], accepted={"manual": False})
             return True
         if not force:
             print(f"align: {out} đã tồn tại và khác bản dựng lại - GIỮ NGUYÊN, vì file "
                   f"trên đĩa có thể đã được sửa tay đúng chỗ (--force nếu thật sự "
                   f"muốn ghi đè).")
+            if not accept_existing:
+                print("align: inputs changed or acceptance is unrecorded; alignment remains OPEN. "
+                      "Inspect the genuine mismatch, then pass --accept-existing-alignment to "
+                      "bind this preserved manual file to the current script+transcript.")
+                return False
+            receipt = state.make_receipt(
+                _receipt(n, "alignment"), "alignment", inputs, tool, params, [out],
+                accepted={"manual": True, "reason": "existing hand-edited alignment preserved"})
+            print(f"align: manual acceptance bound to current inputs ({receipt['receiptId'][:12]}).")
             return True
     if check:
         print(f"align: {out} chưa tồn tại - sẽ được dựng ({len(words)} từ).")
         return True
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"align: đã ghi {out} ({len(words)} từ).")
+    receipt = state.make_receipt(_receipt(n, "alignment"), "alignment", inputs, tool,
+                                 params, [out], accepted={"manual": False})
+    state.append_telemetry(_root(), f"V{n}", {"stage": "alignment", "owner": "script",
+                           "cache": "miss", "subprocessCount": 0, "affectedItems": 1,
+                           "output": str(out), "outputSize": out.stat().st_size,
+                           "receiptId": receipt["receiptId"]})
+    print(f"align: đã ghi {out} ({len(words)} từ; {receipt['receiptId'][:12]}).")
     return True
 
 
@@ -284,6 +362,9 @@ def main():
     ap.add_argument("--only", choices=STEPS)
     ap.add_argument("--check", action="store_true", help="chỉ so, không ghi")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--accept-existing-alignment", action="store_true",
+                    help="after deliberate inspection, bind the preserved hand-edited alignment "
+                         "to current script+transcript without overwriting it")
     args = ap.parse_args()
 
     todo = [args.only] if args.only else list(STEPS)
@@ -296,7 +377,8 @@ def main():
         elif step == "transcribe":
             ok = step_transcribe(args.n, args.language, args.model, args.force) and ok
         elif step == "align":
-            ok = step_align(args.n, args.script, args.check, args.force) and ok
+            ok = step_align(args.n, args.script, args.check, args.force,
+                            args.accept_existing_alignment) and ok
         if not ok:
             break
 

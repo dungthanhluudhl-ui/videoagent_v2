@@ -46,6 +46,8 @@ import json
 import pathlib
 import sys
 
+import stage_state as state
+
 _HERE = pathlib.Path(__file__).resolve().parent
 
 
@@ -58,6 +60,7 @@ def _load_vision_check():
 
 
 VC = _load_vision_check()
+VISION_VERSION = "asset-semantic-v1"
 
 CHECKS = [
     ("wrong_subject",   "buc anh KHONG cho thay dung thu ma ten asset noi"),
@@ -240,18 +243,47 @@ def jobs_from_plan(plan_path):
             if not src:
                 continue                      # map/ve tay - khong co file
             p = root / "public" / src
-            meta = dict(sid=sc["id"], name=a.get("name"), role=a.get("role"),
+            meta = dict(sid=sc["id"], name=a.get("name"), src=a.get("src"), role=a.get("role"),
                         describes=a.get("describes") or [],
                         transformation=sc.get("visualTransformation"),
-                        template=sc.get("template"))
+                        template=sc.get("template"), identityBrief=state.asset_contract(sc, a))
             out.append((str(p), meta, None if p.is_file() else "khong ton tai"))
+    # Same pixels may serve two genuinely different briefs. Deduplicate only
+    # semantic equivalents; path-only dedupe can silently reuse the wrong QA.
     seen, uniq = set(), []
     for j in out:
-        if j[0] in seen:
+        identity = (j[0], state.digest(j[1]))
+        if identity in seen:
             continue
-        seen.add(j[0])
+        seen.add(identity)
         uniq.append(j)
     return uniq
+
+
+def semantic_key(path, meta, model, board=False):
+    prompt = build_board_prompt(meta.get("name")) if board else build_prompt(
+        meta.get("name"), meta.get("role"), meta.get("describes") or [],
+        meta.get("transformation"), meta.get("template"))
+    return state.digest({"file": state.file_input(path), "brief": meta,
+                         "prompt": prompt, "promptVersion": VISION_VERSION,
+                         "model": model, "implementation": [
+                             state.file_input(pathlib.Path(__file__)),
+                             state.file_input(_HERE / "vision_check.py")]})
+
+
+def cached_ask(root, video, path, meta, model, board=False):
+    key = semantic_key(path, meta, model, board)
+    hit = state.cache_get(root, video, "asset-vision", key)
+    if hit is not None:
+        return hit, True, key
+    prompt = build_board_prompt(meta.get("name")) if board else build_prompt(
+        meta.get("name"), meta.get("role"), meta.get("describes") or [],
+        meta.get("transformation"), meta.get("template"))
+    result = ask(path, prompt, model)
+    if "_error" not in result:
+        state.cache_put(root, video, "asset-vision", key, result,
+                        {"path": path, "brief": meta, "model": model})
+    return result, False, key
 
 
 def run_board(args):
@@ -263,24 +295,28 @@ def run_board(args):
         print("khong co o board nao de kiem", file=sys.stderr)
         return 2
 
+    root = state.project_root(pathlib.Path.cwd())
+    video = args.video or "VUNKNOWN"
+    jobs = [(p, {"name": pathlib.Path(p).stem}) for p in paths]
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        res = list(ex.map(
-            lambda p: ask(p, build_board_prompt(pathlib.Path(p).stem), args.model),
-            paths))
+        packed = list(ex.map(lambda x: cached_ask(root, video, x[0], x[1],
+                                                  args.model, board=True), jobs))
+    res = [x[0] for x in packed]
+    cache_hits = sum(1 for x in packed if x[1])
 
     keys = [k for k, _ in BOARD_CHECKS]
     n_flag, toks = 0, 0
     out = {}
-    for p, r in zip(paths, res):
-        toks += r.get("_tokens", 0)
+    for p, r, (_cached_result, hit, _key) in zip(paths, res, packed):
+        toks += 0 if hit else r.get("_tokens", 0)
         out[p] = r
         if "_error" in r:
             print("LOI  %-28s %s" % (pathlib.Path(p).name, r["_error"][:100]))
             continue
-        hits = [k for k in keys if r.get(k) is True]
-        if hits:
+        findings = [k for k in keys if r.get(k) is True]
+        if findings:
             n_flag += 1
-            print("CO   %-28s %s" % (pathlib.Path(p).name, ",".join(hits)))
+            print("CO   %-28s %s" % (pathlib.Path(p).name, ",".join(findings)))
             if r.get("note"):
                 print("     " + r["note"])
         elif args.all:
@@ -291,6 +327,10 @@ def run_board(args):
             json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print("\n%d/%d o board bi gan co   (~%s token model re, KHONG vao context agent)"
           % (n_flag, len(paths), format(toks, ",")))
+    state.append_telemetry(root, video, {"stage": "asset-vision-board", "owner": "cheap vision",
+                           "cache": f"{cache_hits} hit/{len(paths)-cache_hits} miss",
+                           "affectedItems": len(paths), "visionCalls": len(paths) - cache_hits,
+                           "visionTokens": toks, "subprocessCount": 0})
     return 1 if n_flag else 0
 
 
@@ -304,6 +344,10 @@ def main():
     ap.add_argument("--json", dest="out")
     ap.add_argument("--all", action="store_true", help="in ca asset sach")
     ap.add_argument("--workers", type=int, default=6)
+    ap.add_argument("--video", default=None,
+                    help="video id for per-item cache/telemetry when --files is used")
+    ap.add_argument("--new-only", action="store_true",
+                    help="compact hook mode: do not re-emit unchanged cached advisories")
     ap.add_argument("--board", action="store_true",
                     help="cac file dua vao la O CAT TU BANG SINH ANH, chua tach nen - "
                          "dung bo kiem BOARD_CHECKS thay vi bo kiem asset")
@@ -329,21 +373,25 @@ def main():
     missing = [j for j in jobs if j[2]]
     jobs = [j for j in jobs if not j[2]]
 
+    root = find_root(args.plan) if args.plan else state.project_root(pathlib.Path.cwd())
+    plan_data = state.read_json(args.plan, {}) if args.plan else {}
+    video = args.video or plan_data.get("video") or "VUNKNOWN"
+
     def work(j):
-        m = j[1]
-        return ask(j[0], build_prompt(m["name"], m["role"], m["describes"],
-                                      m["transformation"], m["template"]), args.model)
+        return cached_ask(root, video, j[0], j[1], args.model)
 
     results = {}
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        for j, r in zip(jobs, ex.map(work, jobs)):
-            results[j[0]] = r
+        packed = list(ex.map(work, jobs))
+        for j, (r, hit, key) in zip(jobs, packed):
+            results[key] = r
 
     keys = [k for k, _ in CHECKS]
     flagged, clean, errs, toks = [], [], [], 0
-    for path, m, _ in jobs:
-        r = results[path]
-        toks += r.get("_tokens", 0)
+    for (path, m, _), (_cached_result, hit, _key) in zip(jobs, packed):
+        key = semantic_key(path, m, args.model)
+        r = results[key]
+        toks += 0 if hit else r.get("_tokens", 0)
         if "_error" in r:
             errs.append((m["sid"], m["name"], r["_error"]))
             continue
@@ -354,7 +402,14 @@ def main():
         (flagged if hits else clean).append(
             (m["sid"], m["name"], path, hits, r.get("note", "")))
 
-    for sid, name, path, hits, note in flagged:
+    hit_by_key = {key: hit for _result, hit, key in packed}
+    visible_flagged = []
+    for item in flagged:
+        sid, name, path, _hits, _note = item
+        meta = next(m for p, m, _ in jobs if p == path and m.get("sid") == sid and m.get("name") == name)
+        if not args.new_only or not hit_by_key.get(semantic_key(path, meta, args.model), False):
+            visible_flagged.append(item)
+    for sid, name, path, hits, note in visible_flagged:
         print("CO   %-4s %-22s %s" % (sid, name, ",".join(hits)))
         print("          %s  [%s]" % (note, pathlib.Path(path).name))
     if args.all:
@@ -370,11 +425,47 @@ def main():
         pathlib.Path(args.out).write_text(
             json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print("\n%d/%d asset bi gan co%s%s   (~%s token model re, KHONG vao context agent)"
-          % (len(flagged), len(jobs), (", %d loi" % len(errs)) if errs else "",
+    print("\n%d new/material (%d total cached/current)/%d asset bi gan co%s%s   "
+          "(~%s token model re, KHONG vao context agent)"
+          % (len(visible_flagged), len(flagged), len(jobs),
+             (", %d loi" % len(errs)) if errs else "",
              (", %d thieu file" % len(missing)) if missing else "",
              format(toks, ",")))
-    return 1 if (flagged or missing) else 0
+    hits = sum(1 for _r, hit, _key in packed if hit)
+    state.append_telemetry(root, video, {"stage": "asset-vision", "owner": "cheap vision",
+                           "cache": f"{hits} hit/{len(jobs)-hits} miss",
+                           "affectedItems": len(jobs), "visionCalls": len(jobs) - hits,
+                           "visionTokens": toks, "subprocessCount": 0,
+                           "output": args.out})
+    if args.plan:
+        manifest_path = state.manifest_path_for_plan(args.plan, plan_data)
+        hard_keys = {"wrong_subject", "subject_cropped", "watermark"}
+        for path, m, _ in jobs:
+            result = results[semantic_key(path, m, args.model)]
+            found = [k for k, _ in CHECKS if result.get(k) is True]
+            # Cheap vision is a filter, never the sole blocking authority.
+            qa = "ACCEPTED_WITH_ADVISORY" if found else "ACCEPTED"
+            identity_brief = m.get("identityBrief") or m
+            usage_id = f"{m.get('sid', '?')}:{m.get('name') or m.get('src') or pathlib.Path(path).name}"
+            state.update_manifest(manifest_path, video, usage_id,
+                                  {"sourceFile": state.file_input(path),
+                                   "briefId": state.digest(identity_brief), "cheapSemanticQA": qa,
+                                   "advisory": result.get("note", ""),
+                                   "editorialEscalation": ("MAIN_EDITORIAL_JUDGMENT"
+                                                           if ((m.get("role") == "document" or
+                                                                hard_keys.intersection(found)) and found)
+                                                           else None),
+                                   "visionCacheKey": semantic_key(path, m, args.model)},
+                                  state.digest({"file": state.file_input(path),
+                                                "brief": identity_brief}))
+            manifest_item = state.read_json(manifest_path, {}).get("assets", {}).get(usage_id, {})
+            state.update_generation_usage(root, manifest_item.get("generationId"), usage_id, {
+                "cheapSemanticQA": qa, "advisory": result.get("note", ""),
+                "editorialEscalation": ("MAIN_EDITORIAL_JUDGMENT"
+                                        if ((m.get("role") == "document" or
+                                             hard_keys.intersection(found)) and found)
+                                        else None)})
+    return 1 if ((visible_flagged if args.new_only else flagged) or missing) else 0
 
 
 if __name__ == "__main__":

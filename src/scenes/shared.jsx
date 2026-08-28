@@ -133,16 +133,18 @@ export const CameraGroup = ({ zoom, pan, shake, durationInFrames, children }) =>
   );
 };
 
-// Secondary "alive" motion while an element holds on screen — separate
-// from the entrance. `sway` is the default gentle rotation; `tremble` is a
-// faster, smaller, less-smooth jitter (anxious energy); `bob` is a slow
-// vertical drift (for flag/hanging-style props) instead of rotation.
+// Optional continuous motion after an entrance. Legacy Hero/Support keep their
+// historical `sway` default so shipped scenes re-render unchanged. New scenes
+// should use EditorialHero/EditorialSupport below: they settle by default and
+// opt into sway/tremble/bob only for a real editorial event.
 const idleMotion = (frame, phase, mode) => {
   switch (mode) {
     case "tremble":
       return { rot: Math.sin((frame + phase) / 4) * 1.1 + Math.sin((frame + phase) / 2.3) * 0.6, ty: 0 };
     case "bob":
       return { rot: 0, ty: Math.sin((frame + phase) / 18) * 6 };
+    case "none":
+      return { rot: 0, ty: 0 };
     default:
       return { rot: Math.sin((frame + phase) / 22) * 3, ty: 0 };
   }
@@ -245,6 +247,13 @@ export const Support = ({ name, src, width, x, y, phase = 0, idle = "sway", visi
     </Interactive.Div>
   );
 };
+
+// Editorial defaults for Videoagent 2. These wrappers deliberately add no new
+// motion system: they select the settled state of the existing components.
+// Pass idle="sway" | "tremble" | "bob" only when continuous motion carries
+// meaning. Hero/Support remain exported unchanged for legacy compositions.
+export const EditorialHero = (props) => <Hero idle="none" {...props} />;
+export const EditorialSupport = (props) => <Support idle="none" {...props} />;
 
 // A horizontal string that sags loosely at first and pulls taut (with a
 // vibrating "twang" once `vibrateFrom` is reached) as more weight attaches

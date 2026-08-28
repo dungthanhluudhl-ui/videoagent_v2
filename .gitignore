@@ -7,6 +7,7 @@ dist
 # Output files
 out
 input/raw_cache
+input/.videoagent/
 
 # Scene preview stills / contact sheets (scratch, regenerable)
 .preview

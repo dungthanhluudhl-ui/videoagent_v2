@@ -29,8 +29,9 @@ Two safety rules make this safe to leave switched on permanently:
 1. SCOPED. With one deliberate exception, it does nothing unless an ACTIVE
    scene plan exists (`input/scene_plan*.json` with top-level
    "status": "active"). Unrelated work in this repo - and any other project -
-   is untouched. Set the plan's status to "shipped" when a video is done and
-   the gates go quiet.
+   is untouched. Set the plan's status to "shipped" when pipeline/build and
+   review artifacts are complete; it makes gates quiet but is not user/product
+   quality approval.
 
    The exception is `guard_planless_scene`: a scene file for a video newer
    than every planned video is blocked outright. Without it the whole system
@@ -60,6 +61,8 @@ import pathlib
 import re
 import subprocess
 import sys
+
+import stage_state as state
 
 SCRIPTS = pathlib.Path(__file__).resolve().parent
 SCENE_FILE_HINT = "src/scenes/"
@@ -148,7 +151,7 @@ def guard_image_read(payload, root):
             f"Hãy để model rẻ nhìn trước, rồi CHỈ mở những mục nó gắn cờ:\n"
             f"    py -3 {SCRIPTS.name}/vision_check.py --plan {path}\n"
             f"    py -3 {SCRIPTS.name}/asset_vision.py {path}\n"
-            f"    py -3 {SCRIPTS.name}/sheet_vision.py input/review_frames/contact_sheet.jpg "
+            f"    py -3 {SCRIPTS.name}/sheet_vision.py <review sceneSummarySheet> "
             f"--scenes {n_scenes}\n\n"
             f"Nếu người dùng đã trực tiếp yêu cầu bạn xem ảnh này, hãy NÓI VỚI HỌ rằng "
             f"ngân sách ảnh đã cạn và để họ quyết định - đừng tự nâng ngân sách, và đừng "
@@ -321,7 +324,7 @@ def guard_premature_shipped(payload, root):
                         "Video sắp ship mà \"shotlistApproved\" chưa phải true - shot list "
                         "chưa từng được user duyệt (hoặc chốt đã bị gỡ khỏi plan).")
     advisories = []
-    for script, args, blocking in (("plan_gate.py", [str(path)], True),
+    for script, args, blocking in (("plan_gate.py", [str(path), "--hook"], True),
                                    ("build_gate.py", [str(path)], True),
                                    ("review_gate.py", [str(path), "--hook"], True),
                                    ("text_gate.py", [str(path), "--hook"], True),
@@ -356,6 +359,112 @@ def run(script, *args):
         [sys.executable, str(SCRIPTS / script), *args],
         capture_output=True, text=True, encoding="utf-8", errors="replace")
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+
+def _plan_files(root, plan_data):
+    video = plan_data.get("video", "V")
+    return [root / "src" / "scenes" / f"{video}Scene{s.get('id','S')[1:]}.jsx"
+            for s in plan_data.get("scenes") or []]
+
+
+def _asset_files(root, plan_data, roles=None):
+    paths = []
+    for scene in plan_data.get("scenes") or []:
+        for asset in scene.get("assets") or []:
+            if asset.get("src") and (roles is None or asset.get("role") in roles):
+                paths.append(root / "public" / asset["src"])
+    return paths
+
+
+def gate_dependencies(root, plan_path, plan_data, script, args):
+    """True dependency set. Ambiguous families are deliberately not cached."""
+    words = root / str(plan_data.get("wordsFile") or "")
+    scenes = _plan_files(root, plan_data)
+    review = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    common = [plan_path, SCRIPTS / script, SCRIPTS / "hook_gate.py",
+              SCRIPTS / "stage_state.py"]
+    if script == "plan_gate.py":
+        return common + [words]
+    if script == "build_gate.py":
+        selected = next((args[i + 1] for i, x in enumerate(args[:-1]) if x == "--scene"), None)
+        if selected:
+            scenes = [root / "src" / "scenes" /
+                      f"{plan_data.get('video')}Scene{selected.lstrip('S')}.jsx"]
+        return common + scenes + [root / "src" / "scenes" / "SceneTemplates.jsx"]
+    if script in ("text_gate.py", "icon_gate.py", "block_gate.py"):
+        extra = [root / "src" / "scenes" / "shared.jsx",
+                 root / "src" / "scenes" / "visualLanguage.jsx"]
+        if script == "icon_gate.py":
+            extra += [root / "src" / "scenes" / "iconVocabulary.jsx"]
+        if script == "block_gate.py":
+            extra += [root / "src" / "blocks" / "registry.json"]
+        return common + scenes + extra
+    if script == "cutout_gate.py":
+        return common + _asset_files(root, plan_data, {"hero", "support"})
+    if script == "asset_gate.py":
+        return common + _asset_files(root, plan_data)
+    if script == "assemble.py":
+        video = plan_data.get("video", "V")
+        return common + [words, root / "src" / f"{video}Master.jsx", root / "src" / "Root.jsx"] + scenes
+    if script == "baseline_gate.py":
+        return common + [SCRIPTS.parent / "references" / "baseline.json"]
+    if script in ("review_gate.py", "pixel_gate.py"):
+        paths = common + [review] + scenes
+        try:
+            data = json.loads(review.read_text(encoding="utf-8"))
+            for entry in data.get("scenes") or []:
+                for raw in entry.get("frames") or [entry.get("frame")]:
+                    if raw:
+                        paths.append(root / str(raw).replace("\\", "/"))
+        except (OSError, json.JSONDecodeError):
+            pass
+        return paths
+    return None
+
+
+def _gate_summary(output, hard):
+    prefixes = ("FAIL ", "HARD ", "THIEU ", "RENDER FAILED") if hard else ("WARN ",)
+    lines = [line for line in output.splitlines() if line.startswith(prefixes)]
+    if lines:
+        return "\n".join(lines)
+    nonempty = [line for line in output.splitlines() if line.strip()]
+    return nonempty[-1] if nonempty else "gate returned no diagnostics"
+
+
+def run_incremental(root, plan_path, plan_data, script, args):
+    deps = gate_dependencies(root, plan_path, plan_data, script, args)
+    if deps is None:
+        code, out = run(script, *args)
+        return code, out, False, None
+    dependency_inputs = []
+    for path in deps:
+        if script == "plan_gate.py" and pathlib.Path(path) == pathlib.Path(plan_path):
+            dependency_inputs.append({"plan": state.plan_contract(plan_data, plan_path)["plan"]})
+        else:
+            dependency_inputs.append(state.file_input(path))
+    inputs = {"dependencies": dependency_inputs}
+    tool = {"script": script, "version": "incremental-gate-v1"}
+    params = {"args": [str(x) for x in args]}
+    video = plan_data.get("video", "V")
+    key = state.digest({"script": script, "args": params})[:20]
+    receipt_path = state.runtime_dir(root, video) / "receipts" / "gates" / f"{script}-{key}.json"
+    current, receipt = state.receipt_current(receipt_path, f"gate:{script}", inputs, tool, params)
+    if current:
+        meta = receipt.get("metadata") or {}
+        return (int(meta.get("exitCode", 0)), str(meta.get("summary", "")), True,
+                pathlib.Path(meta.get("details")) if meta.get("details") else receipt_path)
+    code, out = run(script, *args)
+    detail = state.runtime_dir(root, video) / "gate-details" / f"{script}-{key}.txt"
+    detail.parent.mkdir(parents=True, exist_ok=True)
+    summary = _gate_summary(out, code != 0)
+    detail.write_text(out if (code != 0 or "WARN " in out) else summary + "\n", encoding="utf-8")
+    receipt = state.make_receipt(receipt_path, f"gate:{script}", inputs, tool, params,
+                                 [detail], metadata={"exitCode": code, "summary": summary,
+                                                     "details": str(detail)})
+    state.append_telemetry(root, video, {"stage": f"gate:{script}", "owner": "script",
+                           "cache": "miss", "subprocessCount": 1, "affectedItems": 1,
+                           "output": str(detail), "receiptId": receipt["receiptId"]})
+    return code, out, False, detail
 
 
 def scene_id_for(path, plan_data):
@@ -406,26 +515,11 @@ def post_edit(payload, root, plan):
               f"do not leave the build and the plan disagreeing.", file=sys.stderr)
         return 2
 
-    # The two gates that read the MARKUP rather than the plan, run here rather
-    # than only at Stop, because both catch things about a label at the one
-    # moment the label is being written. Waiting until the end of the turn
-    # meant a whole video's worth of them arrived at once - which is how V11
-    # accumulated 36 text failures and 265 drawn words before anything said so.
-    scene_failures = []
-    for script, label in (("text_gate.py", "chữ vẽ"), ("icon_gate.py", "ký hiệu vẽ")):
-        if not (SCRIPTS / script).exists():
-            continue                  # the Stop hook reports a missing gate properly
-        code, out = run(script, str(plan_path), "--scene", sid)
-        if code != 0:
-            scene_failures.append(f"### {label} ({script})\n{out.strip()}")
-    if scene_failures:
-        print(f"[vox-gate] {sid} is built, but what it DRAWS does not pass:\n\n"
-              + "\n\n".join(scene_failures), file=sys.stderr)
-        return 2
     return 0
 
 
 STAMP = SCRIPTS.parent / "data" / ".selftest_stamp"
+VISION_STAMP = SCRIPTS.parent / "data" / ".vision_stamp"
 
 
 def gate_fingerprint():
@@ -465,81 +559,96 @@ def selftest_is_current():
         return False, fp
 
 
+def review_fingerprint(root, plan_path, plan_data, review_path):
+    """Metadata fingerprint for inputs consumed by review-stage cheap vision."""
+    paths = {plan_path, review_path}
+    for scene in plan_data.get("scenes") or []:
+        for asset in scene.get("assets") or []:
+            if asset.get("src"):
+                paths.add(root / "public" / asset["src"])
+    try:
+        review = json.loads(review_path.read_text(encoding="utf-8"))
+        for key in ("temporalSheet", "sceneSummarySheet"):
+            if review.get(key):
+                paths.add(root / str(review[key]).replace("\\", "/"))
+        for entry in review.get("scenes") or []:
+            evidence = entry.get("frames") or [entry.get("frame")]
+            for frame in evidence:
+                if frame:
+                    paths.add(root / str(frame).replace("\\", "/"))
+    except (OSError, json.JSONDecodeError):
+        pass
+    h = hashlib.sha256()
+    for path in sorted(paths, key=str):
+        identity = state.json_input(path) if path.suffix.lower() == ".json" else state.file_input(path)
+        h.update(state.canonical(identity))
+    return h.hexdigest()
+
+
 def stop(root, plan):
     plan_path, plan_data = plan
     failures = []
     skip_selftest, fingerprint = selftest_is_current()
-
     advisories = []
-    for script, args, label, blocking in (
-        ("plan_gate.py", [str(plan_path)], "scene plan", True),
-        ("build_gate.py", [str(plan_path)], "built scenes vs plan", True),
-        ("review_gate.py", [str(plan_path), "--hook"], "self-review pass", True),
-        ("text_gate.py", [str(plan_path), "--hook"],
-         "chữ vẽ: readability/integrity; style findings warn", True),
-        # Icons are optional. This only catches a broken registry/import when a
-        # scene actually chooses to render one.
-        ("icon_gate.py", [str(plan_path)], "ký hiệu vẽ: registry/import khi có dùng", True),
-        # Compares this video against the FROZEN profile of one already judged
-        # good, not against an absolute floor. Every gate above accepts a video
-        # that sits just over the minimum; this is the one that notices the
-        # whole build sliding backwards while still technically passing.
-        ("baseline_gate.py", ["check", str(plan_path)], "so với mốc chuẩn", False),
-        # Chất lượng tách nền, đo bằng số thay vì bằng mắt. Trước gate này,
-        # cách duy nhất để biết một cutout có sạch không là mở từng file ra
-        # nhìn - đắt, và không đáng tin: hai tài sản V10 đã ship với lỗi nhìn
-        # thấy được sau khi một contact sheet "duyệt" chúng. Gate này tìm lại
-        # được đúng hai file đó.
-        ("cutout_gate.py",
-         ["public", "--video", str(plan_data.get("video", "V")).lstrip("Vv"),
-          "--plan", str(plan_path), "--hook"],
-         "chất lượng tách nền", True),
-        # Gate duy nhất nhìn thứ NGƯỜI XEM nhìn. Mọi gate chữ phía trên dựng
-        # lại hình học từ mã nguồn; cái đó bắt được nhiều, nhưng lỗi nhãn bị
-        # panel cắt cụt ở S6 đã lọt qua tất cả và chỉ lộ ra khi render still.
-        # cutout_gate hỏi "viền có sạch không". Gate này hỏi câu khác hẳn, mà
-        # trước nay chưa ai hỏi: ảnh này có VỪA cái hộp plan đặt nó vào không.
-        # Hero/Support chỉ nhận `width`, chiều cao do tỉ lệ file quyết định, mà
-        # crop_to_content cắt sát chủ thể nên tỉ lệ đó gần như ngẫu nhiên - nên
-        # một ảnh nhỏ hơn slot bị phóng lên và đọc ra mờ mà không gate nào thấy.
-        # Người xem báo đúng lỗi này ở V10/S25 (622px nhét vào slot 760px).
-        ("asset_gate.py", [str(plan_path), "--hook"],
-         "asset integrity; resolution/slot quality warns", True),
-        # Block use is optional. Validate only declarations/contracts; rendered
-        # repetition is advisory through sheet_vision/review.
-        ("block_gate.py", [str(plan_path)],
-         "kho block: integrity khi có dùng, bespoke tùy chọn", True),
-        ("pixel_gate.py", [str(plan_path)], "chữ trên khung hình đã render", True),
-        # Phần CƠ KHÍ sinh từ plan: captions, master, đăng ký Root. Tự biết
-        # "chưa tới lúc" khi cảnh còn thiếu, nhưng một khi mọi cảnh đã dựng thì
-        # master viết tay lệch plan - hoặc quên sinh - là chặn. Phép đệm rail
-        # sai đã từng kéo 25 cảnh lệch audio nửa giây mà không gate nào thấy.
-        ("assemble.py", [str(plan_path), "--check"],
-         "master/captions khớp bản sinh từ plan", True),
-        # The gates checking the gates. Cheap (it runs them against throwaway
-        # copies in a temp dir) and it is the only thing that notices when a
-        # gate has been edited into uselessness - which nothing did before,
-        # because a gate that has stopped working looks exactly like a gate
-        # with nothing to report.
-        ("selftest.py", [], "self-test của chính bộ gate", True),
-    ):
+    scenes = plan_data.get("scenes") or []
+    statuses = [scene.get("status") or "planned" for scene in scenes]
+    any_built = any(status != "planned" for status in statuses)
+    build_complete = bool(statuses) and all(status in ("built", "reviewed") for status in statuses)
+    review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    review_exists = review_path.is_file()
+    vision_fingerprint = review_fingerprint(root, plan_path, plan_data, review_path) if review_exists else None
+    try:
+        vision_current = bool(vision_fingerprint and
+                              VISION_STAMP.read_text(encoding="utf-8").strip() == vision_fingerprint)
+    except OSError:
+        vision_current = False
+
+    checks = [("plan_gate.py", [str(plan_path), "--hook"], "scene plan integrity", True)]
+    if any_built:
+        checks.append(("build_gate.py", [str(plan_path)], "built scenes vs plan", True))
+    if build_complete:
+        checks += [
+            ("text_gate.py", [str(plan_path), "--hook"], "rendered text implementation", True),
+            ("icon_gate.py", [str(plan_path)], "icon registry/import when used", True),
+            ("cutout_gate.py",
+             ["public", "--video", str(plan_data.get("video", "V")).lstrip("Vv"),
+              "--plan", str(plan_path), "--hook"], "cutout integrity", True),
+            ("asset_gate.py", [str(plan_path), "--hook"], "asset integrity", True),
+            ("block_gate.py", [str(plan_path)], "optional block contracts", True),
+            ("assemble.py", [str(plan_path), "--check"], "generated assembly", True),
+            ("baseline_gate.py", ["check", str(plan_path)], "baseline quality", False),
+        ]
+    if review_exists:
+        checks += [
+            ("review_gate.py", [str(plan_path), "--hook"], "review evidence", True),
+            ("pixel_gate.py", [str(plan_path)], "rendered text pixels", True),
+        ]
+    if not skip_selftest:
+        checks.append(("selftest.py", [], "gate self-test", True))
+
+    missing = [name for name in REQUIRED_GATES if not (SCRIPTS / name).exists()]
+    if missing:
+        failures.append("### broken gate installation\nMissing: " + ", ".join(missing))
+
+    for script, args, label, blocking in checks:
         if not (SCRIPTS / script).exists():
-            failures.append(
-                f"### {label} ({script})\n"
-                f"GATE FILE MISSING: {SCRIPTS / script}\n"
-                f"This gate is in REQUIRED_GATES, so its absence is a broken install, not "
-                f"an opt-out. Restore it from git (`git checkout -- "
-                f".claude/skills/vox-collage-video/scripts/{script}`) before continuing. "
-                f"Do not remove it from REQUIRED_GATES to make this message go away.")
             continue
-        # The existence check above still runs for selftest.py - a vanished
-        # gate is a broken install whether or not this turn needed to run it.
-        if script == "selftest.py" and skip_selftest:
-            continue
-        code, out = run(script, *args)
+        code, out, cache_hit, detail = run_incremental(root, plan_path, plan_data,
+                                                       script, args)
+        if cache_hit:
+            state.append_telemetry(root, plan_data.get("video", "V"), {
+                "stage": f"gate:{script}", "owner": "script", "cache": "hit",
+                "subprocessCount": 0, "affectedItems": 0})
         if code != 0:
             target = failures if blocking else advisories
-            target.append(f"### {label} ({script})\n{out.strip()}")
+            target.append(f"### {label} ({script})\n{_gate_summary(out, True)}"
+                          + (f"\nDETAILS: {detail}" if detail else ""))
+        elif (not cache_hit and script in ("plan_gate.py", "review_gate.py")
+              and "WARN " in out):
+            warnings = "\n".join(line for line in out.splitlines() if line.startswith("WARN "))
+            label = ("outstanding plan-quality advisories" if script == "plan_gate.py"
+                     else "rendered findings / acknowledged quality debt")
+            advisories.append(f"### {label} ({script})\n{warnings}")
 
     # --- Lớp tư vấn: để một model rẻ NHÌN thay agent -----------------------
     # Hai script này KHÔNG chặn, và đó là chủ ý:
@@ -556,11 +665,11 @@ def stop(root, plan):
     # chiếm 55% cache_read = 384 USD. Một dòng dặn dò trong SKILL.md không đổi
     # được thói quen đó; một danh sách cờ in sẵn ngay trước lúc agent định mở
     # ảnh thì có.
-    if vision_router_up():
+    if review_exists and not vision_current and vision_router_up():
         for script, args, label in (
-            ("asset_vision.py", [str(plan_path)],
+            ("asset_vision.py", [str(plan_path), "--new-only"],
              "nghĩa của asset: đúng vật không, minh hoạ đúng lời thoại không"),
-            ("vision_check.py", ["--plan", str(plan_path)],
+            ("vision_check.py", ["--plan", str(plan_path), "--new-only"],
              "khung hình đã render: chữ bị đè, chữ nhỏ, khung trống"),
         ):
             if not (SCRIPTS / script).exists():
@@ -574,19 +683,31 @@ def stop(root, plan):
         # `block_gate` đếm tỉ lệ block trên PLAN; hai mươi tư cảnh khai khác
         # nhau trên giấy vẫn có thể trông giống hệt nhau trên màn hình, và V11
         # đúng là như vậy: 58% số cảnh cùng một kiểu, người xem nói "mệt".
-        sheet = (root / "input" / "review_frames" / "contact_sheet.jpg")
-        if sheet.is_file() and (SCRIPTS / "sheet_vision.py").exists():
+        try:
+            review = json.loads(review_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            review = {}
+        raw_sheet = review.get("sceneSummarySheet")
+        sheet = root / str(raw_sheet).replace("\\", "/") if raw_sheet else None
+        if sheet and sheet.is_file() and (SCRIPTS / "sheet_vision.py").exists():
             code, out = run("sheet_vision.py", str(sheet),
                             "--scenes", str(len(plan_data.get("scenes") or [])))
             if code == 1 and out.strip():
                 advisories.append(
                     "### cả video đọc ra thành một công thức? (sheet_vision.py)\n"
                     + out.strip())
+        if vision_fingerprint:
+            try:
+                VISION_STAMP.parent.mkdir(parents=True, exist_ok=True)
+                VISION_STAMP.write_text(vision_fingerprint, encoding="utf-8")
+            except OSError:
+                pass
 
     if advisories:
-        print("[vox-vision] model rẻ đã soi hộ, những chỗ dưới đây đáng để bạn tự mở "
-              "ảnh ra xem - và CHỈ những chỗ này:\n\n" + "\n\n".join(advisories)
-              + "\n\nĐây là gợi ý, không phải lỗi. Đừng mở hết cả thư mục ảnh ra nhìn: "
+        print("[vox-review] các tín hiệu plan và rendered evidence dưới đây cần được "
+              "xem cùng nhau trong correction pass:\n\n" + "\n\n".join(advisories)
+              + "\n\nĐây là gợi ý, không phải lỗi hay mục tiêu điểm số. Nếu cần mở ảnh, chỉ mở "
+                "những khung cheap vision gắn cờ; đừng mở hết cả thư mục: "
                 "mỗi tấm ảnh vào context sẽ bị đọc lại ở mọi lượt gọi sau đó.",
               file=sys.stderr)
 

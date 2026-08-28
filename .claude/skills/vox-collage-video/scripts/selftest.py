@@ -169,6 +169,410 @@ def run_gate(gate, argv, cwd, stdin_text=None):
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
+def _load_script(name):
+    """Load a script for small pure contract checks without spawning a pipeline."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(f"vox_selftest_{name}", SCRIPTS / name)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def repair_contract_checks(tmp):
+    """Focused V15 generic-repair contracts using synthetic paths/pixels only."""
+    checks = []
+
+    state = _load_script("stage_state.py")
+    pipeline = _load_script("pipeline_contracts.py")
+    review_tool = _load_script("render_review_sheet.py")
+    render_video = _load_script("render_video.py")
+    asset_manifest = _load_script("asset_manifest.py")
+    asset_vision = _load_script("asset_vision.py")
+    frame_vision = _load_script("vision_check.py")
+    hook = _load_script("hook_gate.py")
+
+    # Generic receipts: true input, tool and parameter changes each invalidate.
+    source = tmp / "audio.mp3"; source.write_bytes(b"audio-a")
+    output = tmp / "transcript.json"; output.write_text('{"ok":true}', encoding="utf-8")
+    rpath = tmp / "receipt.json"
+    audio_inputs = {"audio": state.file_input(source)}
+    trans_tool = {"whisper": "same-model", "version": "1"}
+    trans_params = {"language": "vi"}
+    state.make_receipt(rpath, "transcription", audio_inputs, trans_tool, trans_params, [output])
+    checks.append(("receipt: unchanged audio reuses transcription",
+                   state.receipt_current(rpath, "transcription", audio_inputs,
+                                         trans_tool, trans_params)[0]))
+    source.write_bytes(b"audio-b")
+    checks.append(("receipt: changed audio invalidates transcription",
+                   not state.receipt_current(rpath, "transcription",
+                                             {"audio": state.file_input(source)},
+                                             trans_tool, trans_params)[0]))
+
+    script = tmp / "script.txt"; script.write_text("first script", encoding="utf-8")
+    transcript = tmp / "transcript-source.json"; transcript.write_text('{"segments":[]}', encoding="utf-8")
+    aligned = tmp / "aligned.json"; aligned.write_text('{"words":[]}', encoding="utf-8")
+    align_inputs = {"script": state.file_input(script), "transcript": state.json_input(transcript)}
+    align_tool = {"version": "align-1"}; align_params = {"manual": True}
+    state.make_receipt(rpath, "alignment", align_inputs, align_tool, align_params, [aligned],
+                       accepted={"manual": True})
+    current, manual_receipt = state.receipt_current(rpath, "alignment", align_inputs,
+                                                    align_tool, align_params)
+    checks.append(("alignment: manual acceptance survives unchanged inputs",
+                   current and manual_receipt.get("accepted", {}).get("manual") is True))
+    script.write_text("changed script", encoding="utf-8")
+    checks.append(("alignment: changed script invalidates while transcript remains reusable",
+                   not state.receipt_current(rpath, "alignment",
+                       {"script": state.file_input(script), "transcript": state.json_input(transcript)},
+                       align_tool, align_params)[0]))
+    script.write_text("first script", encoding="utf-8")
+    transcript.write_text('{"segments":[{"x":1}]}', encoding="utf-8")
+    checks.append(("alignment: changed transcript invalidates",
+                   not state.receipt_current(rpath, "alignment",
+                       {"script": state.file_input(script), "transcript": state.json_input(transcript)},
+                       align_tool, align_params)[0]))
+    checks.append(("alignment: implementation version invalidates",
+                   not state.receipt_current(rpath, "alignment", align_inputs,
+                                             {"version": "align-2"}, align_params)[0]))
+
+    # Synthetic project contracts.
+    (tmp / "input").mkdir(exist_ok=True); (tmp / "public").mkdir(exist_ok=True)
+    (tmp / "src" / "scenes").mkdir(parents=True, exist_ok=True)
+    (tmp / "package.json").write_text('{"dependencies":{"remotion":"4.0.507"}}', encoding="utf-8")
+    words_path = tmp / "input" / "words99_aligned.json"
+    words_path.write_text(json.dumps({"words": [["local", 0.0, 0.3, 0], ["narration", 0.3, 0.8, 0],
+                                                ["neighbor", 2.1, 2.5, 1]]}), encoding="utf-8")
+    evidence = tmp / "source.pdf"; evidence.write_bytes(b"official-a")
+    asset_a = tmp / "public" / "asset-a.png"; asset_a.write_bytes(b"image-a")
+    asset_b = tmp / "public" / "asset-b.png"; asset_b.write_bytes(b"image-b")
+    synthetic_plan = {
+        "video": "V99", "fps": 30, "wordsFile": "input/words99_aligned.json",
+        "status": "active", "shotlistApproved": True, "sourceAuthority": str(evidence),
+        "globalVisualContract": {"palette": "paper-orange", "bespoke": True},
+        "scenes": [
+            {"id": "S1", "startSec": 0, "endSec": 2, "durationInFrames": 60,
+             "status": "built", "viewerQuestion": "q1", "visualTransformation": "a becomes b",
+             "contrastWithPrevious": "opening", "visualEvents": [{"frame": 0, "what": "open"},
+                                                                {"frame": 25, "what": "change"}],
+             "assets": [{"name": "Doc", "src": "asset-a.png", "role": "document",
+                         "describes": ["proof"], "evidenceRegions": [{"anchorPhrase": "local", "region": [0,0,1,1]}]}]},
+            {"id": "S2", "startSec": 2, "endSec": 4, "durationInFrames": 60,
+             "status": "planned", "viewerQuestion": "q2", "visualTransformation": "c replaces d",
+             "contrastWithPrevious": "photo after document", "visualEvents": [{"frame": 10, "what": "arrive"}],
+             "assets": [{"name": "Ordinary", "src": "asset-b.png", "role": "hero",
+                         "describes": ["neighbor"]}]}
+        ]}
+    plan_path = tmp / "input" / "scene_plan99.json"
+    plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
+
+    contract_a = state.plan_contract(synthetic_plan, plan_path)
+    plan_receipt = tmp / "plan-receipt.json"
+    state.make_receipt(plan_receipt, "editorial-plan", contract_a, {"version": 1}, {},
+                       outputs=(), accepted={"manual": True})
+    checks.append(("plan: unchanged true inputs reuse approved receipt",
+                   state.receipt_current(plan_receipt, "editorial-plan", contract_a,
+                                         {"version": 1}, {}, require_outputs=False)[0]))
+    workflow_only = copy.deepcopy(synthetic_plan); workflow_only["status"] = "shipped"
+    workflow_only["scenes"][0]["status"] = "reviewed"
+    checks.append(("plan: workflow state alone does not reopen editorial contract",
+                   state.plan_contract(workflow_only, plan_path) == contract_a))
+    changed_timing = copy.deepcopy(synthetic_plan); changed_timing["scenes"][0]["endSec"] = 1.8
+    checks.append(("plan: narration/timing mutation invalidates",
+                   state.plan_contract(changed_timing, plan_path) != contract_a))
+    evidence.write_bytes(b"official-b")
+    checks.append(("plan: source contract bytes mutation invalidates",
+                   state.plan_contract(synthetic_plan, plan_path) != contract_a))
+    evidence.write_bytes(b"official-a")
+
+    board = _load_script("generate_board.py")
+    class PromptArgs:
+        full_bleed = False; bg = "green"; cols = None; consistent_subject = None
+        context = None; model = "model-a"; generation_id = None; lineage = None
+    prompt_args = PromptArgs()
+    prompt_a = board.assembled_prompt([("asset", "specific brief")], prompt_args)
+    prompt_b = board.assembled_prompt([("asset", "changed brief")], prompt_args)
+    prompt_args.bg = "magenta"
+    prompt_c = board.assembled_prompt([("asset", "specific brief")], prompt_args)
+    checks.append(("prompt: semantic brief or style contract invalidates assembled prompt",
+                   len({state.digest(prompt_a), state.digest(prompt_b), state.digest(prompt_c)}) == 3))
+    before_image = state.file_input(asset_a); asset_a.write_bytes(b"image-a-changed")
+    checks.append(("asset: same filename with changed bytes invalidates identity",
+                   before_image != state.file_input(asset_a)))
+    asset_a.write_bytes(b"image-a")
+
+    cut_inputs = {"source": state.file_input(asset_a)}; cut_tool = {"model": "isnet"}
+    cut_params = {"fit": "3:4"}
+    state.make_receipt(rpath, "cutout", cut_inputs, cut_tool, cut_params, [output])
+    asset_a.write_bytes(b"image-a-2")
+    checks.append(("cutout: source mutation invalidates",
+                   not state.receipt_current(rpath, "cutout", {"source": state.file_input(asset_a)},
+                                             cut_tool, cut_params)[0]))
+    asset_a.write_bytes(b"image-a")
+    checks.append(("cutout: processing parameter/model mutation invalidates",
+                   not state.receipt_current(rpath, "cutout", cut_inputs,
+                                             {"model": "u2net"}, {"fit": "1:1"})[0]))
+
+    meta = {"name": "Doc", "role": "document", "describes": ["proof"],
+            "transformation": "a becomes b", "template": "bespoke"}
+    av1 = asset_vision.semantic_key(asset_a, meta, "model-a")
+    av2 = asset_vision.semantic_key(asset_a, {**meta, "describes": ["changed slot brief"]}, "model-a")
+    av3 = asset_vision.semantic_key(asset_a, meta, "model-b")
+    checks.append(("asset vision: unchanged semantic key hits; brief/model changes miss",
+                   av1 == asset_vision.semantic_key(asset_a, meta, "model-a") and len({av1,av2,av3}) == 3))
+    fv1 = frame_vision.frame_cache_key(asset_a, {"scene": "S1", "masterFrame": 20}, "model-a", 45)
+    fv2 = frame_vision.frame_cache_key(asset_a, {"scene": "S1", "masterFrame": 21}, "model-a", 45)
+    fv3 = frame_vision.frame_cache_key(asset_a, {"scene": "S1", "masterFrame": 20}, "model-b", 45)
+    checks.append(("frame vision: per-frame brief/model keys invalidate independently",
+                   fv1 == frame_vision.frame_cache_key(asset_a, {"scene":"S1","masterFrame":20}, "model-a", 45)
+                   and len({fv1,fv2,fv3}) == 3))
+
+    packet = pipeline.build_worker_packet(plan_path, ["S1"])
+    packet_text = json.dumps(packet, ensure_ascii=False)
+    checks.append(("worker packet contains local timing/narration/plan/global/assets/neighbors/primitives",
+                   all(x in packet_text for x in ("local narration", "a becomes b", "asset-a.png",
+                                                  "paper-orange", "S2", "shared.jsx"))))
+    checks.append(("worker packet excludes unrelated source/log/history/all-asset payloads",
+                   "asset-b.png" not in packet_text and "historical logs" in packet["excluded"]
+                   and "lessons archive" in packet["excluded"]))
+    packet_changed = pipeline.build_worker_packet(plan_path, ["S1"])
+    synthetic_changed = copy.deepcopy(synthetic_plan)
+    synthetic_changed["scenes"][0]["visualTransformation"] = "different local contract"
+    plan_path.write_text(json.dumps(synthetic_changed), encoding="utf-8")
+    checks.append(("scene: local packet/plan scene mutation invalidates packet",
+                   pipeline.build_worker_packet(plan_path, ["S1"])["packetId"] != packet_changed["packetId"]))
+    plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
+
+    manifest = review_tool.sample_manifest(synthetic_plan, tmp / "frames", 2)
+    s1 = [x for x in manifest["samples"] if x["scene"] == "S1"]
+    s2 = [x for x in manifest["samples"] if x["scene"] == "S2"]
+    checks.append(("review mapping: local frames map across scene boundaries to master time",
+                   all(x["masterFrame"] == x["localFrame"] for x in s1) and
+                   all(x["masterFrame"] == 60 + x["localFrame"] for x in s2) and
+                   all(abs(x["masterTimeSec"] - x["masterFrame"]/30) < 1e-6 for x in manifest["samples"])))
+    checks.append(("review mapping: visualEvent settled and near-cut samples remain present",
+                   20 in [x["localFrame"] for x in s1] and 45 in [x["localFrame"] for x in s1]
+                   and 54 in [x["localFrame"] for x in s1]))
+    entries = review_tool.review_entries(manifest)
+    checks.append(("review mapping: scene-summary selects one recorded representative per scene",
+                   len(entries) == 2 and all(e["frame"] in e["frames"] for e in entries)))
+    cmd = review_tool.extraction_command("draft.mp4", manifest["samples"], tmp / "f_%04d.png")
+    checks.append(("review extraction command is one ffmpeg process over requested master frames",
+                   cmd[:1] == ["ffmpeg"] and "select=" in " ".join(cmd) and
+                   "remotion" not in " ".join(cmd).lower()))
+    targeted = manifest["targetedFullResolution"]
+    manual_manifest = review_tool.sample_manifest(synthetic_plan, tmp / "frames", 2, ["S2"])
+    checks.append(("full-res selection: documents automatic, ordinary frames not all forced, manual escalation works",
+                   {x["scene"] for x in targeted} == {"S1"} and
+                   {x["scene"] for x in manual_manifest["targetedFullResolution"]} == {"S1", "S2"}))
+    full_cmd = review_tool.targeted_full_res_command(manual_manifest, tmp / "full")
+    checks.append(("targeted full-res uses one Remotion render process for selected frames",
+                   full_cmd[:3] == ["npx", "remotion", "render"] and
+                   "--codec=none" in full_cmd and "--frames=" in " ".join(full_cmd)))
+    draft_proof = {"path": "draft.mp4", "size": 1, "mtimeNs": 1}
+    rkey = review_tool.sample_identity(draft_proof, manifest, manifest["samples"][0])
+    changed_draft = review_tool.sample_identity({**draft_proof, "size": 2}, manifest, manifest["samples"][0])
+    changed_sample = review_tool.sample_identity(draft_proof, manifest, {**manifest["samples"][0], "masterFrame": 99})
+    checks.append(("review: draft or sample manifest mutation invalidates affected evidence",
+                   len({rkey, changed_draft, changed_sample}) == 3))
+    third_plan = copy.deepcopy(synthetic_plan)
+    third_plan["scenes"].append({"id": "S3", "startSec": 4, "endSec": 6,
+                                 "durationInFrames": 60, "status": "built",
+                                 "viewerQuestion": "q3", "visualTransformation": "e reveals f",
+                                 "contrastWithPrevious": "new ending", "visualEvents": [{"frame": 5, "what": "end"}],
+                                 "assets": []})
+    (tmp / "src" / "scenes" / "V99Scene3.jsx").write_text("scene-three", encoding="utf-8")
+    third_manifest = review_tool.sample_manifest(third_plan, tmp / "frames3", 2)
+    sample_s1 = next(x for x in third_manifest["samples"] if x["scene"] == "S1")
+    sample_s3 = next(x for x in third_manifest["samples"] if x["scene"] == "S3")
+    params = {"scale": 0.5, "fps": 30}
+    s1_before = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_plan, sample_s1, params))
+    s3_before = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_plan, sample_s3, params))
+    third_changed = copy.deepcopy(third_plan)
+    third_changed["scenes"][0]["visualTransformation"] = "changed first scene only"
+    s1_after = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_changed, sample_s1, params))
+    s3_after = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_changed, sample_s3, params))
+    checks.append(("review: local scene change invalidates affected/neighbor evidence, not distant scene",
+                   s1_before != s1_after and s3_before == s3_after))
+
+    # Draft/final render closure uses normalized render sources/settings and does
+    # not care about workflow-only plan status.
+    (tmp / "src" / "V99Master.jsx").write_text("export const V99Master=()=>null", encoding="utf-8")
+    (tmp / "src" / "Root.jsx").write_text("root", encoding="utf-8")
+    (tmp / "src" / "scenes" / "V99Scene1.jsx").write_text("scene-one", encoding="utf-8")
+    (tmp / "src" / "scenes" / "V99Scene2.jsx").write_text("scene-two", encoding="utf-8")
+    (tmp / "src" / "scenes" / "shared.jsx").write_text("shared", encoding="utf-8")
+    (tmp / "src" / "scenes" / "visualLanguage.jsx").write_text("visual", encoding="utf-8")
+    (tmp / "remotion.config.ts").write_text("config", encoding="utf-8")
+    (tmp / "package-lock.json").write_text("{}", encoding="utf-8")
+    draft = tmp / "draft.mp4"; draft.write_bytes(b"synthetic-draft")
+    final = tmp / "final.mp4"; final.write_bytes(b"synthetic-final")
+    d = render_video.render_contract(plan_path, "draft", draft)
+    state.make_receipt(d[3], "render-draft", d[6], d[7], d[8], [draft])
+    checks.append(("draft: unchanged relevant source/settings reuse",
+                   render_video.render_contract(plan_path, "draft", draft)[4]))
+    d_half = render_video.render_contract(plan_path, "draft", draft, scale=0.6)
+    checks.append(("draft: render settings mutation invalidates",
+                   not d_half[4]))
+    scene_one = tmp / "src" / "scenes" / "V99Scene1.jsx"
+    scene_one.write_text("scene-one-changed", encoding="utf-8")
+    checks.append(("draft: relevant source mutation invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    scene_one.write_text("scene-one", encoding="utf-8")
+    f = render_video.render_contract(plan_path, "final", final)
+    state.make_receipt(f[3], "render-final", f[6], f[7], f[8], [final])
+    checks.append(("final: unchanged full-resolution settings reuse",
+                   render_video.render_contract(plan_path, "final", final)[4]))
+    (tmp / "remotion.config.ts").write_text("changed config", encoding="utf-8")
+    checks.append(("final: source/render configuration mutation invalidates",
+                   not render_video.render_contract(plan_path, "final", final)[4]))
+    try:
+        render_video.render_contract(plan_path, "final", final, scale=0.5)
+        final_scale_blocked = False
+    except ValueError:
+        final_scale_blocked = True
+    checks.append(("final: full-resolution scale cannot be lowered", final_scale_blocked))
+
+    # Incremental gate: cache both success/failure execution result, never hide hard.
+    gate_plan = copy.deepcopy(synthetic_plan)
+    calls = {"n": 0}; original_run = hook.run
+    def fake_run(_script, *_args):
+        calls["n"] += 1
+        return 1, "FAIL synthetic integrity failure"
+    hook.run = fake_run
+    try:
+        code1, out1, hit1, _ = hook.run_incremental(tmp, plan_path, gate_plan,
+                                                    "plan_gate.py", [str(plan_path), "--hook"])
+        code2, out2, hit2, _ = hook.run_incremental(tmp, plan_path, gate_plan,
+                                                    "plan_gate.py", [str(plan_path), "--hook"])
+        unrelated = tmp / "unrelated.txt"; unrelated.write_text("changed", encoding="utf-8")
+        code3, out3, hit3, _ = hook.run_incremental(tmp, plan_path, gate_plan,
+                                                    "plan_gate.py", [str(plan_path), "--hook"])
+        plan_path.write_text(json.dumps({**gate_plan, "title": "true dependency change"}), encoding="utf-8")
+        code4, out4, hit4, _ = hook.run_incremental(tmp, plan_path,
+                                                    {**gate_plan, "title": "true dependency change"},
+                                                    "plan_gate.py", [str(plan_path), "--hook"])
+    finally:
+        hook.run = original_run
+        plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
+    checks.append(("incremental gate: unchanged and unrelated changes skip subprocess",
+                   not hit1 and hit2 and hit3 and calls["n"] == 2))
+    checks.append(("incremental gate: true dependency reruns and cached hard remains explicit",
+                   not hit4 and all(c == 1 for c in (code1,code2,code3,code4)) and
+                   all("FAIL synthetic" in x for x in (out1,out2,out3,out4))))
+
+    manifest_path, _ = asset_manifest.sync(plan_path)
+    asset_manifest.accept(plan_path, "S1:Doc")
+    _, unchanged_manifest = asset_manifest.sync(plan_path)
+    checks.append(("asset manifest: accepted item survives unchanged sync",
+                   unchanged_manifest["assets"]["S1:Doc"]["acceptance"] == "ACCEPTED"))
+    asset_manifest.accept(plan_path, "S2:Ordinary", advisory="usable crop advisory")
+    _, advisory_manifest = asset_manifest.sync(plan_path)
+    checks.append(("asset manifest: advisory acceptance survives without regeneration",
+                   advisory_manifest["assets"]["S2:Ordinary"]["acceptance"] == "ACCEPTED_WITH_ADVISORY"))
+    item = advisory_manifest["assets"]["S1:Doc"]
+    state.update_manifest(manifest_path, "V99", "S1:Doc",
+                          {"mechanicalQA": "HARD_UNUSABLE"}, item["identity"])
+    _, hard_manifest = asset_manifest.sync(plan_path)
+    checks.append(("asset manifest: hard-unusable state stays blocking",
+                   hard_manifest["assets"]["S1:Doc"]["mechanicalQA"] == "HARD_UNUSABLE"))
+    asset_manifest.accept(plan_path, "S2:Ordinary", replacement_for="S1:Doc")
+    lineage = state.read_json(manifest_path, {})["assets"]
+    checks.append(("asset manifest: replacement lineage points to accepted new file",
+                   lineage["S1:Doc"]["acceptedReplacement"] == "S2:Ordinary" and
+                   lineage["S2:Ordinary"]["replacementFor"] == "S1:Doc"))
+    asset_b.write_bytes(b"image-b-mutated")
+    _, mutated_manifest = asset_manifest.sync(plan_path)
+    checks.append(("asset manifest: same filename changed bytes invalidates acceptance",
+                   mutated_manifest["assets"]["S2:Ordinary"]["acceptance"] == "PENDING"))
+
+    compact = state.compact_result("CLOSED", hard=0, advisory=1, details="details.json",
+                                   receipt="abc")
+    hard_compact = state.compact_result("HARD", hard=2, questions=["first", "second"],
+                                        details="failure.txt")
+    checks.append(("compact output: success stays bounded and hard issues remain explicit",
+                   len(compact.splitlines()) <= 7 and "HARD: 2" in hard_compact and
+                   "first; second" in hard_compact and "failure.txt" in hard_compact))
+    ledger = state.append_telemetry(tmp, "V99", {"stage": "noop", "owner": "script",
+                                    "elapsedMs": 1.2, "cache": "hit", "subprocessCount": 0,
+                                    "reasoning": "must not be stored"})
+    record = json.loads(ledger.read_text(encoding="utf-8").splitlines()[-1])
+    checks.append(("telemetry: timing/cache/subprocess recorded; main tokens UNKNOWN; no reasoning",
+                   record["elapsedMs"] == 1.2 and record["cache"] == "hit" and
+                   record["subprocessCount"] == 0 and record["mainTokens"] == "UNKNOWN" and
+                   "reasoning" not in record))
+
+    beat = _load_script("beat_sync.py")
+    words = [["exact", 1.5, 1.7, 0], ["evidence", 1.7, 2.0, 0]]
+    plan = {"fps": 30, "scenes": [{"id": "S1", "startSec": 1.0, "endSec": 3.0,
+             "assets": [{"role": "document", "name": "Doc", "evidenceRegions": [
+                 {"anchorPhrase": "exact evidence", "region": [0.1, 0.2, 0.7, 0.1]}]}]}]}
+    resolved = beat.resolve_evidence_regions(plan, words)
+    checks.append(("document evidence phrase timing reuses aligned words",
+                   resolved[0]["regions"][0]["from"] == 15))
+    legacy = copy.deepcopy(plan)
+    legacy["scenes"][0]["assets"][0].pop("evidenceRegions")
+    checks.append(("legacy document without evidenceRegions remains valid",
+                   beat.resolve_evidence_regions(legacy, words) == []))
+
+    plan_gate = _load_script("plan_gate.py")
+    report = plan_gate.Report()
+    plan_gate.gate_anchors(plan["scenes"], words, report)
+    checks.append(("valid normalized evidenceRegions parse mechanically", not report.failures))
+    invalid = copy.deepcopy(plan)
+    invalid["scenes"][0]["assets"][0]["evidenceRegions"][0]["region"] = [0.8, 0.2, 0.4, 0.1]
+    report = plan_gate.Report()
+    plan_gate.gate_anchors(invalid["scenes"], words, report)
+    checks.append(("out-of-source evidenceRegions are rejected", bool(report.failures)))
+
+    assemble = _load_script("assemble.py")
+    base = {"scenes": [{"id": "S1"}, {"id": "S2"}]}
+    parts = assemble.scene_parts(base, "99")
+    generated = assemble.master_jsx({"audioFile": "a.mp3"}, "99", "99", parts)
+    checks.append(("omitted transition defaults to cut", "presentation={fade()}" not in generated))
+    base["scenes"][1]["transitionIn"] = "fade"
+    parts = assemble.scene_parts(base, "99")
+    generated = assemble.master_jsx({"audioFile": "a.mp3"}, "99", "99", parts)
+    checks.append(("explicit semantic fade path remains available",
+                   generated.count("presentation={fade()}") == 1))
+
+    from PIL import Image
+    frame_dir = tmp / "input" / "review_frames_custom"
+    frame_dir.mkdir(parents=True)
+    entries = []
+    for i in range(3):
+        frame = frame_dir / f"scene{i}.png"
+        Image.new("RGB", (20, 30), (i * 30, 20, 20)).save(frame)
+        entries.append({"id": f"S{i + 1}", "frame": str(frame),
+                        "frames": [str(frame), str(frame)]})
+    review_sheet = _load_script("render_review_sheet.py")
+    thumbs = review_sheet.scene_summary_thumbs(entries)
+    count = review_sheet.build_sheet(thumbs, tmp / "summary.jpg")
+    checks.append(("scene-summary view contains exactly one frame per scene",
+                   count == len(entries) == len(thumbs)))
+
+    sheet = _load_script("sheet_vision.py")
+    checks.append(("sheet impossible-count validation remains active",
+                   sheet.valid_run({"groups": [{"looks_like": "x", "count": 4}]}, 3) is None))
+
+    vision = _load_script("vision_check.py")
+    plan_path = tmp / "input" / "scene_plan99.json"
+    plan_path.write_text(json.dumps({"video": "V99", "scenes": []}), encoding="utf-8")
+    review_path = tmp / "input" / "review99.json"
+    review_path.write_text(json.dumps({"scenes": [
+        {"id": "S1", "frame": "input/review_frames_custom/scene0.png",
+         "frames": ["input/review_frames_custom/scene1.png"]},
+        {"id": "S2", "frame": "input/review_frames_custom/scene2.png"},
+    ]}), encoding="utf-8")
+    discovered = vision.collect([], str(plan_path))
+    checks.append(("vision_check follows review frames and frame-only fallback",
+                   [pathlib.Path(path).name for path in discovered] == ["scene1.png", "scene2.png"]))
+    visual_language = (ROOT / "src" / "scenes" / "visualLanguage.jsx").read_text(encoding="utf-8")
+    checks.append(("new BackgroundPhoto camera is stable by default", "drift = 0," in visual_language))
+    hook_source = (SCRIPTS / "hook_gate.py").read_text(encoding="utf-8")
+    checks.append(("sheet_vision routes scene-summary sheet with scene count",
+                   'review.get("sceneSummarySheet")' in hook_source and '"--scenes"' in hook_source))
+    return checks
+
+
 # --------------------------------------------------------------------------
 # Mutations - each one is a defect this project has ACTUALLY shipped or nearly
 # shipped, not an invented edge case.
@@ -447,11 +851,14 @@ def copy_src_file(*names):
     return hook
 
 
-def unpad_first_rail(tmp):
-    """Sinh master thật trong sandbox rồi bỏ đệm rail ĐẦU - đúng lỗi đã ship
-    một lần ở V10: mọi cảnh từ S2 trôi sớm nửa giây so với audio của nó."""
+def unpad_explicit_fade_rail(tmp):
+    """Request one real fade, then remove its preceding rail padding."""
+    plan_path = tmp / "input" / "scene_plan10.json"
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    plan["scenes"][1]["transitionIn"] = "fade"
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
     subprocess.run([sys.executable, str(SCRIPTS / "assemble.py"),
-                    str(tmp / "input" / "scene_plan10.json"), "--only", "master"],
+                    str(plan_path), "--only", "master"],
                    cwd=str(tmp), capture_output=True)
     f = tmp / "src" / "V10Master.jsx"
     s = f.read_text(encoding="utf-8")
@@ -955,16 +1362,16 @@ CASES = [
     # assemble.py - phần cơ khí sinh từ plan (captions, master, đăng ký).
     # Ca 1 là khoá luật ngắt dòng: generator phải tái tạo ĐÚNG TỪNG KHUNG file
     # caption đã ship - ai đổi thuật toán ngắt dòng/làm tròn frame là vỡ ở đây.
-    # Ca 2 là lỗi rail đã ship một lần ở V10. Ca 3 là hàng rào chống đè công
-    # viết tay.
+    # Ca 2 khoá rail của đường fade TƯỜNG MINH; omission nay là hard cut nên
+    # không còn rail để phá. Ca 3 là hàng rào chống đè công viết tay.
     Case("assemble: captionData sinh lại phải khớp từng khung bản đã ship",
          "assemble.py", None, expect_fail=False,
          sandbox_hook=copy_src_file("captionData10.js"),
          args=lambda p: [str(p), "--only", "captions", "--check"]),
-    Case("assemble: master bỏ đệm rail đầu phải bị --check bắt",
-         "assemble.py", None, sandbox_hook=unpad_first_rail,
+    Case("assemble: explicit fade bỏ đệm rail trước nó phải bị --check bắt",
+         "assemble.py", None, sandbox_hook=unpad_explicit_fade_rail,
          args=lambda p: [str(p), "--only", "master", "--check"],
-         expect_message=["LỆCH"]),
+         expect_message=["master:"]),
     Case("assemble: không được đè master viết tay",
          "assemble.py", None, sandbox_hook=fake_handwritten_master,
          args=lambda p: [str(p), "--only", "master"],
@@ -1080,6 +1487,8 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--repair-only", action="store_true",
+                    help="run only synthetic efficiency/closure mutation contracts")
     args = ap.parse_args()
 
     if not REF_PLAN.exists():
@@ -1087,7 +1496,13 @@ def main():
         return 0
 
     results = []
-    for case in CASES:
+    with tempfile.TemporaryDirectory(prefix="voxrepair-") as td:
+        try:
+            for name, ok in repair_contract_checks(pathlib.Path(td)):
+                results.append((name, ok, "" if ok else "focused repair contract returned false"))
+        except Exception as exc:  # noqa: BLE001
+            results.append(("V15 generic repair contracts", False, f"selftest crashed: {exc}"))
+    for case in ([] if args.repair_only else CASES):
         with tempfile.TemporaryDirectory(prefix="voxgate-") as td:
             tmp = pathlib.Path(td)
             try:
