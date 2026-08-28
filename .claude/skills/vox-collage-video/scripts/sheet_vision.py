@@ -138,15 +138,33 @@ def cached_aggregate(sheet, scenes, model, runs, check_fn=None):
     key = cache_identity(sheet, scenes, PROMPT, model, runs)
     cached = state.cache_get(root, video, "sheet-vision", key)
     if cached is not None:
+        if isinstance(cached, dict) and cached.get("cacheSchema") == 1:
+            return cached.get("aggregate"), True, key
         return cached, True, key
     check_fn = check_fn or check
     import concurrent.futures as cf
     with cf.ThreadPoolExecutor(max_workers=runs) as ex:
         raw = list(ex.map(lambda _: check_fn(sheet, model), range(runs)))
     result = aggregate(raw, scenes)
-    state.cache_put(root, video, "sheet-vision", key, result,
+    # Envelope the aggregate so an unreliable None is still a durable cache
+    # hit rather than being confused with cache absence.
+    state.cache_put(root, video, "sheet-vision", key,
+                    {"cacheSchema": 1, "aggregate": result},
                     {"model": model, "runs": runs, "sheet": str(sheet)})
     return result, False, key
+
+
+def status_result(result, cache_hit=False):
+    """Small machine contract consumed by the explicit review-vision stage."""
+    if result is None:
+        return {"status": "ADVISORY", "code": "sheet-vision-unreliable",
+                "reason": "cross-scene sheet vision unavailable/unreliable",
+                "cacheHit": bool(cache_hit)}
+    if result.get("hot"):
+        return {"status": "ADVISORY", "code": "sheet-vision-repetitive",
+                "reason": "cross-scene sheet vision found likely visual repetition",
+                "cacheHit": bool(cache_hit)}
+    return {"status": "CLOSED", "cacheHit": bool(cache_hit)}
 
 # DUNG "CAI TIEN" LOI NHAC TREN.
 #
@@ -206,6 +224,8 @@ def main():
     ap.add_argument("--runs", type=int, default=RUNS,
                     help="chay may lan roi lay trung vi (do dao dong da do duoc)")
     ap.add_argument("--json", dest="out")
+    ap.add_argument("--status-json", action="store_true",
+                    help="emit only the machine-readable CLOSED/ADVISORY result")
     args = ap.parse_args()
 
     if not pathlib.Path(args.sheet).is_file():
@@ -213,6 +233,9 @@ def main():
         return 2
 
     result, cache_hit, _key = cached_aggregate(args.sheet, args.scenes, args.model, args.runs)
+    if args.status_json:
+        print(json.dumps(status_result(result, cache_hit), ensure_ascii=False))
+        return 0
     if not result:
         print("WARN sheet vision unreliable: no run returned valid scene counts; "
               "quality advisory skipped", file=sys.stderr)

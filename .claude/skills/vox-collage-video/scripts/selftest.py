@@ -194,6 +194,35 @@ def repair_contract_checks(tmp):
     hook = _load_script("hook_gate.py")
     sheet_vision = _load_script("sheet_vision.py")
     review_vision = _load_script("review_vision.py")
+    plan_gate = _load_script("plan_gate.py")
+
+    # V16-like primary treatment run: backdrop and bespoke arrangement prose
+    # differ, but the director still receives one advisory over the exact run.
+    treatment_run = [
+        {"id": "S10", "visualLanguage": "document", "backdrop": "card",
+         "template": "bespoke: evidence title and authority stack"},
+        {"id": "S11", "visualLanguage": "document", "backdrop": "spotlight",
+         "template": "bespoke: quotation crop beside source badge"},
+        {"id": "S12", "visualLanguage": "document", "backdrop": "chart",
+         "template": "bespoke: document fragments become a comparison chart"},
+        {"id": "S13", "visualLanguage": "document", "backdrop": "spotlight",
+         "template": "bespoke: final record panel with highlighted holding"},
+    ]
+    run_report = plan_gate.Report()
+    plan_gate.gate_diversity(copy.deepcopy(treatment_run), run_report, {})
+    run_text = "\n".join(run_report.lines)
+    checks.append(("preflight: varied grammar still surfaces S10-S13 primary document run",
+                   "WARN S10-S13: 4 consecutive scenes use DOCUMENT" in run_text and
+                   "card / spotlight / chart / spotlight" in run_text))
+    checks.append(("preflight: primary treatment run remains advisory, never hard",
+                   not run_report.failures))
+    interrupted = copy.deepcopy(treatment_run)
+    interrupted[2]["visualLanguage"] = "data"
+    interrupted_report = plan_gate.Report()
+    plan_gate.gate_diversity(interrupted, interrupted_report, {})
+    checks.append(("preflight: changing a middle primary treatment breaks the four-scene run",
+                   "4 consecutive scenes" not in "\n".join(interrupted_report.lines) and
+                   not interrupted_report.failures))
 
     # Generic receipts: true input, tool and parameter changes each invalidate.
     source = tmp / "audio.mp3"; source.write_bytes(b"audio-a")
@@ -241,7 +270,9 @@ def repair_contract_checks(tmp):
     # Synthetic project contracts.
     (tmp / "input").mkdir(exist_ok=True); (tmp / "public").mkdir(exist_ok=True)
     (tmp / "src" / "scenes").mkdir(parents=True, exist_ok=True)
-    (tmp / "package.json").write_text('{"dependencies":{"remotion":"4.0.507"}}', encoding="utf-8")
+    package = {"dependencies": {"remotion": "^4.0.507", "@remotion/cli": "^4.0.507",
+                                "lucide-react": "^1.33.0", "unrelated-package": "^2.0.0"}}
+    (tmp / "package.json").write_text(json.dumps(package), encoding="utf-8")
     words_path = tmp / "input" / "words99_aligned.json"
     words_path.write_text(json.dumps({"words": [["local", 0.0, 0.3, 0], ["narration", 0.3, 0.8, 0],
                                                 ["neighbor", 2.1, 2.5, 1]]}), encoding="utf-8")
@@ -407,7 +438,8 @@ def repair_contract_checks(tmp):
     # not care about workflow-only plan status.
     helper = tmp / "src" / "scenes" / "V99Kit.jsx"
     helper.write_text("export const kit='a'", encoding="utf-8")
-    (tmp / "src" / "V99Master.jsx").write_text("export const V99Master=()=>null", encoding="utf-8")
+    (tmp / "src" / "V99Master.jsx").write_text(
+        'import {Circle} from "lucide-react"; export const V99Master=()=>Circle;', encoding="utf-8")
     (tmp / "src" / "Root.jsx").write_text(
         'import {V99Master} from "./V99Master";\n'
         'export const Root=()=> <><Composition id="V98Master" component={Other}/>'
@@ -419,13 +451,51 @@ def repair_contract_checks(tmp):
     (tmp / "src" / "scenes" / "shared.jsx").write_text("shared", encoding="utf-8")
     (tmp / "src" / "scenes" / "visualLanguage.jsx").write_text("visual", encoding="utf-8")
     (tmp / "remotion.config.ts").write_text("config", encoding="utf-8")
-    (tmp / "package-lock.json").write_text("{}", encoding="utf-8")
+    lock = {"lockfileVersion": 3, "packages": {
+        "node_modules/remotion": {"version": "4.0.507"},
+        "node_modules/@remotion/cli": {"version": "4.0.507"},
+        "node_modules/lucide-react": {"version": "1.33.0"},
+        "node_modules/unrelated-package": {"version": "2.0.0"},
+    }}
+    lock_path = tmp / "package-lock.json"
+    lock_path.write_text(json.dumps(lock), encoding="utf-8")
+    runtime_versions = render_video.resolved_render_versions(
+        tmp, [tmp / "src" / "V99Master.jsx"])
+    checks.append(("draft versions: canonical lowercase Remotion runtime identities resolve exact lock",
+                   runtime_versions.get("remotion") ==
+                   {"version": "4.0.507", "resolution": "package-lock"} and
+                   runtime_versions.get("@remotion/cli") ==
+                   {"version": "4.0.507", "resolution": "package-lock"} and
+                   "@Remotion/cli" not in runtime_versions))
     draft = tmp / "draft.mp4"; draft.write_bytes(b"synthetic-draft")
     final = tmp / "final.mp4"; final.write_bytes(b"synthetic-final")
     d = render_video.render_contract(plan_path, "draft", draft)
     state.make_receipt(d[3], "render-draft", d[6], d[7], d[8], [draft])
     checks.append(("draft: unchanged relevant source/settings reuse",
                    render_video.render_contract(plan_path, "draft", draft)[4]))
+    unrelated_lock = copy.deepcopy(lock)
+    unrelated_lock["packages"]["node_modules/unrelated-package"]["version"] = "2.1.0"
+    lock_path.write_text(json.dumps(unrelated_lock), encoding="utf-8")
+    checks.append(("draft versions: unrelated locked dependency mutation stays HIT",
+                   render_video.render_contract(plan_path, "draft", draft)[4]))
+    used_lock = copy.deepcopy(lock)
+    used_lock["packages"]["node_modules/lucide-react"]["version"] = "1.34.0"
+    lock_path.write_text(json.dumps(used_lock), encoding="utf-8")
+    checks.append(("draft versions: source-closure locked dependency mutation invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    runtime_lock = copy.deepcopy(lock)
+    runtime_lock["packages"]["node_modules/remotion"]["version"] = "4.0.508"
+    lock_path.write_text(json.dumps(runtime_lock), encoding="utf-8")
+    checks.append(("draft versions: unchanged package range with changed exact lock invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    lock_path.unlink()
+    fallback_a = render_video.resolved_render_versions(tmp, [tmp / "src" / "V99Master.jsx"])
+    fallback_b = render_video.resolved_render_versions(tmp, [tmp / "src" / "V99Master.jsx"])
+    checks.append(("draft versions: missing lock uses deterministic marked fallback",
+                   fallback_a == fallback_b and
+                   fallback_a["lucide-react"]["resolution"] == "package-json-fallback" and
+                   fallback_a["lucide-react"]["unresolved"]))
+    lock_path.write_text(json.dumps(lock), encoding="utf-8")
     editorial = copy.deepcopy(synthetic_plan)
     editorial["scenes"][0]["viewerQuestion"] = "editorial wording only"
     editorial["scenes"][0]["density"] = "high"
@@ -671,10 +741,88 @@ def repair_contract_checks(tmp):
                    first_calls == sheet_vision.RUNS and second_calls == 0 and
                    third_calls == sheet_vision.RUNS and not first_hit and second_hit and not third_hit))
 
+    # Unreliable aggregates are cacheable too: unchanged pixels make zero model
+    # calls and retain the same explicit machine advisory.
+    unreliable_sheet = frames_dir / "sheet-unreliable-cache.jpg"
+    Image.new("RGB", (30, 30), (8, 9, 10)).save(unreliable_sheet)
+    unreliable_calls = {"n": 0}
+    def fake_invalid_sheet(_path, _model):
+        unreliable_calls["n"] += 1
+        return {"_error": "mock invalid aggregate"}
+    unreliable_first, unreliable_first_hit, _ = sheet_vision.cached_aggregate(
+        unreliable_sheet, 3, "mock-unreliable", sheet_vision.RUNS, fake_invalid_sheet)
+    calls_after_unreliable_first = unreliable_calls["n"]
+    unreliable_second, unreliable_second_hit, _ = sheet_vision.cached_aggregate(
+        unreliable_sheet, 3, "mock-unreliable", sheet_vision.RUNS, fake_invalid_sheet)
+    calls_after_unreliable_second = unreliable_calls["n"] - calls_after_unreliable_first
+    checks.append(("sheet unreliable cache: unchanged aggregate makes zero model calls and keeps advisory",
+                   unreliable_first is None and unreliable_second is None and
+                   calls_after_unreliable_first == sheet_vision.RUNS and
+                   calls_after_unreliable_second == 0 and not unreliable_first_hit and
+                   unreliable_second_hit and
+                   sheet_vision.status_result(unreliable_first)["code"] ==
+                   sheet_vision.status_result(unreliable_second, True)["code"] ==
+                   "sheet-vision-unreliable"))
+
+    # review_vision consumes only structured sheet status. All subprocesses are
+    # mocked; the receipt must distinguish clean, repetitive, and unreliable.
+    class MockVisionProcess:
+        def __init__(self, returncode=0, stdout="", stderr=""):
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def review_receipt_for(sheet_status):
+        calls = []
+        old_run, old_argv = review_vision.subprocess.run, sys.argv
+        rv_path = review_vision.receipt_path(tmp, changed_plan.get("video", "V"))
+        rv_path.unlink(missing_ok=True)
+        def fake_review_run(command, **_kwargs):
+            script = pathlib.Path(command[1]).name
+            calls.append(script)
+            if script == "sheet_vision.py":
+                return MockVisionProcess(stdout=json.dumps(sheet_status))
+            return MockVisionProcess()
+        review_vision.subprocess.run = fake_review_run
+        sys.argv = ["review_vision.py", str(lifecycle_path)]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                code = review_vision.main()
+        finally:
+            review_vision.subprocess.run, sys.argv = old_run, old_argv
+        return code, state.read_json(rv_path, {}), calls
+
+    clean_code, clean_receipt, clean_calls = review_receipt_for({"status": "CLOSED",
+                                                                 "cacheHit": False})
+    repetitive_code, repetitive_receipt, repetitive_calls = review_receipt_for(
+        {"status": "ADVISORY", "code": "sheet-vision-repetitive",
+         "reason": "cross-scene sheet vision found likely visual repetition", "cacheHit": False})
+    unreliable_code, unreliable_receipt, unreliable_review_calls = review_receipt_for(
+        {"status": "ADVISORY", "code": "sheet-vision-unreliable",
+         "reason": "cross-scene sheet vision unavailable/unreliable", "cacheHit": True})
+    clean_advisories = (clean_receipt.get("metadata") or {}).get("advisories") or []
+    repetitive_advisories = (repetitive_receipt.get("metadata") or {}).get("advisories") or []
+    unreliable_advisories = (unreliable_receipt.get("metadata") or {}).get("advisories") or []
+    checks.append(("review vision: valid clean sheet closes without reliability advisory",
+                   clean_code == 0 and clean_receipt.get("status") == "CLOSED" and
+                   not clean_advisories and clean_calls.count("sheet_vision.py") == 1))
+    checks.append(("review vision: repetitive sheet quality advisory is preserved",
+                   repetitive_code == 0 and repetitive_receipt.get("status") == "CLOSED" and
+                   any(item.get("code") == "sheet-vision-repetitive"
+                       for item in repetitive_advisories) and
+                   repetitive_calls.count("sheet_vision.py") == 1))
+    checks.append(("review vision: unreliable sheet advisory is explicit and non-hard",
+                   unreliable_code == 0 and unreliable_receipt.get("status") == "CLOSED" and
+                   any(item.get("code") == "sheet-vision-unreliable" and
+                       item.get("reason") == "cross-scene sheet vision unavailable/unreliable"
+                       for item in unreliable_advisories) and
+                   unreliable_review_calls.count("sheet_vision.py") == 1))
+
     # Stop checks review-vision current/stale state but never launches any of
     # the three model-capable scripts. Deterministic checks remain represented.
     deterministic_calls, model_subprocesses = [], []
-    old_inc, old_selftest, old_current = hook.run_incremental, hook.selftest_is_current, review_vision.is_current
+    old_inc, old_selftest, old_current = (hook.run_incremental, hook.selftest_is_current,
+                                          hook.review_vision.is_current)
     def fake_incremental(_root, _pp, _plan, script_name, _args):
         deterministic_calls.append(script_name)
         if script_name in ("asset_vision.py", "vision_check.py", "sheet_vision.py"):
@@ -687,10 +835,10 @@ def repair_contract_checks(tmp):
         scene["status"] = "built"
     try:
         current_err, stale_err = io.StringIO(), io.StringIO()
-        review_vision.is_current = lambda *_: (True, {})
+        hook.review_vision.is_current = lambda *_: (True, {})
         with contextlib.redirect_stderr(current_err):
             stop_current = hook.stop(tmp, (lifecycle_path, stop_plan))
-        review_vision.is_current = lambda *_: (False, {})
+        hook.review_vision.is_current = lambda *_: (False, {})
         with contextlib.redirect_stderr(stale_err):
             stop_stale = hook.stop(tmp, (lifecycle_path, stop_plan))
         def hard_incremental(_root, _pp, _plan, script_name, _args):
@@ -703,7 +851,7 @@ def repair_contract_checks(tmp):
             stop_hard = hook.stop(tmp, (lifecycle_path, stop_plan))
     finally:
         hook.run_incremental, hook.selftest_is_current = old_inc, old_selftest
-        review_vision.is_current = old_current
+        hook.review_vision.is_current = old_current
     checks.append(("Stop hook: current/stale review vision causes zero model/network subprocesses",
                    stop_current == 0 and stop_stale == 0 and not model_subprocesses and
                    "explicit review vision remains" in stale_err.getvalue()))

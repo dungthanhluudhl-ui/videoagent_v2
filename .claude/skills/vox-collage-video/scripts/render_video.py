@@ -111,9 +111,14 @@ def referenced_public_files(root, source_files):
     return sorted(found, key=str)
 
 
-def installed_render_versions(root, source_files):
+def resolved_render_versions(root, source_files):
+    """Exact locked versions for packages used by this render source closure."""
     package = state.read_json(pathlib.Path(root) / "package.json", {})
-    installed = {**(package.get("dependencies") or {}), **(package.get("devDependencies") or {})}
+    specifications = {**(package.get("dependencies") or {}),
+                      **(package.get("devDependencies") or {})}
+    lock = state.read_json(pathlib.Path(root) / "package-lock.json", {})
+    lock_packages = lock.get("packages") or {}
+    legacy_dependencies = lock.get("dependencies") or {}
     external = set()
     pattern = re.compile(r'(?:from\s+|import\s*)["\']([^\.][^"\']*)["\']')
     for path in source_files:
@@ -125,7 +130,16 @@ def installed_render_versions(root, source_files):
             parts = name.split("/")
             external.add("/".join(parts[:2]) if name.startswith("@") else parts[0])
     external.update(("remotion", "@remotion/cli"))
-    return {name: installed.get(name) for name in sorted(external) if name in installed}
+    resolved = {}
+    for name in sorted(external):
+        entry = lock_packages.get(f"node_modules/{name}") or legacy_dependencies.get(name) or {}
+        version = entry.get("version") if isinstance(entry, dict) else None
+        if version:
+            resolved[name] = {"version": str(version), "resolution": "package-lock"}
+        else:
+            resolved[name] = {"specification": specifications.get(name),
+                              "resolution": "package-json-fallback", "unresolved": True}
+    return resolved
 
 
 def source_inputs(root, plan_path, plan):
@@ -145,7 +159,7 @@ def source_inputs(root, plan_path, plan):
         paths.append(root / "public" / audio)
     return [{"renderPlan": render_plan_slice(plan)},
             {"rootRegistration": selected_registration(root, f"{video}Master")},
-            {"installedRenderVersions": installed_render_versions(root, paths)},
+            {"resolvedRenderVersions": resolved_render_versions(root, paths)},
             *[state.file_input(p) for p in paths]]
 
 
@@ -161,8 +175,7 @@ def render_contract(plan_path, mode="draft", output=None, scale=None, codec="h26
     params = {"mode": mode, "composition": f"{video}Master", "scale": scale,
               "fps": plan.get("fps", 30), "codec": codec}
     inputs = source_inputs(root, plan_path, plan)
-    tool = state.tool_identity(HERE / "render_video.py", versions={"wrapper": VERSION,
-                               "remotion": state.read_json(root / "package.json", {}).get("dependencies", {}).get("remotion")})
+    tool = state.tool_identity(HERE / "render_video.py", versions={"wrapper": VERSION})
     receipt_path = state.runtime_dir(root, video) / "receipts" / f"render-{mode}.json"
     current, receipt = state.receipt_current(receipt_path, f"render-{mode}", inputs, tool,
                                              params)

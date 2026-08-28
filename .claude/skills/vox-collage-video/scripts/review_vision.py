@@ -9,7 +9,7 @@ import sys
 import stage_state as state
 
 HERE = pathlib.Path(__file__).resolve().parent
-VERSION = "explicit-review-vision-v1"
+VERSION = "explicit-review-vision-v2"
 
 
 def inputs_for(plan_path, plan):
@@ -76,11 +76,27 @@ def main():
         if not sheet_path.is_absolute():
             sheet_path = state.project_root(plan_path) / sheet_path
         commands.append(("sheet_vision.py", [str(sheet_path), "--scenes",
-                                             str(len(plan.get("scenes") or []))]))
+                                             str(len(plan.get("scenes") or [])),
+                                             "--status-json"]))
     advisories = []
     for script, argv in commands:
         proc = subprocess.run([sys.executable, str(HERE / script), *argv], capture_output=True,
                               text=True, encoding="utf-8", errors="replace")
+        if script == "sheet_vision.py" and proc.returncode == 0:
+            try:
+                sheet_status = json.loads(proc.stdout)
+            except (TypeError, json.JSONDecodeError):
+                print(state.compact_result("HARD", hard=1,
+                      details="sheet_vision.py returned invalid structured status"), file=sys.stderr)
+                return 2
+            if sheet_status.get("status") == "ADVISORY":
+                advisories.append({"script": script, "code": sheet_status.get("code"),
+                                   "reason": sheet_status.get("reason")})
+            elif sheet_status.get("status") != "CLOSED":
+                print(state.compact_result("HARD", hard=1,
+                      details="sheet_vision.py returned unknown structured status"), file=sys.stderr)
+                return 2
+            continue
         if proc.returncode == 1:
             advisories.append({"script": script, "output": (proc.stdout + proc.stderr).strip()})
         elif proc.returncode not in (0, 1):

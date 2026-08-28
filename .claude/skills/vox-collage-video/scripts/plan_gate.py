@@ -502,6 +502,37 @@ def gate_diversity(scenes, rep, thresholds):
                 rep.info(f"advisory: {field}={cur_v!r} repeats on consecutive scenes "
                          f"{prev.get('id')} -> {cur.get('id')}; judge the rendered edit")
 
+    # Primary treatment is the strongest plan-time signal of a visually
+    # repetitive run. Report meaningful runs independently of backdrop and
+    # template prose; this is evidence for the director, never a variety quota.
+    primary_runs = []
+    for scene in scenes:
+        langs = scene_languages(scene)
+        primary_runs.append((scene, langs[0] if langs else None))
+    start = 0
+    while start < len(primary_runs):
+        end = start + 1
+        while end < len(primary_runs) and primary_runs[end][1] == primary_runs[start][1]:
+            end += 1
+        primary = primary_runs[start][1]
+        if primary and end - start >= 3:
+            run = [scene for scene, _ in primary_runs[start:end]]
+            ids = [scene.get("id", "?") for scene in run]
+            backdrops = [str(scene.get("backdrop") or "unspecified") for scene in run]
+            arrangements = []
+            for scene in run:
+                template = re.sub(r"^bespoke\s*:?\s*", "", str(scene.get("template") or ""),
+                                  flags=re.IGNORECASE)
+                template = re.sub(r"\s+", " ", template).strip() or "unspecified"
+                arrangements.append(template[:96] + ("…" if len(template) > 96 else ""))
+            rep.warn(f"{ids[0]}-{ids[-1]}: {len(run)} consecutive scenes use "
+                     f"{primary.upper()} as the primary treatment. Backdrops: "
+                     f"{' / '.join(backdrops)}. Planned arrangements: "
+                     f"{' / '.join(arrangements)}. Review whether these scenes are genuinely "
+                     "distinct spatial transformations before build. Preserve the treatment "
+                     "when evidence meaning requires it; do not change scenes merely for variety.")
+        start = end
+
     # One whole-plan treatment preflight. Exact contiguous groups and their
     # shared grammar are useful before JSX; a quota or automatic rewrite is not.
     signatures = []
