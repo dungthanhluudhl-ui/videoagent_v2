@@ -502,6 +502,41 @@ def gate_diversity(scenes, rep, thresholds):
                 rep.info(f"advisory: {field}={cur_v!r} repeats on consecutive scenes "
                          f"{prev.get('id')} -> {cur.get('id')}; judge the rendered edit")
 
+    # One whole-plan treatment preflight. Exact contiguous groups and their
+    # shared grammar are useful before JSX; a quota or automatic rewrite is not.
+    signatures = []
+    for scene in scenes:
+        langs = scene_languages(scene)
+        primary = langs[0] if langs else None
+        template = (scene.get("template") or "").strip()
+        lower = template.lower()
+        if primary == "document" and any(word in lower for word in
+                                          ("document", "evidence", "source", "record", "card", "panel")):
+            template_family = "dominant evidence-card/source grammar"
+        elif template in NAMED_TEMPLATES:
+            template_family = template
+        else:
+            template_family = re.sub(r"^bespoke\s*:?\s*", "bespoke ", template,
+                                     flags=re.IGNORECASE).split(" with ", 1)[0].strip()
+        grammar = (primary, scene.get("backdrop"), template_family)
+        signatures.append((scene.get("id"), grammar))
+    start = 0
+    while start < len(signatures):
+        end = start + 1
+        while end < len(signatures) and signatures[end][1] == signatures[start][1]:
+            end += 1
+        if end - start >= 2:
+            ids = [sid for sid, _ in signatures[start:end]]
+            primary, backdrop, template = signatures[start][1]
+            grammar = "; ".join(x for x in (
+                f"primary {primary} treatment" if primary else "",
+                f"{backdrop} backdrop" if backdrop else "",
+                f"{template} grammar" if template else "") if x)
+            rep.warn(f"{'–'.join((ids[0], ids[-1]))}: {grammar}. Review this cluster before "
+                     "build; preserve authentic evidence but consider different spatial "
+                     "transformations when they add meaning.")
+        start = end
+
     # These are implementation/layout signals only; keep them visible but do
     # not infer finished-video monotony from plan labels.
     tops = Counter((s.get("punch") or {}).get("top") for s in scenes

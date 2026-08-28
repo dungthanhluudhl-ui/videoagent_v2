@@ -25,6 +25,17 @@ editorial judgment decide them.
 
 **NARRATION MEANING → VISUAL TREATMENT → EVIDENCE/ASSET NEED → COMPONENT.**
 
+### Compact director contract
+
+Show the **relationship**, not merely the topic. Mechanism means setup/attempt →
+consequence/failure; reversal means one state visibly gives way; “not X but Y”
+must show X before negation/replacement. Quantity must be perceived, not merely
+read as a numeral, and comparison must create a real spatial relation.
+`visualTransformation` promises a visible state change, not prose metadata.
+Authentic evidence should support the claim, but document evidence does not imply
+one centered document-card composition. Add a second treatment only when it adds
+meaning. Use `worked-examples.md` lazily when a difficult decision needs precedent.
+
 Prefer authentic, relevant visuals: source documents, real places, specific
 people/objects, maps, and source-preserving crops. Generated imagery must still
 be relevant and honest. Do not use generic symbols, decorative diagrams, icons,
@@ -65,6 +76,10 @@ their stage.
    - Run `plan_gate.py input/scene_plan<N>.json --hook`: integrity failures
      block; quality/editorial heuristics warn. Use strict standalone mode only
      for deliberate diagnostics.
+   - Before sourcing/build, perform one whole-plan treatment preflight. Review
+      exact advisory clusters and shared planned grammar; preserve authentic
+      evidence and change spatial treatment only when meaning benefits. This is
+      one director pass, not a quota, blocker, or automatic rewrite.
    - Present the shot list before sourcing unless the user explicitly requested
      end-to-end execution. Set `shotlistApproved` only after approval.
    - `pipeline_contracts.py approve-plan <plan>` closes a valid approved plan
@@ -111,8 +126,10 @@ their stage.
      composition repetition before minor cosmetic debt.
    - A resolved quality fail is acknowledged/accepted debt, not a pass. Missing,
      stale, unreadable, or blank evidence is hard failure.
-   - Cheap vision remains an advisory filter at review stage. Open only flagged
-     images; the pre-read image-context budget remains hard.
+   - Cheap vision is an explicit review action: `review_vision.py <plan>`. Its
+      per-item/per-sheet caches make unchanged work free and its per-video receipt
+      records current completion. Stop checks that receipt and never calls a model.
+      Open only flagged images; the pre-read image-context budget remains hard.
 
 6. **Finish**
    - `assemble.py --check` must pass.
@@ -132,6 +149,24 @@ Scripts/workers return `STATUS`, `HARD`, `ADVISORY`, changed artifacts, unresolv
 questions, details and receipt; hard issues stay explicit, successful logs/reasoning
 stay on disk. `economics.jsonl` records timing/cache/subprocess/vision/render facts;
 unavailable main-token usage is `UNKNOWN`.
+
+## Correction policy
+
+**HARD INTEGRITY:** repair the objective local defect, rerun only affected
+dependencies/gates, and repeat only until mechanically valid. **EDITORIAL
+QUALITY:** director/plan → early preflight → build → actual-master review → one
+targeted correction → delta review → final. Do not optimize until a metric turns
+green. After the intended correction, report remaining aesthetic debt explicitly;
+do not rewrite unrelated scenes to silence an advisory. A local S5 repair normally
+reopens S5 evidence/review and only genuinely affected neighbor/global summaries.
+
+## Real context boundaries
+
+Use fresh sessions: **SESSION A—PLAN, SESSION B—BUILD, SESSION C—REVIEW /
+CORRECTION / FINAL**. Emit a compact `pipeline_contracts.py handoff` artifact at
+each boundary. Disk receipts reduce re-reading and duplicate work, but they do not
+shrink the history of a continuous Codex conversation. Fresh-session boundaries
+are what actually isolate main-agent context; worker packets do not create one.
 
 ## Reference routing
 

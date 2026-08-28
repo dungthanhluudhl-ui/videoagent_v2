@@ -5,7 +5,8 @@ idea. This file is the other half: twelve real decisions from V10/Itaewon, each
 with the narration that prompted it, the reasoning, the frame that shipped, and
 **the obvious answer that was rejected and why**.
 
-Read this at step 2a, before writing `visualTransformation` for any scene.
+The compact director contract in `SKILL.md` is mandatory in normal planning.
+Read this full file lazily when a difficult `visualTransformation` needs precedent.
 
 The rejected column matters more than the chosen one. In almost every case the
 rejected option is what an AI reaches for first, it passes every gate, and it

@@ -38,6 +38,8 @@ import json
 import pathlib
 import sys
 
+import stage_state as state
+
 _HERE = pathlib.Path(__file__).resolve().parent
 
 
@@ -68,6 +70,7 @@ REPEAT_SHARE = 0.45
 # Chay le so lan va lay TRUNG VI la cach re nhat de xu ly dao dong da do duoc
 # - ba lan het khoang 10k token cua model re, tuc gan nhu khong ton gi.
 RUNS = 3
+VISION_VERSION = "sheet-aggregate-v2"
 
 PROMPT = (
     "Anh nay la BANG TOM TAT CANH cua mot video doc: MOI CANH CHI CO DUNG MOT KHUNG DAI DIEN; "
@@ -99,6 +102,51 @@ def valid_run(run, total_scenes):
     normalized = dict(run)
     normalized["groups"] = clean
     return normalized
+
+
+def cache_identity(sheet, scenes, prompt, model, runs):
+    return state.digest({"sheet": state.file_input(sheet), "scenes": scenes,
+                         "prompt": prompt, "model": model, "runs": runs,
+                         "sendWidth": SEND_W, "repeatShare": REPEAT_SHARE,
+                         "implementation": state.file_input(pathlib.Path(__file__)),
+                         "version": VISION_VERSION})
+
+
+def aggregate(runs, scenes):
+    parsed = [r for r in runs if "_error" not in r]
+    ok = [valid_run(r, scenes) for r in parsed]
+    ok = [r for r in ok if r is not None]
+    if not ok:
+        return None
+    shares = []
+    for run in ok:
+        groups = sorted(run.get("groups") or [], key=lambda g: -(g.get("count") or 0))
+        total = scenes or sum(g.get("count") or 0 for g in groups)
+        biggest = (groups[0].get("count") or 0) if groups else 0
+        shares.append((biggest / total if total else 0.0, biggest, total, groups, run))
+    shares.sort(key=lambda item: item[0])
+    share, biggest, total, groups, run = shares[len(shares) // 2]
+    return {"runs": [item[4] for item in shares], "shares": [item[0] for item in shares],
+            "share": share, "biggest": biggest, "total": total, "groups": groups,
+            "representative": run, "hot": share > REPEAT_SHARE,
+            "tokens": sum(r.get("_tokens", 0) for r in ok)}
+
+
+def cached_aggregate(sheet, scenes, model, runs, check_fn=None):
+    root = state.project_root(pathlib.Path(sheet))
+    video = pathlib.Path(sheet).parent.name or "VUNKNOWN"
+    key = cache_identity(sheet, scenes, PROMPT, model, runs)
+    cached = state.cache_get(root, video, "sheet-vision", key)
+    if cached is not None:
+        return cached, True, key
+    check_fn = check_fn or check
+    import concurrent.futures as cf
+    with cf.ThreadPoolExecutor(max_workers=runs) as ex:
+        raw = list(ex.map(lambda _: check_fn(sheet, model), range(runs)))
+    result = aggregate(raw, scenes)
+    state.cache_put(root, video, "sheet-vision", key, result,
+                    {"model": model, "runs": runs, "sheet": str(sheet)})
+    return result, False, key
 
 # DUNG "CAI TIEN" LOI NHAC TREN.
 #
@@ -164,30 +212,17 @@ def main():
         print("khong thay %s" % args.sheet, file=sys.stderr)
         return 2
 
-    import concurrent.futures as cf
-    with cf.ThreadPoolExecutor(max_workers=args.runs) as ex:
-        runs = list(ex.map(lambda _: check(args.sheet, args.model), range(args.runs)))
-    parsed = [r for r in runs if "_error" not in r]
-    ok = [valid_run(r, args.scenes) for r in parsed]
-    ok = [r for r in ok if r is not None]
-    if not ok:
+    result, cache_hit, _key = cached_aggregate(args.sheet, args.scenes, args.model, args.runs)
+    if not result:
         print("WARN sheet vision unreliable: no run returned valid scene counts; "
               "quality advisory skipped", file=sys.stderr)
         return 0
 
-    toks = sum(r.get("_tokens", 0) for r in ok)
-    shares, best = [], None
-    for r in ok:
-        gs = sorted(r.get("groups") or [], key=lambda g: -(g.get("count") or 0))
-        tot = args.scenes or sum(g.get("count") or 0 for g in gs)
-        big = (gs[0].get("count") or 0) if gs else 0
-        s = big / tot if tot else 0.0
-        shares.append((s, big, tot, gs, r))
-    shares.sort(key=lambda x: x[0])
-    share, biggest, total, groups, r = shares[len(shares) // 2]      # trung vi
+    share, biggest, total = result["share"], result["biggest"], result["total"]
+    groups, r, toks = result["groups"], result["representative"], result["tokens"]
 
     print("nhom bo cuc trong giong nhau (lan chay o giua %d lan):"
-          % len(ok))
+          % len(result["runs"]))
     for g in groups:
         c = g.get("count") or 0
         pct = (" = %.0f%%" % (c * 100.0 / total)) if total else ""
@@ -197,19 +232,20 @@ def main():
     if r.get("note"):
         print("\n" + r["note"])
 
-    hot = share > REPEAT_SHARE
+    hot = result["hot"]
 
     if args.out:
         pathlib.Path(args.out).write_text(
-            json.dumps([x[4] for x in shares], ensure_ascii=False, indent=2),
+            json.dumps(result, ensure_ascii=False, indent=2),
             encoding="utf-8")
 
     print("\n%d lan chay cho ty le nhom lon nhat: %s"
-          % (len(ok), ", ".join("%.0f%%" % (s * 100) for s, *_ in shares)))
+          % (len(result["runs"]), ", ".join("%.0f%%" % (s * 100) for s in result["shares"])))
     print("trung vi %d/%s = %.0f%%   (tran %.0f%%)   -> %s"
           % (biggest, total or "?", share * 100, REPEAT_SHARE * 100,
              "LAP LAI - xem lai truoc khi ship" if hot else "da dang, dat"))
     print("~%s token model re, KHONG vao context agent" % format(toks, ","))
+    print("cache: %s" % ("HIT (0 model calls)" if cache_hit else "MISS"))
     return 1 if hot else 0
 
 

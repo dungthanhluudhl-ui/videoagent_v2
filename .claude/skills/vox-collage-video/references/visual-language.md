@@ -100,6 +100,8 @@ to `DocumentEvidence`, which preserves the raster, dims surrounding material,
 highlights exact evidence, and moves when narration reaches another clause. It
 does not choose evidence, rewrite source text, or force every document into the
 same composition.
+The region identifies the claim location, not a crop boundary. Safe presentation
+margin belongs to the primitive; crop is explicit opt-in via `allowCrop`.
 
 Rendered variety is judged from the scene-summary sheet, not from apparently
 different `visualLanguage` labels. Do not relabel scenes or add media/layout/

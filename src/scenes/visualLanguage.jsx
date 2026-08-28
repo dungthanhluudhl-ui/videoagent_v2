@@ -28,6 +28,7 @@ import {
 } from "remotion";
 import { fitText, measureText } from "@remotion/layout-utils";
 import { BG, INK, ORANGE, fontFamily } from "./shared";
+import { fitDocumentEvidence } from "./documentEvidenceGeometry.mjs";
 
 /** Width of one character, in ems, for Be Vietnam Pro at the weights used
  *  here. Deliberately duplicated in `scripts/text_gate.py` as CHAR_EM - the
@@ -178,6 +179,8 @@ export const DocumentEvidence = ({
   dim = 0.58,
   highlight = ORANGE,
   sourceAspect = 1 / Math.sqrt(2),
+  safetyMargin = 18,
+  allowCrop = false,
 }) => {
   const frame = useCurrentFrame();
   const active = regionAtFrame(regions, frame);
@@ -193,20 +196,11 @@ export const DocumentEvidence = ({
   const rw = mix("width");
   const rh = mix("height");
   const regionZoom = (previous.zoom ?? 1) + ((active.zoom ?? 1) - (previous.zoom ?? 1)) * progress;
-  const pageWidth = Math.min(width, height * sourceAspect);
-  const pageHeight = pageWidth / sourceAspect;
-  const scale = Math.min(width / Math.max(rw * pageWidth, 0.001),
-    height / Math.max(rh * pageHeight, 0.001)) * regionZoom;
-  const cx = rx + rw / 2;
-  const cy = ry + rh / 2;
-  const shownWidth = pageWidth * scale;
-  const shownHeight = pageHeight * scale;
-  const pageLeft = width / 2 - cx * shownWidth;
-  const pageTop = height / 2 - cy * shownHeight;
-  const focusLeft = pageLeft + rx * shownWidth;
-  const focusTop = pageTop + ry * shownHeight;
-  const focusWidth = rw * shownWidth;
-  const focusHeight = rh * shownHeight;
+  const geometry = fitDocumentEvidence({viewportWidth: width, viewportHeight: height,
+    sourceAspect, region: {x: rx, y: ry, width: rw, height: rh},
+    requestedZoom: regionZoom, safetyMargin, allowCrop});
+  const {pageWidth, pageHeight, scale, pageLeft, pageTop, shownWidth, shownHeight,
+    focusLeft, focusTop, focusWidth, focusHeight} = geometry;
   const shade = `rgba(15,15,15,${dim})`;
 
   return (

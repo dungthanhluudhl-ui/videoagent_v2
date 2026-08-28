@@ -20,7 +20,8 @@ semantics.
   - building: plan + build integrity;
   - build complete: batch text, icon, cutout, asset, optional-block, assembly,
     and baseline diagnostics;
-  - review exists: review evidence + pixel checks; cheap vision may run here.
+  - review exists: review evidence + pixel checks; Stop only checks the explicit
+    per-video `review_vision.py` receipt and never invokes cheap vision.
 - Each deterministic gate has a receipt over its true dependencies. Unchanged
   gates skip their subprocess; a cached hard result still blocks and identifies
   its details artifact. Unrelated file edits do not invalidate a gate.

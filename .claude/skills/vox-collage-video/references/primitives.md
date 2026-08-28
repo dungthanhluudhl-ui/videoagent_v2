@@ -34,7 +34,7 @@ never touched: at the time of the V10 review only **3 of 12** available
 | Component | Use |
 |---|---|
 | `BackgroundPhoto` | Full-bleed photo, tinted to palette; `drift=0` by default |
-| `DocumentEvidence` | Default authentic document evidence: raster source, timed focus regions, crop/pan/zoom, surrounding dim, exact-region highlight |
+| `DocumentEvidence` | Authentic raster evidence with timed focus and safe-fit margin; cited regions remain visible by default; intentional crop requires `allowCrop` |
 | `DiagramCanvas` | SVG container in a 1080×1300 space for drawn reconstructions |
 | `DrawnPath` | Progressive stroke reveal |
 | `DimensionLine` | Measurement line with end ticks and a label ("3,2m") |
@@ -67,6 +67,8 @@ this mapping: `beat_sync.py evidence-regions <plan>` resolves each phrase throug
 the existing aligned transcript and returns scene-local `regions` for
 `DocumentEvidence`. A document used only as context/authority remains valid
 without `evidenceRegions`. Never retype source text as a substitute.
+`evidenceRegion` describes where the claim is located, not the exact crop boundary.
+The rendering primitive owns deterministic presentation margin around it.
 
 ### `src/scenes/iconVocabulary.jsx` — the symbol vocabulary
 

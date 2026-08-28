@@ -21,3 +21,15 @@ For continuation, identify the existing `scene_plan<N>.json` and requested next
 output; do not regenerate completed timing, assets, scenes, or review evidence.
 Do not paste prior logs, prompt packs, clean item reports, or unrelated scene
 history back into the new conversation.
+
+For a stage continuation, prefer the deterministic handoff form:
+
+```text
+Use the current `vox-collage-video` workflow.
+Continue <V> from <absolute handoff artifact path>.
+Perform <BUILD / REVIEW / CORRECTION / FINAL>.
+Load only artifacts named by the handoff plus directly required dependencies.
+```
+
+Fresh sessions are the mechanism that bounds main LLM context. Receipts and
+handoffs do not erase the history of a continuous Codex conversation.

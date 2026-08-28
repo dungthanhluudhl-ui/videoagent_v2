@@ -188,6 +188,20 @@ def plan_contract(plan, plan_path):
     return {"plan": clean, "alignedWords": json_input(words), "sources": sources}
 
 
+def plan_slice(plan, fields=(), scene_fields=(), scene_ids=None):
+    """Small normalized plan contract for one consumer, never the raw plan file."""
+    wanted = set(scene_ids or [])
+    scenes = []
+    for scene in plan.get("scenes") or []:
+        if wanted and scene.get("id") not in wanted:
+            continue
+        scenes.append({key: scene.get(key) for key in scene_fields if key in scene})
+    result = {key: plan.get(key) for key in fields if key in plan}
+    if scene_fields:
+        result["scenes"] = scenes
+    return result
+
+
 def manifest_path_for_plan(plan_path, plan):
     video = str(plan.get("video") or pathlib.Path(plan_path).stem.replace("scene_plan", "V"))
     return pathlib.Path(plan_path).parent / f"asset_manifest{video.lstrip('Vv')}.json"

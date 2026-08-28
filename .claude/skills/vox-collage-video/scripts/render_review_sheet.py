@@ -25,7 +25,7 @@ try:
 except ImportError:
     sys.exit("Pillow is required: py -3 -m pip install pillow")
 
-VERSION = "master-draft-extraction-v1"
+VERSION = "master-draft-extraction-v2"
 SETTLE = 20
 
 
@@ -152,10 +152,8 @@ def sample_source_proof(root, plan_path, plan, sample, render_params):
     scene_files = [root / "src" / "scenes" / f"{video}Scene{s.get('id','S')[1:]}.jsx"
                    for s in relevant]
     files = render_video.local_dependency_files(scene_files)
-    files += [root / "src" / "scenes" / "shared.jsx",
-              root / "src" / "scenes" / "visualLanguage.jsx",
-              root / "src" / f"{video}Master.jsx", root / "src" / "Root.jsx",
-              root / "remotion.config.ts", root / "package.json", root / "package-lock.json"]
+    files += [root / "src" / f"{video}Master.jsx", root / "remotion.config.ts",
+              root / "package.json"]
     words_name = pathlib.Path(str(plan.get("wordsFile") or "")).name
     suffix = words_name.replace("words", "").replace("_aligned.json", "")
     files += [root / "src" / f"captionData{suffix}.js",
@@ -164,10 +162,12 @@ def sample_source_proof(root, plan_path, plan, sample, render_params):
         for asset in scene.get("assets") or []:
             if asset.get("src"):
                 files.append(root / "public" / asset["src"])
-    local_contract = [{k: v for k, v in scene.items() if k != "status"}
-                      for scene in relevant]
+    local_contract = state.plan_slice(
+        {"scenes": relevant}, scene_fields=("id", "startSec", "endSec", "durationInFrames",
+                                             "masterStartFrame", "transitionIn", "assets"))["scenes"]
     return {"localScenes": local_contract,
             "files": [state.file_input(path) for path in files],
+            "rootRegistration": render_video.selected_registration(root, f"{video}Master"),
             "alignedWords": state.json_input(root / str(plan.get("wordsFile") or "")),
             "renderParameters": render_params,
             "mapping": {"masterFrame": sample["masterFrame"], "fps": plan.get("fps", 30)}}
@@ -230,6 +230,61 @@ def review_entries(manifest):
     return entries
 
 
+JUDGEMENT_FIELDS = ("illustrated", "composed", "varied", "purposeful", "note", "resolved")
+
+
+def evidence_identity(entry):
+    return state.digest([{key: item.get(key) for key in (
+        "id", "scene", "localFrame", "masterFrame", "masterTimeSec", "path",
+        "sourceFingerprint", "visualTransformation")}
+        for item in entry.get("evidence") or []])
+
+
+def merge_editorial_judgement(entries, old_review):
+    old = {entry.get("id"): entry for entry in old_review.get("scenes") or []}
+    for entry in entries:
+        prior = old.get(entry.get("id"))
+        if prior and evidence_identity(prior) == evidence_identity(entry):
+            for field in JUDGEMENT_FIELDS:
+                if field in prior:
+                    entry[field] = prior[field]
+    return entries
+
+
+def review_generation(manifest, render_params, draft_identity):
+    mapping = [{key: sample.get(key) for key in (
+        "id", "scene", "localFrame", "masterFrame", "masterTimeSec", "path",
+        "sourceFingerprint", "visualTransformation")}
+        for sample in manifest.get("samples") or []]
+    return state.digest({"draft": draft_identity, "renderParameters": render_params,
+                         "mapping": mapping, "version": manifest.get("version")})
+
+
+def complete_review_generation(manifest, manifest_path, review_path, temporal, summary,
+                               targeted_path, render_params, draft_identity, keep_review=False):
+    """Atomically derive both review artifacts from one authoritative evidence generation."""
+    generation = review_generation(manifest, render_params, draft_identity)
+    manifest["reviewGeneration"] = generation
+    state.write_json(manifest_path, manifest)
+    entries = review_entries(manifest)
+    old_review = state.read_json(review_path, {}) if keep_review else {}
+    if keep_review:
+        entries = merge_editorial_judgement(entries, old_review)
+    review = {"video": manifest.get("video"),
+              "evidenceSource": "medium-resolution actual master draft",
+              "sampleManifest": str(manifest_path), "temporalSheet": str(temporal),
+              "sceneSummarySheet": str(summary), "targetedFullResolution": str(targeted_path),
+              "renderParameters": render_params, "reviewGeneration": generation,
+              "howToFill": "Judge actual-master evidence; quality fail may be acknowledged, missing/stale/blank evidence is hard.",
+              "criteria": {"illustrated": "narration is shown",
+                           "composed": "balanced and legible",
+                           "varied": "not the same visual formula as neighbours",
+                           "purposeful": "every element has an editorial reason"},
+              "scenes": entries}
+    state.write_json(review_path, review)
+    return review
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("plan")
@@ -277,7 +332,6 @@ def main():
         return 1
 
     stale, current = stale_samples(root, video, plan_path, plan, manifest, render_params)
-    state.write_json(manifest_path, manifest)
     changed = extract_stale(root, video, draft, stale, args.command_only)
     if args.command_only:
         print(json.dumps(changed, ensure_ascii=False))
@@ -290,25 +344,15 @@ def main():
     build_sheet(thumbs, temporal)
     build_sheet(scene_summary_thumbs(entries), summary)
     review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
-    review = state.read_json(review_path, {}) if args.keep_review else {}
-    review.update({"video": video, "evidenceSource": "medium-resolution actual master draft",
-                   "sampleManifest": str(manifest_path), "temporalSheet": str(temporal),
-                   "sceneSummarySheet": str(summary), "targetedFullResolution": str(targeted_path),
-                   "renderParameters": render_params})
-    if not args.keep_review or not review.get("scenes"):
-        review.update({"howToFill": "Judge actual-master evidence; quality fail may be acknowledged, missing/stale/blank evidence is hard.",
-                       "criteria": {"illustrated": "narration is shown",
-                                    "composed": "balanced and legible",
-                                    "varied": "not the same visual formula as neighbours",
-                                    "purposeful": "every element has an editorial reason"},
-                       "scenes": entries})
-    state.write_json(review_path, review)
+    review = complete_review_generation(
+        manifest, manifest_path, review_path, temporal, summary, targeted_path,
+        render_params, state.file_input(draft), args.keep_review)
     state.append_telemetry(root, video, {"stage": "review-extraction", "owner": "script",
                            "cache": f"{len(current)} hit/{len(stale)} miss",
                            "subprocessCount": 1 if stale else 0,
                            "affectedItems": len(stale), "output": str(temporal)})
     print(state.compact_result("CLOSED", changed=[*changed, temporal, summary, review_path],
-                               details=manifest_path, receipt=state.digest(manifest)))
+                               details=manifest_path, receipt=review["reviewGeneration"]))
     return 0
 
 

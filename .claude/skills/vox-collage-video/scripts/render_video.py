@@ -15,7 +15,7 @@ import sys
 import stage_state as state
 
 HERE = pathlib.Path(__file__).resolve().parent
-VERSION = "master-render-v1"
+VERSION = "pixel-source-v2"
 
 
 def local_dependency_files(seeds):
@@ -42,14 +42,100 @@ def local_dependency_files(seeds):
     return sorted(found, key=str)
 
 
+def selected_registration(root, composition):
+    """Normalize only this composition's Root registration, not unrelated videos."""
+    path = pathlib.Path(root) / "src" / "Root.jsx"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {"composition": composition, "missing": True}
+    tag = re.search(r"<Composition\b[^>]*\bid=[\"']" + re.escape(composition)
+                    + r"[\"'][^>]*/>", text, re.DOTALL)
+    if not tag:
+        return {"composition": composition, "missing": True}
+    normalized = re.sub(r"\s+", " ", tag.group(0)).strip()
+    imports, definitions = [], []
+    identifiers = set(re.findall(r"\b(?:component|durationInFrames|fps|width|height)=\{([^}]+)\}",
+                                 normalized))
+    setting_names = {value.split(".", 1)[0].strip() for value in
+                     re.findall(r"\b(?:durationInFrames|fps|width|height)=\{([^}]+)\}", normalized)}
+    for line in text.splitlines():
+        if not line.lstrip().startswith("import "):
+            continue
+        bases = {name.split(".", 1)[0].strip() for name in identifiers}
+        if not bases.intersection(set(re.findall(r"\b[A-Za-z_$][\w$]*\b", line))):
+            continue
+        imports.append(re.sub(r"\s+", " ", line).strip())
+        source_match = re.search(r'from\s+["\'](\.[^"\']+)["\']', line)
+        if not source_match:
+            continue
+        base = (path.parent / source_match.group(1)).resolve()
+        candidates = [pathlib.Path(str(base) + ext) for ext in ("", ".js", ".jsx", ".ts", ".tsx")]
+        module = next((candidate for candidate in candidates if candidate.is_file()), None)
+        if not module:
+            continue
+        module_text = module.read_text(encoding="utf-8")
+        for name in sorted(setting_names):
+            match = re.search(r"export\s+const\s+" + re.escape(name)
+                              + r"\s*=\s*(.*?);", module_text, re.DOTALL)
+            if match:
+                definitions.append({"name": name,
+                                    "value": re.sub(r"\s+", " ", match.group(1)).strip()})
+    return {"composition": composition, "registration": normalized,
+            "imports": sorted(imports), "settingDefinitions": definitions}
+
+
+def render_plan_slice(plan):
+    """Only plan values that generated/current rendering code can consume."""
+    return {"video": plan.get("video"), "fps": plan.get("fps", 30),
+            "audioFile": plan.get("audioFile"),
+            "scenes": [{"id": scene.get("id"),
+                        "assets": [{"src": asset.get("src")} for asset in scene.get("assets") or []
+                                   if asset.get("src")]}
+                       for scene in plan.get("scenes") or []]}
+
+
+def referenced_public_files(root, source_files):
+    """Literal staticFile()/asset references in the selected local source closure."""
+    found = set()
+    pattern = re.compile(r"(?:staticFile|src)\s*\(?\s*[\"']([^\"']+)[\"']")
+    for path in source_files:
+        try:
+            text = pathlib.Path(path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for raw in pattern.findall(text):
+            candidate = pathlib.Path(root) / "public" / raw.lstrip("/\\")
+            if candidate.is_file():
+                found.add(candidate.resolve())
+    return sorted(found, key=str)
+
+
+def installed_render_versions(root, source_files):
+    package = state.read_json(pathlib.Path(root) / "package.json", {})
+    installed = {**(package.get("dependencies") or {}), **(package.get("devDependencies") or {})}
+    external = set()
+    pattern = re.compile(r'(?:from\s+|import\s*)["\']([^\.][^"\']*)["\']')
+    for path in source_files:
+        try:
+            text = pathlib.Path(path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for name in pattern.findall(text):
+            parts = name.split("/")
+            external.add("/".join(parts[:2]) if name.startswith("@") else parts[0])
+    external.update(("remotion", "@remotion/cli"))
+    return {name: installed.get(name) for name in sorted(external) if name in installed}
+
+
 def source_inputs(root, plan_path, plan):
     video = plan.get("video", "V")
     master = root / "src" / f"{video}Master.jsx"
     scene_seeds = [root / "src" / "scenes" / f"{video}Scene{s.get('id','S')[1:]}.jsx"
                    for s in plan.get("scenes") or []]
     paths = local_dependency_files([master, *scene_seeds])
-    paths += [root / "src" / "Root.jsx", root / "src" / "index.ts",
-              root / "remotion.config.ts", root / "package.json", root / "package-lock.json"]
+    paths += referenced_public_files(root, paths)
+    paths += [root / "src" / "index.ts", root / "remotion.config.ts"]
     for scene in plan.get("scenes") or []:
         for asset in scene.get("assets") or []:
             if asset.get("src"):
@@ -57,7 +143,9 @@ def source_inputs(root, plan_path, plan):
     audio = plan.get("audioFile")
     if audio:
         paths.append(root / "public" / audio)
-    return [{"renderPlan": state.plan_contract(plan, plan_path)["plan"]},
+    return [{"renderPlan": render_plan_slice(plan)},
+            {"rootRegistration": selected_registration(root, f"{video}Master")},
+            {"installedRenderVersions": installed_render_versions(root, paths)},
             *[state.file_input(p) for p in paths]]
 
 

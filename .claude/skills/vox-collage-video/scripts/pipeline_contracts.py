@@ -16,6 +16,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 PLAN_VERSION = "plan-contract-v1"
 PACKET_VERSION = "scene-packet-v1"
 ASSET_PACKET_VERSION = "asset-brief-packet-v1"
+HANDOFF_VERSION = "stage-handoff-v1"
 
 
 def plan_receipt_path(plan_path, plan):
@@ -158,6 +159,41 @@ def close_correction(plan_path, note="one broad editorial correction complete"):
                                     {"note": note}, outputs=(), accepted={"manual": True})
 
 
+def build_handoff(plan_path, closed_stage, next_stage, hard=(), advisories=(), changed_scenes=()):
+    plan_path = pathlib.Path(plan_path).resolve()
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
+    video = plan.get("video", "V")
+    review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    review = state.read_json(review_path, {})
+    receipt_dir = state.runtime_dir(root, video) / "receipts"
+    stage_receipts = {
+        "PLAN": [receipt_dir / "plan-approved.json"],
+        "BUILD": [receipt_dir / "plan-approved.json"],
+        "REVIEW": [receipt_dir / "render-draft.json"],
+        "CORRECTION": [receipt_dir / "editorial-correction.json"],
+        "FINAL": [receipt_dir / "render-final.json"],
+    }
+    required = [plan_path]
+    if next_stage.upper() in ("REVIEW", "CORRECTION", "FINAL"):
+        required.append(review_path)
+    if next_stage.upper() in ("BUILD", "REVIEW", "CORRECTION", "FINAL") and plan.get("wordsFile"):
+        required.append((root / plan["wordsFile"]).resolve())
+    artifact = {
+        "schema": 1, "handoffVersion": HANDOFF_VERSION, "video": video,
+        "closedStage": closed_stage.upper(), "nextRequestedStage": next_stage.upper(),
+        "authoritativePlan": str(plan_path),
+        "authoritativeReceipts": [str(path) for path in stage_receipts.get(closed_stage.upper(), [])
+                                  if path.is_file()],
+        "requiredNextInputs": [str(path) for path in required if path.is_file()],
+        "unresolvedHard": list(hard), "editorialAdvisories": list(advisories),
+        "changedSceneIds": list(changed_scenes),
+        "reviewGeneration": review.get("reviewGeneration") or None,
+    }
+    artifact["handoffId"] = state.digest(artifact)
+    return artifact
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
@@ -175,6 +211,14 @@ def main():
     p = sub.add_parser("close-correction")
     p.add_argument("plan")
     p.add_argument("--note", default="one broad editorial correction complete")
+    p = sub.add_parser("handoff")
+    p.add_argument("plan")
+    p.add_argument("--closed-stage", required=True, choices=("PLAN", "BUILD", "REVIEW", "CORRECTION", "FINAL"))
+    p.add_argument("--next-stage", required=True, choices=("BUILD", "REVIEW", "CORRECTION", "FINAL"))
+    p.add_argument("--hard", action="append", default=[])
+    p.add_argument("--advisory", action="append", default=[])
+    p.add_argument("--changed-scenes", default="")
+    p.add_argument("--out", required=True)
     args = ap.parse_args()
     if args.command == "approve-plan":
         try:
@@ -191,6 +235,13 @@ def main():
     if args.command == "close-correction":
         path, receipt = close_correction(args.plan, args.note)
         print(state.compact_result("CLOSED", changed=[path], receipt=receipt))
+        return 0
+    if args.command == "handoff":
+        artifact = build_handoff(args.plan, args.closed_stage, args.next_stage, args.hard,
+                                 args.advisory, [x.strip() for x in args.changed_scenes.split(",")
+                                                   if x.strip()])
+        state.write_json(args.out, artifact)
+        print(state.compact_result("CLOSED", changed=[args.out], receipt=artifact["handoffId"]))
         return 0
     if args.command == "asset-brief-packet":
         packet = build_asset_brief_packet(args.plan)

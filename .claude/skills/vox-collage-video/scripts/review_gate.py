@@ -161,6 +161,20 @@ def main():
             problems.append(f"{review_path} is not valid JSON: {exc}")
             review = {}
 
+        atomic_review = bool(review.get("sampleManifest"))
+        manifest_path = pathlib.Path(str(review.get("sampleManifest"))) if atomic_review else None
+        if manifest_path is not None and not manifest_path.is_absolute():
+            manifest_path = state.project_root(plan_path) / manifest_path
+        manifest = state.read_json(manifest_path, {}) if manifest_path is not None else {}
+        review_generation = review.get("reviewGeneration")
+        manifest_generation = manifest.get("reviewGeneration")
+        if atomic_review and (not review_generation or review_generation != manifest_generation):
+            problems.append("reviewGeneration is missing or disagrees with the current sample manifest; "
+                            "review evidence generations must be atomic")
+        manifest_samples = {item.get("id"): item for item in manifest.get("samples") or []}
+        manifest_paths = {str(item.get("path", "")).replace("\\", "/"): item
+                          for item in manifest_samples.values()}
+
         entries = {e.get("id"): e for e in review.get("scenes", [])}
         for scene in scenes:
             sid = scene.get("id")
@@ -180,6 +194,24 @@ def main():
             if not isinstance(evidence_frames, list):
                 problems.append(f"{sid}: `frames` must be a list of sampled evidence paths")
                 evidence_frames = []
+            for item in entry.get("evidence") or []:
+                if not atomic_review:
+                    break
+                sample_id = item.get("id")
+                current = manifest_samples.get(sample_id)
+                normalized_path = str(item.get("path", "")).replace("\\", "/")
+                if not sample_id or current is None:
+                    problems.append(f"{sid}: review references obsolete sample {sample_id!r} "
+                                    "not present in the current manifest")
+                elif item != current:
+                    problems.append(f"{sid}/{sample_id}: review evidence metadata disagrees with "
+                                    "the authoritative current manifest")
+                if normalized_path not in manifest_paths:
+                    problems.append(f"{sid}: evidence path {normalized_path!r} is not a current sample")
+            expected_scene_samples = [item for item in manifest_samples.values()
+                                      if item.get("scene") == sid]
+            if atomic_review and len(entry.get("evidence") or []) != len(expected_scene_samples):
+                problems.append(f"{sid}: required current evidence is missing from the review entry")
 
             for crit in CRITERIA:
                 verdict = (entry.get(crit) or "").strip().lower()
@@ -218,10 +250,13 @@ def main():
                         problems.append(
                             f"{sid}: source contract changed after {fpath.name} was extracted - "
                             "this actual-master evidence is stale. Re-run render_review_sheet.py.")
-                elif src and src.stat().st_mtime > fpath.stat().st_mtime + 1:
-                    problems.append(
-                        f"{sid}: {src.name} was edited AFTER {fpath.name} was rendered - this "
-                        f"verdict describes a build that no longer exists. Re-render the frame.")
+                else:
+                    if atomic_review:
+                        problems.append(f"{sid}: current evidence {fpath.name} has no sourceFingerprint")
+                    elif src and src.stat().st_mtime > fpath.stat().st_mtime + 1:
+                        problems.append(
+                            f"{sid}: {src.name} was edited AFTER {fpath.name} was rendered - this "
+                            f"verdict describes a build that no longer exists. Re-render the frame.")
 
             if args.no_measure or not frame:
                 continue

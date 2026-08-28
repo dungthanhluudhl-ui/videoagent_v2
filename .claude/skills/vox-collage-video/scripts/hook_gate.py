@@ -63,6 +63,7 @@ import subprocess
 import sys
 
 import stage_state as state
+import review_vision
 
 SCRIPTS = pathlib.Path(__file__).resolve().parent
 SCENE_FILE_HINT = "src/scenes/"
@@ -77,7 +78,7 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
                   "baseline_gate.py", "text_gate.py", "icon_gate.py",
                   "cutout_gate.py", "asset_gate.py", "block_gate.py",
-                  "pixel_gate.py", "assemble.py", "selftest.py")
+                  "pixel_gate.py", "assemble.py", "review_vision.py", "selftest.py")
 
 
 IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp")
@@ -167,25 +168,6 @@ def guard_image_read(payload, root):
     elif n > budget * 0.6:
         print(f"[vox-image] {video}: ảnh thứ {n}/{budget}.", file=sys.stderr)
     return 0
-
-
-def vision_router_up(timeout=1.5):
-    """Router model rẻ có đang chạy không.
-
-    Kiểm bằng một cú mở socket chứ không bằng một lượt gọi thật: lớp tư vấn
-    phía dưới phải IM LẶNG khi router tắt, không được vừa chậm vừa in lỗi.
-    Không có router thì agent quay lại tự nhìn - đắt hơn, nhưng vẫn chạy được.
-    """
-    import os
-    import socket
-    import urllib.parse
-    base = os.environ.get("VOX_VISION_BASE", "http://localhost:20128/v1")
-    try:
-        u = urllib.parse.urlparse(base)
-        with socket.create_connection((u.hostname, u.port or 80), timeout=timeout):
-            return True
-    except (OSError, ValueError):
-        return False
 
 
 def find_active_plan(root):
@@ -377,47 +359,85 @@ def _asset_files(root, plan_data, roles=None):
 
 
 def gate_dependencies(root, plan_path, plan_data, script, args):
-    """True dependency set. Ambiguous families are deliberately not cached."""
+    """Normalized logical plan slices plus files actually consumed by a gate family."""
     words = root / str(plan_data.get("wordsFile") or "")
     scenes = _plan_files(root, plan_data)
     review = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
-    common = [plan_path, SCRIPTS / script, SCRIPTS / "hook_gate.py",
-              SCRIPTS / "stage_state.py"]
+    common = [SCRIPTS / script, SCRIPTS / "hook_gate.py", SCRIPTS / "stage_state.py"]
+    all_scene_fields = ("id", "startSec", "endSec", "durationInFrames", "masterStartFrame",
+                        "narrativeFunction", "viewerQuestion", "visualTransformation",
+                        "contrastWithPrevious", "visualLanguage", "template", "backdrop",
+                        "variant", "density", "comprehensionLoad", "textOnly", "assets",
+                        "visualEvents", "punch", "transitionIn")
     if script == "plan_gate.py":
-        return common + [words]
+        contract = state.plan_slice(plan_data, fields=("video", "fps", "wordsFile"),
+                                    scene_fields=all_scene_fields)
+        return [{"planContract": contract}, *common, words]
     if script == "build_gate.py":
         selected = next((args[i + 1] for i, x in enumerate(args[:-1]) if x == "--scene"), None)
         if selected:
             scenes = [root / "src" / "scenes" /
                       f"{plan_data.get('video')}Scene{selected.lstrip('S')}.jsx"]
-        return common + scenes + [root / "src" / "scenes" / "SceneTemplates.jsx"]
+        fields = ("id", "durationInFrames", "visualTransformation", "visualLanguage",
+                  "template", "backdrop", "variant", "assets", "visualEvents", "punch")
+        contract = state.plan_slice(plan_data, fields=("video", "fps"), scene_fields=fields,
+                                    scene_ids=[selected] if selected else None)
+        return [{"planContract": contract}, *common, *scenes,
+                root / "src" / "scenes" / "SceneTemplates.jsx",
+                root / "src" / "scenes" / "shared.jsx",
+                root / "src" / "scenes" / "visualLanguage.jsx"]
     if script in ("text_gate.py", "icon_gate.py", "block_gate.py"):
         extra = [root / "src" / "scenes" / "shared.jsx",
                  root / "src" / "scenes" / "visualLanguage.jsx"]
         if script == "icon_gate.py":
-            extra += [root / "src" / "scenes" / "iconVocabulary.jsx"]
+            extra.append(root / "src" / "scenes" / "iconVocabulary.jsx")
         if script == "block_gate.py":
-            extra += [root / "src" / "blocks" / "registry.json"]
-        return common + scenes + extra
+            extra.append(root / "src" / "blocks" / "registry.json")
+        fields = ("id", "assets", "punch", "visualLanguage", "template")
+        return [{"planContract": state.plan_slice(plan_data, fields=("video",),
+                                                   scene_fields=fields)},
+                *common, *scenes, *extra]
     if script == "cutout_gate.py":
-        return common + _asset_files(root, plan_data, {"hero", "support"})
+        assets = [{"id": s.get("id"), "assets": [a for a in s.get("assets") or []
+                   if a.get("role") in {"hero", "support"}]} for s in plan_data.get("scenes") or []]
+        return [{"assetContract": assets}, *common,
+                *_asset_files(root, plan_data, {"hero", "support"})]
     if script == "asset_gate.py":
-        return common + _asset_files(root, plan_data)
+        assets = [{"id": s.get("id"), "assets": s.get("assets") or []}
+                  for s in plan_data.get("scenes") or []]
+        return [{"assetContract": assets}, *common, *_asset_files(root, plan_data)]
     if script == "assemble.py":
         video = plan_data.get("video", "V")
-        return common + [words, root / "src" / f"{video}Master.jsx", root / "src" / "Root.jsx"] + scenes
+        contract = state.plan_slice(plan_data, fields=("video", "fps", "audioFile", "wordsFile"),
+                                    scene_fields=("id", "startSec", "endSec", "durationInFrames",
+                                                  "masterStartFrame", "transitionIn"))
+        return [{"assemblyContract": contract}, *common, words,
+                root / "src" / f"{video}Master.jsx", root / "src" / "Root.jsx", *scenes]
     if script == "baseline_gate.py":
-        return common + [SCRIPTS.parent / "references" / "baseline.json"]
+        contract = state.plan_slice(plan_data, fields=("video", "fps"),
+                                    scene_fields=("id", "startSec", "endSec", "visualLanguage",
+                                                  "template", "backdrop", "visualEvents"))
+        return [{"baselineContract": contract}, *common,
+                SCRIPTS.parent / "references" / "baseline.json"]
     if script in ("review_gate.py", "pixel_gate.py"):
-        paths = common + [review] + scenes
+        review_data = state.read_json(review, {})
+        if script == "pixel_gate.py":
+            review_contract = {"reviewGeneration": review_data.get("reviewGeneration"),
+                               "scenes": [{"id": entry.get("id"),
+                                           "frame": entry.get("frame"),
+                                           "frames": entry.get("frames"),
+                                           "evidence": entry.get("evidence")}
+                                          for entry in review_data.get("scenes") or []]}
+            paths = [{"reviewEvidence": review_contract}, *common, *scenes]
+        else:
+            paths = [{"review": review_data}, *common, *scenes]
         try:
-            data = json.loads(review.read_text(encoding="utf-8"))
-            for entry in data.get("scenes") or []:
+            for entry in review_data.get("scenes") or []:
                 for raw in entry.get("frames") or [entry.get("frame")]:
                     if raw:
                         paths.append(root / str(raw).replace("\\", "/"))
-        except (OSError, json.JSONDecodeError):
-            pass
+        except (TypeError, AttributeError):
+            return paths
         return paths
     return None
 
@@ -438,8 +458,8 @@ def run_incremental(root, plan_path, plan_data, script, args):
         return code, out, False, None
     dependency_inputs = []
     for path in deps:
-        if script == "plan_gate.py" and pathlib.Path(path) == pathlib.Path(plan_path):
-            dependency_inputs.append({"plan": state.plan_contract(plan_data, plan_path)["plan"]})
+        if isinstance(path, dict):
+            dependency_inputs.append(path)
         else:
             dependency_inputs.append(state.file_input(path))
     inputs = {"dependencies": dependency_inputs}
@@ -519,7 +539,6 @@ def post_edit(payload, root, plan):
 
 
 STAMP = SCRIPTS.parent / "data" / ".selftest_stamp"
-VISION_STAMP = SCRIPTS.parent / "data" / ".vision_stamp"
 
 
 def gate_fingerprint():
@@ -559,32 +578,6 @@ def selftest_is_current():
         return False, fp
 
 
-def review_fingerprint(root, plan_path, plan_data, review_path):
-    """Metadata fingerprint for inputs consumed by review-stage cheap vision."""
-    paths = {plan_path, review_path}
-    for scene in plan_data.get("scenes") or []:
-        for asset in scene.get("assets") or []:
-            if asset.get("src"):
-                paths.add(root / "public" / asset["src"])
-    try:
-        review = json.loads(review_path.read_text(encoding="utf-8"))
-        for key in ("temporalSheet", "sceneSummarySheet"):
-            if review.get(key):
-                paths.add(root / str(review[key]).replace("\\", "/"))
-        for entry in review.get("scenes") or []:
-            evidence = entry.get("frames") or [entry.get("frame")]
-            for frame in evidence:
-                if frame:
-                    paths.add(root / str(frame).replace("\\", "/"))
-    except (OSError, json.JSONDecodeError):
-        pass
-    h = hashlib.sha256()
-    for path in sorted(paths, key=str):
-        identity = state.json_input(path) if path.suffix.lower() == ".json" else state.file_input(path)
-        h.update(state.canonical(identity))
-    return h.hexdigest()
-
-
 def stop(root, plan):
     plan_path, plan_data = plan
     failures = []
@@ -596,12 +589,7 @@ def stop(root, plan):
     build_complete = bool(statuses) and all(status in ("built", "reviewed") for status in statuses)
     review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
     review_exists = review_path.is_file()
-    vision_fingerprint = review_fingerprint(root, plan_path, plan_data, review_path) if review_exists else None
-    try:
-        vision_current = bool(vision_fingerprint and
-                              VISION_STAMP.read_text(encoding="utf-8").strip() == vision_fingerprint)
-    except OSError:
-        vision_current = False
+    vision_current = review_vision.is_current(plan_path, plan_data)[0] if review_exists else False
 
     checks = [("plan_gate.py", [str(plan_path), "--hook"], "scene plan integrity", True)]
     if any_built:
@@ -650,58 +638,9 @@ def stop(root, plan):
                      else "rendered findings / acknowledged quality debt")
             advisories.append(f"### {label} ({script})\n{warnings}")
 
-    # --- Lớp tư vấn: để một model rẻ NHÌN thay agent -----------------------
-    # Hai script này KHÔNG chặn, và đó là chủ ý:
-    #
-    #  1. Chúng gọi một router bên ngoài (localhost:20128). Một gate chặn cứng
-    #     phụ thuộc dịch vụ ngoài sẽ khoá cả repo mỗi khi dịch vụ đó tắt.
-    #  2. Thứ chúng trả về là "chỗ này cần nhìn", không phải "chỗ này sai".
-    #     Đo trên bộ nhãn: 25/26 ca đúng, nhưng cùng một lỗi có lúc nó gọi là
-    #     `text_overlap` có lúc gọi `collision`. Cờ dùng để LỌC, không dùng để
-    #     phán quyết - biến nó thành gate chặn là dùng sai công cụ.
-    #
-    # Vì sao vẫn đặt ở đây thay vì để agent tự nhớ chạy: đo trên 439 bức ảnh
-    # của bốn phiên dựng, agent nhìn 5-10 ảnh mỗi cảnh, và riêng V11 khoản đó
-    # chiếm 55% cache_read = 384 USD. Một dòng dặn dò trong SKILL.md không đổi
-    # được thói quen đó; một danh sách cờ in sẵn ngay trước lúc agent định mở
-    # ảnh thì có.
-    if review_exists and not vision_current and vision_router_up():
-        for script, args, label in (
-            ("asset_vision.py", [str(plan_path), "--new-only"],
-             "nghĩa của asset: đúng vật không, minh hoạ đúng lời thoại không"),
-            ("vision_check.py", ["--plan", str(plan_path), "--new-only"],
-             "khung hình đã render: chữ bị đè, chữ nhỏ, khung trống"),
-        ):
-            if not (SCRIPTS / script).exists():
-                continue
-            code, out = run(script, *args)
-            if code == 1 and out.strip():
-                advisories.append(f"### {label} ({script})\n{out.strip()}")
-
-        # Tiêu chí `varied` của người xem, và là tiêu chí DUY NHẤT không trả
-        # lời được bằng một khung hình - nó hỏi về quan hệ GIỮA các cảnh.
-        # `block_gate` đếm tỉ lệ block trên PLAN; hai mươi tư cảnh khai khác
-        # nhau trên giấy vẫn có thể trông giống hệt nhau trên màn hình, và V11
-        # đúng là như vậy: 58% số cảnh cùng một kiểu, người xem nói "mệt".
-        try:
-            review = json.loads(review_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            review = {}
-        raw_sheet = review.get("sceneSummarySheet")
-        sheet = root / str(raw_sheet).replace("\\", "/") if raw_sheet else None
-        if sheet and sheet.is_file() and (SCRIPTS / "sheet_vision.py").exists():
-            code, out = run("sheet_vision.py", str(sheet),
-                            "--scenes", str(len(plan_data.get("scenes") or [])))
-            if code == 1 and out.strip():
-                advisories.append(
-                    "### cả video đọc ra thành một công thức? (sheet_vision.py)\n"
-                    + out.strip())
-        if vision_fingerprint:
-            try:
-                VISION_STAMP.parent.mkdir(parents=True, exist_ok=True)
-                VISION_STAMP.write_text(vision_fingerprint, encoding="utf-8")
-            except OSError:
-                pass
+    if review_exists and not vision_current:
+        advisories.append("### explicit review vision remains\nRun review_vision.py explicitly "
+                          "for the current review pixels and briefs. Stop never invokes a model.")
 
     if advisories:
         print("[vox-review] các tín hiệu plan và rendered evidence dưới đây cần được "

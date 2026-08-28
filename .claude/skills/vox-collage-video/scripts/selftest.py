@@ -24,7 +24,9 @@ hook_gate.py, so a broken gate cannot survive a turn unnoticed.
 """
 
 import argparse
+import contextlib
 import copy
+import io
 import json
 import os
 import pathlib
@@ -190,6 +192,8 @@ def repair_contract_checks(tmp):
     asset_vision = _load_script("asset_vision.py")
     frame_vision = _load_script("vision_check.py")
     hook = _load_script("hook_gate.py")
+    sheet_vision = _load_script("sheet_vision.py")
+    review_vision = _load_script("review_vision.py")
 
     # Generic receipts: true input, tool and parameter changes each invalidate.
     source = tmp / "audio.mp3"; source.write_bytes(b"audio-a")
@@ -244,8 +248,10 @@ def repair_contract_checks(tmp):
     evidence = tmp / "source.pdf"; evidence.write_bytes(b"official-a")
     asset_a = tmp / "public" / "asset-a.png"; asset_a.write_bytes(b"image-a")
     asset_b = tmp / "public" / "asset-b.png"; asset_b.write_bytes(b"image-b")
+    audio = tmp / "public" / "audio99.mp3"; audio.write_bytes(b"audio-a")
     synthetic_plan = {
         "video": "V99", "fps": 30, "wordsFile": "input/words99_aligned.json",
+        "audioFile": "audio99.mp3",
         "status": "active", "shotlistApproved": True, "sourceAuthority": str(evidence),
         "globalVisualContract": {"palette": "paper-orange", "bespoke": True},
         "scenes": [
@@ -366,7 +372,8 @@ def repair_contract_checks(tmp):
     full_cmd = review_tool.targeted_full_res_command(manual_manifest, tmp / "full")
     checks.append(("targeted full-res uses one Remotion render process for selected frames",
                    full_cmd[:3] == ["npx", "remotion", "render"] and
-                   "--codec=none" in full_cmd and "--frames=" in " ".join(full_cmd)))
+                   "--sequence" in full_cmd and "--image-format=png" in full_cmd and
+                   "--frames=" in " ".join(full_cmd) and "--codec=none" not in full_cmd))
     draft_proof = {"path": "draft.mp4", "size": 1, "mtimeNs": 1}
     rkey = review_tool.sample_identity(draft_proof, manifest, manifest["samples"][0])
     changed_draft = review_tool.sample_identity({**draft_proof, "size": 2}, manifest, manifest["samples"][0])
@@ -379,6 +386,10 @@ def repair_contract_checks(tmp):
                                  "viewerQuestion": "q3", "visualTransformation": "e reveals f",
                                  "contrastWithPrevious": "new ending", "visualEvents": [{"frame": 5, "what": "end"}],
                                  "assets": []})
+    local_scene_one = tmp / "src" / "scenes" / "V99Scene1.jsx"
+    local_scene_two = tmp / "src" / "scenes" / "V99Scene2.jsx"
+    local_scene_one.write_text("scene-one-a", encoding="utf-8")
+    local_scene_two.write_text("scene-two-a", encoding="utf-8")
     (tmp / "src" / "scenes" / "V99Scene3.jsx").write_text("scene-three", encoding="utf-8")
     third_manifest = review_tool.sample_manifest(third_plan, tmp / "frames3", 2)
     sample_s1 = next(x for x in third_manifest["samples"] if x["scene"] == "S1")
@@ -386,18 +397,24 @@ def repair_contract_checks(tmp):
     params = {"scale": 0.5, "fps": 30}
     s1_before = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_plan, sample_s1, params))
     s3_before = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_plan, sample_s3, params))
-    third_changed = copy.deepcopy(third_plan)
-    third_changed["scenes"][0]["visualTransformation"] = "changed first scene only"
-    s1_after = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_changed, sample_s1, params))
-    s3_after = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_changed, sample_s3, params))
+    local_scene_one.write_text("scene-one-b", encoding="utf-8")
+    s1_after = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_plan, sample_s1, params))
+    s3_after = state.digest(review_tool.sample_source_proof(tmp, plan_path, third_plan, sample_s3, params))
     checks.append(("review: local scene change invalidates affected/neighbor evidence, not distant scene",
                    s1_before != s1_after and s3_before == s3_after))
 
     # Draft/final render closure uses normalized render sources/settings and does
     # not care about workflow-only plan status.
+    helper = tmp / "src" / "scenes" / "V99Kit.jsx"
+    helper.write_text("export const kit='a'", encoding="utf-8")
     (tmp / "src" / "V99Master.jsx").write_text("export const V99Master=()=>null", encoding="utf-8")
-    (tmp / "src" / "Root.jsx").write_text("root", encoding="utf-8")
-    (tmp / "src" / "scenes" / "V99Scene1.jsx").write_text("scene-one", encoding="utf-8")
+    (tmp / "src" / "Root.jsx").write_text(
+        'import {V99Master} from "./V99Master";\n'
+        'export const Root=()=> <><Composition id="V98Master" component={Other}/>'
+        '<Composition id="V99Master" component={V99Master} durationInFrames={120} fps={30} width={1080} height={1920}/></>;',
+        encoding="utf-8")
+    (tmp / "src" / "scenes" / "V99Scene1.jsx").write_text(
+        'import {kit} from "./V99Kit"; export const scene=kit;', encoding="utf-8")
     (tmp / "src" / "scenes" / "V99Scene2.jsx").write_text("scene-two", encoding="utf-8")
     (tmp / "src" / "scenes" / "shared.jsx").write_text("shared", encoding="utf-8")
     (tmp / "src" / "scenes" / "visualLanguage.jsx").write_text("visual", encoding="utf-8")
@@ -409,6 +426,22 @@ def repair_contract_checks(tmp):
     state.make_receipt(d[3], "render-draft", d[6], d[7], d[8], [draft])
     checks.append(("draft: unchanged relevant source/settings reuse",
                    render_video.render_contract(plan_path, "draft", draft)[4]))
+    editorial = copy.deepcopy(synthetic_plan)
+    editorial["scenes"][0]["viewerQuestion"] = "editorial wording only"
+    editorial["scenes"][0]["density"] = "high"
+    editorial["qualityNote"] = "advisory only"
+    plan_path.write_text(json.dumps(editorial), encoding="utf-8")
+    checks.append(("draft: editorial-only plan metadata mutation stays HIT",
+                   render_video.render_contract(plan_path, "draft", draft)[4]))
+    plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
+    root_file = tmp / "src" / "Root.jsx"
+    original_root = root_file.read_text(encoding="utf-8")
+    root_file.write_text(original_root.replace("V98Master", "V97Master"), encoding="utf-8")
+    unrelated_video = tmp / "src" / "scenes" / "V98Scene1.jsx"
+    unrelated_video.write_text("unrelated changed", encoding="utf-8")
+    checks.append(("draft: unrelated composition/video mutation stays HIT",
+                   render_video.render_contract(plan_path, "draft", draft)[4]))
+    root_file.write_text(original_root, encoding="utf-8")
     d_half = render_video.render_contract(plan_path, "draft", draft, scale=0.6)
     checks.append(("draft: render settings mutation invalidates",
                    not d_half[4]))
@@ -416,7 +449,19 @@ def repair_contract_checks(tmp):
     scene_one.write_text("scene-one-changed", encoding="utf-8")
     checks.append(("draft: relevant source mutation invalidates",
                    not render_video.render_contract(plan_path, "draft", draft)[4]))
-    scene_one.write_text("scene-one", encoding="utf-8")
+    scene_one.write_text('import {kit} from "./V99Kit"; export const scene=kit;', encoding="utf-8")
+    helper.write_text("export const kit='changed'", encoding="utf-8")
+    checks.append(("draft: imported rendering helper mutation invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    helper.write_text("export const kit='a'", encoding="utf-8")
+    asset_a.write_bytes(b"image-changed")
+    checks.append(("draft: referenced asset byte mutation invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    asset_a.write_bytes(b"image-a")
+    audio.write_bytes(b"audio-changed")
+    checks.append(("draft: audio byte mutation invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    audio.write_bytes(b"audio-a")
     f = render_video.render_contract(plan_path, "final", final)
     state.make_receipt(f[3], "render-final", f[6], f[7], f[8], [final])
     checks.append(("final: unchanged full-resolution settings reuse",
@@ -446,18 +491,24 @@ def repair_contract_checks(tmp):
         unrelated = tmp / "unrelated.txt"; unrelated.write_text("changed", encoding="utf-8")
         code3, out3, hit3, _ = hook.run_incremental(tmp, plan_path, gate_plan,
                                                     "plan_gate.py", [str(plan_path), "--hook"])
-        plan_path.write_text(json.dumps({**gate_plan, "title": "true dependency change"}), encoding="utf-8")
+        unrelated_plan = {**gate_plan, "qualityNote": "unrelated metadata"}
+        plan_path.write_text(json.dumps(unrelated_plan), encoding="utf-8")
         code4, out4, hit4, _ = hook.run_incremental(tmp, plan_path,
-                                                    {**gate_plan, "title": "true dependency change"},
+                                                    unrelated_plan,
+                                                    "plan_gate.py", [str(plan_path), "--hook"])
+        true_change = copy.deepcopy(gate_plan)
+        true_change["scenes"][0]["visualTransformation"] = "true gate dependency changed"
+        plan_path.write_text(json.dumps(true_change), encoding="utf-8")
+        code5, out5, hit5, _ = hook.run_incremental(tmp, plan_path, true_change,
                                                     "plan_gate.py", [str(plan_path), "--hook"])
     finally:
         hook.run = original_run
         plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
     checks.append(("incremental gate: unchanged and unrelated changes skip subprocess",
-                   not hit1 and hit2 and hit3 and calls["n"] == 2))
+                   not hit1 and hit2 and hit3 and hit4 and calls["n"] == 2))
     checks.append(("incremental gate: true dependency reruns and cached hard remains explicit",
-                   not hit4 and all(c == 1 for c in (code1,code2,code3,code4)) and
-                   all("FAIL synthetic" in x for x in (out1,out2,out3,out4))))
+                   not hit5 and all(c == 1 for c in (code1,code2,code3,code4,code5)) and
+                   all("FAIL synthetic" in x for x in (out1,out2,out3,out4,out5))))
 
     manifest_path, _ = asset_manifest.sync(plan_path)
     asset_manifest.accept(plan_path, "S1:Doc")
@@ -523,6 +574,172 @@ def repair_contract_checks(tmp):
     plan_gate.gate_anchors(invalid["scenes"], words, report)
     checks.append(("out-of-source evidenceRegions are rejected", bool(report.failures)))
 
+    # Review lifecycle integration: generation A -> editorial verdicts -> one
+    # changed scene/sample -> generation B --keep-review -> real review gate.
+    lifecycle_plan = copy.deepcopy(third_plan)
+    lifecycle_plan["scenes"][1]["status"] = "built"
+    lifecycle_path = tmp / "input" / "scene_plan99.json"
+    lifecycle_path.write_text(json.dumps(lifecycle_plan), encoding="utf-8")
+    review_path = tmp / "input" / "review99.json"
+    frames_dir = tmp / "input" / "review_frames_v99"
+    manifest_path = frames_dir / "sample_manifest.json"
+    temporal = frames_dir / "contact_sheet.jpg"
+    summary = frames_dir / "scene_summary_sheet.jpg"
+    targeted_path = frames_dir / "targeted_full_res_manifest.json"
+    params = {"mode": "draft", "composition": "V99Master", "scale": 0.5,
+              "fps": 30, "codec": "h264"}
+
+    def materialize_generation(plan_value, keep=False):
+        manifest_value = review_tool.sample_manifest(plan_value, frames_dir, 2)
+        review_tool.stale_samples(tmp, "V99", lifecycle_path, plan_value,
+                                  manifest_value, params)
+        for sample in manifest_value["samples"]:
+            pathlib.Path(sample["path"]).parent.mkdir(parents=True, exist_ok=True)
+            from PIL import Image
+            Image.new("RGB", (270, 480), (40, 70, 90)).save(sample["path"])
+        temporal.parent.mkdir(parents=True, exist_ok=True)
+        from PIL import Image
+        Image.new("RGB", (20, 20), (20, 20, 20)).save(temporal)
+        Image.new("RGB", (20, 20), (30, 30, 30)).save(summary)
+        state.write_json(targeted_path, {"requests": manifest_value["targetedFullResolution"]})
+        review_value = review_tool.complete_review_generation(
+            manifest_value, manifest_path, review_path, temporal, summary, targeted_path,
+            params, {"sha256": "synthetic-draft"}, keep)
+        return manifest_value, review_value
+
+    manifest_a, review_a = materialize_generation(lifecycle_plan)
+    for entry in review_a["scenes"]:
+        entry.update({"illustrated": "pass", "composed": "pass", "varied": "pass",
+                      "purposeful": "pass", "note": "generation A judgement",
+                      "resolved": False})
+    state.write_json(review_path, review_a)
+    obsolete = next(item["id"] for item in manifest_a["samples"] if item["scene"] == "S1")
+    changed_plan = copy.deepcopy(lifecycle_plan)
+    changed_plan["scenes"][0]["visualEvents"] = [{"frame": 3, "what": "changed sample"}]
+    lifecycle_path.write_text(json.dumps(changed_plan), encoding="utf-8")
+    scene_one.write_text('import {kit} from "./V99Kit"; export const scene=kit+"changed";',
+                         encoding="utf-8")
+    manifest_b, review_b = materialize_generation(changed_plan, keep=True)
+    by_id = {entry["id"]: entry for entry in review_b["scenes"]}
+    current_ids = {item["id"] for item in manifest_b["samples"]}
+    checks.append(("review lifecycle: unchanged scene gets current evidence and retains judgement",
+                   by_id["S3"]["illustrated"] == "pass" and
+                   by_id["S3"]["evidence"] == [x for x in manifest_b["samples"]
+                                                if x["scene"] == "S3"]))
+    checks.append(("review lifecycle: changed scene judgement clears and obsolete sample disappears",
+                   by_id["S1"]["illustrated"] == "" and obsolete not in current_ids and
+                   obsolete not in json.dumps(review_b)))
+    checks.append(("review lifecycle: manifest/review generation is coherent",
+                   manifest_b["reviewGeneration"] == review_b["reviewGeneration"]))
+    # Generation B is coherent but every entry whose actual-master source
+    # identity changed (the scene and transition-neighbor) requires fresh judgement.
+    for entry in review_b["scenes"]:
+        if not entry["illustrated"]:
+            entry.update({"illustrated": "pass", "composed": "pass", "varied": "pass",
+                          "purposeful": "pass", "note": "fresh generation B judgement",
+                          "resolved": False})
+    state.write_json(review_path, review_b)
+    gate_code, gate_out = run_gate("review_gate.py", [str(lifecycle_path), "--no-measure"], tmp)
+    checks.append(("review lifecycle: real review_gate accepts coherent generation B",
+                   gate_code == 0))
+    stale_review = copy.deepcopy(review_b); stale_review["reviewGeneration"] = "stale-generation"
+    state.write_json(review_path, stale_review)
+    stale_code, stale_out = run_gate("review_gate.py", [str(lifecycle_path), "--no-measure"], tmp)
+    checks.append(("review lifecycle: real review_gate rejects stale generation",
+                   stale_code != 0 and "reviewGeneration" in stale_out))
+    state.write_json(review_path, review_b)
+
+    # Durable sheet aggregate cache with a mocked model call: 3, 0, 3.
+    sheet_file = frames_dir / "sheet-cache.jpg"
+    from PIL import Image
+    Image.new("RGB", (30, 30), (1, 2, 3)).save(sheet_file)
+    model_calls = {"n": 0}
+    def fake_sheet_check(_path, _model):
+        model_calls["n"] += 1
+        return {"repetitive": False, "groups": [], "note": "mock", "_tokens": 1}
+    first_result, first_hit, _ = sheet_vision.cached_aggregate(
+        sheet_file, 3, "mock-model", sheet_vision.RUNS, fake_sheet_check)
+    first_calls = model_calls["n"]
+    _, second_hit, _ = sheet_vision.cached_aggregate(
+        sheet_file, 3, "mock-model", sheet_vision.RUNS, fake_sheet_check)
+    second_calls = model_calls["n"] - first_calls
+    Image.new("RGB", (30, 30), (4, 5, 6)).save(sheet_file)
+    _, third_hit, _ = sheet_vision.cached_aggregate(
+        sheet_file, 3, "mock-model", sheet_vision.RUNS, fake_sheet_check)
+    third_calls = model_calls["n"] - first_calls - second_calls
+    checks.append(("sheet vision cache: mocked model calls are configured-runs, zero, configured-runs",
+                   first_calls == sheet_vision.RUNS and second_calls == 0 and
+                   third_calls == sheet_vision.RUNS and not first_hit and second_hit and not third_hit))
+
+    # Stop checks review-vision current/stale state but never launches any of
+    # the three model-capable scripts. Deterministic checks remain represented.
+    deterministic_calls, model_subprocesses = [], []
+    old_inc, old_selftest, old_current = hook.run_incremental, hook.selftest_is_current, review_vision.is_current
+    def fake_incremental(_root, _pp, _plan, script_name, _args):
+        deterministic_calls.append(script_name)
+        if script_name in ("asset_vision.py", "vision_check.py", "sheet_vision.py"):
+            model_subprocesses.append(script_name)
+        return 0, "OK synthetic", True, None
+    hook.run_incremental = fake_incremental
+    hook.selftest_is_current = lambda: (True, "current")
+    stop_plan = copy.deepcopy(changed_plan)
+    for scene in stop_plan["scenes"]:
+        scene["status"] = "built"
+    try:
+        current_err, stale_err = io.StringIO(), io.StringIO()
+        review_vision.is_current = lambda *_: (True, {})
+        with contextlib.redirect_stderr(current_err):
+            stop_current = hook.stop(tmp, (lifecycle_path, stop_plan))
+        review_vision.is_current = lambda *_: (False, {})
+        with contextlib.redirect_stderr(stale_err):
+            stop_stale = hook.stop(tmp, (lifecycle_path, stop_plan))
+        def hard_incremental(_root, _pp, _plan, script_name, _args):
+            deterministic_calls.append(script_name)
+            return ((1, "FAIL cached synthetic HARD", True, "cached-hard.txt")
+                    if script_name == "plan_gate.py" else (0, "OK synthetic", True, None))
+        hook.run_incremental = hard_incremental
+        hard_err = io.StringIO()
+        with contextlib.redirect_stderr(hard_err):
+            stop_hard = hook.stop(tmp, (lifecycle_path, stop_plan))
+    finally:
+        hook.run_incremental, hook.selftest_is_current = old_inc, old_selftest
+        review_vision.is_current = old_current
+    checks.append(("Stop hook: current/stale review vision causes zero model/network subprocesses",
+                   stop_current == 0 and stop_stale == 0 and not model_subprocesses and
+                   "explicit review vision remains" in stale_err.getvalue()))
+    checks.append(("Stop hook: deterministic gate receipt/cache checks still execute",
+                   "plan_gate.py" in deterministic_calls and "build_gate.py" in deterministic_calls))
+    checks.append(("Stop hook: cached HARD remains explicit and blocking",
+                   stop_hard == 2 and "cached synthetic HARD" in hard_err.getvalue()))
+
+    handoff = pipeline.build_handoff(lifecycle_path, "REVIEW", "CORRECTION",
+                                     hard=["S1 source mismatch"],
+                                     advisories=["S3 composition debt"], changed_scenes=["S1"])
+    handoff_text = json.dumps(handoff)
+    checks.append(("context handoff: compact required paths/stage/issues/review generation",
+                   len(handoff_text) < 5000 and handoff["authoritativePlan"] == str(lifecycle_path.resolve())
+                   and handoff["nextRequestedStage"] == "CORRECTION"
+                   and handoff["changedSceneIds"] == ["S1"]
+                   and handoff["reviewGeneration"] == review_b["reviewGeneration"]))
+    checks.append(("context handoff: excludes logs/history/full unrelated scene payloads",
+                   all(word not in handoff_text.lower() for word in
+                       ("priorconversation", "promptpack", "historical lessons", "asset-b.png"))))
+
+    geometry_script = tmp / "geometry-test.mjs"
+    geometry_module = (ROOT / "src" / "scenes" / "documentEvidenceGeometry.mjs").as_uri()
+    geometry_script.write_text(
+        f'import {{fitDocumentEvidence as fit}} from {json.dumps(geometry_module)};\n'
+        'const cases=[{x:.2,y:.2,width:.5,height:.3},{x:0,y:.2,width:.35,height:.3},'
+        '{x:.65,y:.2,width:.35,height:.3},{x:.3,y:0,width:.3,height:1},'
+        '{x:0,y:.4,width:1,height:.15}];\n'
+        'const ok=cases.every(region=>{const g=fit({viewportWidth:960,viewportHeight:1120,'
+        'sourceAspect:.707,region,requestedZoom:2.4,safetyMargin:18});return '
+        'g.focusLeft>=18-1e-6&&g.focusTop>=18-1e-6&&g.focusLeft+g.focusWidth<=942+1e-6&&'
+        'g.focusTop+g.focusHeight<=1102+1e-6;});process.exit(ok?0:1);', encoding="utf-8")
+    geometry_proc = subprocess.run(["node", str(geometry_script)], capture_output=True, text=True)
+    checks.append(("DocumentEvidence geometry: centered/edge/tall/wide/zoom>1 stay inside margin",
+                   geometry_proc.returncode == 0))
+
     assemble = _load_script("assemble.py")
     base = {"scenes": [{"id": "S1"}, {"id": "S2"}]}
     parts = assemble.scene_parts(base, "99")
@@ -568,8 +785,11 @@ def repair_contract_checks(tmp):
     visual_language = (ROOT / "src" / "scenes" / "visualLanguage.jsx").read_text(encoding="utf-8")
     checks.append(("new BackgroundPhoto camera is stable by default", "drift = 0," in visual_language))
     hook_source = (SCRIPTS / "hook_gate.py").read_text(encoding="utf-8")
-    checks.append(("sheet_vision routes scene-summary sheet with scene count",
-                   'review.get("sceneSummarySheet")' in hook_source and '"--scenes"' in hook_source))
+    explicit_source = (SCRIPTS / "review_vision.py").read_text(encoding="utf-8")
+    checks.append(("sheet_vision is routed explicitly with scene count, never from Stop",
+                   'review.get("sceneSummarySheet")' in explicit_source and
+                   '"--scenes"' in explicit_source and
+                   'run("sheet_vision.py"' not in hook_source))
     return checks
 
 

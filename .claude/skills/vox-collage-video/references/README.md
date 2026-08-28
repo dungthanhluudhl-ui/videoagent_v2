@@ -7,7 +7,7 @@ applies; code and each script's `--help` remain mechanical truth.
 | File | Read when |
 |---|---|
 | `visual-language.md` | When choosing how to represent narration |
-| `worked-examples.md` | When a difficult editorial transformation needs examples |
+| `worked-examples.md` | Lazy precedent for a difficult transformation; the compact director contract is in SKILL.md |
 | `primitives.md` | While implementing a component; check existing capability first |
 | `animation-variants.md` | While choosing or implementing motion |
 | `gates.md` | Troubleshooting enforcement or locating a gate |
