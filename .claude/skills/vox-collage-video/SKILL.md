@@ -160,13 +160,25 @@ green. After the intended correction, report remaining aesthetic debt explicitly
 do not rewrite unrelated scenes to silence an advisory. A local S5 repair normally
 reopens S5 evidence/review and only genuinely affected neighbor/global summaries.
 
-## Real context boundaries
+## Execution and context management
 
-Use fresh sessions: **SESSION A—PLAN, SESSION B—BUILD, SESSION C—REVIEW /
-CORRECTION / FINAL**. Emit a compact `pipeline_contracts.py handoff` artifact at
-each boundary. Disk receipts reduce re-reading and duplicate work, but they do not
-shrink the history of a continuous Codex conversation. Fresh-session boundaries
-are what actually isolate main-agent context; worker packets do not create one.
+Normal end-to-end production is one continuous Codex task: **PLAN → SOURCE →
+BUILD → actual-master REVIEW → one targeted editorial CORRECTION → delta REVIEW
+as required → FINAL**. Do not ask the user to restart Codex between stages. Use
+the runtime's native context management or compaction for a long continuous task
+when available; do not build a custom compaction or orchestration system.
+
+Disk receipts, manifests, plans and handoff artifacts are authoritative persistent
+pipeline state. They reduce what a task needs to reload, but do not shrink an
+already-open model context. Existing bounded worker packets likewise narrow the
+material a task needs to read; unless the runtime actually provides isolated
+workers, a packet is not a new LLM context or a context reset.
+
+`pipeline_contracts.py handoff` remains an optional checkpoint for a real
+continuation boundary: recovery after interruption, an intentionally separate
+session, user-requested stage separation, or explicit delegation where the
+environment provides isolation. Creating a handoff does not require another
+session and is not part of the default continuous production path.
 
 ## Reference routing
 

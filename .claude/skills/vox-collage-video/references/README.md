@@ -12,7 +12,7 @@ applies; code and each script's `--help` remain mechanical truth.
 | `animation-variants.md` | While choosing or implementing motion |
 | `gates.md` | Troubleshooting enforcement or locating a gate |
 | `lessons.md` | Search for a relevant historical defect; do not read as a ritual |
-| `kickoff-prompt.md` | Minimal user launcher for a fresh session |
+| `kickoff-prompt.md` | Minimal launcher for continuous production or optional recovery/continuation |
 
 `example-scene.jsx` was removed: a synthetic template drifts out of sync with
 the real code. Copy patterns from the current `src/scenes/` instead — it is
