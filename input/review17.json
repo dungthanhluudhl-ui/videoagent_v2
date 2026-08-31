@@ -1,0 +1,516 @@
+{
+  "video": "V17",
+  "evidenceSource": "medium-resolution actual master draft",
+  "sampleManifest": "input\\review_frames_v17\\sample_manifest.json",
+  "temporalSheet": "input\\review_frames_v17\\contact_sheet.jpg",
+  "sceneSummarySheet": "input\\review_frames_v17\\scene_summary_sheet.jpg",
+  "targetedFullResolution": "input\\review_frames_v17\\targeted_full_res_manifest.json",
+  "renderParameters": {
+    "mode": "draft",
+    "composition": "V17Master",
+    "scale": 0.5,
+    "fps": 30,
+    "codec": "h264"
+  },
+  "reviewGeneration": "cf2c93d13b69164d7c80e076a46210349ad9ec08f1d3f81e053bf55b33037bc2",
+  "howToFill": "Judge actual-master evidence; quality fail may be acknowledged, missing/stale/blank evidence is hard.",
+  "criteria": {
+    "illustrated": "narration is shown",
+    "composed": "balanced and legible",
+    "varied": "not the same visual formula as neighbours",
+    "purposeful": "every element has an editorial reason"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "frame": "input\\review_frames_v17\\V17Master_S1_f50_m50.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S1_f20_m20.png",
+        "input\\review_frames_v17\\V17Master_S1_f50_m50.png",
+        "input\\review_frames_v17\\V17Master_S1_f152_m152.png"
+      ],
+      "evidence": [
+        {
+          "id": "S1-f20",
+          "scene": "S1",
+          "localFrame": 20,
+          "masterFrame": 20,
+          "masterTimeSec": 0.666667,
+          "path": "input\\review_frames_v17\\V17Master_S1_f20_m20.png",
+          "visualTransformation": "Một hồ sơ đang khép bị giật mở; khoảng tối bên trong trở thành lối sâu của kho phế liệu, đặt người xem vào nơi giam giữ.",
+          "sourceFingerprint": "882b5cf6777ba8580bfd467b88d39a5e9d0cc7d5661b25d98899462abb4b4660"
+        },
+        {
+          "id": "S1-f50",
+          "scene": "S1",
+          "localFrame": 50,
+          "masterFrame": 50,
+          "masterTimeSec": 1.666667,
+          "path": "input\\review_frames_v17\\V17Master_S1_f50_m50.png",
+          "visualTransformation": "Một hồ sơ đang khép bị giật mở; khoảng tối bên trong trở thành lối sâu của kho phế liệu, đặt người xem vào nơi giam giữ.",
+          "sourceFingerprint": "f1e52fbff7dc699e30e7feed293f184473674b9f6d21cc51528eb4072dc53440"
+        },
+        {
+          "id": "S1-f152",
+          "scene": "S1",
+          "localFrame": 152,
+          "masterFrame": 152,
+          "masterTimeSec": 5.066667,
+          "path": "input\\review_frames_v17\\V17Master_S1_f152_m152.png",
+          "visualTransformation": "Một hồ sơ đang khép bị giật mở; khoảng tối bên trong trở thành lối sâu của kho phế liệu, đặt người xem vào nơi giam giữ.",
+          "sourceFingerprint": "be9e535aac936541fab8877bc47933d7a81d3de54fab844eddba04057975737d"
+        }
+      ],
+      "visualTransformation": "Một hồ sơ đang khép bị giật mở; khoảng tối bên trong trở thành lối sâu của kho phế liệu, đặt người xem vào nơi giam giữ.",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The file cover clears before the warehouse and headline occupy the frame.",
+      "resolved": false
+    },
+    {
+      "id": "S2",
+      "frame": "input\\review_frames_v17\\V17Master_S2_f65_m223.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S2_f20_m178.png",
+        "input\\review_frames_v17\\V17Master_S2_f65_m223.png",
+        "input\\review_frames_v17\\V17Master_S2_f184_m342.png"
+      ],
+      "evidence": [
+        {
+          "id": "S2-f20",
+          "scene": "S2",
+          "localFrame": 20,
+          "masterFrame": 178,
+          "masterTimeSec": 5.933333,
+          "path": "input\\review_frames_v17\\V17Master_S2_f20_m178.png",
+          "visualTransformation": "Một chiếc còng khóa sập trước, rồi dây trói siết thành vòng bao quanh lối thoát; hai vật thể biến không gian thành một bẫy kín.",
+          "sourceFingerprint": "36a6a5c8d5781597cd256ef3224cac7f45138e202103ae28ce86b194df40083f"
+        },
+        {
+          "id": "S2-f65",
+          "scene": "S2",
+          "localFrame": 65,
+          "masterFrame": 223,
+          "masterTimeSec": 7.433333,
+          "path": "input\\review_frames_v17\\V17Master_S2_f65_m223.png",
+          "visualTransformation": "Một chiếc còng khóa sập trước, rồi dây trói siết thành vòng bao quanh lối thoát; hai vật thể biến không gian thành một bẫy kín.",
+          "sourceFingerprint": "5698a526a51150ca6a4cfcc953cff107e99bd8fc8f456cd6c937a527d5e16eca"
+        },
+        {
+          "id": "S2-f184",
+          "scene": "S2",
+          "localFrame": 184,
+          "masterFrame": 342,
+          "masterTimeSec": 11.4,
+          "path": "input\\review_frames_v17\\V17Master_S2_f184_m342.png",
+          "visualTransformation": "Một chiếc còng khóa sập trước, rồi dây trói siết thành vòng bao quanh lối thoát; hai vật thể biến không gian thành một bẫy kín.",
+          "sourceFingerprint": "5dbf7df21ade6696686404de68a2a5597da43cf4673808331b05264503fd810a"
+        }
+      ],
+      "visualTransformation": "Một chiếc còng khóa sập trước, rồi dây trói siết thành vòng bao quanh lối thoát; hai vật thể biến không gian thành một bẫy kín.",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Cuff and rope form the planned physical restraint sequence.",
+      "resolved": false
+    },
+    {
+      "id": "S3",
+      "frame": "input\\review_frames_v17\\V17Master_S3_f85_m433.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S3_f20_m368.png",
+        "input\\review_frames_v17\\V17Master_S3_f85_m433.png",
+        "input\\review_frames_v17\\V17Master_S3_f230_m578.png"
+      ],
+      "evidence": [
+        {
+          "id": "S3-f20",
+          "scene": "S3",
+          "localFrame": 20,
+          "masterFrame": 368,
+          "masterTimeSec": 12.266667,
+          "path": "input\\review_frames_v17\\V17Master_S3_f20_m368.png",
+          "visualTransformation": "Cuộc gọi bị ép buộc nối nạn nhân với gia đình; con số 150 triệu trượt vào giữa đường dây và biến thành điều kiện mở khóa.",
+          "sourceFingerprint": "e04ef3035f6ca07ffd37c9e61780516257592424ddf9070148bcda65d811fef1"
+        },
+        {
+          "id": "S3-f85",
+          "scene": "S3",
+          "localFrame": 85,
+          "masterFrame": 433,
+          "masterTimeSec": 14.433333,
+          "path": "input\\review_frames_v17\\V17Master_S3_f85_m433.png",
+          "visualTransformation": "Cuộc gọi bị ép buộc nối nạn nhân với gia đình; con số 150 triệu trượt vào giữa đường dây và biến thành điều kiện mở khóa.",
+          "sourceFingerprint": "af46ed1c55d1d07c4794ef5b5a04a0389ff5a50fd05e69909d1c1e271a858a73"
+        },
+        {
+          "id": "S3-f230",
+          "scene": "S3",
+          "localFrame": 230,
+          "masterFrame": 578,
+          "masterTimeSec": 19.266667,
+          "path": "input\\review_frames_v17\\V17Master_S3_f230_m578.png",
+          "visualTransformation": "Cuộc gọi bị ép buộc nối nạn nhân với gia đình; con số 150 triệu trượt vào giữa đường dây và biến thành điều kiện mở khóa.",
+          "sourceFingerprint": "8edb1ee9db86d992c4ed3552f2266885954e9016f279e2b44277c2fd2945762f"
+        }
+      ],
+      "visualTransformation": "Cuộc gọi bị ép buộc nối nạn nhân với gia đình; con số 150 triệu trượt vào giữa đường dây và biến thành điều kiện mở khóa.",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The coerced-call mechanism is clear; the arrowhead still reads slightly detached.",
+      "resolved": true
+    },
+    {
+      "id": "S4",
+      "frame": "input\\review_frames_v17\\V17Master_S4_f62_m646.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S4_f20_m604.png",
+        "input\\review_frames_v17\\V17Master_S4_f62_m646.png",
+        "input\\review_frames_v17\\V17Master_S4_f143_m727.png"
+      ],
+      "evidence": [
+        {
+          "id": "S4-f20",
+          "scene": "S4",
+          "localFrame": 20,
+          "masterFrame": 604,
+          "masterTimeSec": 20.133333,
+          "path": "input\\review_frames_v17\\V17Master_S4_f20_m604.png",
+          "visualTransformation": "Trích đoạn hồ sơ chính thức tiến vào, vùng nêu yêu cầu chuyển đủ tiền được soi rõ; dấu ngày sau đóng xuống để cho thấy hành vi tiếp diễn.",
+          "sourceFingerprint": "5a5a054bb39eb1f8bacc284bcf6544b8dd704d3331b7ebb5a269bcf6e5a907c1"
+        },
+        {
+          "id": "S4-f62",
+          "scene": "S4",
+          "localFrame": 62,
+          "masterFrame": 646,
+          "masterTimeSec": 21.533333,
+          "path": "input\\review_frames_v17\\V17Master_S4_f62_m646.png",
+          "visualTransformation": "Trích đoạn hồ sơ chính thức tiến vào, vùng nêu yêu cầu chuyển đủ tiền được soi rõ; dấu ngày sau đóng xuống để cho thấy hành vi tiếp diễn.",
+          "sourceFingerprint": "3d93b56a0bfaea6fb62f61b175fe0aabce524f02f5433a52853f5c3249e4b31c"
+        },
+        {
+          "id": "S4-f143",
+          "scene": "S4",
+          "localFrame": 143,
+          "masterFrame": 727,
+          "masterTimeSec": 24.233333,
+          "path": "input\\review_frames_v17\\V17Master_S4_f143_m727.png",
+          "visualTransformation": "Trích đoạn hồ sơ chính thức tiến vào, vùng nêu yêu cầu chuyển đủ tiền được soi rõ; dấu ngày sau đóng xuống để cho thấy hành vi tiếp diễn.",
+          "sourceFingerprint": "92e36f78af1d95945ba91dd075b32827acf6a0f6b326c34a02ad7352dc4525e5"
+        }
+      ],
+      "visualTransformation": "Trích đoạn hồ sơ chính thức tiến vào, vùng nêu yêu cầu chuyển đủ tiền được soi rõ; dấu ngày sau đóng xuống để cho thấy hành vi tiếp diễn.",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "The cited demand is clearer; surrounding source lines meet crop edges.",
+      "resolved": true
+    },
+    {
+      "id": "S5",
+      "frame": "input\\review_frames_v17\\V17Master_S5_f144_m877.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S5_f50_m783.png",
+        "input\\review_frames_v17\\V17Master_S5_f144_m877.png"
+      ],
+      "evidence": [
+        {
+          "id": "S5-f50",
+          "scene": "S5",
+          "localFrame": 50,
+          "masterFrame": 783,
+          "masterTimeSec": 26.1,
+          "path": "input\\review_frames_v17\\V17Master_S5_f50_m783.png",
+          "visualTransformation": "Các mảnh hồ sơ rút khỏi khung, để lại một khoảng giấy trống; dấu hỏi lớn tự gõ xuống và dừng lại cho người xem đổi vai từ chứng kiến sang phán đoán.",
+          "sourceFingerprint": "140c68b02a3364fcd9288e562cc999f6d085b2ff2a3491496daf20cf19391848"
+        },
+        {
+          "id": "S5-f144",
+          "scene": "S5",
+          "localFrame": 144,
+          "masterFrame": 877,
+          "masterTimeSec": 29.233333,
+          "path": "input\\review_frames_v17\\V17Master_S5_f144_m877.png",
+          "visualTransformation": "Các mảnh hồ sơ rút khỏi khung, để lại một khoảng giấy trống; dấu hỏi lớn tự gõ xuống và dừng lại cho người xem đổi vai từ chứng kiến sang phán đoán.",
+          "sourceFingerprint": "e29622edba9e3513e52b2cb8663a640c44db02b5652b9a81f4164252063c2020"
+        }
+      ],
+      "visualTransformation": "Các mảnh hồ sơ rút khỏi khung, để lại một khoảng giấy trống; dấu hỏi lớn tự gõ xuống và dừng lại cho người xem đổi vai từ chứng kiến sang phán đoán.",
+      "illustrated": "n/a",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Intentional text-only breathing scene; sparse signal accepted.",
+      "resolved": false
+    },
+    {
+      "id": "S6",
+      "frame": "input\\review_frames_v17\\V17Master_S6_f65_m948.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S6_f20_m903.png",
+        "input\\review_frames_v17\\V17Master_S6_f65_m948.png",
+        "input\\review_frames_v17\\V17Master_S6_f122_m1005.png"
+      ],
+      "evidence": [
+        {
+          "id": "S6-f20",
+          "scene": "S6",
+          "localFrame": 20,
+          "masterFrame": 903,
+          "masterTimeSec": 30.1,
+          "path": "input\\review_frames_v17\\V17Master_S6_f20_m903.png",
+          "visualTransformation": "Dòng hồ sơ xác nhận khoản vay thật được đặt nguyên vẹn; con dấu NỢ THẬT hạ xuống thay vì né tránh dữ kiện có lợi cho phía đòi nợ.",
+          "sourceFingerprint": "5ef9c4cd937831c3efa200478ffea7f7f557a244cbefe3be975602db30cfbc8b"
+        },
+        {
+          "id": "S6-f65",
+          "scene": "S6",
+          "localFrame": 65,
+          "masterFrame": 948,
+          "masterTimeSec": 31.6,
+          "path": "input\\review_frames_v17\\V17Master_S6_f65_m948.png",
+          "visualTransformation": "Dòng hồ sơ xác nhận khoản vay thật được đặt nguyên vẹn; con dấu NỢ THẬT hạ xuống thay vì né tránh dữ kiện có lợi cho phía đòi nợ.",
+          "sourceFingerprint": "2f43e7e42e5f5469fb4016d523e293a7d0c1600908be1969c0d59dc0dbee7499"
+        },
+        {
+          "id": "S6-f122",
+          "scene": "S6",
+          "localFrame": 122,
+          "masterFrame": 1005,
+          "masterTimeSec": 33.5,
+          "path": "input\\review_frames_v17\\V17Master_S6_f122_m1005.png",
+          "visualTransformation": "Dòng hồ sơ xác nhận khoản vay thật được đặt nguyên vẹn; con dấu NỢ THẬT hạ xuống thay vì né tránh dữ kiện có lợi cho phía đòi nợ.",
+          "sourceFingerprint": "68e1f988d0d06b1a590a124b5c9f0e1be099c9bacf0a3a692f5c20534c087aae"
+        }
+      ],
+      "visualTransformation": "Dòng hồ sơ xác nhận khoản vay thật được đặt nguyên vẹn; con dấu NỢ THẬT hạ xuống thay vì né tránh dữ kiện có lợi cho phía đòi nợ.",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Debt premise is clear; surrounding source lines remain edge-cropped.",
+      "resolved": true
+    },
+    {
+      "id": "S7",
+      "frame": "input\\review_frames_v17\\V17Master_S7_f185_m1196.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S7_f20_m1031.png",
+        "input\\review_frames_v17\\V17Master_S7_f175_m1186.png",
+        "input\\review_frames_v17\\V17Master_S7_f185_m1196.png",
+        "input\\review_frames_v17\\V17Master_S7_f229_m1240.png"
+      ],
+      "evidence": [
+        {
+          "id": "S7-f20",
+          "scene": "S7",
+          "localFrame": 20,
+          "masterFrame": 1031,
+          "masterTimeSec": 34.366667,
+          "path": "input\\review_frames_v17\\V17Master_S7_f20_m1031.png",
+          "visualTransformation": "Hai thẻ ĐÒI NỢ và GIỮ NGƯỜI vào hai cột; một dải đen cam mang tên tội BẮT CÓC cắt ngang rồi thay hoàn toàn cả hai nhãn cũ.",
+          "sourceFingerprint": "1dbb998063888a89d1a1230851c179358194f87d1714ebc89826a5cd567af14d"
+        },
+        {
+          "id": "S7-f175",
+          "scene": "S7",
+          "localFrame": 175,
+          "masterFrame": 1186,
+          "masterTimeSec": 39.533333,
+          "path": "input\\review_frames_v17\\V17Master_S7_f175_m1186.png",
+          "visualTransformation": "Hai thẻ ĐÒI NỢ và GIỮ NGƯỜI vào hai cột; một dải đen cam mang tên tội BẮT CÓC cắt ngang rồi thay hoàn toàn cả hai nhãn cũ.",
+          "sourceFingerprint": "ddbf8bec468165a43531fea93e398d367a019e28b03a6628d117ee36b868bc1f"
+        },
+        {
+          "id": "S7-f185",
+          "scene": "S7",
+          "localFrame": 185,
+          "masterFrame": 1196,
+          "masterTimeSec": 39.866667,
+          "path": "input\\review_frames_v17\\V17Master_S7_f185_m1196.png",
+          "visualTransformation": "Hai thẻ ĐÒI NỢ và GIỮ NGƯỜI vào hai cột; một dải đen cam mang tên tội BẮT CÓC cắt ngang rồi thay hoàn toàn cả hai nhãn cũ.",
+          "sourceFingerprint": "4b5457d5150e6c600b95239e3271e05cb6fa7e5fea806e1151b8697d05deeacc"
+        },
+        {
+          "id": "S7-f229",
+          "scene": "S7",
+          "localFrame": 229,
+          "masterFrame": 1240,
+          "masterTimeSec": 41.333333,
+          "path": "input\\review_frames_v17\\V17Master_S7_f229_m1240.png",
+          "visualTransformation": "Hai thẻ ĐÒI NỢ và GIỮ NGƯỜI vào hai cột; một dải đen cam mang tên tội BẮT CÓC cắt ngang rồi thay hoàn toàn cả hai nhãn cũ.",
+          "sourceFingerprint": "8f5d762b9b120178d79074b7a065a4d4f7c6deaf5382bb8cd49e8e67805e2d29"
+        }
+      ],
+      "visualTransformation": "Hai thẻ ĐÒI NỢ và GIỮ NGƯỜI vào hai cột; một dải đen cam mang tên tội BẮT CÓC cắt ngang rồi thay hoàn toàn cả hai nhãn cũ.",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Replacement is readable; takeover bar touches prior card edges.",
+      "resolved": true
+    },
+    {
+      "id": "S8",
+      "frame": "input\\review_frames_v17\\V17Master_S8_f120_m1366.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S8_f20_m1266.png",
+        "input\\review_frames_v17\\V17Master_S8_f120_m1366.png",
+        "input\\review_frames_v17\\V17Master_S8_f172_m1418.png"
+      ],
+      "evidence": [
+        {
+          "id": "S8-f20",
+          "scene": "S8",
+          "localFrame": 20,
+          "masterFrame": 1266,
+          "masterTimeSec": 42.2,
+          "path": "input\\review_frames_v17\\V17Master_S8_f20_m1266.png",
+          "visualTransformation": "Tên án lệ từ văn bản thật tiến vào như một bìa hồ sơ; vùng số 64/2023/AL được soi sáng đúng lúc lời đọc gọi tên nguồn.",
+          "sourceFingerprint": "7de5a0bc3e68537cc745e4ad70915bf03ff7079a7966b502d536ae93e250b147"
+        },
+        {
+          "id": "S8-f120",
+          "scene": "S8",
+          "localFrame": 120,
+          "masterFrame": 1366,
+          "masterTimeSec": 45.533333,
+          "path": "input\\review_frames_v17\\V17Master_S8_f120_m1366.png",
+          "visualTransformation": "Tên án lệ từ văn bản thật tiến vào như một bìa hồ sơ; vùng số 64/2023/AL được soi sáng đúng lúc lời đọc gọi tên nguồn.",
+          "sourceFingerprint": "b6d50cc7eaad5adc03b62571cf6a52c062d0d6375fd78de0c6d5dd894c85464c"
+        },
+        {
+          "id": "S8-f172",
+          "scene": "S8",
+          "localFrame": 172,
+          "masterFrame": 1418,
+          "masterTimeSec": 47.266667,
+          "path": "input\\review_frames_v17\\V17Master_S8_f172_m1418.png",
+          "visualTransformation": "Tên án lệ từ văn bản thật tiến vào như một bìa hồ sơ; vùng số 64/2023/AL được soi sáng đúng lúc lời đọc gọi tên nguồn.",
+          "sourceFingerprint": "cf7b24c77e8ca086cc0d0feed6a7eaebc773ea806f0f2f4ee57fdef133554fc8"
+        }
+      ],
+      "visualTransformation": "Tên án lệ từ văn bản thật tiến vào như một bìa hồ sơ; vùng số 64/2023/AL được soi sáng đúng lúc lời đọc gọi tên nguồn.",
+      "illustrated": "pass",
+      "composed": "pass",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Official title functions as readable authority/context.",
+      "resolved": false
+    },
+    {
+      "id": "S9",
+      "frame": "input\\review_frames_v17\\V17Master_S9_f95_m1519.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S9_f20_m1444.png",
+        "input\\review_frames_v17\\V17Master_S9_f95_m1519.png",
+        "input\\review_frames_v17\\V17Master_S9_f197_m1621.png"
+      ],
+      "evidence": [
+        {
+          "id": "S9-f20",
+          "scene": "S9",
+          "localFrame": 20,
+          "masterFrame": 1444,
+          "masterTimeSec": 48.133333,
+          "path": "input\\review_frames_v17\\V17Master_S9_f20_m1444.png",
+          "visualTransformation": "Trích đoạn NỢ THẬT đứng bên trái; bên phải lần lượt khóa ba thanh BẮT GIỮ, TRÓI, NHỐT, rồi khối cưỡng ép lấn qua đường phân cách.",
+          "sourceFingerprint": "8267551e17b91f215935c3f5162bb850158a9aac3b3187980a7ee0bf38c91df5"
+        },
+        {
+          "id": "S9-f95",
+          "scene": "S9",
+          "localFrame": 95,
+          "masterFrame": 1519,
+          "masterTimeSec": 50.633333,
+          "path": "input\\review_frames_v17\\V17Master_S9_f95_m1519.png",
+          "visualTransformation": "Trích đoạn NỢ THẬT đứng bên trái; bên phải lần lượt khóa ba thanh BẮT GIỮ, TRÓI, NHỐT, rồi khối cưỡng ép lấn qua đường phân cách.",
+          "sourceFingerprint": "a4bf051032155ebe2582bbe4d37c2d40f105a852a4bc37391c3b983137743e71"
+        },
+        {
+          "id": "S9-f197",
+          "scene": "S9",
+          "localFrame": 197,
+          "masterFrame": 1621,
+          "masterTimeSec": 54.033333,
+          "path": "input\\review_frames_v17\\V17Master_S9_f197_m1621.png",
+          "visualTransformation": "Trích đoạn NỢ THẬT đứng bên trái; bên phải lần lượt khóa ba thanh BẮT GIỮ, TRÓI, NHỐT, rồi khối cưỡng ép lấn qua đường phân cách.",
+          "sourceFingerprint": "5abcc8d13e787639c485d70364bc459bd0525f4c681e05da818f9eb8feb6fca4"
+        }
+      ],
+      "visualTransformation": "Trích đoạn NỢ THẬT đứng bên trái; bên phải lần lượt khóa ba thanh BẮT GIỮ, TRÓI, NHỐT, rồi khối cưỡng ép lấn qua đường phân cách.",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Reversal is clear; source clause remains small and divider touches its edge.",
+      "resolved": true
+    },
+    {
+      "id": "S10",
+      "frame": "input\\review_frames_v17\\V17Master_S10_f125_m1752.png",
+      "frames": [
+        "input\\review_frames_v17\\V17Master_S10_f20_m1647.png",
+        "input\\review_frames_v17\\V17Master_S10_f114_m1741.png",
+        "input\\review_frames_v17\\V17Master_S10_f125_m1752.png",
+        "input\\review_frames_v17\\V17Master_S10_f167_m1794.png"
+      ],
+      "evidence": [
+        {
+          "id": "S10-f20",
+          "scene": "S10",
+          "localFrame": 20,
+          "masterFrame": 1647,
+          "masterTimeSec": 54.9,
+          "path": "input\\review_frames_v17\\V17Master_S10_f20_m1647.png",
+          "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+          "sourceFingerprint": "50ed18631a94848bd2bbd9800ab185c9ce8713905c51da5c02cf87f0c1d58227"
+        },
+        {
+          "id": "S10-f114",
+          "scene": "S10",
+          "localFrame": 114,
+          "masterFrame": 1741,
+          "masterTimeSec": 58.033333,
+          "path": "input\\review_frames_v17\\V17Master_S10_f114_m1741.png",
+          "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+          "sourceFingerprint": "9f8543ac1627527957e6aaa454b4774ff9cdc5a9441bb0755eec88483b1c562c"
+        },
+        {
+          "id": "S10-f125",
+          "scene": "S10",
+          "localFrame": 125,
+          "masterFrame": 1752,
+          "masterTimeSec": 58.4,
+          "path": "input\\review_frames_v17\\V17Master_S10_f125_m1752.png",
+          "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+          "sourceFingerprint": "6654bae40b83accc5b9caaa8027b387c1f19271357d6cc2a18d1d5c6c38f6e73"
+        },
+        {
+          "id": "S10-f167",
+          "scene": "S10",
+          "localFrame": 167,
+          "masterFrame": 1794,
+          "masterTimeSec": 59.8,
+          "path": "input\\review_frames_v17\\V17Master_S10_f167_m1794.png",
+          "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+          "sourceFingerprint": "23e0403412233ce295e863983a5a5b93217b3dbc093c1a3414078d128a39e729"
+        }
+      ],
+      "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+      "illustrated": "pass",
+      "composed": "fail",
+      "varied": "pass",
+      "purposeful": "pass",
+      "note": "Condition and final negation are clear; source surroundings remain edge-cropped.",
+      "resolved": true
+    }
+  ]
+}

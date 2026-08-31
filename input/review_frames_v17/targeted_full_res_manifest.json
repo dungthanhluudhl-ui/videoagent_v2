@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "video": "V17",
+  "composition": "V17Master",
+  "requests": [
+    {
+      "id": "S4-f62",
+      "scene": "S4",
+      "localFrame": 62,
+      "masterFrame": 646,
+      "masterTimeSec": 21.533333,
+      "path": "input\\review_frames_v17\\V17Master_S4_f62_m646.png",
+      "visualTransformation": "Trích đoạn hồ sơ chính thức tiến vào, vùng nêu yêu cầu chuyển đủ tiền được soi rõ; dấu ngày sau đóng xuống để cho thấy hành vi tiếp diễn.",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S6-f65",
+      "scene": "S6",
+      "localFrame": 65,
+      "masterFrame": 948,
+      "masterTimeSec": 31.6,
+      "path": "input\\review_frames_v17\\V17Master_S6_f65_m948.png",
+      "visualTransformation": "Dòng hồ sơ xác nhận khoản vay thật được đặt nguyên vẹn; con dấu NỢ THẬT hạ xuống thay vì né tránh dữ kiện có lợi cho phía đòi nợ.",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S8-f120",
+      "scene": "S8",
+      "localFrame": 120,
+      "masterFrame": 1366,
+      "masterTimeSec": 45.533333,
+      "path": "input\\review_frames_v17\\V17Master_S8_f120_m1366.png",
+      "visualTransformation": "Tên án lệ từ văn bản thật tiến vào như một bìa hồ sơ; vùng số 64/2023/AL được soi sáng đúng lúc lời đọc gọi tên nguồn.",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S9-f95",
+      "scene": "S9",
+      "localFrame": 95,
+      "masterFrame": 1519,
+      "masterTimeSec": 50.633333,
+      "path": "input\\review_frames_v17\\V17Master_S9_f95_m1519.png",
+      "visualTransformation": "Trích đoạn NỢ THẬT đứng bên trái; bên phải lần lượt khóa ba thanh BẮT GIỮ, TRÓI, NHỐT, rồi khối cưỡng ép lấn qua đường phân cách.",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    },
+    {
+      "id": "S10-f125",
+      "scene": "S10",
+      "localFrame": 125,
+      "masterFrame": 1752,
+      "masterTimeSec": 58.4,
+      "path": "input\\review_frames_v17\\V17Master_S10_f125_m1752.png",
+      "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+      "reason": "declared document/text/pixel-sensitive evidence"
+    }
+  ],
+  "singleProcessCommand": [
+    "npx",
+    "remotion",
+    "render",
+    "V17Master",
+    "input\\review_frames_v17\\targeted_full_res",
+    "--sequence",
+    "--frames=646,948,1366,1519,1752",
+    "--image-format=png",
+    "--overwrite"
+  ]
+}

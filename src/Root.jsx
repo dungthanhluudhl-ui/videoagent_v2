@@ -209,6 +209,20 @@ import { V16Scene13, V16SCENE13_DURATION } from "./scenes/V16Scene13";
 import { V16Master, MASTER16_DURATION } from "./V16Master";
 // ===== /ASSEMBLE:V16 imports =====
 
+// ===== ASSEMBLE:V17 imports - khối máy sinh, đừng sửa tay =====
+import { V17Scene1, V17SCENE1_DURATION } from "./scenes/V17Scene1";
+import { V17Scene2, V17SCENE2_DURATION } from "./scenes/V17Scene2";
+import { V17Scene3, V17SCENE3_DURATION } from "./scenes/V17Scene3";
+import { V17Scene4, V17SCENE4_DURATION } from "./scenes/V17Scene4";
+import { V17Scene5, V17SCENE5_DURATION } from "./scenes/V17Scene5";
+import { V17Scene6, V17SCENE6_DURATION } from "./scenes/V17Scene6";
+import { V17Scene7, V17SCENE7_DURATION } from "./scenes/V17Scene7";
+import { V17Scene8, V17SCENE8_DURATION } from "./scenes/V17Scene8";
+import { V17Scene9, V17SCENE9_DURATION } from "./scenes/V17Scene9";
+import { V17Scene10, V17SCENE10_DURATION } from "./scenes/V17Scene10";
+import { V17Master, MASTER17_DURATION } from "./V17Master";
+// ===== /ASSEMBLE:V17 imports =====
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -538,6 +552,22 @@ export const RemotionRoot = () => {
       </Folder>
       <Composition id="V16Master" component={V16Master} durationInFrames={MASTER16_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       {/* ===== /ASSEMBLE:V16 ===== */}
+
+      {/* ===== ASSEMBLE:V17 - khối máy sinh, đừng sửa tay ===== */}
+      <Folder name="V17-Scenes">
+        <Composition id="V17Scene1" component={V17Scene1} durationInFrames={V17SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene2" component={V17Scene2} durationInFrames={V17SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene3" component={V17Scene3} durationInFrames={V17SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene4" component={V17Scene4} durationInFrames={V17SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene5" component={V17Scene5} durationInFrames={V17SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene6" component={V17Scene6} durationInFrames={V17SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene7" component={V17Scene7} durationInFrames={V17SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene8" component={V17Scene8} durationInFrames={V17SCENE8_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene9" component={V17Scene9} durationInFrames={V17SCENE9_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V17Scene10" component={V17Scene10} durationInFrames={V17SCENE10_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+      <Composition id="V17Master" component={V17Master} durationInFrames={MASTER17_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      {/* ===== /ASSEMBLE:V17 ===== */}
 
     </>
   );
