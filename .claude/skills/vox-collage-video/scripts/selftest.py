@@ -186,6 +186,7 @@ def repair_contract_checks(tmp):
 
     state = _load_script("stage_state.py")
     pipeline = _load_script("pipeline_contracts.py")
+    build_gate = _load_script("build_gate.py")
     review_tool = _load_script("render_review_sheet.py")
     render_video = _load_script("render_video.py")
     asset_manifest = _load_script("asset_manifest.py")
@@ -319,6 +320,90 @@ def repair_contract_checks(tmp):
     checks.append(("plan: source contract bytes mutation invalidates",
                    state.plan_contract(synthetic_plan, plan_path) != contract_a))
     evidence.write_bytes(b"official-a")
+
+    # Previs approval freezes actual pixels/assets/intent, not mutable source bytes.
+    from PIL import Image, ImageDraw, ImageEnhance
+    approval_plan = copy.deepcopy(synthetic_plan)
+    approval_plan["scenes"] = [copy.deepcopy(approval_plan["scenes"][0])]
+    approval_scene = approval_plan["scenes"][0]
+    approval_scene["assetRationale"] = "The authentic document carries the proof named by this scene."
+    approval_scene["assets"][0].update({"meaningBearing": True, "locked": True,
+                                         "lockedSha256": state.hash_file(asset_a),
+                                         "selectionRationale": approval_scene["assetRationale"]})
+    plan_path.write_text(json.dumps(approval_plan), encoding="utf-8")
+    approval_source = tmp / "src" / "scenes" / "V99Scene1.jsx"
+    approval_source.write_text("<AbsoluteFill>approved rough source bytes</AbsoluteFill>", encoding="utf-8")
+    baseline_dir = tmp / "input" / "previs_baseline99"; baseline_dir.mkdir()
+    open_frame = baseline_dir / "S1_OPEN.png"; key_frame = baseline_dir / "S1_KEY.png"
+    base_pixels = Image.new("RGB", (1080, 1920), (18, 18, 16))
+    base_draw = ImageDraw.Draw(base_pixels)
+    base_draw.rounded_rectangle((80, 330, 650, 1760), 50, fill=(225, 220, 205),
+                                outline=(255, 106, 26), width=24)
+    base_draw.rectangle((690, 240, 1020, 730), fill=(255, 106, 26))
+    base_pixels.save(open_frame); base_pixels.save(key_frame)
+    contact = baseline_dir / "previs_contact_sheet.png"; base_pixels.save(contact)
+    baseline_manifest = baseline_dir / "previs_frame_manifest.json"
+    state.write_json(baseline_manifest, {"schema": 1, "contactSheet": str(contact), "frames": [
+        {"scene": "S1", "role": "OPEN", "path": str(open_frame),
+         "sha256": state.hash_file(open_frame)},
+        {"scene": "S1", "role": "KEY", "path": str(key_frame),
+         "sha256": state.hash_file(key_frame)},
+    ]})
+    original_pipeline_run = pipeline.subprocess.run
+    pipeline.subprocess.run = lambda *_args, **_kwargs: type(
+        "PrevisPlanCheck", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+    try:
+        pipeline.approve_previs(plan_path, baseline_manifest, "human approved this actual-pixel composition")
+        approved_current = pipeline.previs_is_closed(plan_path)[0]
+        approval_source.write_text(
+            "<AbsoluteFill>approved rough source bytes plus additive motion</AbsoluteFill>", encoding="utf-8")
+        source_edit_current = pipeline.previs_is_closed(plan_path)[0]
+        asset_a.write_bytes(b"primary-asset-swap")
+        asset_swap_current = pipeline.previs_is_closed(plan_path)[0]
+    finally:
+        pipeline.subprocess.run = original_pipeline_run
+        asset_a.write_bytes(b"image-a")
+    checks.append(("previs approval: unchanged baseline is current", approved_current))
+    checks.append(("previs approval: additive source edit does not invalidate approved pixels",
+                   source_edit_current))
+    checks.append(("previs approval: primary asset byte swap invalidates lock",
+                   not asset_swap_current))
+
+    polished = baseline_dir / "polished.png"
+    moved = baseline_dir / "moved-400px.png"
+    ImageEnhance.Contrast(base_pixels).enhance(1.015).save(polished)
+    moved_pixels = Image.new("RGB", (1080, 1920), (18, 18, 16))
+    moved_pixels.paste(base_pixels.crop((0, 0, 680, 1920)), (400, 0))
+    ImageDraw.Draw(moved_pixels).rectangle((690, 240, 1020, 730), fill=(255, 106, 26))
+    moved_pixels.save(moved)
+    legitimate = build_gate.compare_previs_pixels(open_frame, polished)
+    displaced = build_gate.compare_previs_pixels(open_frame, moved)
+    checks.append(("previs drift: legitimate polish passes coarse actual-pixel comparison",
+                   legitimate["passed"]))
+    checks.append(("previs drift: intentional roughly 400px hero displacement fails",
+                   not displaced["passed"]))
+
+    direct_scene = tmp / "src" / "scenes" / "V99Scene1.jsx"
+    direct_scene.write_text(
+        'import {staticFile} from "remotion"; export const X=()=>'
+        '<div data-visual-treatment="diagram"><Img name="Doc" '
+        'src={staticFile("asset-a.png")}/></div>;', encoding="utf-8")
+    direct_built = build_gate.parse_scene_file(direct_scene)
+    checks.append(("build gate: direct bespoke staticFile asset identity is readable",
+                   any(x["name"] == "Doc" and x["src"] == "asset-a.png"
+                       for x in direct_built["assets"])))
+    checks.append(("build gate: direct bespoke treatment declaration is explicit",
+                   'data-visual-treatment="diagram"' in direct_built["text"]))
+
+    review_path = tmp / "input" / "review99.json"
+    review_path.write_text('{"video":"V99"}', encoding="utf-8")
+    correction_path, correction = pipeline.close_correction(
+        plan_path, "one local correction", changed_scenes=["S1"])
+    checks.append(("correction locality: receipt binds only declared changed scene sources",
+                   correction_path.is_file() and correction["accepted"]["changedScenes"] == ["S1"]
+                   and len(correction["inputs"]["sceneSources"]) == 1
+                   and correction["inputs"]["sceneSources"][0]["path"].endswith("V99Scene1.jsx")))
+    plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
 
     board = _load_script("generate_board.py")
     class PromptArgs:
@@ -880,12 +965,15 @@ def repair_contract_checks(tmp):
         'const cases=[{x:.2,y:.2,width:.5,height:.3},{x:0,y:.2,width:.35,height:.3},'
         '{x:.65,y:.2,width:.35,height:.3},{x:.3,y:0,width:.3,height:1},'
         '{x:0,y:.4,width:1,height:.15}];\n'
-        'const ok=cases.every(region=>{const g=fit({viewportWidth:960,viewportHeight:1120,'
-        'sourceAspect:.707,region,requestedZoom:2.4,safetyMargin:18});return '
-        'g.focusLeft>=18-1e-6&&g.focusTop>=18-1e-6&&g.focusLeft+g.focusWidth<=942+1e-6&&'
-        'g.focusTop+g.focusHeight<=1102+1e-6;});process.exit(ok?0:1);', encoding="utf-8")
+        'cases.push({x:.04,y:.2,width:.92,height:.58});\n'
+        'const ok=cases.every((region,index)=>{const g=fit({viewportWidth:index===5?1000:960,'
+        'viewportHeight:index===5?650:1120,sourceAspect:index===5?2118/966:.707,region,'
+        'requestedZoom:index===5?1.72:2.4,safetyMargin:18,allowCrop:index===5});return '
+        'g.focusLeft>=18-1e-6&&g.focusTop>=18-1e-6&&'
+        'g.focusLeft+g.focusWidth<=(index===5?982:942)+1e-6&&'
+        'g.focusTop+g.focusHeight<=(index===5?632:1102)+1e-6;});process.exit(ok?0:1);', encoding="utf-8")
     geometry_proc = subprocess.run(["node", str(geometry_script)], capture_output=True, text=True)
-    checks.append(("DocumentEvidence geometry: centered/edge/tall/wide/zoom>1 stay inside margin",
+    checks.append(("DocumentEvidence geometry: edge/tall/wide and exact V17 S4 allowCrop stay inside margin",
                    geometry_proc.returncode == 0))
 
     assemble = _load_script("assemble.py")

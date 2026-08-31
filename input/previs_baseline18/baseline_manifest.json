@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "baseline": "Phase-A externally approved actual pixels",
+  "baselineCommit": "92df6fceb6dd3cb55563d10b1dd8b477cbca0760",
+  "candidatePatch": "out/previs-first-smoke/candidate_previs.patch",
+  "candidatePatchSha256": "90d2b8ee4f1a10dcc08e8b7a67eeb5cffb65af0cf27ec13e191478cfb98e704f",
+  "contactSheet": "input/previs_baseline18/previs_contact_sheet.png",
+  "contactSheetSha256": "d5835c10854d79288fc22b8f501fb6ae5c85d4bf79d93d882277b85c72d40560",
+  "sourceProvenance": {
+    "S3": {
+      "path": "D:\\VideoAgent2-previs-first-smoke-92df6fc\\src\\previsPhaseA\\PrevisS3.jsx",
+      "sha256": "25b5f082d08f22a32852be06513e64b6fae399d3b76d2abcea6f6ae542e352ab"
+    },
+    "S4": {
+      "path": "D:\\VideoAgent2-previs-first-smoke-92df6fc\\src\\previsPhaseA\\PrevisS4.jsx",
+      "sha256": "63930e8fe490469ce46e72833bc3c79578398dff9b0b0d1412bfa5db8d36fa96"
+    },
+    "S8": {
+      "path": "D:\\VideoAgent2-previs-first-smoke-92df6fc\\src\\previsPhaseA\\PrevisS8.jsx",
+      "sha256": "c64ce9e0e21d7c18cbe0fbbbffdb749d238973c8e881a0193d0c3d6dfaefb9c8"
+    },
+    "S9": {
+      "path": "D:\\VideoAgent2-previs-first-smoke-92df6fc\\src\\previsPhaseA\\PrevisS9.jsx",
+      "sha256": "53c8f3fc4db97304afbb2186f44049f1b348c50215cd5d40ee36c6089a18b2db"
+    }
+  },
+  "frames": [
+    {
+      "scene": "S3",
+      "role": "OPEN",
+      "path": "input/previs_baseline18/S3_OPEN.png",
+      "sha256": "6283ad56de53d02ef81840fd0238635ae755dacf7a736bbb5380fe33e728bcbb"
+    },
+    {
+      "scene": "S3",
+      "role": "KEY",
+      "path": "input/previs_baseline18/S3_KEY.png",
+      "sha256": "c83af1e71fba715dc61c289eb0ca445b86b9011927fb6629b4d22be1a0e5664d"
+    },
+    {
+      "scene": "S4",
+      "role": "OPEN",
+      "path": "input/previs_baseline18/S4_OPEN.png",
+      "sha256": "d18d8da0677a00866be335e1d0a2d7b3cb6a6ab0bd198864ef5031e52a951eb3"
+    },
+    {
+      "scene": "S4",
+      "role": "KEY",
+      "path": "input/previs_baseline18/S4_KEY.png",
+      "sha256": "568850d8f0a66f630191e79157b7e2a8034b46da80ff98ac8308f31d9676e9aa"
+    },
+    {
+      "scene": "S8",
+      "role": "OPEN",
+      "path": "input/previs_baseline18/S8_OPEN.png",
+      "sha256": "c23fd2b1fcf918b17ac00740bf13f05a2739fa226c054fe57f7883aa688955b4"
+    },
+    {
+      "scene": "S8",
+      "role": "KEY",
+      "path": "input/previs_baseline18/S8_KEY.png",
+      "sha256": "36658a7a2719a5e18584bdc5344d9a5065e85247ffe8c9f79fbdeb99bbb24a90"
+    },
+    {
+      "scene": "S9",
+      "role": "OPEN",
+      "path": "input/previs_baseline18/S9_OPEN.png",
+      "sha256": "661ae0754eee12637a6d01af4a745180f0393ed35a5d20d64bed352a456395f4"
+    },
+    {
+      "scene": "S9",
+      "role": "KEY",
+      "path": "input/previs_baseline18/S9_KEY.png",
+      "sha256": "8cd076b65c9b0b894e051150564f561b92d96baa5135a5ee2d1eccfa05bcdf9c"
+    }
+  ]
+}

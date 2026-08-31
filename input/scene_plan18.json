@@ -1,0 +1,853 @@
+{
+  "video": "V18",
+  "title": "Án lệ 64 — Khi đòi nợ trở thành bắt cóc",
+  "fps": 30,
+  "audioFile": "audio18.mp3",
+  "wordsFile": "input/words18_aligned.json",
+  "status": "active",
+  "shotlistApproved": true,
+  "sourceAuthority": "input/anle64input/Án lệ 64.pdf",
+  "globalVisualContract": {
+    "editorialOrder": "narration meaning -> visual treatment -> authentic evidence or asset -> component",
+    "palette": "newsprint cream, carbon black, oxidized orange and restrained red",
+    "texture": "torn legal file, stamped evidence and documentary contact-print edges",
+    "sourceHierarchy": "official precedent first for legal claims; source-specific reconstruction imagery for physical events",
+    "camera": "stable by default; movement only for evidence focus or legal-state replacement",
+    "transition": "hard cuts; no decorative continuity transitions",
+    "bespoke": true,
+    "workflow": "previs-in-place; approve actual OPEN/KEY pixels; promote the same scene source additively"
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "startSec": 0.0,
+      "endSec": 5.27,
+      "narrativeFunction": "continuation hook and location reveal",
+      "viewerQuestion": "Câu chuyện tiếp tục ở đâu?",
+      "visualTransformation": "Một hồ sơ đang khép bị giật mở; khoảng tối bên trong trở thành lối sâu của kho phế liệu, đặt người xem vào nơi giam giữ.",
+      "contrastWithPrevious": "Mở video bằng một cú lật hồ sơ trực tiếp vào không gian thật thay vì một màn giới thiệu.",
+      "density": "low",
+      "comprehensionLoad": "simple",
+      "visualLanguage": "background-photo",
+      "backdrop": "photo",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "background",
+          "name": "Scrap-Warehouse-Location",
+          "src": "anle64_warehouse_vertical.png",
+          "anchorPhrase": "kho tập kết phế liệu",
+          "describes": [
+            "kho tập kết phế liệu"
+          ],
+          "delay": 0,
+          "visibleFor": 128,
+          "sourceConstraint": "source-specific warehouse reconstruction; not the actual crime scene",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "fa09ee9f3f9eb4ad580f3b6413c6e9693d064410fe59fb85575ae3b421cecf7d",
+          "selectionRationale": "The spatial aisle makes the move into a scrap warehouse immediately legible."
+        },
+        {
+          "role": "support",
+          "name": "Continuation-Headline",
+          "anchorPhrase": "câu chuyện chưa dừng ở đó",
+          "describes": [
+            "câu chuyện chưa dừng ở đó"
+          ],
+          "delay": 0,
+          "visibleFor": 158
+        },
+        {
+          "role": "support",
+          "name": "Warehouse-Portal-Reveal",
+          "anchorPhrase": "kho tập kết phế liệu",
+          "describes": [
+            "kho tập kết phế liệu"
+          ],
+          "delay": 30,
+          "visibleFor": 128
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hồ sơ bật mở với câu tiếp diễn"
+        },
+        {
+          "frame": 30,
+          "what": "Kho phế liệu trồi lên chiếm toàn khung"
+        }
+      ],
+      "durationInFrames": 158,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 72
+      },
+      "assetRationale": "The full-height warehouse reconstruction carries the location and oppressive depth that the narration introduces."
+    },
+    {
+      "id": "S2",
+      "startSec": 5.27,
+      "endSec": 11.6,
+      "narrativeFunction": "escalating physical restraint",
+      "viewerQuestion": "Điều gì ngăn anh T bỏ trốn?",
+      "visualTransformation": "Một chiếc còng khóa sập trước, rồi dây trói siết thành vòng bao quanh lối thoát; hai vật thể biến không gian thành một bẫy kín.",
+      "contrastWithPrevious": "Từ toàn cảnh địa điểm sang cận cảnh hai phương tiện khống chế có trọng lượng vật lý.",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "cutout",
+      "backdrop": "spotlight",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Restrained-Subject",
+          "src": "anle64_victim_restrained_seated.png",
+          "anchorPhrase": "không thể bỏ trốn",
+          "describes": [
+            "không thể bỏ trốn"
+          ],
+          "delay": 0,
+          "visibleFor": 190,
+          "sourceConstraint": "anonymous reconstruction; not a portrait of the actual victim",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "144ff414801347876aad30b1d0dbf39f379da0b7d4a1f4b62ba919c500b83c6b",
+          "selectionRationale": "The anonymous seated subject turns two restraint objects into a human consequence."
+        },
+        {
+          "role": "hero",
+          "name": "Locked-Handcuffs",
+          "src": "anle64_handcuffs.png",
+          "anchorPhrase": "khóa còng",
+          "describes": [
+            "khóa còng"
+          ],
+          "delay": 0,
+          "visibleFor": 190,
+          "sourceConstraint": "illustrative restraint object, not case evidence",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "9c6bcb90faf924f5e13fd2fecd0cd651436f638a5f910d5ffa16daaa7ce7c583",
+          "selectionRationale": "The physical steel restraint is spoken first and anchors the scene."
+        },
+        {
+          "role": "support",
+          "name": "Restraint-Rope",
+          "src": "anle64_restraint_rope.png",
+          "anchorPhrase": "không thể bỏ trốn",
+          "describes": [
+            "không thể bỏ trốn"
+          ],
+          "delay": 37,
+          "visibleFor": 145,
+          "sourceConstraint": "illustrative restraint object, not case evidence",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "124021305f7844858269461ae081c2e5192ea1dcbddb15b4e4559fdbf3e3ba5a",
+          "selectionRationale": "The rope completes the visible trap around the subject."
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Còng khóa sập ở trung tâm"
+        },
+        {
+          "frame": 37,
+          "what": "Dây trói quấn quanh lối thoát"
+        }
+      ],
+      "durationInFrames": 190,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 118
+      },
+      "assetRationale": "The anonymous restrained subject, steel handcuffs and rope directly carry bodily restraint and inability to escape."
+    },
+    {
+      "id": "S3",
+      "startSec": 11.6,
+      "endSec": 19.47,
+      "narrativeFunction": "coercion mechanism and release price",
+      "viewerQuestion": "Áp lực được chuyển thành yêu cầu tiền như thế nào?",
+      "visualTransformation": "Cuộc gọi bị ép buộc nối nạn nhân với gia đình; con số 150 triệu trượt vào giữa đường dây và biến thành điều kiện mở khóa.",
+      "contrastWithPrevious": "Từ công cụ giữ thân thể sang cơ chế dùng thân thể bị giữ để gây áp lực lên người thân.",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "background-photo",
+        "cutout"
+      ],
+      "backdrop": "photo",
+      "variant": "flip",
+      "assets": [
+        {
+          "role": "hero",
+          "name": "Coerced-Caller",
+          "src": "anle64_victim_phone_under_duress.png",
+          "anchorPhrase": "người thân tìm cách chuyển tiền",
+          "describes": [
+            "người thân tìm cách chuyển tiền"
+          ],
+          "delay": 0,
+          "visibleFor": 236,
+          "sourceConstraint": "anonymous reconstruction; not a portrait of the actual victim",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "b6198cf086a312b64ef7748e7e7435e52d901349d37ca1e2e3e97da3703fef15",
+          "selectionRationale": "The caller makes coercion through family immediately legible."
+        },
+        {
+          "role": "background",
+          "name": "Warehouse-Context",
+          "src": "anle64_warehouse_vertical.png",
+          "anchorPhrase": "người thân tìm cách chuyển tiền",
+          "describes": [
+            "người thân tìm cách chuyển tiền"
+          ],
+          "delay": 0,
+          "visibleFor": 236,
+          "sourceConstraint": "source-specific warehouse reconstruction; not the actual crime scene",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "fa09ee9f3f9eb4ad580f3b6413c6e9693d064410fe59fb85575ae3b421cecf7d",
+          "selectionRationale": "The detention setting keeps the phone demand causally tied to physical custody."
+        },
+        {
+          "role": "diagram",
+          "name": "Release-Price-Condition",
+          "anchorPhrase": "150 triệu đồng",
+          "describes": [
+            "150 triệu đồng cho N thì mới được thả"
+          ],
+          "delay": 66,
+          "visibleFor": 171
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "The coerced caller dominates the detention setting"
+        },
+        {
+          "frame": 66,
+          "what": "The release-price block takes the right side"
+        }
+      ],
+      "durationInFrames": 236,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 104
+      },
+      "assetRationale": "The large anonymous coerced-caller reconstruction carries the human mechanism, while the warehouse preserves detention context behind the release-price condition."
+    },
+    {
+      "id": "S4",
+      "startSec": 19.47,
+      "endSec": 24.43,
+      "narrativeFunction": "official factual evidence and persistence",
+      "viewerQuestion": "Yêu cầu chuyển tiền có phải chỉ xảy ra một lần?",
+      "visualTransformation": "Trích đoạn hồ sơ chính thức tiến vào, vùng nêu yêu cầu chuyển đủ tiền được soi rõ; dấu ngày sau đóng xuống để cho thấy hành vi tiếp diễn.",
+      "contrastWithPrevious": "Từ tái dựng cơ chế sang văn bản nguồn chính thức làm chứng cho yêu cầu cụ thể.",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "backdrop": "card",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Official-Noon-Money-Demand",
+          "src": "anle64_pdf_p3_noon_demand.png",
+          "anchorPhrase": "chuyển đủ 150 triệu đồng",
+          "describes": [
+            "chuyển đủ 150 triệu đồng vào tài khoản của anh T"
+          ],
+          "delay": 0,
+          "visibleFor": 149,
+          "sourceConstraint": "truthful crop from the authoritative Án lệ 64 PDF",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "1512032dc21932ca76915a5f9057860f4e49e69d3b358b2c820c9405dfb58f5e",
+          "selectionRationale": "The cited official lines prove the exact transfer demand without retyping them.",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "chuyển đủ 150 triệu đồng",
+              "region": [
+                0.3,
+                0.45,
+                0.42,
+                0.28
+              ]
+            }
+          ]
+        },
+        {
+          "role": "support",
+          "name": "Demand-Region-Focus",
+          "anchorPhrase": "chuyển đủ 150 triệu đồng",
+          "describes": [
+            "chuyển đủ 150 triệu đồng vào tài khoản của anh T"
+          ],
+          "delay": 28,
+          "visibleFor": 111
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "The official excerpt opens as the full evidence field"
+        },
+        {
+          "frame": 28,
+          "what": "The cited money-demand lines become the focal band"
+        }
+      ],
+      "durationInFrames": 149,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 112
+      },
+      "assetRationale": "The authentic page-three excerpt directly contains the compelled transfer demand, so it remains the single dominant evidence surface."
+    },
+    {
+      "id": "S5",
+      "startSec": 24.43,
+      "endSec": 29.43,
+      "narrativeFunction": "breath and viewer question",
+      "viewerQuestion": "Nếu tiền là nợ thật thì vì sao đây không chỉ là đòi nợ sai cách?",
+      "visualTransformation": "Các mảnh hồ sơ rút khỏi khung, để lại một khoảng giấy trống; dấu hỏi lớn tự gõ xuống và dừng lại cho người xem đổi vai từ chứng kiến sang phán đoán.",
+      "contrastWithPrevious": "Khoảng thở chữ đơn sau chuỗi ảnh và tài liệu dày, chủ ý không thêm minh họa.",
+      "density": "low",
+      "comprehensionLoad": "simple",
+      "visualLanguage": "text-only",
+      "backdrop": "card",
+      "variant": "flip",
+      "assets": [],
+      "punch": {
+        "lines": [
+          "VẬY TẠI SAO",
+          "LẠI LÀ BẮT CÓC?"
+        ],
+        "anchorPhrase": "nhiều anh em chắc sẽ thắc mắc",
+        "from": 30,
+        "describes": [
+          "nhiều anh em chắc sẽ thắc mắc"
+        ],
+        "visibleFor": 120,
+        "top": 480
+      },
+      "visualEvents": [
+        {
+          "frame": 30,
+          "what": "Câu hỏi pháp lý tự gõ xuống trang trống"
+        }
+      ],
+      "durationInFrames": 150,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 98
+      },
+      "codeDrawnRationale": "A typographic clearing and one oversized question communicate the rhetorical role more clearly than any available authentic/context image."
+    },
+    {
+      "id": "S6",
+      "startSec": 29.43,
+      "endSec": 33.7,
+      "narrativeFunction": "strongest counterargument",
+      "viewerQuestion": "Khoản 150 triệu có thực sự là nợ chưa trả?",
+      "visualTransformation": "Dòng hồ sơ xác nhận khoản vay thật được đặt nguyên vẹn; con dấu NỢ THẬT hạ xuống thay vì né tránh dữ kiện có lợi cho phía đòi nợ.",
+      "contrastWithPrevious": "Từ câu hỏi trống sang bằng chứng cụ thể ủng hộ trực giác của người xem.",
+      "density": "med",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "backdrop": "card",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Official-Real-Debt-Record",
+          "src": "anle64_pdf_p2_real_debt.png",
+          "anchorPhrase": "khoản nợ anh T chưa trả cho N",
+          "describes": [
+            "khoản nợ anh T chưa trả cho N"
+          ],
+          "delay": 0,
+          "visibleFor": 128,
+          "sourceConstraint": "truthful crop from the authoritative Án lệ 64 PDF",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "khoản nợ anh T chưa trả cho N",
+              "region": [
+                0.02,
+                0.04,
+                0.96,
+                0.92
+              ]
+            }
+          ],
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "e7d501735c27b255db5eac7353aa7036db972a79dd8e3a5dfaf3507f94966804",
+          "selectionRationale": "The official excerpt proves the debt premise the viewer is invited to concede."
+        },
+        {
+          "role": "support",
+          "name": "Real-Debt-Stamp",
+          "anchorPhrase": "khoản nợ anh T chưa trả cho N",
+          "describes": [
+            "khoản nợ anh T chưa trả cho N"
+          ],
+          "delay": 45,
+          "visibleFor": 83
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hồ sơ khoản vay thật trải ra"
+        },
+        {
+          "frame": 45,
+          "what": "Con dấu NỢ THẬT nện xuống"
+        }
+      ],
+      "durationInFrames": 128,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 92
+      },
+      "assetRationale": "The authentic real-debt excerpt is the factual concession; the bespoke stamp makes its argumentative weight visible without replacing the source."
+    },
+    {
+      "id": "S7",
+      "startSec": 33.7,
+      "endSec": 41.53,
+      "narrativeFunction": "competing classifications and reversal",
+      "viewerQuestion": "Vì sao đòi nợ hoặc giữ người trái pháp luật bị thay bằng tội bắt cóc?",
+      "visualTransformation": "Hai thẻ ĐÒI NỢ và GIỮ NGƯỜI vào hai cột; một dải đen cam mang tên tội BẮT CÓC cắt ngang rồi thay hoàn toàn cả hai nhãn cũ.",
+      "contrastWithPrevious": "Rời mặt giấy chứng cứ để dựng cạnh tranh và thay thế pháp lý trong không gian.",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": "diagram",
+      "backdrop": "chart",
+      "variant": "punch",
+      "assets": [
+        {
+          "role": "diagram",
+          "name": "Debt-Recovery-Frame",
+          "anchorPhrase": "lấy lại tiền của mình thôi",
+          "describes": [
+            "lấy lại tiền của mình thôi"
+          ],
+          "delay": 0,
+          "visibleFor": 235
+        },
+        {
+          "role": "diagram",
+          "name": "Kidnapping-Reclassification",
+          "anchorPhrase": "Bắt cóc nhằm chiếm đoạt tài sản",
+          "describes": [
+            "Bắt cóc nhằm chiếm đoạt tài sản"
+          ],
+          "delay": 155,
+          "visibleFor": 80
+        },
+        {
+          "role": "support",
+          "name": "Kidnapping-Verdict",
+          "anchorPhrase": "Bắt cóc nhằm chiếm đoạt tài sản",
+          "describes": [
+            "Bắt cóc nhằm chiếm đoạt tài sản"
+          ],
+          "delay": 165,
+          "visibleFor": 70
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Hai cách gọi ban đầu vào hai cột"
+        },
+        {
+          "frame": 155,
+          "what": "Thanh tái phân loại cắt ngang hai nhãn cũ"
+        },
+        {
+          "frame": 165,
+          "what": "Tên tội danh mới nở kín khung"
+        }
+      ],
+      "durationInFrames": 235,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 205
+      },
+      "codeDrawnRationale": "The scene is a legal-label replacement: direct bespoke spatial typography shows two classifications being displaced more clearly than the available photographs or documents."
+    },
+    {
+      "id": "S8",
+      "startSec": 41.53,
+      "endSec": 47.47,
+      "narrativeFunction": "controlling authority reveal",
+      "viewerQuestion": "Nguồn pháp lý nào giải thích sự chuyển loại này?",
+      "visualTransformation": "Tên án lệ từ văn bản thật tiến vào như một bìa hồ sơ; vùng số 64/2023/AL được soi sáng đúng lúc lời đọc gọi tên nguồn.",
+      "contrastWithPrevious": "Từ đồ họa câu hỏi mạnh sang thẩm quyền chính thức, chậm và dễ đọc hơn.",
+      "density": "low",
+      "comprehensionLoad": "moderate",
+      "visualLanguage": "document",
+      "backdrop": "card",
+      "variant": "rise",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Official-Precedent-Title",
+          "src": "anle64_pdf_p1_title_focus.png",
+          "anchorPhrase": "Án lệ số 64 năm 2023",
+          "describes": [
+            "Án lệ số 64 năm 2023"
+          ],
+          "delay": 0,
+          "visibleFor": 178,
+          "sourceConstraint": "truthful title crop from the authoritative Án lệ 64 PDF",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "e6f60f9bc0907db462fc1645aa400a31c73c0ce163c3f4270a08a7b06bb8a654",
+          "selectionRationale": "The real title crop is the source of authority and the scene identity.",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "Án lệ số 64 năm 2023",
+              "region": [
+                0.3,
+                0.12,
+                0.38,
+                0.18
+              ]
+            }
+          ]
+        },
+        {
+          "role": "support",
+          "name": "Authority-Number-Focus",
+          "anchorPhrase": "Án lệ số 64 năm 2023",
+          "describes": [
+            "Án lệ số 64 năm 2023"
+          ],
+          "delay": 100,
+          "visibleFor": 142
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "The oversized number and official title establish authority"
+        },
+        {
+          "frame": 100,
+          "what": "The title crop squares up and focuses on the precedent number"
+        }
+      ],
+      "durationInFrames": 178,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 124
+      },
+      "assetRationale": "The authentic title crop visibly supplies the precedent number and institutional authority, so no substitute graphic is needed."
+    },
+    {
+      "id": "S9",
+      "startSec": 47.47,
+      "endSec": 54.23,
+      "narrativeFunction": "legal rule setup and coercive-method reversal",
+      "viewerQuestion": "Dữ kiện nợ thật bị hành vi nào vượt qua?",
+      "visualTransformation": "Trích đoạn NỢ THẬT đứng bên trái; bên phải lần lượt khóa ba thanh BẮT GIỮ, TRÓI, NHỐT, rồi khối cưỡng ép lấn qua đường phân cách.",
+      "contrastWithPrevious": "Nguồn thẩm quyền toàn trang chuyển thành phép thử hai phía giữa quyền đòi nợ và phương thức cưỡng ép.",
+      "density": "high",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "document",
+        "cutout"
+      ],
+      "backdrop": "card",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Real-Debt-Record",
+          "src": "anle64_pdf_p2_real_debt.png",
+          "anchorPhrase": "một khoản nợ thật",
+          "describes": [
+            "một khoản nợ thật"
+          ],
+          "delay": 0,
+          "visibleFor": 203,
+          "sourceConstraint": "truthful crop from the authoritative Án lệ 64 PDF",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "e7d501735c27b255db5eac7353aa7036db972a79dd8e3a5dfaf3507f94966804",
+          "selectionRationale": "The source concedes the real debt before legal reclassification.",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "một khoản nợ thật",
+              "region": [
+                0.2,
+                0.08,
+                0.58,
+                0.62
+              ]
+            }
+          ]
+        },
+        {
+          "role": "document",
+          "name": "Official-Coercive-Methods",
+          "src": "anle64_pdf_p8_p7_pressure.png",
+          "anchorPhrase": "bắt giữ, trói, nhốt",
+          "describes": [
+            "bắt giữ, trói, nhốt hoặc dùng bạo lực"
+          ],
+          "delay": 0,
+          "visibleFor": 203,
+          "sourceConstraint": "truthful reasoning crop from the authoritative An le 64 PDF",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "a9999d37c292ed22ed62b751fbb486ae98dcc56130c867348cff9634d6f022f7",
+          "selectionRationale": "The official reasoning names the coercive methods that cross the debt boundary.",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "bắt giữ, trói, nhốt",
+              "region": [
+                0.25,
+                0.05,
+                0.5,
+                0.85
+              ]
+            }
+          ]
+        },
+        {
+          "role": "support",
+          "name": "Handcuffs-Support",
+          "src": "anle64_handcuffs.png",
+          "anchorPhrase": "bắt giữ, trói, nhốt",
+          "describes": [
+            "bắt giữ, trói, nhốt hoặc dùng bạo lực"
+          ],
+          "delay": 0,
+          "visibleFor": 203,
+          "sourceConstraint": "anonymous reconstruction support",
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "9c6bcb90faf924f5e13fd2fecd0cd651436f638a5f910d5ffa16daaa7ce7c583",
+          "selectionRationale": "The subdued restraint object gives physical weight without replacing source evidence."
+        },
+        {
+          "role": "support",
+          "name": "Coercive-Method-Replacement",
+          "anchorPhrase": "bắt giữ, trói, nhốt",
+          "describes": [
+            "bắt giữ, trói, nhốt hoặc dùng bạo lực"
+          ],
+          "delay": 76,
+          "visibleFor": 155
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "The official real-debt concession holds the frame"
+        },
+        {
+          "frame": 76,
+          "what": "Sourced coercive-method evidence crosses the boundary and takes over"
+        }
+      ],
+      "durationInFrames": 203,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 142
+      },
+      "assetRationale": "The official real-debt excerpt concedes the debt, then the official coercive-method excerpt displaces it; the handcuff remains subdued physical support."
+    },
+    {
+      "id": "S10",
+      "startSec": 54.23,
+      "endSec": 60.0,
+      "narrativeFunction": "release-condition mechanism and legal conclusion",
+      "viewerQuestion": "Điều kiện nào biến đòi nợ thành chiếm đoạt và ranh giới cuối cùng nằm ở đâu?",
+      "visualTransformation": "Khóa ngang gắn GIAO TIỀN với THẢ NGƯỜI; sau đó nhãn TRANH CHẤP TIỀN BẠC bị gạch xóa để kết luận KHÔNG CÒN ĐƠN GIẢN chiếm vị trí phán quyết.",
+      "contrastWithPrevious": "Từ các phương thức cưỡng ép sang quan hệ điều kiện duy nhất rồi một phủ định kết luận nhìn thấy được.",
+      "density": "med",
+      "comprehensionLoad": "complex",
+      "visualLanguage": [
+        "document",
+        "flow"
+      ],
+      "backdrop": "spotlight",
+      "variant": "strike",
+      "assets": [
+        {
+          "role": "document",
+          "name": "Official-Release-Condition",
+          "src": "anle64_pdf_p8_p7_release_condition.png",
+          "anchorPhrase": "giao tiền thì mới thả người",
+          "describes": [
+            "giao tiền thì mới thả người"
+          ],
+          "delay": 0,
+          "visibleFor": 173,
+          "sourceConstraint": "truthful crop from the authoritative Án lệ 64 PDF",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "giao tiền thì mới thả người",
+              "region": [
+                0.02,
+                0.04,
+                0.96,
+                0.92
+              ]
+            }
+          ],
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "8b664a6e5eac09a2f0e93da73092eb5d305f0d8cf804e650ff6b0fd70dfb550b",
+          "selectionRationale": "The official source states the money-for-release condition."
+        },
+        {
+          "role": "document",
+          "name": "Official-Legal-Conclusion",
+          "src": "anle64_pdf_p8_p7_conclusion.png",
+          "anchorPhrase": "tranh chấp tiền bạc",
+          "describes": [
+            "tranh chấp tiền bạc nữa"
+          ],
+          "delay": 94,
+          "visibleFor": 79,
+          "sourceConstraint": "truthful conclusion crop from the authoritative An le 64 PDF",
+          "evidenceRegions": [
+            {
+              "anchorPhrase": "tranh chấp tiền bạc",
+              "region": [
+                0.02,
+                0.04,
+                0.96,
+                0.92
+              ]
+            }
+          ],
+          "meaningBearing": true,
+          "locked": true,
+          "lockedSha256": "93b07994b061619391f2cc95ab27387c6c7e6d378d17e62fe4051c1942d9bc3c",
+          "selectionRationale": "The official conclusion supplies the final boundary rather than a retyped substitute."
+        },
+        {
+          "role": "support",
+          "name": "Conclusion-Verdict",
+          "anchorPhrase": "không còn đơn giản là một tranh chấp tiền bạc",
+          "describes": [
+            "không còn đơn giản là một tranh chấp tiền bạc"
+          ],
+          "delay": 105,
+          "visibleFor": 68
+        }
+      ],
+      "punch": {
+        "lines": [],
+        "anchorPhrase": "",
+        "from": 0,
+        "describes": [],
+        "visibleFor": 0
+      },
+      "visualEvents": [
+        {
+          "frame": 0,
+          "what": "Khóa điều kiện GIAO TIỀN sang THẢ NGƯỜI đóng lại"
+        },
+        {
+          "frame": 94,
+          "what": "Dòng kết luận nguồn thay chỗ điều kiện"
+        },
+        {
+          "frame": 105,
+          "what": "Nét gạch xóa cách gọi tranh chấp tiền bạc"
+        }
+      ],
+      "durationInFrames": 173,
+      "status": "built",
+      "previsFrames": {
+        "OPEN": 0,
+        "KEY": 145
+      },
+      "assetRationale": "The release-condition excerpt proves the mechanism and the authentic conclusion excerpt proves the final legal boundary."
+    }
+  ],
+  "previsApproved": true,
+  "benchmarkBasis": "Same validated An le 64 audio/alignment/semantic content as V17; donor scenes start from externally approved Phase-A source, not V17 JSX."
+}

@@ -4,7 +4,7 @@
   "fps": 30,
   "audioFile": "audio14.mp3",
   "wordsFile": "input/words14_aligned.json",
-  "status": "active",
+  "status": "shipped",
   "shotlistApproved": true,
   "sourceAuthority": "input/anle64input/Án lệ 64.pdf",
   "benchmarkBasis": "Same accepted audio14.mp3 and words14_aligned.json used by the V15 regression; V16 is independently planned and implemented.",

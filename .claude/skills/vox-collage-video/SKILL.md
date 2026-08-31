@@ -60,6 +60,15 @@ contract, required artifacts and editorial exceptions—not prior logs, prompt
 packs, clean reports, unrelated code or reasoning. Changed inputs reopen only
 their stage.
 
+Exactly one plan may be `active`; set a finished video to `shipped` in the same
+workflow that ships it.
+
+Canonical lifecycle: **SCRIPT/AUDIO → ALIGNMENT → SEMANTIC PLAN → ASSET DISCOVERY
++ LOCK → PREVIS-IN-PLACE → GLOBAL CONTACT SHEET → HUMAN APPROVAL → PROMOTE THE
+SAME SOURCE → CONFORMANCE → ONE DRAFT → ONE TEMPORAL REVIEW → AT MOST ONE LOCAL
+CORRECTION → FINAL.** No current `previs-approved` receipt means visual-previs;
+a current receipt means promotion/build. Do not add another phase system.
+
 1. **Initialize timing**
    - New work: `init_video.py <N> --audio <file> --script <file>`.
    - Script-authoritative alignment supplies timing. Content receipts close
@@ -85,45 +94,59 @@ their stage.
    - `pipeline_contracts.py approve-plan <plan>` closes a valid approved plan
      against narration/timing, sources, style and content. Advisories do not loop.
 
-3. **Source**
+3. **Discover and lock assets**
    - Manual image mode is default: `generate_board.py` prepares prompts/crops;
    - Lineage connects brief → generation/prompt → expected/returned file.
      `asset_manifest.py` carries processing, QA, acceptance and replacements;
      same-name byte changes invalidate. Batch cutouts skip unchanged source/config;
      cheap vision caches each file+brief+prompt/model independently.
    - Reuse valid artifacts. Record source and preserve authentic document text.
+     Before previs, each scene records the chosen meaning-bearing asset(s) and one
+     sentence saying why they carry the meaning, or why a code-drawn relationship
+     is clearer than available authentic/context imagery. There is no photo quota.
    - Process only assets that actually need cutouts.
 
-4. **Build**
-   - Freeze global plan/visual/authenticity, then emit bounded adjacent-scene
-     `worker-packet`s. Native subagents may own non-overlapping chunks; otherwise
-     use packets sequentially—no custom scheduler. Bespoke JSX stays first-class;
-     the main agent retains global summary/rhythm/repetition/final judgment.
-   - Build bespoke scene compositions from current primitives.
-   - Anchor entrances to aligned narration using `beat_sync.py frame`.
-   - Keep plan and source synchronized; PostEdit runs immediate build/contract
-     integrity only. Text/icon/asset/cutout checks run later as a batch.
+4. **Previs in production source, then promote that source**
+   - Build bespoke production-compatible scene JSX with real locked assets. Design
+     hierarchy, composition, source emphasis and OPEN/KEY actual pixels now; add MID
+     only for a genuine three-state transformation. Defer motion, captions and final
+     gate polish. `build_gate.py --previs` runs only reduced integrity appropriate
+     to this phase.
+   - `render_review_sheet.py <plan> --previs` renders the actual scene compositions,
+     not a storyboard renderer. The whole-video contact sheet is where visual
+     treatment is judged after contact with the real assets. A diagram chosen only
+     because it was easier to code than an available meaning-bearing photo/context
+     asset is the V17 failure pattern.
+   - `pipeline_contracts.py approve-previs` freezes approved actual pixels, locked
+     assets, evidence identity, semantic intent and the human art-direction note.
+     Source hashes are provenance only. Changing a locked primary asset, dominant
+     relationship, major composition, evidence region or visual mode reopens approval.
+   - Promote the same scene source additively: narration anchors, purposeful motion,
+     captions/master integration and readability polish. Do not throw approved JSX
+     away and rebuild a production scene. `build_gate.py --previs-baseline` compares
+     promoted OPEN/KEY pixels coarsely; easing, micro-position and polish may pass,
+     material redesign may not.
+   - Stable typography, safe zones, captions and evidence helpers are a compatibility
+     layer, not a layout system. Direct bespoke JSX/CSS/Img/SVG remains first-class.
+     Build bespoke first; distill a reusable primitive only after 2–3 shipped successes.
+   - Anchor entrances to aligned narration using `beat_sync.py frame`; after approval,
+     existing full gates and assembly remain authoritative.
    - Use `assemble.py input/scene_plan<N>.json`; generated master/captions remain
      plan-derived and script-authoritative.
    - Omitted `transitionIn` means an editorial hard cut. Request the existing
      `fade` only when continuity/passage of time benefits; other meaning-driven
      transitions belong in a deliberate handwritten master, not a variety quota.
 
-5. **Review rendered evidence**
-   - `render_video.py --mode draft` makes one medium-resolution actual-master
+5. **Review one temporal draft**
+   - `render_video.py --mode draft` makes exactly one medium-resolution actual-master
      draft at normal FPS. `render_review_sheet.py` maps event samples to master
      frames, extracts stale items in one ffmpeg process, then derives temporal +
      summary sheets. No normal per-frame Remotion still fan-out.
    - Targeted full-res evidence selects document/text/pixel-sensitive declarations
      and manual escalations; draft pixels never replace source/text/edge inspection.
-   - Inspect temporal evidence against `visualTransformation` and the summary
-     sheet for cross-scene composition. In the one broad correction pass, read
-     these pixel findings together with outstanding plan pacing/comprehension/
-     dead-air advisories and acknowledged quality debt. Warnings are clues, not
-     score targets, and may remain when narrative/rendered evidence supports it.
-   - Prioritize defects that materially affect comprehension, evidence location,
-     source honesty, visible transformation, legal-conclusion timing, or major
-     composition repetition before minor cosmetic debt.
+   - Compare the draft with approved previs only for motion fidelity, evidence
+     readability, purposeful camera, narration sync, pacing/transition rhythm and
+     motion-created defects. Do not rescore art direction unless drift is found.
    - A resolved quality fail is acknowledged/accepted debt, not a pass. Missing,
      stale, unreadable, or blank evidence is hard failure.
    - Cheap vision is an explicit review action: `review_vision.py <plan>`. Its
@@ -133,7 +156,9 @@ their stage.
 
 6. **Finish**
    - `assemble.py --check` must pass.
-   - Close the one broad correction with `pipeline_contracts.py close-correction`.
+   - If needed, close one scene-local correction with
+     `pipeline_contracts.py close-correction --changed-scenes S<ids>`; do not
+     regenerate unrelated scene source.
      Render exactly one final full-resolution MP4 with `render_video.py --mode final`
      when requested; final scale remains 1.0 and normal production quality.
    - Mark `status: "shipped"` only after mandatory mechanical artifacts are
@@ -152,19 +177,17 @@ unavailable main-token usage is `UNKNOWN`.
 
 ## Correction policy
 
-**HARD INTEGRITY:** repair the objective local defect, rerun only affected
-dependencies/gates, and repeat only until mechanically valid. **EDITORIAL
-QUALITY:** director/plan → early preflight → build → actual-master review → one
-targeted correction → delta review → final. Do not optimize until a metric turns
-green. After the intended correction, report remaining aesthetic debt explicitly;
-do not rewrite unrelated scenes to silence an advisory. A local S5 repair normally
-reopens S5 evidence/review and only genuinely affected neighbor/global summaries.
+**HARD INTEGRITY:** repair the objective local defect and rerun only affected
+dependencies/gates. **EDITORIAL QUALITY:** semantic plan → actual-pixel previs →
+approval → same-source promotion → one temporal review → at most one local correction
+→ final. After the intended correction, report remaining debt explicitly; do not
+rewrite unrelated scenes. A local S5 repair normally reopens S5 evidence/review and
+only genuinely affected neighbor/global summaries.
 
 ## Execution and context management
 
-Normal end-to-end production is one continuous Codex task: **PLAN → SOURCE →
-BUILD → actual-master REVIEW → one targeted editorial CORRECTION → delta REVIEW
-as required → FINAL**. Do not ask the user to restart Codex between stages. Use
+Normal end-to-end production is one continuous Codex task following the canonical
+lifecycle above. Do not ask the user to restart Codex between stages. Use
 the runtime's native context management or compaction for a long continuous task
 when available; do not build a custom compaction or orchestration system.
 

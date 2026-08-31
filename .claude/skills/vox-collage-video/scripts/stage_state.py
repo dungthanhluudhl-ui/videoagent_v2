@@ -168,13 +168,18 @@ def cache_put(root, video, family, key, result, metadata=None):
 
 def plan_contract(plan, plan_path):
     """Editorial true inputs; workflow/review state changes do not reopen a plan."""
-    ignored_top = {"status", "shotlistApproved", "_howToUse"}
-    ignored_scene = {"status"}
+    ignored_top = {"status", "shotlistApproved", "previsApproved", "_howToUse"}
+    ignored_scene = {"status", "assetRationale", "codeDrawnRationale", "previsFrames"}
+    ignored_asset = {"meaningBearing", "locked", "lockedSha256", "selectionRationale"}
     clean = {k: v for k, v in plan.items() if k not in ignored_top and k != "scenes"}
-    clean["scenes"] = [
-        {k: v for k, v in scene.items() if k not in ignored_scene}
-        for scene in plan.get("scenes") or []
-    ]
+    clean["scenes"] = []
+    for scene in plan.get("scenes") or []:
+        item = {k: v for k, v in scene.items() if k not in ignored_scene and k != "assets"}
+        item["assets"] = [
+            {k: v for k, v in asset.items() if k not in ignored_asset}
+            for asset in scene.get("assets") or []
+        ]
+        clean["scenes"].append(item)
     root = project_root(plan_path)
     words = root / str(plan.get("wordsFile") or "")
     sources = []

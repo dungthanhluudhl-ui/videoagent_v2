@@ -9,6 +9,12 @@ Each entry is here because it cost a rebuild. None of them are hypothetical.
 
 ## Archive
 
+- **Composition-Contract renderer retired.** Its semantic/structural Contracts
+  were strong and the common path needed zero JSX turns, but deterministic generic
+  realization produced worse actual pixels and flattened art direction into one
+  rendering vocabulary. Do not repair or import that renderer; use bespoke
+  previs-in-place and promote the same approved source.
+
 - `Hero` / `Support` percentage coordinates (`x="25%"`, `x="75%"`) failing to center — earlier code only calculated `marginLeft = -width / 2` for `x === "50%"`, leaving other percentage values using top-left anchor (`marginLeft = 0`). This pushed the right column cutout out of the 1080px canvas by ~78px, cutting off the right elbow/arm. ALWAYS use `marginLeft = (typeof x === "string" && x.endsWith("%")) || x === "50%" ? -width / 2 : 0` to center percentage coordinates.
 - PunchPhrase line breaks letting a single word fall alone on a 2nd line (e.g. "BÓC TÁCH NGHỀ LUẬT \n SƯ"). ALWAYS enforce `whiteSpace: "nowrap"` & `flexWrap: "nowrap"` on line containers, and auto-scale `fontSize` with `maxCharCount` so lines never break mid-sentence.
 - **This rule used to end with "...and use explicit `lines` array" — that clause was itself a bug, and it silently reproduced the exact defect it was meant to fix, across multiple later videos.** `PunchPhrase` already auto-splits a line only when it's genuinely >15 chars (see `shared.jsx`'s `finalLines` logic). But every `SceneTemplates.jsx` template only forwards a `punchLines` array straight into that `lines` prop — there's no separate "let it decide" passthrough — so a later video (`VayTinChap`) hand-split short headlines into 2-entry arrays (e.g. `["CƠ HỘI HAY", "BẪY?"]` — 15 chars combined, fits ONE line) simply because the old instruction said to always use an explicit array. Result: needless line breaks with a large empty gap on the right of the shorter line, on nearly every scene. **Fix: default to ONE array entry containing the whole phrase** (e.g. `punchLines={["CƠ HỘI HAY BẪY?"]}`) and let the >15-char auto-breaker decide whether/where to split — don't pre-split into multiple entries by feel. Only write more than one entry for two genuinely separate clauses that must not visually run together (rare — count the combined length first; a lot of headlines that read as "obviously two lines" fit one line fine once you count).

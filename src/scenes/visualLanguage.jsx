@@ -154,6 +154,21 @@ const regionAtFrame = (regions, frame) => {
     ordered[0] ?? { x: 0, y: 0, width: 1, height: 1 });
 };
 
+// Measured source-raster metadata for existing authentic document assets. Callers
+// may still pass sourceAspect explicitly; this fallback removes the old generic
+// A-series assumption where the repository already knows the real raster shape.
+const DOCUMENT_SOURCE_ASPECTS = {
+  "anle64_pdf_p1_authority.png": 1380 / 868,
+  "anle64_pdf_p1_title_focus.png": 2070 / 630,
+  "anle64_pdf_p2_real_debt.png": 2118 / 831,
+  "anle64_pdf_p3_noon_demand.png": 2118 / 966,
+  "anle64_pdf_p3_pressure_continues.png": 1412 / 1328,
+  "anle64_pdf_p8_p7_actions.png": 2118 / 1488,
+  "anle64_pdf_p8_p7_conclusion.png": 2824 / 948,
+  "anle64_pdf_p8_p7_pressure.png": 2824 / 860,
+  "anle64_pdf_p8_p7_release_condition.png": 2824 / 1036,
+};
+
 /**
  * Displays a rasterized source page without recreating its text, and moves
  * focus as narration moves through evidence.
@@ -178,7 +193,7 @@ export const DocumentEvidence = ({
   transitionFrames = 18,
   dim = 0.58,
   highlight = ORANGE,
-  sourceAspect = 1 / Math.sqrt(2),
+  sourceAspect,
   safetyMargin = 18,
   allowCrop = false,
 }) => {
@@ -196,8 +211,9 @@ export const DocumentEvidence = ({
   const rw = mix("width");
   const rh = mix("height");
   const regionZoom = (previous.zoom ?? 1) + ((active.zoom ?? 1) - (previous.zoom ?? 1)) * progress;
+  const measuredSourceAspect = sourceAspect ?? DOCUMENT_SOURCE_ASPECTS[src] ?? 1 / Math.sqrt(2);
   const geometry = fitDocumentEvidence({viewportWidth: width, viewportHeight: height,
-    sourceAspect, region: {x: rx, y: ry, width: rw, height: rh},
+    sourceAspect: measuredSourceAspect, region: {x: rx, y: ry, width: rw, height: rh},
     requestedZoom: regionZoom, safetyMargin, allowCrop});
   const {pageWidth, pageHeight, scale, pageLeft, pageTop, shownWidth, shownHeight,
     focusLeft, focusTop, focusWidth, focusHeight} = geometry;

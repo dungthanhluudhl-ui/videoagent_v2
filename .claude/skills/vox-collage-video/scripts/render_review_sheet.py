@@ -26,6 +26,7 @@ except ImportError:
     sys.exit("Pillow is required: py -3 -m pip install pillow")
 
 VERSION = "master-draft-extraction-v2"
+PREVIS_VERSION = "previs-scene-states-v1"
 SETTLE = 20
 
 
@@ -47,6 +48,138 @@ def build_sheet(thumbs, out_path, max_cols=6):
     pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     sheet.save(out_path, quality=88)
     return len(images)
+
+
+def build_previs_sheet(entries, out_path):
+    """Rows are scenes; columns are OPEN / optional MID / KEY actual scene pixels."""
+    if not entries:
+        return 0
+    roles = ("OPEN", "MID", "KEY") if any(x.get("role") == "MID" for x in entries) else ("OPEN", "KEY")
+    thumb_w, thumb_h = 270, 480
+    label_w, header_h, gap = 72, 50, 10
+    scenes = list(dict.fromkeys(x.get("scene") for x in entries))
+    sheet = Image.new("RGB", (label_w + len(roles) * (thumb_w + gap) + gap,
+                              header_h + len(scenes) * (thumb_h + gap) + gap),
+                      (22, 21, 18))
+    draw = ImageDraw.Draw(sheet)
+    for col, role in enumerate(roles):
+        draw.text((label_w + col * (thumb_w + gap) + 8, 16), role, fill=(255, 106, 26))
+    lookup = {(x.get("scene"), x.get("role")): pathlib.Path(x["path"]) for x in entries}
+    for row, sid in enumerate(scenes):
+        top = header_h + row * (thumb_h + gap)
+        draw.text((16, top + 18), sid, fill=(245, 240, 228))
+        for col, role in enumerate(roles):
+            path = lookup.get((sid, role))
+            if not path or not path.is_file():
+                continue
+            image = Image.open(path).convert("RGB")
+            image.thumbnail((thumb_w, thumb_h), Image.Resampling.LANCZOS)
+            left = label_w + col * (thumb_w + gap) + (thumb_w - image.width) // 2
+            y = top + (thumb_h - image.height) // 2
+            sheet.paste(image, (left, y))
+    pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(out_path)
+    return len(entries)
+
+
+def previs_frame_requests(plan, out_dir):
+    video = plan.get("video", "V")
+    requests = []
+    for scene in plan.get("scenes") or []:
+        sid = scene.get("id", "")
+        states = scene.get("previsFrames") or {}
+        if not isinstance(states, dict):
+            continue
+        for role in ("OPEN", "MID", "KEY"):
+            if role not in states:
+                continue
+            frame = int(states[role])
+            requests.append({"scene": sid, "role": role, "localFrame": frame,
+                             "composition": f"{video}Scene{sid.lstrip('S')}",
+                             "path": str(pathlib.Path(out_dir) / f"{sid}_{role}.png")})
+    return requests
+
+
+def _sequence_output(directory, frame):
+    candidates = []
+    for path in pathlib.Path(directory).glob("*.png"):
+        try:
+            suffix = int(path.stem.rsplit("-", 1)[-1])
+        except ValueError:
+            continue
+        if suffix == frame:
+            candidates.append(path)
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def render_previs(plan_path, plan, out_dir, manifest_only=False, command_only=False, scene_ids=()):
+    root = state.project_root(plan_path)
+    video = plan.get("video", "V")
+    out_dir = pathlib.Path(out_dir)
+    if scene_ids:
+        wanted = set(scene_ids)
+        plan = {**plan, "scenes": [s for s in plan.get("scenes") or [] if s.get("id") in wanted]}
+    requests = previs_frame_requests(plan, out_dir)
+    by_scene = {}
+    for item in requests:
+        by_scene.setdefault(item["scene"], []).append(item)
+    commands = []
+    for sid, items in by_scene.items():
+        temp = out_dir / "sequence" / sid
+        frames = sorted({item["localFrame"] for item in items})
+        commands.append(["npx", "remotion", "render", items[0]["composition"], str(temp),
+                         "--sequence", "--frames=" + ",".join(map(str, frames)),
+                         "--image-format=png", "--overwrite"])
+    manifest_path = out_dir / "previs_frame_manifest.json"
+    sheet_path = out_dir / "previs_contact_sheet.png"
+    if command_only:
+        print(json.dumps(commands, ensure_ascii=False))
+        return 0
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if not manifest_only:
+        for command, (sid, items) in zip(commands, by_scene.items()):
+            proc = subprocess.run(command, cwd=root, capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace",
+                                  shell=(sys.platform == "win32"))
+            if proc.returncode:
+                detail = state.runtime_dir(root, video) / "logs" / f"previs-{sid}-failure.txt"
+                detail.parent.mkdir(parents=True, exist_ok=True)
+                detail.write_text((proc.stdout or "") + (proc.stderr or ""), encoding="utf-8")
+                print(state.compact_result("HARD", hard=1, details=detail), file=sys.stderr)
+                return proc.returncode
+            temp = out_dir / "sequence" / sid
+            for item in items:
+                source = _sequence_output(temp, item["localFrame"])
+                if not source:
+                    print(state.compact_result(
+                        "HARD", hard=1,
+                        details=f"Remotion produced no unique PNG for {sid}/{item['role']} frame {item['localFrame']}"),
+                        file=sys.stderr)
+                    return 1
+                target = pathlib.Path(item["path"])
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
+        shutil.rmtree(out_dir / "sequence", ignore_errors=True)
+    frames = []
+    for item in requests:
+        proof = state.file_input(item["path"])
+        frames.append({**item, **({"size": proof.get("size"), "sha256": proof.get("sha256")}
+                                 if not proof.get("missing") else {"missing": True})})
+    if not manifest_only:
+        build_previs_sheet(frames, sheet_path)
+    manifest = {"schema": 1, "version": PREVIS_VERSION, "video": video,
+                "contactSheet": str(sheet_path), "frames": frames}
+    state.write_json(manifest_path, manifest)
+    state.append_telemetry(root, video, {"stage": "previs-stills", "owner": "script",
+                           "subprocessCount": 0 if manifest_only else len(commands),
+                           "affectedItems": len(frames), "output": str(sheet_path),
+                           "renderMode": "previs"})
+    status = "CLOSED" if manifest_only or all(not x.get("missing") for x in frames) else "HARD"
+    print(state.compact_result(status, hard=0 if status == "CLOSED" else 1,
+                               changed=[manifest_path] if manifest_only else [
+                                   *[x["path"] for x in frames], sheet_path, manifest_path],
+                               details=sheet_path, receipt=state.digest(manifest)))
+    return 0 if status == "CLOSED" else 1
 
 
 def scene_summary_thumbs(review_entries):
@@ -275,11 +408,16 @@ def complete_review_generation(manifest, manifest_path, review_path, temporal, s
               "sampleManifest": str(manifest_path), "temporalSheet": str(temporal),
               "sceneSummarySheet": str(summary), "targetedFullResolution": str(targeted_path),
               "renderParameters": render_params, "reviewGeneration": generation,
-              "howToFill": "Judge actual-master evidence; quality fail may be acknowledged, missing/stale/blank evidence is hard.",
-              "criteria": {"illustrated": "narration is shown",
-                           "composed": "balanced and legible",
-                           "varied": "not the same visual formula as neighbours",
-                           "purposeful": "every element has an editorial reason"},
+              "howToFill": "Compare the one actual-master draft with approved previs. Judge only motion fidelity, evidence readability, narration sync, pacing and transition rhythm; missing/stale/blank evidence is hard.",
+              "temporalReviewScope": ["motion preserves approved composition",
+                                      "evidence stays readable while moving",
+                                      "camera movement is purposeful",
+                                      "pacing and transition rhythm are coherent",
+                                      "motion creates no new visual defect"],
+              "criteria": {"illustrated": "motion remains synchronized with narration",
+                           "composed": "motion preserves approved composition and readability",
+                           "varied": "pacing and transition rhythm let the sequence breathe",
+                           "purposeful": "camera and internal motion have an editorial reason"},
               "scenes": entries}
     state.write_json(review_path, review)
     return review
@@ -295,12 +433,20 @@ def main():
     ap.add_argument("--command-only", action="store_true")
     ap.add_argument("--keep-review", action="store_true")
     ap.add_argument("--full-res-scene", action="append", default=[])
+    ap.add_argument("--previs", action="store_true",
+                    help="render actual scene OPEN/MID/KEY states and one whole-video contact sheet")
+    ap.add_argument("--scene", action="append", default=[],
+                    help="with --previs, render only this scene id; repeat for multiple scenes")
     args = ap.parse_args()
 
     plan_path = pathlib.Path(args.plan)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
     video = plan.get("video", "V")
+    if args.previs:
+        out_dir = pathlib.Path(args.out_dir) if args.out_dir else plan_path.parent / f"previs_frames_{video.lower()}"
+        return render_previs(plan_path, plan, out_dir, args.manifest_only, args.command_only,
+                             args.scene)
     draft = pathlib.Path(args.draft) if args.draft else root / "out" / f"{video}_draft.mp4"
     out_dir = pathlib.Path(args.out_dir) if args.out_dir else plan_path.parent / f"review_frames_{video.lower()}"
     manifest = sample_manifest(plan, out_dir, args.per_scene, args.full_res_scene)

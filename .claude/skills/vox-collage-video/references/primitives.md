@@ -6,6 +6,12 @@ never touched: at the time of the V10 review only **3 of 12** available
 `@remotion/*` packages were imported anywhere, and of the 12 installed
 `remotion-dev` skills only `remotion-markup` had ever been consulted.
 
+This kit is a compatibility layer, not a layout system. Use tokens, safe zones,
+caption/master conventions and evidence helpers when they preserve approved
+pixels; use direct bespoke JSX/CSS/Img/SVG/layering when they do not. Build bespoke
+first. Distill a reusable primitive only after the pattern survives 2–3 shipped
+videos; do not build speculative archetypes from one benchmark success.
+
 ## Project primitives
 
 ### `src/scenes/shared.jsx` — the core kit
@@ -34,7 +40,7 @@ never touched: at the time of the V10 review only **3 of 12** available
 | Component | Use |
 |---|---|
 | `BackgroundPhoto` | Full-bleed photo, tinted to palette; `drift=0` by default |
-| `DocumentEvidence` | Authentic raster evidence with timed focus and safe-fit margin; cited regions remain visible by default; intentional crop requires `allowCrop` |
+| `DocumentEvidence` | Authentic raster evidence with timed focus and measured source aspect; `allowCrop` may bleed the page but never the cited region |
 | `DiagramCanvas` | SVG container in a 1080×1300 space for drawn reconstructions |
 | `DrawnPath` | Progressive stroke reveal |
 | `DimensionLine` | Measurement line with end ticks and a label ("3,2m") |

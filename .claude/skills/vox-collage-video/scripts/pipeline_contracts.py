@@ -17,6 +17,7 @@ PLAN_VERSION = "plan-contract-v1"
 PACKET_VERSION = "scene-packet-v1"
 ASSET_PACKET_VERSION = "asset-brief-packet-v1"
 HANDOFF_VERSION = "stage-handoff-v1"
+PREVIS_VERSION = "previs-approval-v1"
 
 
 def plan_receipt_path(plan_path, plan):
@@ -55,6 +56,144 @@ def plan_is_closed(plan_path):
     current, receipt = state.receipt_current(path, "editorial-plan", inputs, tool, {},
                                              require_outputs=False)
     return current and plan.get("shotlistApproved") is True, path, receipt
+
+
+def previs_receipt_path(plan_path, plan):
+    root = state.project_root(plan_path)
+    return state.runtime_dir(root, plan.get("video", "V")) / "receipts" / "previs-approved.json"
+
+
+def semantic_scene(scene):
+    fields = ("id", "startSec", "endSec", "narrativeFunction", "viewerQuestion",
+              "visualTransformation", "contrastWithPrevious", "visualLanguage",
+              "backdrop", "density", "comprehensionLoad")
+    return {key: scene.get(key) for key in fields if key in scene}
+
+
+def locked_asset_contract(root, scene):
+    rationale = str(scene.get("assetRationale") or scene.get("codeDrawnRationale") or "").strip()
+    locked = []
+    for asset in scene.get("assets") or []:
+        if asset.get("meaningBearing") is not True:
+            continue
+        if asset.get("locked") is not True or not asset.get("src"):
+            raise ValueError(
+                f"{scene.get('id')}/{asset.get('name') or '?'}: meaning-bearing asset must be locked with src")
+        path = root / "public" / asset["src"]
+        proof = state.file_input(path)
+        if proof.get("missing"):
+            raise ValueError(f"{scene.get('id')}: locked asset is missing: {path}")
+        expected = asset.get("lockedSha256")
+        if expected and expected != proof.get("sha256"):
+            raise ValueError(f"{scene.get('id')}: locked asset hash does not match current bytes: {asset['src']}")
+        locked.append({"scene": scene.get("id"), "name": asset.get("name"),
+                       "src": asset.get("src"), "role": asset.get("role"),
+                       "sha256": proof.get("sha256"),
+                       "evidenceRegions": asset.get("evidenceRegions") or [],
+                       "sourceConstraint": asset.get("sourceConstraint"),
+                       "rationale": asset.get("selectionRationale") or rationale})
+    if not locked and not scene.get("codeDrawnRationale"):
+        raise ValueError(f"{scene.get('id')}: no locked meaning-bearing asset or code-drawn rationale")
+    if not rationale:
+        raise ValueError(f"{scene.get('id')}: missing minimal asset-selection rationale")
+    return locked, rationale
+
+
+def _project_path(root, value):
+    path = pathlib.Path(str(value or ""))
+    return path if path.is_absolute() else root / path
+
+
+def previs_approval_contract(plan_path, manifest_path):
+    plan_path = pathlib.Path(plan_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
+    manifest_path = pathlib.Path(manifest_path)
+    manifest_path = manifest_path if manifest_path.is_absolute() else root / manifest_path
+    manifest = state.read_json(manifest_path, {})
+    if plan.get("shotlistApproved") is not True:
+        raise ValueError("shotlistApproved must be true before previs approval")
+    proc = subprocess.run([sys.executable, str(HERE / "plan_gate.py"), str(plan_path), "--hook"],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if proc.returncode:
+        raise ValueError("semantic plan integrity failed before previs approval")
+    frames_by_scene = {}
+    frame_inputs = []
+    for item in manifest.get("frames") or []:
+        sid, role = item.get("scene"), str(item.get("role") or "").upper()
+        if role not in ("OPEN", "MID", "KEY"):
+            continue
+        path = _project_path(root, item.get("path"))
+        proof = state.file_input(path)
+        if proof.get("missing"):
+            raise ValueError(f"{sid}/{role}: final previs frame is missing: {path}")
+        declared = item.get("sha256")
+        if declared and declared != proof.get("sha256"):
+            raise ValueError(f"{sid}/{role}: frame hash disagrees with manifest")
+        frames_by_scene.setdefault(sid, set()).add(role)
+        frame_inputs.append({"scene": sid, "role": role, **proof})
+    contact = _project_path(root, manifest.get("contactSheet"))
+    contact_proof = state.file_input(contact)
+    if contact_proof.get("missing"):
+        raise ValueError("whole-video previs contact sheet is missing")
+    scene_inputs, locked_assets, provenance = [], [], []
+    for scene in plan.get("scenes") or []:
+        sid = scene.get("id")
+        required = {"OPEN", "KEY"}
+        if not required.issubset(frames_by_scene.get(sid, set())):
+            raise ValueError(f"{sid}: final OPEN and KEY previs frames are required")
+        assets, rationale = locked_asset_contract(root, scene)
+        locked_assets.extend(assets)
+        source = root / "src" / "scenes" / f"{plan.get('video', 'V')}Scene{sid.lstrip('S')}.jsx"
+        if not source.is_file():
+            raise ValueError(f"{sid}: scene source is missing: {source}")
+        semantic = semantic_scene(scene)
+        scene_inputs.append({"scene": sid, "semanticSliceFingerprint": state.digest(semantic),
+                             "semantic": semantic, "assetRationale": rationale})
+        provenance.append({"scene": sid, "sourcePath": str(source),
+                           "previsSourceSha": state.hash_file(source)})
+    plan_receipt = state.read_json(plan_receipt_path(plan_path, plan), {})
+    inputs = {"planIdentity": {"video": plan.get("video"),
+                               "planVersion": plan_receipt.get("receiptId") or state.digest(
+                                   state.plan_contract(plan, plan_path))},
+              "semanticScenes": scene_inputs, "lockedAssets": locked_assets,
+              "approvedFrames": frame_inputs, "contactSheet": contact_proof}
+    return plan, root, manifest_path, inputs, provenance
+
+
+def approve_previs(plan_path, manifest_path, art_direction):
+    if not str(art_direction or "").strip():
+        raise ValueError("a free-text human artDirection approval note is required")
+    plan, root, manifest_path, inputs, provenance = previs_approval_contract(plan_path, manifest_path)
+    tool = state.tool_identity(HERE / "pipeline_contracts.py",
+                               versions={"contract": PREVIS_VERSION})
+    path = previs_receipt_path(plan_path, plan)
+    receipt = state.make_receipt(
+        path, "previs-approved", inputs, tool, {}, outputs=(),
+        accepted={"manual": True, "artDirection": art_direction.strip()},
+        metadata={"approvalBaselineManifest": str(manifest_path),
+                  "sourceProvenance": provenance,
+                  "note": "previsSourceSha is provenance only; additive promotion may change source bytes"})
+    return path, receipt
+
+
+def previs_is_closed(plan_path):
+    plan_path = pathlib.Path(plan_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    path = previs_receipt_path(plan_path, plan)
+    existing = state.read_json(path, {})
+    manifest = (existing.get("metadata") or {}).get("approvalBaselineManifest")
+    if not manifest:
+        return False, path, existing
+    try:
+        _plan, _root, _manifest, inputs, _provenance = previs_approval_contract(plan_path, manifest)
+    except ValueError:
+        return False, path, existing
+    tool = state.tool_identity(HERE / "pipeline_contracts.py",
+                               versions={"contract": PREVIS_VERSION})
+    current, receipt = state.receipt_current(path, "previs-approved", inputs, tool, {},
+                                             require_outputs=False)
+    return current, path, receipt
 
 
 def words_for_scene(words, scene):
@@ -142,21 +281,27 @@ def build_asset_brief_packet(plan_path):
     return packet
 
 
-def close_correction(plan_path, note="one broad editorial correction complete"):
+def close_correction(plan_path, note="one targeted editorial correction complete", changed_scenes=()):
     plan_path = pathlib.Path(plan_path)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
     video = plan.get("video", "V")
     review = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    known = {s.get("id") for s in plan.get("scenes") or []}
+    changed = list(dict.fromkeys(changed_scenes or known))
+    unknown = [sid for sid in changed if sid not in known]
+    if unknown:
+        raise ValueError(f"unknown changed scene(s): {', '.join(unknown)}")
     inputs = {"plan": state.json_input(plan_path), "review": state.json_input(review),
               "sceneSources": [state.file_input(root / "src" / "scenes" /
-                                                f"{video}Scene{s.get('id','S')[1:]}.jsx")
-                               for s in plan.get("scenes") or []]}
+                                                f"{video}Scene{sid.lstrip('S')}.jsx")
+                               for sid in changed]}
     tool = state.tool_identity(HERE / "pipeline_contracts.py",
                                versions={"contract": "editorial-correction-v1"})
     path = state.runtime_dir(root, video) / "receipts" / "editorial-correction.json"
     return path, state.make_receipt(path, "editorial-correction", inputs, tool,
-                                    {"note": note}, outputs=(), accepted={"manual": True})
+                                    {"note": note, "changedScenes": changed}, outputs=(),
+                                    accepted={"manual": True, "changedScenes": changed})
 
 
 def build_handoff(plan_path, closed_stage, next_stage, hard=(), advisories=(), changed_scenes=()):
@@ -201,6 +346,12 @@ def main():
     p.add_argument("plan")
     p = sub.add_parser("plan-status")
     p.add_argument("plan")
+    p = sub.add_parser("approve-previs")
+    p.add_argument("plan")
+    p.add_argument("--manifest")
+    p.add_argument("--art-direction", required=False)
+    p.add_argument("--check", action="store_true",
+                   help="verify currentness without replacing the approval baseline")
     p = sub.add_parser("worker-packet")
     p.add_argument("plan")
     p.add_argument("--scenes", required=True, help="comma-separated adjacent scene ids")
@@ -210,7 +361,9 @@ def main():
     p.add_argument("--out", required=True)
     p = sub.add_parser("close-correction")
     p.add_argument("plan")
-    p.add_argument("--note", default="one broad editorial correction complete")
+    p.add_argument("--note", default="one targeted editorial correction complete")
+    p.add_argument("--changed-scenes", default="",
+                   help="comma-separated scene ids substantively changed by the one correction")
     p = sub.add_parser("handoff")
     p.add_argument("plan")
     p.add_argument("--closed-stage", required=True, choices=("PLAN", "BUILD", "REVIEW", "CORRECTION", "FINAL"))
@@ -232,10 +385,32 @@ def main():
         print(state.compact_result("CLOSED" if closed else "HARD", hard=0 if closed else 1,
                                    details=path, receipt=receipt or "missing"))
         return 0 if closed else 1
+    if args.command == "approve-previs":
+        try:
+            if args.check:
+                closed, path, receipt = previs_is_closed(args.plan)
+                print(state.compact_result("CLOSED" if closed else "HARD",
+                                           hard=0 if closed else 1, details=path,
+                                           receipt=receipt or "missing"))
+                return 0 if closed else 1
+            if not args.manifest:
+                raise ValueError("--manifest is required when creating previs approval")
+            path, receipt = approve_previs(args.plan, args.manifest, args.art_direction)
+            print(state.compact_result("CLOSED", changed=[path], receipt=receipt))
+            return 0
+        except ValueError as exc:
+            print(state.compact_result("HARD", hard=1, questions=[str(exc)]), file=sys.stderr)
+            return 1
     if args.command == "close-correction":
-        path, receipt = close_correction(args.plan, args.note)
-        print(state.compact_result("CLOSED", changed=[path], receipt=receipt))
-        return 0
+        try:
+            path, receipt = close_correction(
+                args.plan, args.note,
+                [x.strip() for x in args.changed_scenes.split(",") if x.strip()])
+            print(state.compact_result("CLOSED", changed=[path], receipt=receipt))
+            return 0
+        except ValueError as exc:
+            print(state.compact_result("HARD", hard=1, questions=[str(exc)]), file=sys.stderr)
+            return 1
     if args.command == "handoff":
         artifact = build_handoff(args.plan, args.closed_stage, args.next_stage, args.hard,
                                  args.advisory, [x.strip() for x in args.changed_scenes.split(",")

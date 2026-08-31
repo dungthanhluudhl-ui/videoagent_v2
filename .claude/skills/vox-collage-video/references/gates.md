@@ -12,9 +12,12 @@ semantics.
 
 ## Automatic hooks
 
+- Exactly one plan may be `active`; the workflow that ships a finished video
+  also sets its plan to `shipped`.
 - **PreRead:** image-context budget only.
-- **PostEdit on an active scene:** approval guard, then one scene-scoped
-  `build_gate.py` subprocess. Text/icon/style scans are batch work.
+- **PostEdit on an active scene:** approval guard, then one scene-scoped reduced
+  `build_gate.py --previs` before a current previs receipt, or the existing full
+  build check after approval. Text/icon/style scans remain batch work.
 - **Stop:** phase is inferred from scene statuses and existing review evidence.
   - planning: plan integrity;
   - building: plan + build integrity;
@@ -40,6 +43,8 @@ semantics.
 |---|---|---|
 | `plan_gate.py` | readable schema, required meaning/structure, possible timing, valid anchors/assets, backed visual events | contract hard; pacing/coverage/density heuristics warn with `--hook` |
 | `build_gate.py` | approved plan ↔ JSX contract | hard |
+| `build_gate.py --previs` | rough source compiles; intended/locked assets, evidence identity, rationale and semantic treatment exist | hard; no final motion/caption timing yet |
+| `build_gate.py --previs-baseline` | approved vs promoted actual OPEN/KEY structure and locked assets | hard on material redesign/asset swap, tolerant of motion/polish |
 | `text_gate.py` | readable/importable text implementation | mechanical failures hard; style warns with `--hook` |
 | `icon_gate.py` | registry/import integrity when icons are used | hard; zero icons valid |
 | `asset_gate.py` | source file integrity and measurements | missing/unreadable hard; resolution/slot quality warns with `--hook` |
@@ -59,10 +64,10 @@ small typography, crops, collisions and cutout/watermark edges.
 `fail + resolved` means **acknowledged / accepted quality debt**. It remains a
 visible warning and never becomes `pass`.
 
-During the single broad correction pass, consider rendered flags, temporal and
-scene-summary evidence, plan pacing/comprehension warnings, and resolved debt
-together. Fix comprehension/evidence/transformation debt before cosmetics; this
-is editorial ordering, not a severity taxonomy or a quality blocker.
+After contact-sheet art-direction approval, the one draft review asks only whether
+motion preserves composition, evidence remains readable, camera/pacing/transition
+rhythm work, and motion created no new defect. A correction is local and recorded
+with `close-correction --changed-scenes`; unrelated scene source is not regenerated.
 
 ## Invocation
 
@@ -70,6 +75,8 @@ is editorial ordering, not a severity taxonomy or a quality blocker.
 py -3 .claude/skills/vox-collage-video/scripts/<gate>.py --help
 py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/scene_plan<N>.json --hook
 py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/scene_plan<N>.json --scene S1
+py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/scene_plan<N>.json --previs
+py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/scene_plan<N>.json --previs
 py -3 .claude/skills/vox-collage-video/scripts/review_gate.py input/scene_plan<N>.json --hook
 py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/scene_plan<N>.json --check
 ```

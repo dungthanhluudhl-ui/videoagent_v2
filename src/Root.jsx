@@ -223,6 +223,21 @@ import { V17Scene10, V17SCENE10_DURATION } from "./scenes/V17Scene10";
 import { V17Master, MASTER17_DURATION } from "./V17Master";
 // ===== /ASSEMBLE:V17 imports =====
 
+// ===== ASSEMBLE:V18 imports - khối máy sinh, đừng sửa tay =====
+import { V18Scene1, V18SCENE1_DURATION } from "./scenes/V18Scene1";
+import { V18Scene2, V18SCENE2_DURATION } from "./scenes/V18Scene2";
+import { V18Scene3, V18SCENE3_DURATION } from "./scenes/V18Scene3";
+import { V18Scene4, V18SCENE4_DURATION } from "./scenes/V18Scene4";
+import { V18Scene5, V18SCENE5_DURATION } from "./scenes/V18Scene5";
+import { V18Scene6, V18SCENE6_DURATION } from "./scenes/V18Scene6";
+import { V18Scene7, V18SCENE7_DURATION } from "./scenes/V18Scene7";
+import { V18Scene8, V18SCENE8_DURATION } from "./scenes/V18Scene8";
+import { V18Scene9, V18SCENE9_DURATION } from "./scenes/V18Scene9";
+import { V18Scene10, V18SCENE10_DURATION } from "./scenes/V18Scene10";
+// ===== /ASSEMBLE:V18 imports =====
+// Checkpoint-only temporal evidence master; kept outside the generated V18 block.
+import { V18DonorMaster, V18_DONOR_DURATION } from "./V18DonorMaster";
+
 export const RemotionRoot = () => {
   return (
     <>
@@ -568,6 +583,22 @@ export const RemotionRoot = () => {
       </Folder>
       <Composition id="V17Master" component={V17Master} durationInFrames={MASTER17_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       {/* ===== /ASSEMBLE:V17 ===== */}
+
+      {/* ===== ASSEMBLE:V18 - khối máy sinh, đừng sửa tay ===== */}
+      <Folder name="V18-Scenes">
+        <Composition id="V18Scene1" component={V18Scene1} durationInFrames={V18SCENE1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene2" component={V18Scene2} durationInFrames={V18SCENE2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene3" component={V18Scene3} durationInFrames={V18SCENE3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene4" component={V18Scene4} durationInFrames={V18SCENE4_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene5" component={V18Scene5} durationInFrames={V18SCENE5_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene6" component={V18Scene6} durationInFrames={V18SCENE6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene7" component={V18Scene7} durationInFrames={V18SCENE7_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene8" component={V18Scene8} durationInFrames={V18SCENE8_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene9" component={V18Scene9} durationInFrames={V18SCENE9_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+        <Composition id="V18Scene10" component={V18Scene10} durationInFrames={V18SCENE10_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
+      </Folder>
+      {/* ===== /ASSEMBLE:V18 ===== */}
+      <Composition id="V18DonorMaster" component={V18DonorMaster} durationInFrames={V18_DONOR_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
 
     </>
   );

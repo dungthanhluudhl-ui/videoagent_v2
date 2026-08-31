@@ -64,6 +64,7 @@ import sys
 
 import stage_state as state
 import review_vision
+import pipeline_contracts
 
 SCRIPTS = pathlib.Path(__file__).resolve().parent
 SCENE_FILE_HINT = "src/scenes/"
@@ -527,9 +528,20 @@ def post_edit(payload, root, plan):
               f"là quên - là khai man có chủ đích.", file=sys.stderr)
         return 2
 
-    code, out = run("build_gate.py", str(plan_path), "--scene", sid)
+    uses_previs_lifecycle = (
+        "previsApproved" in plan_data or
+        any(scene.get("previsFrames") for scene in plan_data.get("scenes") or [])
+    )
+    previs_closed = True
+    if uses_previs_lifecycle:
+        previs_closed, _previs_path, _previs_receipt = pipeline_contracts.previs_is_closed(plan_path)
+    args = [str(plan_path), "--scene", sid]
+    if not previs_closed:
+        args.append("--previs")
+    code, out = run("build_gate.py", *args)
     if code != 0:
-        print(f"[vox-gate] {sid} no longer matches the approved plan ({plan_path.name}):\n"
+        phase = "approved production plan" if previs_closed else "previs intent/asset lock"
+        print(f"[vox-gate] {sid} no longer matches the {phase} ({plan_path.name}):\n"
               f"{out.strip()}\n"
               f"Fix the scene, or update the plan deliberately if the change is intended - "
               f"do not leave the build and the plan disagreeing.", file=sys.stderr)

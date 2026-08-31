@@ -1,0 +1,190 @@
+{
+  "schema": 1,
+  "version": "previs-scene-states-v1",
+  "video": "V18",
+  "humanVerdict": "APPROVE PREVIS",
+  "contactSheet": "input/previs_approved18/previs_contact_sheet.png",
+  "contactSheetSha256": "872a56924794dd10a42a53c81e8712e4d24bd7add2a3f20c9a453e9a0c72d164",
+  "frames": [
+    {
+      "scene": "S1",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene1",
+      "path": "input/previs_approved18/S1_OPEN.png",
+      "size": 461792,
+      "sha256": "70e89e244c7bcad611589f448165c956957dd777f7d7dbe1a81804b673e1089e"
+    },
+    {
+      "scene": "S1",
+      "role": "KEY",
+      "localFrame": 72,
+      "composition": "V18Scene1",
+      "path": "input/previs_approved18/S1_KEY.png",
+      "size": 2244133,
+      "sha256": "fd61e4a46c67a311ac3ced9e8670cbde442ef98d233970ea90255541ffdf2147"
+    },
+    {
+      "scene": "S2",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene2",
+      "path": "input/previs_approved18/S2_OPEN.png",
+      "size": 660479,
+      "sha256": "08d76b3ccb2aba0cb8bd93deaf04502ac7b8b7bf4a82570a53e58ca0c2294868"
+    },
+    {
+      "scene": "S2",
+      "role": "KEY",
+      "localFrame": 118,
+      "composition": "V18Scene2",
+      "path": "input/previs_approved18/S2_KEY.png",
+      "size": 835193,
+      "sha256": "030866f06c9b2e7e3723d2041bb7c8bcdae27550771bd7363ea4a044e1eefc23"
+    },
+    {
+      "scene": "S3",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene3",
+      "path": "input/previs_approved18/S3_OPEN.png",
+      "size": 1682700,
+      "sha256": "b7a48b68710970e94161a6be5f692491b1b89662ed588b3d9a9d81f0265559dd"
+    },
+    {
+      "scene": "S3",
+      "role": "KEY",
+      "localFrame": 104,
+      "composition": "V18Scene3",
+      "path": "input/previs_approved18/S3_KEY.png",
+      "size": 1586511,
+      "sha256": "faf886aaee6852b09013c8f36d3cdf587b2022caa0b6f5280741f680a5786120"
+    },
+    {
+      "scene": "S4",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene4",
+      "path": "input/previs_approved18/S4_OPEN.png",
+      "size": 599090,
+      "sha256": "6a8f439ea00e6fe1fea245b28c55d47ae9867dab1f3bfefb00220c35caaa45ca"
+    },
+    {
+      "scene": "S4",
+      "role": "KEY",
+      "localFrame": 112,
+      "composition": "V18Scene4",
+      "path": "input/previs_approved18/S4_KEY.png",
+      "size": 666542,
+      "sha256": "577ee9532bb2a32576ae38da21730a2c8647f4c099fb2ca9f09ed917e89b573b"
+    },
+    {
+      "scene": "S5",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene5",
+      "path": "input/previs_approved18/S5_OPEN.png",
+      "size": 73029,
+      "sha256": "687f2d9d2129f9e0cda7082ccd0da413d95cc7d0b664743e5108e2699dfa6069"
+    },
+    {
+      "scene": "S5",
+      "role": "KEY",
+      "localFrame": 98,
+      "composition": "V18Scene5",
+      "path": "input/previs_approved18/S5_KEY.png",
+      "size": 90073,
+      "sha256": "438a463dbbc562a5879fc719d38ff6d005bf89bced29ea151ff94327b9993f30"
+    },
+    {
+      "scene": "S6",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene6",
+      "path": "input/previs_approved18/S6_OPEN.png",
+      "size": 406410,
+      "sha256": "64e06a2f701b9af1e89404c4e6f92315949ed745cb0ef23affcd5e8c79145f13"
+    },
+    {
+      "scene": "S6",
+      "role": "KEY",
+      "localFrame": 92,
+      "composition": "V18Scene6",
+      "path": "input/previs_approved18/S6_KEY.png",
+      "size": 391732,
+      "sha256": "7d1b3db99eb15f809790c130ce83bd2008f4354ddbe5a6145d3e9dfafe3138ca"
+    },
+    {
+      "scene": "S7",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene7",
+      "path": "input/previs_approved18/S7_OPEN.png",
+      "size": 107589,
+      "sha256": "ae9e4d702d20855fa853cbbec7f8a91075ea19cc747f156afec62282ec6d81fd"
+    },
+    {
+      "scene": "S7",
+      "role": "KEY",
+      "localFrame": 205,
+      "composition": "V18Scene7",
+      "path": "input/previs_approved18/S7_KEY.png",
+      "size": 114628,
+      "sha256": "34adcb72324068d73f9554067eb972cf18c8af806433ac362948c91711cf97c0"
+    },
+    {
+      "scene": "S8",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene8",
+      "path": "input/previs_approved18/S8_OPEN.png",
+      "size": 381825,
+      "sha256": "08247c7dc293d61c8e71f0fc35d3eb5374403a05a980faa06bb8edd6ca9d00a1"
+    },
+    {
+      "scene": "S8",
+      "role": "KEY",
+      "localFrame": 124,
+      "composition": "V18Scene8",
+      "path": "input/previs_approved18/S8_KEY.png",
+      "size": 361797,
+      "sha256": "5c9c376866a891cb90b76082aadbd7c357ad6e3b6c926a49b63f2b6ccd6b482f"
+    },
+    {
+      "scene": "S9",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene9",
+      "path": "input/previs_approved18/S9_OPEN.png",
+      "size": 587433,
+      "sha256": "5bd39f09ec049a55b3941668fba40858429e7ff0269c993c520b58223518dbd5"
+    },
+    {
+      "scene": "S9",
+      "role": "KEY",
+      "localFrame": 142,
+      "composition": "V18Scene9",
+      "path": "input/previs_approved18/S9_KEY.png",
+      "size": 453719,
+      "sha256": "475cc185aaed19815a14c34836a4b3dd6016297e624293340268c5d5da83bb37"
+    },
+    {
+      "scene": "S10",
+      "role": "OPEN",
+      "localFrame": 0,
+      "composition": "V18Scene10",
+      "path": "input/previs_approved18/S10_OPEN.png",
+      "size": 664528,
+      "sha256": "be5b6c5b5f824d468924f81f22eec630be50e381c5a1ba7cc663e89b334d3ea4"
+    },
+    {
+      "scene": "S10",
+      "role": "KEY",
+      "localFrame": 145,
+      "composition": "V18Scene10",
+      "path": "input/previs_approved18/S10_KEY.png",
+      "size": 456982,
+      "sha256": "22859cba5cf18fbbf6795897d147ca00ac878887bf649e684d87848c2bfe884f"
+    }
+  ]
+}

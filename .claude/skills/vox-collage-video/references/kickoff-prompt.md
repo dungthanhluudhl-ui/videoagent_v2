@@ -18,10 +18,12 @@ Treat receipts/contracts on disk as memory: return compact stage summaries and
 load only unresolved exceptions plus artifacts required for the requested stage.
 ```
 
-Normal end-to-end production continues in this Codex task through PLAN → SOURCE →
-BUILD → actual-master REVIEW → one targeted editorial CORRECTION → delta REVIEW
-as required → FINAL. Do not restart Codex between stages. Let the runtime's native
-context management or compaction manage the continuous task when available.
+Normal end-to-end production continues in this Codex task through SCRIPT/AUDIO →
+ALIGNMENT → SEMANTIC PLAN → ASSET DISCOVERY + LOCK → PREVIS-IN-PLACE → GLOBAL
+CONTACT SHEET → HUMAN APPROVAL → PROMOTE SAME SOURCE → CONFORMANCE → ONE DRAFT →
+ONE TEMPORAL REVIEW → AT MOST ONE LOCAL CORRECTION → FINAL. Do not restart Codex
+between stages. Let the runtime's native context management or compaction manage
+the continuous task when available.
 
 For an optional continuation after a real session boundary, identify the existing
 `scene_plan<N>.json` and requested next output; do not regenerate completed timing,
@@ -34,7 +36,7 @@ boundary needs a checkpoint, the deterministic handoff form is available:
 ```text
 Use the current `vox-collage-video` workflow.
 Continue <V> from <absolute handoff artifact path>.
-Perform <BUILD / REVIEW / CORRECTION / FINAL>.
+Perform <PREVIS / PROMOTION / REVIEW / CORRECTION / FINAL>.
 Load only artifacts named by the handoff plus directly required dependencies.
 ```
 

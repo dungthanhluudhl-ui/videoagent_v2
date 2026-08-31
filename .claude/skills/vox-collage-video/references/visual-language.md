@@ -18,6 +18,12 @@ content actually calls for. `visualLanguage` records that choice; its share is
 informational, not a style quota. Repetition is judged on rendered output by
 review and `sheet_vision.py`, not inferred from implementation labels.
 
+Make that choice in production-compatible bespoke previs JSX with the real locked
+asset, then judge OPEN/KEY actual pixels on the whole-video contact sheet. The
+contact sheet is where treatment is judged after contact with real assets. Do not
+choose a diagram merely because it is easier to code than an available
+meaning-bearing photograph or context asset; that is the V17 failure pattern.
+
 ## The languages
 
 | If the narration is about… | visualLanguage | Build it with |
@@ -101,7 +107,8 @@ highlights exact evidence, and moves when narration reaches another clause. It
 does not choose evidence, rewrite source text, or force every document into the
 same composition.
 The region identifies the claim location, not a crop boundary. Safe presentation
-margin belongs to the primitive; crop is explicit opt-in via `allowCrop`.
+margin belongs to the primitive. `allowCrop` may bleed the surrounding page; it
+may never guillotine the cited evidence region.
 
 Rendered variety is judged from the scene-summary sheet, not from apparently
 different `visualLanguage` labels. Do not relabel scenes or add media/layout/

@@ -1,0 +1,188 @@
+{
+  "schema": 1,
+  "video": "V18",
+  "assets": {
+    "S1:Scrap-Warehouse-Location": {
+      "identity": "f325437efd7b3110210d37b2171e16c16583ec34b19f694e364b4a8e6210efb1",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_warehouse_vertical.png",
+        "size": 1321674,
+        "sha256": "fa09ee9f3f9eb4ad580f3b6413c6e9693d064410fe59fb85575ae3b421cecf7d"
+      },
+      "briefId": "90d690265b4140787471c6221dafbc1ea55bccc659aa461564841409112ec773",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.285217+00:00"
+    },
+    "S2:Locked-Handcuffs": {
+      "identity": "4b097cf7bb8d8885e18506a6b8a4d2b9ad26c6d0772d35b86cd26b131e4af323",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_handcuffs.png",
+        "size": 339471,
+        "sha256": "9c6bcb90faf924f5e13fd2fecd0cd651436f638a5f910d5ffa16daaa7ce7c583"
+      },
+      "briefId": "4caa794ca06b39798bc330e0969ba58e6cfc736b0ce453c903f519959fe70bb8",
+      "mechanicalQA": "ACCEPTED",
+      "mechanicalAdvisory": "",
+      "updatedAt": "2026-08-31T23:42:19.318239+00:00"
+    },
+    "S2:Restraint-Rope": {
+      "identity": "1460d08fba2afbecc99b50f9b8156ce3a5130d3a7bf080127500c34e230ad800",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_restraint_rope.png",
+        "size": 444158,
+        "sha256": "124021305f7844858269461ae081c2e5192ea1dcbddb15b4e4559fdbf3e3ba5a"
+      },
+      "briefId": "59f1f207a841ba96fcc8220908f539f367141fe036d6512e3dc73e118e4dcc92",
+      "mechanicalQA": "ACCEPTED",
+      "mechanicalAdvisory": "",
+      "updatedAt": "2026-08-31T23:42:19.335401+00:00"
+    },
+    "S3:Coerced-Caller": {
+      "identity": "b04bdd82740131bc678264d1c73837a4e8b97ccb6f0ec22d5a4bbe611673e36b",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_victim_phone_under_duress.png",
+        "size": 271464,
+        "sha256": "b6198cf086a312b64ef7748e7e7435e52d901349d37ca1e2e3e97da3703fef15"
+      },
+      "briefId": "8188e470d045c66b53174d3c4f3152a76b32e099fbe48e6cf6c150fc5e5739e7",
+      "mechanicalQA": "ACCEPTED",
+      "mechanicalAdvisory": "",
+      "updatedAt": "2026-08-31T23:42:19.345756+00:00"
+    },
+    "S3:Warehouse-Context": {
+      "identity": "a72dadd2b4692629a37a3cc7f989ac0491478126e5211d75fcc86c3d1fe15a06",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_warehouse_vertical.png",
+        "size": 1321674,
+        "sha256": "fa09ee9f3f9eb4ad580f3b6413c6e9693d064410fe59fb85575ae3b421cecf7d"
+      },
+      "briefId": "eb01584e66c84baf7d7c1bd9ce41c00751cfbc26aaefbbf759bb919d7cfbafa1",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.357212+00:00"
+    },
+    "S4:Official-Noon-Money-Demand": {
+      "identity": "b3a9893a5f5003ffac40b63b905c09065cf64656b40272dc547436f9d7cf95d4",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p3_noon_demand.png",
+        "size": 677652,
+        "sha256": "1512032dc21932ca76915a5f9057860f4e49e69d3b358b2c820c9405dfb58f5e"
+      },
+      "briefId": "94a400c48db1517cc77d7cdeb95dae46aa1b745f605131a0f8c708c5856db4b7",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.377360+00:00"
+    },
+    "S6:Official-Real-Debt-Record": {
+      "identity": "be74fd49c3ac8472037bf43f1ac5022867564572ccc606524616cfcb3fe8833f",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p2_real_debt.png",
+        "size": 499939,
+        "sha256": "e7d501735c27b255db5eac7353aa7036db972a79dd8e3a5dfaf3507f94966804"
+      },
+      "briefId": "b0052698db92c7cb1f7b06e0774566b0c2fc33952627d210c0fb16add24e5d93",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.377360+00:00"
+    },
+    "S8:Official-Precedent-Title": {
+      "identity": "f4b5689c777af7e0a823709a04c2c1ce3b588695c5fc40a7f4a438cbec0d7048",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p1_title_focus.png",
+        "size": 327495,
+        "sha256": "e6f60f9bc0907db462fc1645aa400a31c73c0ce163c3f4270a08a7b06bb8a654"
+      },
+      "briefId": "e34a4076a10d33ba34f2033553a40e70bdcb9bcbf9758f671a9f605c17753ed0",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.402966+00:00"
+    },
+    "S9:Real-Debt-Record": {
+      "identity": "003d8d7d9f8d7afc7ed357da235b04af537c145fc257c0ae5cb83fa9e0e9ff7d",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p2_real_debt.png",
+        "size": 499939,
+        "sha256": "e7d501735c27b255db5eac7353aa7036db972a79dd8e3a5dfaf3507f94966804"
+      },
+      "briefId": "50b146a1f943d6085c4054b125df8c7736d96e42b4d80009a7c3f64c96382907",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.407995+00:00"
+    },
+    "S9:Official-Coercive-Methods": {
+      "identity": "bebbffb80944eb5db5be48727df66318afc938fe10f00b4f58299fc4b3b7aa16",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p8_p7_pressure.png",
+        "size": 690957,
+        "sha256": "a9999d37c292ed22ed62b751fbb486ae98dcc56130c867348cff9634d6f022f7"
+      },
+      "briefId": "29545b0676b96213f1aedb187d088215737ea2797651aad6360bc3d1902f5ac3",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.428984+00:00"
+    },
+    "S9:Handcuffs-Support": {
+      "identity": "c13687a94f099b283bf1c0651386f7cf2fac93ced827ed4018cb74808ed5792b",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_handcuffs.png",
+        "size": 339471,
+        "sha256": "9c6bcb90faf924f5e13fd2fecd0cd651436f638a5f910d5ffa16daaa7ce7c583"
+      },
+      "briefId": "948085b7535ebafa49621f30e1e8d468de4e883323b38e9e25b7aa99ce13e5d8",
+      "mechanicalQA": "ACCEPTED",
+      "mechanicalAdvisory": "",
+      "updatedAt": "2026-08-31T23:42:19.441874+00:00"
+    },
+    "S10:Official-Release-Condition": {
+      "identity": "afac222ca2f45dd04f80302a33ed36877868bf92cc1bc10548af85e2faf543f4",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p8_p7_release_condition.png",
+        "size": 981232,
+        "sha256": "8b664a6e5eac09a2f0e93da73092eb5d305f0d8cf804e650ff6b0fd70dfb550b"
+      },
+      "briefId": "ee75f454031557c0ab202b0283ed43d11146e5f1f9ac36f915daecddca6a6e00",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.443436+00:00"
+    },
+    "S10:Official-Legal-Conclusion": {
+      "identity": "f0a55233ea09bc2bb72e53aaac3735913bd866169bc326b853977b16fbeb01df",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_pdf_p8_p7_conclusion.png",
+        "size": 768274,
+        "sha256": "93b07994b061619391f2cc95ab27387c6c7e6d378d17e62fe4051c1942d9bc3c"
+      },
+      "briefId": "885f3550b9f63c465de55a4522b73565337a8df3cb8fa3b4c86143f456ab5ab0",
+      "mechanicalQA": "ACCEPTED_WITH_ADVISORY",
+      "mechanicalAdvisory": "anh cu, khong co dau voxContentPx - do bang kich thuoc file",
+      "updatedAt": "2026-08-31T23:42:19.458914+00:00"
+    },
+    "S2:Restrained-Subject": {
+      "identity": "04194e299d5a4a0f15687b5997385470380a4a3a694a4dca6aad514927957c2e",
+      "acceptance": "PENDING",
+      "sourceFile": {
+        "path": "D:\\VideoAgent 2\\public\\anle64_victim_restrained_seated.png",
+        "size": 503446,
+        "sha256": "144ff414801347876aad30b1d0dbf39f379da0b7d4a1f4b62ba919c500b83c6b"
+      },
+      "briefId": "2311a105cd31a4b4c24de6e7a91d77ba44e855adeefe5e5afc949dda3504dc1d",
+      "mechanicalQA": "ACCEPTED",
+      "mechanicalAdvisory": "",
+      "updatedAt": "2026-08-31T23:42:19.307943+00:00"
+    }
+  }
+}
