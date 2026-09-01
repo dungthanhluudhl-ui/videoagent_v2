@@ -14,7 +14,7 @@ VERSION = "explicit-review-vision-v2"
 
 def inputs_for(plan_path, plan):
     root = state.project_root(plan_path)
-    review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    review_path = state.review_path_for_plan(plan_path, plan)
     review = state.read_json(review_path, {})
     paths = []
     for scene in plan.get("scenes") or []:
@@ -23,11 +23,11 @@ def inputs_for(plan_path, plan):
                 paths.append(root / "public" / asset["src"])
     for key in ("temporalSheet", "sceneSummarySheet"):
         if review.get(key):
-            paths.append(root / str(review[key]).replace("\\", "/"))
+            paths.append(state.project_path(root, review[key]))
     for entry in review.get("scenes") or []:
         for raw in entry.get("frames") or [entry.get("frame")]:
             if raw:
-                paths.append(root / str(raw).replace("\\", "/"))
+                paths.append(state.project_path(root, raw))
     return {"reviewGeneration": review.get("reviewGeneration"),
             "assetsAndPixels": [state.file_input(path) for path in sorted(set(paths), key=str)],
             "briefs": [{"id": s.get("id"), "visualTransformation": s.get("visualTransformation"),
@@ -37,7 +37,7 @@ def inputs_for(plan_path, plan):
 
 
 def receipt_path(root, video):
-    return state.runtime_dir(root, video) / "receipts" / "review-vision.json"
+    return state.video_paths(root, video)["receipts"] / "review-vision.json"
 
 
 def is_current(plan_path, plan):
@@ -57,7 +57,7 @@ def main():
     ap.add_argument("plan")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
-    plan_path = pathlib.Path(args.plan)
+    plan_path = state.project_path(state.project_root(__file__), args.plan)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     current, receipt = is_current(plan_path, plan)
     if current:
@@ -67,21 +67,20 @@ def main():
         print(state.compact_result("ADVISORY", advisory=1,
               questions=["run review_vision.py explicitly for current review pixels/briefs"]))
         return 1
-    review = state.read_json(pathlib.Path(str(plan_path).replace("scene_plan", "review")), {})
+    review = state.read_json(state.review_path_for_plan(plan_path, plan), {})
     commands = [("asset_vision.py", [str(plan_path), "--new-only"]),
                 ("vision_check.py", ["--plan", str(plan_path), "--new-only"])]
     sheet = review.get("sceneSummarySheet")
     if sheet:
-        sheet_path = pathlib.Path(str(sheet).replace("\\", "/"))
-        if not sheet_path.is_absolute():
-            sheet_path = state.project_root(plan_path) / sheet_path
+        sheet_path = state.project_path(state.project_root(plan_path), sheet)
         commands.append(("sheet_vision.py", [str(sheet_path), "--scenes",
                                              str(len(plan.get("scenes") or [])),
                                              "--status-json"]))
     advisories = []
+    root = state.project_root(plan_path)
     for script, argv in commands:
         proc = subprocess.run([sys.executable, str(HERE / script), *argv], capture_output=True,
-                              text=True, encoding="utf-8", errors="replace")
+                              text=True, encoding="utf-8", errors="replace", cwd=root)
         if script == "sheet_vision.py" and proc.returncode == 0:
             try:
                 sheet_status = json.loads(proc.stdout)
@@ -102,7 +101,6 @@ def main():
         elif proc.returncode not in (0, 1):
             print(state.compact_result("HARD", hard=1, details=f"{script} failed"), file=sys.stderr)
             return proc.returncode
-    root = state.project_root(plan_path)
     tool = state.tool_identity(HERE / "review_vision.py", HERE / "asset_vision.py",
                                HERE / "vision_check.py", HERE / "sheet_vision.py",
                                versions={"stage": VERSION})

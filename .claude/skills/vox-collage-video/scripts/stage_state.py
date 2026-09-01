@@ -145,8 +145,60 @@ def project_root(path):
     return pathlib.Path.cwd().resolve()
 
 
+def normalize_video(video):
+    """Return the stable ``V<N>`` identity used by every on-disk artifact."""
+    value = str(video or "V").strip()
+    return f"V{value[1:]}" if value[:1].lower() == "v" else f"V{value}"
+
+
+def video_paths(root, video):
+    """Canonical per-video paths.
+
+    Consumers may still accept an arbitrary authoritative plan path, but derived
+    artifacts never depend on string replacement or the caller's working
+    directory.  Keep this map small and mechanical: it is the one source of
+    truth for pipeline state, generated registration, review, and render paths.
+    """
+    root = pathlib.Path(root).resolve()
+    video = normalize_video(video)
+    suffix = video[1:]
+    input_dir = root / "input"
+    runtime = input_dir / ".videoagent" / video
+    receipts = runtime / "receipts"
+    return {
+        "root": root,
+        "input": input_dir,
+        "output": root / "out",
+        "source": root / "src",
+        "scenes": root / "src" / "scenes",
+        "plan": input_dir / f"scene_plan{suffix}.json",
+        "review": input_dir / f"review{suffix}.json",
+        "review_frames": input_dir / f"review_frames_{video.lower()}",
+        "asset_manifest": input_dir / f"asset_manifest{suffix}.json",
+        "runtime": runtime,
+        "receipts": receipts,
+        "gate_receipts": receipts / "gates",
+        "gate_details": runtime / "gate-details",
+        "cache": runtime / "cache",
+        "logs": runtime / "logs",
+        "economics": runtime / "economics.jsonl",
+        "master": root / "src" / f"{video}Master.jsx",
+        "previs_root": root / "src" / "PrevisRoot.tsx",
+        "entry": root / "src" / "index.ts",
+        "draft": root / "out" / f"{video}_draft.mp4",
+        "final": root / "out" / f"{video}_final.mp4",
+    }
+
+
+def project_path(root, path):
+    """Resolve a caller-supplied artifact path against the project, never CWD."""
+    candidate = pathlib.Path(str(path).replace("\\", "/"))
+    return candidate.resolve() if candidate.is_absolute() else (pathlib.Path(root) / candidate).resolve()
+
+
 def runtime_dir(root, video):
-    return pathlib.Path(root) / "input" / ".videoagent" / str(video)
+    """Compatibility wrapper; new consumers should use :func:`video_paths`."""
+    return video_paths(root, video)["runtime"]
 
 
 def item_cache_path(root, video, family, key):
@@ -203,8 +255,18 @@ def plan_slice(plan, fields=(), scene_fields=(), scene_ids=None):
 
 
 def manifest_path_for_plan(plan_path, plan):
-    video = str(plan.get("video") or pathlib.Path(plan_path).stem.replace("scene_plan", "V"))
-    return pathlib.Path(plan_path).parent / f"asset_manifest{video.lstrip('Vv')}.json"
+    """Compatibility wrapper over the canonical per-video path map."""
+    plan_path = pathlib.Path(plan_path)
+    video = plan.get("video") or plan_path.stem.replace("scene_plan", "V")
+    return video_paths(project_root(plan_path), video)["asset_manifest"]
+
+
+def review_path_for_plan(plan_path, plan=None):
+    """Canonical review artifact for an authoritative plan."""
+    plan_path = pathlib.Path(plan_path)
+    plan = plan if plan is not None else read_json(plan_path, {})
+    video = plan.get("video") or plan_path.stem.replace("scene_plan", "V")
+    return video_paths(project_root(plan_path), video)["review"]
 
 
 def asset_contract(scene, asset):

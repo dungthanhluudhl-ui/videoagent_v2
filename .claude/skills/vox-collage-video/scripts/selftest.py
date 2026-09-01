@@ -287,7 +287,7 @@ def repair_contract_checks(tmp):
         "globalVisualContract": {"palette": "paper-orange", "bespoke": True},
         "scenes": [
             {"id": "S1", "startSec": 0, "endSec": 2, "durationInFrames": 60,
-             "status": "built", "viewerQuestion": "q1", "visualTransformation": "a becomes b",
+             "status": "previs", "viewerQuestion": "q1", "visualTransformation": "a becomes b",
              "contrastWithPrevious": "opening", "visualEvents": [{"frame": 0, "what": "open"},
                                                                 {"frame": 25, "what": "change"}],
              "assets": [{"name": "Doc", "src": "asset-a.png", "role": "document",
@@ -300,6 +300,37 @@ def repair_contract_checks(tmp):
         ]}
     plan_path = tmp / "input" / "scene_plan99.json"
     plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
+
+    canonical_paths = state.video_paths(tmp, "v99")
+    checks.append(("paths: canonical plan/review/frames/runtime/render artifacts are project-rooted",
+                   canonical_paths["plan"] == plan_path.resolve() and
+                   canonical_paths["review"] == (tmp / "input" / "review99.json").resolve() and
+                   canonical_paths["review_frames"] ==
+                   (tmp / "input" / "review_frames_v99").resolve() and
+                   canonical_paths["entry"] == (tmp / "src" / "index.ts").resolve() and
+                   canonical_paths["previs_root"] == (tmp / "src" / "PrevisRoot.tsx").resolve()))
+    checks.append(("paths: derived review ignores plan filename and caller working directory",
+                   state.review_path_for_plan(tmp / "input" / "renamed-contract.json",
+                                              synthetic_plan) == canonical_paths["review"] and
+                   state.project_path(tmp, "input/review99.json") == canonical_paths["review"]))
+    lifecycle = pipeline.lifecycle_contract(synthetic_plan)
+    checks.append(("lifecycle: canonical PREVIS and legacy built/BUILD normalize identically",
+                   pipeline.scene_status_stage("previs") == "PREVIS" and
+                   pipeline.scene_status_stage("built") == "PREVIS" and
+                   pipeline.canonical_stage("BUILD") == "PREVIS" and
+                   lifecycle["anyPrevis"] and not lifecycle["previsComplete"]))
+    checks.append(("lifecycle: PREVIS marker is canonical while BUILT-HERE remains input-compatible",
+                   pipeline.canonical_previs_marker("// PREVIS-HERE: S1") ==
+                   pipeline.CANONICAL_PREVIS_MARKER and
+                   pipeline.canonical_previs_marker("// BUILT-HERE: S1") ==
+                   pipeline.CANONICAL_PREVIS_MARKER))
+    unapproved_previs = copy.deepcopy(synthetic_plan)
+    unapproved_previs["shotlistApproved"] = False
+    lifecycle_report = plan_gate.Report()
+    plan_gate.gate_lifecycle(unapproved_previs, lifecycle_report)
+    checks.append(("approval: shared shotlistApproved contract blocks PREVIS lifecycle",
+                   pipeline.approval_contract(unapproved_previs)["approved"] is False and
+                   any("shotlistApproved" in failure for failure in lifecycle_report.failures)))
 
     contract_a = state.plan_contract(synthetic_plan, plan_path)
     plan_receipt = tmp / "plan-receipt.json"
@@ -403,6 +434,7 @@ def repair_contract_checks(tmp):
     full_cmd = review_tool.targeted_full_res_command(manual_manifest, tmp / "full")
     checks.append(("targeted full-res uses one Remotion render process for selected frames",
                    full_cmd[:3] == ["npx", "remotion", "render"] and
+                   full_cmd[3] == "src/index.ts" and
                    "--sequence" in full_cmd and "--image-format=png" in full_cmd and
                    "--frames=" in " ".join(full_cmd) and "--codec=none" not in full_cmd))
     draft_proof = {"path": "draft.mp4", "size": 1, "mtimeNs": 1}
@@ -413,7 +445,7 @@ def repair_contract_checks(tmp):
                    len({rkey, changed_draft, changed_sample}) == 3))
     third_plan = copy.deepcopy(synthetic_plan)
     third_plan["scenes"].append({"id": "S3", "startSec": 4, "endSec": 6,
-                                 "durationInFrames": 60, "status": "built",
+                                 "durationInFrames": 60, "status": "previs",
                                  "viewerQuestion": "q3", "visualTransformation": "e reveals f",
                                  "contrastWithPrevious": "new ending", "visualEvents": [{"frame": 5, "what": "end"}],
                                  "assets": []})
@@ -439,11 +471,19 @@ def repair_contract_checks(tmp):
     helper = tmp / "src" / "scenes" / "V99Kit.jsx"
     helper.write_text("export const kit='a'", encoding="utf-8")
     (tmp / "src" / "V99Master.jsx").write_text(
-        'import {Circle} from "lucide-react"; export const V99Master=()=>Circle;', encoding="utf-8")
+        'import {Circle} from "lucide-react"; import {scene as sceneOne} from "./scenes/V99Scene1"; '
+        'export const MASTER99_DURATION=120; export const V99Master=()=>Circle&&sceneOne;',
+        encoding="utf-8")
+    (tmp / "src" / "index.ts").write_text(
+        'import {registerRoot} from "remotion"; import {PrevisRoot} from "./PrevisRoot"; '
+        'registerRoot(PrevisRoot);', encoding="utf-8")
+    (tmp / "src" / "PrevisRoot.tsx").write_text(
+        'import {Composition} from "remotion"; import {V99Master,MASTER99_DURATION} from "./V99Master";\n'
+        'export const PrevisRoot=()=> <Composition id="V99Master" component={V99Master} '
+        'durationInFrames={MASTER99_DURATION} fps={30} width={1080} height={1920}/>;',
+        encoding="utf-8")
     (tmp / "src" / "Root.jsx").write_text(
-        'import {V99Master} from "./V99Master";\n'
-        'export const Root=()=> <><Composition id="V98Master" component={Other}/>'
-        '<Composition id="V99Master" component={V99Master} durationInFrames={120} fps={30} width={1080} height={1920}/></>;',
+        'export const ProductionRoot=()=>"unrelated production registration";',
         encoding="utf-8")
     (tmp / "src" / "scenes" / "V99Scene1.jsx").write_text(
         'import {kit} from "./V99Kit"; export const scene=kit;', encoding="utf-8")
@@ -470,6 +510,14 @@ def repair_contract_checks(tmp):
     draft = tmp / "draft.mp4"; draft.write_bytes(b"synthetic-draft")
     final = tmp / "final.mp4"; final.write_bytes(b"synthetic-final")
     d = render_video.render_contract(plan_path, "draft", draft)
+    render_input_text = json.dumps(d[6], ensure_ascii=False)
+    checks.append(("draft command/source proof uses only generated src/index.ts -> PrevisRoot graph",
+                   d[9][:5] == ["npx", "remotion", "render", "src/index.ts", "V99Master"] and
+                   "PrevisRoot.tsx" in render_input_text and "Root.jsx" not in render_input_text))
+    command_only_branch = (pathlib.Path(render_video.__file__).read_text(encoding="utf-8")
+                           .split("if args.command_only:", 1)[1].split("if args.check:", 1)[0])
+    checks.append(("render --command-only branch is static and cannot invoke a subprocess",
+                   "subprocess.run" not in command_only_branch and "print(json.dumps(cmd" in command_only_branch))
     state.make_receipt(d[3], "render-draft", d[6], d[7], d[8], [draft])
     checks.append(("draft: unchanged relevant source/settings reuse",
                    render_video.render_contract(plan_path, "draft", draft)[4]))
@@ -504,14 +552,19 @@ def repair_contract_checks(tmp):
     checks.append(("draft: editorial-only plan metadata mutation stays HIT",
                    render_video.render_contract(plan_path, "draft", draft)[4]))
     plan_path.write_text(json.dumps(synthetic_plan), encoding="utf-8")
-    root_file = tmp / "src" / "Root.jsx"
-    original_root = root_file.read_text(encoding="utf-8")
-    root_file.write_text(original_root.replace("V98Master", "V97Master"), encoding="utf-8")
+    production_root = tmp / "src" / "Root.jsx"
+    production_root.write_text("changed unrelated production root", encoding="utf-8")
     unrelated_video = tmp / "src" / "scenes" / "V98Scene1.jsx"
     unrelated_video.write_text("unrelated changed", encoding="utf-8")
-    checks.append(("draft: unrelated composition/video mutation stays HIT",
+    checks.append(("draft: production Root.jsx and unrelated video mutations stay HIT",
                    render_video.render_contract(plan_path, "draft", draft)[4]))
-    root_file.write_text(original_root, encoding="utf-8")
+    previs_root = tmp / "src" / "PrevisRoot.tsx"
+    original_previs_root = previs_root.read_text(encoding="utf-8")
+    previs_root.write_text(original_previs_root.replace("width={1080}", "width={1000}"),
+                           encoding="utf-8")
+    checks.append(("draft: selected generated PrevisRoot registration mutation invalidates",
+                   not render_video.render_contract(plan_path, "draft", draft)[4]))
+    previs_root.write_text(original_previs_root, encoding="utf-8")
     d_half = render_video.render_contract(plan_path, "draft", draft, scale=0.6)
     checks.append(("draft: render settings mutation invalidates",
                    not d_half[4]))
@@ -647,7 +700,7 @@ def repair_contract_checks(tmp):
     # Review lifecycle integration: generation A -> editorial verdicts -> one
     # changed scene/sample -> generation B --keep-review -> real review gate.
     lifecycle_plan = copy.deepcopy(third_plan)
-    lifecycle_plan["scenes"][1]["status"] = "built"
+    lifecycle_plan["scenes"][1]["status"] = "previs"
     lifecycle_path = tmp / "input" / "scene_plan99.json"
     lifecycle_path.write_text(json.dumps(lifecycle_plan), encoding="utf-8")
     review_path = tmp / "input" / "review99.json"
@@ -832,7 +885,7 @@ def repair_contract_checks(tmp):
     hook.selftest_is_current = lambda: (True, "current")
     stop_plan = copy.deepcopy(changed_plan)
     for scene in stop_plan["scenes"]:
-        scene["status"] = "built"
+        scene["status"] = "previs"
     try:
         current_err, stale_err = io.StringIO(), io.StringIO()
         hook.review_vision.is_current = lambda *_: (True, {})
@@ -1190,14 +1243,14 @@ def insert_unregistered_icon(tmp):
                     encoding="utf-8")
 
 
-def mark_every_scene_built(plan):
-    """A built video with no review file must still be blocked.
+def mark_every_scene_previs(plan):
+    """A PREVIS-complete video with no review file must still be blocked.
 
     The phase check added to review_gate lets a PLAN-ONLY video through, so
     this case exists to prove the exemption cannot be widened: flip the scenes
-    to "built" and the review requirement has to come straight back."""
+    to "previs" and the review requirement has to come straight back."""
     for s in plan["scenes"]:
-        s["status"] = "built"
+        s["status"] = "previs"
     return plan
 
 
@@ -1669,8 +1722,8 @@ CASES = [
     Case("review_gate: khung render hoàn toàn trắng vẫn FAIL",
          "review_gate.py", None, review=unexplained_pass_on_empty_frame,
          sandbox_hook=_repaint_frames("blank"), expect_message=["completely blank"]),
-    Case("review_gate: video đã dựng nhưng thiếu file review", "review_gate.py",
-         mark_every_scene_built, review=lambda r: {"video": "x", "scenes": []}),
+    Case("review_gate: video đã làm PREVIS nhưng thiếu file review", "review_gate.py",
+         mark_every_scene_previs, review=lambda r: {"video": "x", "scenes": []}),
     # The reference itself must survive all four. A gate that cannot pass is a
     # wall, and a wall gets removed.
     # V10 shipped BEFORE the element-lifetime rule and breaks it 12 times.

@@ -274,35 +274,36 @@ def cached_ask(root, video, path, brief, model, settle):
 
 
 def review_path_for_plan(plan_path):
-    return pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    plan_path = pathlib.Path(plan_path).resolve()
+    return state.review_path_for_plan(plan_path, state.read_json(plan_path, {}))
 
 
 def _review_evidence(review_path):
     """Read exactly the evidence named by the review artifact.
 
     `frames` is temporal evidence; old `frame`-only artifacts remain valid.
-    Relative paths are normally workspace-relative, with review-relative paths
-    retained as a practical fallback for older artifacts.
+    Relative paths are always project-root-relative.
     """
     review = json.loads(review_path.read_text(encoding="utf-8"))
-    workspace = review_path.resolve().parent.parent
+    workspace = state.project_root(review_path)
     paths = []
     for entry in review.get("scenes") or []:
         evidence = entry.get("frames") or ([entry.get("frame")] if entry.get("frame") else [])
         for raw in evidence:
             path = pathlib.Path(str(raw).replace("\\", "/"))
-            candidates = [path] if path.is_absolute() else [workspace / path, review_path.parent / path]
-            found = next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+            found = path if path.is_absolute() else workspace / path
             paths.append(str(found))
     return paths
 
 
 def collect(frames, plan):
+    plan_path = state.project_path(state.project_root(__file__), plan) if plan else None
+    root = state.project_root(plan_path or __file__)
     paths = []
     for f in frames:
-        paths.extend(sorted(glob.glob(f)) if any(c in f for c in "*?[") else [f])
-    if plan:
-        plan_path = pathlib.Path(plan)
+        pattern = str(state.project_path(root, f))
+        paths.extend(sorted(glob.glob(pattern)) if any(c in f for c in "*?[") else [pattern])
+    if plan_path:
         review_path = review_path_for_plan(plan_path)
         if review_path.is_file():
             paths.extend(_review_evidence(review_path))
@@ -310,7 +311,7 @@ def collect(frames, plan):
             # Backward compatibility for pre-review-artifact workflows only.
             p = json.loads(plan_path.read_text(encoding="utf-8"))
             vid = str(p.get("video") or "").lstrip("Vv")
-            root = plan_path.resolve().parent / "review_frames"
+            root = state.project_root(plan_path) / "input" / "review_frames"
             for sc in p.get("scenes", []):
                 paths.extend(sorted(str(x) for x in
                                     root.glob("V%sScene%s_f*.png" % (vid, sc["id"][1:]))))
@@ -323,7 +324,7 @@ def review_brief_map(plan_path):
     plan = state.read_json(plan_path, {})
     review_path = review_path_for_plan(pathlib.Path(plan_path))
     review = state.read_json(review_path, {})
-    workspace = review_path.resolve().parent.parent
+    workspace = state.project_root(review_path)
     mapped = {}
     for entry in review.get("scenes") or []:
         evidence = entry.get("evidence") or []
@@ -359,13 +360,14 @@ def main():
                     help="truoc frame nay khong xet empty/element_tiny (phan tu con dang bay vao)")
     args = ap.parse_args()
 
-    paths = collect(args.frames, args.plan)
+    plan_path = state.project_path(state.project_root(__file__), args.plan) if args.plan else None
+    paths = collect(args.frames, plan_path)
     if not paths:
         print("khong co khung nao de kiem", file=sys.stderr)
         return 2
 
-    brief_map, plan_data, review_path = review_brief_map(args.plan)
-    root = state.project_root(pathlib.Path(args.plan) if args.plan else pathlib.Path.cwd())
+    brief_map, plan_data, review_path = review_brief_map(plan_path)
+    root = state.project_root(plan_path or __file__)
     video = plan_data.get("video") or args.video or "VUNKNOWN"
     results = {}
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
@@ -405,7 +407,7 @@ def main():
         print("LOI  %-34s %s" % (pathlib.Path(p).name, e[:120]))
 
     if args.out:
-        pathlib.Path(args.out).write_text(
+        state.project_path(root, args.out).write_text(
             json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print("\n%d new/material (%d total cached/current)/%d khung bi gan co%s%s   "

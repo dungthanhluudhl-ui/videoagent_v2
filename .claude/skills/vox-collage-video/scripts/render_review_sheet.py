@@ -126,12 +126,12 @@ def extraction_command(draft, samples, temp_pattern):
             str(temp_pattern)]
 
 
-def targeted_full_res_command(manifest, out_dir):
+def targeted_full_res_command(manifest, out_dir, entry="src/index.ts"):
     """One Remotion process for all targeted master frames, never one per frame."""
     frames = sorted({int(x["masterFrame"]) for x in manifest.get("targetedFullResolution", [])})
     if not frames:
         return []
-    return ["npx", "remotion", "render", manifest["composition"], str(out_dir),
+    return ["npx", "remotion", "render", str(entry), manifest["composition"], str(out_dir),
             "--sequence", "--frames=" + ",".join(map(str, frames)),
             "--image-format=png", "--overwrite"]
 
@@ -179,7 +179,8 @@ def stale_samples(root, video, plan_path, plan, manifest, render_params):
         source_proof = sample_source_proof(root, plan_path, plan, sample, render_params)
         sample["sourceFingerprint"] = state.digest(source_proof)
         key = sample_identity(source_proof, manifest, sample)
-        receipt_path = state.runtime_dir(root, video) / "receipts" / "review-samples" / f"{key}.json"
+        receipt_path = (state.video_paths(root, video)["receipts"] /
+                        "review-samples" / f"{key}.json")
         inputs = {"source": source_proof, "sample": sample}
         tool = {"versions": {"extraction": VERSION}}
         ok, receipt = state.receipt_current(receipt_path, "review-sample", inputs, tool, {})
@@ -188,7 +189,7 @@ def stale_samples(root, video, plan_path, plan, manifest, render_params):
 
 
 def extract_stale(root, video, draft, stale, command_only=False):
-    temp_dir = state.runtime_dir(root, video) / "review-extract-temp"
+    temp_dir = state.video_paths(root, video)["runtime"] / "review-extract-temp"
     temp_pattern = temp_dir / "frame_%04d.png"
     cmd = extraction_command(draft, [x[0] for x in stale], temp_pattern)
     if command_only:
@@ -297,12 +298,14 @@ def main():
     ap.add_argument("--full-res-scene", action="append", default=[])
     args = ap.parse_args()
 
-    plan_path = pathlib.Path(args.plan)
+    plan_path = state.project_path(state.project_root(__file__), args.plan)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
     video = plan.get("video", "V")
-    draft = pathlib.Path(args.draft) if args.draft else root / "out" / f"{video}_draft.mp4"
-    out_dir = pathlib.Path(args.out_dir) if args.out_dir else plan_path.parent / f"review_frames_{video.lower()}"
+    paths = state.video_paths(root, video)
+    draft = state.project_path(root, args.draft) if args.draft else paths["draft"]
+    out_dir = (state.project_path(root, args.out_dir) if args.out_dir
+               else paths["review_frames"])
     manifest = sample_manifest(plan, out_dir, args.per_scene, args.full_res_scene)
     manifest_path = out_dir / "sample_manifest.json"
     targeted_path = out_dir / "targeted_full_res_manifest.json"
@@ -343,7 +346,7 @@ def main():
     summary = out_dir / "scene_summary_sheet.jpg"
     build_sheet(thumbs, temporal)
     build_sheet(scene_summary_thumbs(entries), summary)
-    review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    review_path = paths["review"]
     review = complete_review_generation(
         manifest, manifest_path, review_path, temporal, summary, targeted_path,
         render_params, state.file_input(draft), args.keep_review)

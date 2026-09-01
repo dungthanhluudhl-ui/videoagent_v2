@@ -62,6 +62,7 @@ import re
 import subprocess
 import sys
 
+import pipeline_contracts as contracts
 import stage_state as state
 import review_vision
 
@@ -301,7 +302,7 @@ def guard_premature_shipped(payload, root):
         return 0
 
     failures = []
-    if data.get("shotlistApproved") is not True:
+    if not contracts.approval_contract(data)["approved"]:
         failures.append("### shot list chưa duyệt\n"
                         "Video sắp ship mà \"shotlistApproved\" chưa phải true - shot list "
                         "chưa từng được user duyệt (hoặc chốt đã bị gỡ khỏi plan).")
@@ -362,8 +363,10 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
     """Normalized logical plan slices plus files actually consumed by a gate family."""
     words = root / str(plan_data.get("wordsFile") or "")
     scenes = _plan_files(root, plan_data)
-    review = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
-    common = [SCRIPTS / script, SCRIPTS / "hook_gate.py", SCRIPTS / "stage_state.py"]
+    paths = state.video_paths(root, plan_data.get("video", "V"))
+    review = paths["review"]
+    common = [SCRIPTS / script, SCRIPTS / "hook_gate.py", SCRIPTS / "stage_state.py",
+              SCRIPTS / "pipeline_contracts.py"]
     all_scene_fields = ("id", "startSec", "endSec", "durationInFrames", "masterStartFrame",
                         "narrativeFunction", "viewerQuestion", "visualTransformation",
                         "contrastWithPrevious", "visualLanguage", "template", "backdrop",
@@ -412,7 +415,7 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
                                     scene_fields=("id", "startSec", "endSec", "durationInFrames",
                                                   "masterStartFrame", "transitionIn"))
         return [{"assemblyContract": contract}, *common, words,
-                root / "src" / f"{video}Master.jsx", root / "src" / "Root.jsx", *scenes]
+                paths["master"], paths["previs_root"], paths["entry"], *scenes]
     if script == "baseline_gate.py":
         contract = state.plan_slice(plan_data, fields=("video", "fps"),
                                     scene_fields=("id", "startSec", "endSec", "visualLanguage",
@@ -435,7 +438,7 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
             for entry in review_data.get("scenes") or []:
                 for raw in entry.get("frames") or [entry.get("frame")]:
                     if raw:
-                        paths.append(root / str(raw).replace("\\", "/"))
+                        paths.append(state.project_path(root, raw))
         except (TypeError, AttributeError):
             return paths
         return paths
@@ -467,14 +470,15 @@ def run_incremental(root, plan_path, plan_data, script, args):
     params = {"args": [str(x) for x in args]}
     video = plan_data.get("video", "V")
     key = state.digest({"script": script, "args": params})[:20]
-    receipt_path = state.runtime_dir(root, video) / "receipts" / "gates" / f"{script}-{key}.json"
+    paths = state.video_paths(root, video)
+    receipt_path = paths["gate_receipts"] / f"{script}-{key}.json"
     current, receipt = state.receipt_current(receipt_path, f"gate:{script}", inputs, tool, params)
     if current:
         meta = receipt.get("metadata") or {}
         return (int(meta.get("exitCode", 0)), str(meta.get("summary", "")), True,
                 pathlib.Path(meta.get("details")) if meta.get("details") else receipt_path)
     code, out = run(script, *args)
-    detail = state.runtime_dir(root, video) / "gate-details" / f"{script}-{key}.txt"
+    detail = paths["gate_details"] / f"{script}-{key}.txt"
     detail.parent.mkdir(parents=True, exist_ok=True)
     summary = _gate_summary(out, code != 0)
     detail.write_text(out if (code != 0 or "WARN " in out) else summary + "\n", encoding="utf-8")
@@ -517,11 +521,11 @@ def post_edit(payload, root, plan):
     # model gõ - xem nguyên tắc ANCHOR trong plan_gate.py); cái nó mua được là
     # biến "im lặng bỏ qua checkpoint" thành "phải chủ động khai man" - đúng
     # cái sàn khả thi.
-    if plan_data.get("shotlistApproved") is not True:
+    if not contracts.approval_contract(plan_data)["approved"]:
         print(f"[vox-gate] {sid}: shot list của {plan_path.name} CHƯA được user duyệt "
-              f"(\"shotlistApproved\" chưa phải true) - chưa được dựng cảnh nào.\n"
+              f"(\"shotlistApproved\" chưa phải true) - chưa được làm PREVIS cảnh nào.\n"
               f"  Thứ tự đúng: plan qua plan_gate + baseline_gate -> TRÌNH shot list "
-              f"cho user -> user đồng ý -> đặt \"shotlistApproved\": true -> mới dựng.\n"
+              f"cho user -> user đồng ý -> đặt \"shotlistApproved\": true -> mới làm PREVIS.\n"
               f"  Chỉ đặt true sau khi user THẬT SỰ duyệt, hoặc họ đã dặn từ đầu là "
               f"chạy end-to-end không cần hỏi. Tự đặt true để vượt chốt này không phải "
               f"là quên - là khai man có chủ đích.", file=sys.stderr)
@@ -584,17 +588,18 @@ def stop(root, plan):
     skip_selftest, fingerprint = selftest_is_current()
     advisories = []
     scenes = plan_data.get("scenes") or []
-    statuses = [scene.get("status") or "planned" for scene in scenes]
-    any_built = any(status != "planned" for status in statuses)
-    build_complete = bool(statuses) and all(status in ("built", "reviewed") for status in statuses)
-    review_path = pathlib.Path(str(plan_path).replace("scene_plan", "review"))
+    lifecycle = contracts.lifecycle_contract(plan_data)
+    any_previs = lifecycle["anyPrevis"]
+    previs_complete = lifecycle["previsComplete"]
+    paths = state.video_paths(root, plan_data.get("video", "V"))
+    review_path = paths["review"]
     review_exists = review_path.is_file()
     vision_current = review_vision.is_current(plan_path, plan_data)[0] if review_exists else False
 
     checks = [("plan_gate.py", [str(plan_path), "--hook"], "scene plan integrity", True)]
-    if any_built:
-        checks.append(("build_gate.py", [str(plan_path)], "built scenes vs plan", True))
-    if build_complete:
+    if any_previs:
+        checks.append(("build_gate.py", [str(plan_path)], "PREVIS scenes vs plan", True))
+    if previs_complete:
         checks += [
             ("text_gate.py", [str(plan_path), "--hook"], "rendered text implementation", True),
             ("icon_gate.py", [str(plan_path)], "icon registry/import when used", True),

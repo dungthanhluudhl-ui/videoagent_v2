@@ -15,11 +15,11 @@ import sys
 import stage_state as state
 
 HERE = pathlib.Path(__file__).resolve().parent
-VERSION = "pixel-source-v2"
+VERSION = "pixel-source-v3"
 
 
 def local_dependency_files(seeds):
-    """Follow local JS/TS imports without pulling unrelated Root registrations."""
+    """Follow local JS/TS imports from the isolated generated entry graph."""
     found, todo = set(), [pathlib.Path(p) for p in seeds]
     pattern = re.compile(r'(?:from\s+|import\s*)["\'](\.[^"\']+)["\']')
     extensions = ("", ".js", ".jsx", ".ts", ".tsx", ".json")
@@ -43,8 +43,8 @@ def local_dependency_files(seeds):
 
 
 def selected_registration(root, composition):
-    """Normalize only this composition's Root registration, not unrelated videos."""
-    path = pathlib.Path(root) / "src" / "Root.jsx"
+    """Normalize one registration from generated PrevisRoot, never production Root.jsx."""
+    path = state.video_paths(root, "V")["previs_root"]
     try:
         text = path.read_text(encoding="utf-8")
     except OSError:
@@ -144,12 +144,13 @@ def resolved_render_versions(root, source_files):
 
 def source_inputs(root, plan_path, plan):
     video = plan.get("video", "V")
-    master = root / "src" / f"{video}Master.jsx"
-    scene_seeds = [root / "src" / "scenes" / f"{video}Scene{s.get('id','S')[1:]}.jsx"
-                   for s in plan.get("scenes") or []]
-    paths = local_dependency_files([master, *scene_seeds])
+    video_paths = state.video_paths(root, video)
+    # The entry imports generated PrevisRoot, which imports exactly the selected
+    # master/scenes. Starting here proves the graph Remotion actually receives
+    # and makes production/legacy Root.jsx unreachable by construction.
+    paths = local_dependency_files([video_paths["entry"]])
     paths += referenced_public_files(root, paths)
-    paths += [root / "src" / "index.ts", root / "remotion.config.ts"]
+    paths += [root / "remotion.config.ts"]
     for scene in plan.get("scenes") or []:
         for asset in scene.get("assets") or []:
             if asset.get("src"):
@@ -164,22 +165,23 @@ def source_inputs(root, plan_path, plan):
 
 
 def render_contract(plan_path, mode="draft", output=None, scale=None, codec="h264"):
-    plan_path = pathlib.Path(plan_path)
+    plan_path = state.project_path(state.project_root(__file__), plan_path)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
     video = plan.get("video", "V")
     scale = float(scale if scale is not None else (0.5 if mode == "draft" else 1.0))
     if mode == "final" and scale != 1.0:
         raise ValueError("final render must remain full-resolution (scale=1)")
-    output = pathlib.Path(output) if output else root / "out" / f"{video}_{mode}.mp4"
+    paths = state.video_paths(root, video)
+    output = state.project_path(root, output) if output else paths[mode]
     params = {"mode": mode, "composition": f"{video}Master", "scale": scale,
               "fps": plan.get("fps", 30), "codec": codec}
     inputs = source_inputs(root, plan_path, plan)
     tool = state.tool_identity(HERE / "render_video.py", versions={"wrapper": VERSION})
-    receipt_path = state.runtime_dir(root, video) / "receipts" / f"render-{mode}.json"
+    receipt_path = paths["receipts"] / f"render-{mode}.json"
     current, receipt = state.receipt_current(receipt_path, f"render-{mode}", inputs, tool,
                                              params)
-    cmd = ["npx", "remotion", "render", f"{video}Master", str(output),
+    cmd = ["npx", "remotion", "render", "src/index.ts", f"{video}Master", str(output),
            f"--codec={codec}", f"--scale={scale}", "--overwrite"]
     return root, video, output, receipt_path, current, receipt, inputs, tool, params, cmd
 
@@ -200,14 +202,14 @@ def main():
         print(f"HARD: {exc}", file=sys.stderr)
         return 2
     root, video, output, rpath, current, receipt, inputs, tool, params, cmd = data
+    if args.command_only:
+        print(json.dumps(cmd, ensure_ascii=False))
+        return 0
     if current:
         print(state.compact_result("CLOSED", details=output, receipt=receipt))
         state.append_telemetry(root, video, {"stage": f"render-{args.mode}", "owner": "script",
                                "cache": "hit", "subprocessCount": 0, "renderMode": args.mode,
                                "renderParameters": params, "receiptId": receipt.get("receiptId")})
-        return 0
-    if args.command_only:
-        print(json.dumps(cmd, ensure_ascii=False))
         return 0
     if args.check:
         print(state.compact_result("HARD", hard=1, details=f"stale/missing: {output}"))
@@ -218,7 +220,7 @@ def main():
         proc = subprocess.run(cmd, cwd=root, capture_output=True, text=True,
                               encoding="utf-8", errors="replace", shell=(sys.platform == "win32"))
         if proc.returncode:
-            detail = state.runtime_dir(root, video) / "logs" / f"render-{args.mode}-failure.txt"
+            detail = state.video_paths(root, video)["logs"] / f"render-{args.mode}-failure.txt"
             detail.parent.mkdir(parents=True, exist_ok=True)
             detail.write_text((proc.stdout or "") + (proc.stderr or ""), encoding="utf-8")
             print(state.compact_result("HARD", hard=1, details=detail), file=sys.stderr)

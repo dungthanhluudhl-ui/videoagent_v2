@@ -4,7 +4,7 @@ plan_gate.py - the machine-checkable contract gate for a video's scene plan.
 Replaces scene_plan_check.py's CLI-string interface with a real JSON file
 (`input/scene_plan<N>.json`) that survives the whole build and can be
 re-checked at any time by any tool (or a hook). This is the single source of
-truth: plan_gate checks the plan, build_gate checks the BUILD against the
+  truth: plan_gate checks the plan, build_gate checks the PREVIS against the
 same file, and the Stop hook runs both.
 
 Why a file instead of chat text: the previous video (V10/Itaewon) shipped
@@ -86,7 +86,7 @@ each failure.
       "visualEvents": [{"frame": 0, "what": "hero rises in"},
                        {"frame": 48, "what": "punch phrase"}],
 
-      "status": "planned|built|reviewed"
+      "status": "planned|previs|reviewed"  // "built" remains a legacy PREVIS alias
     }
   ]
 }
@@ -94,10 +94,14 @@ each failure.
 
 import argparse
 import json
+import pathlib
 import re
 import sys
 import unicodedata
 from collections import Counter
+
+import pipeline_contracts as contracts
+import stage_state as state
 
 # ---------------------------------------------------------------------------
 # Vocabulary
@@ -1158,6 +1162,20 @@ def gate_timeline_continuity(scenes, rep):
         rep.ok("scenes tile the timeline with no gaps or overlaps")
 
 
+def gate_lifecycle(plan, rep):
+    """Validate canonical PLAN/PREVIS/REVIEW state and the PREVIS approval boundary."""
+    lifecycle = contracts.lifecycle_contract(plan)
+    for item in lifecycle["invalidSceneStatuses"]:
+        rep.fail(f"{item.get('scene')}: invalid status {item.get('status')!r}; expected "
+                 "planned, previs, or reviewed ('built' is accepted only as a legacy PREVIS alias)")
+    if lifecycle["anyPrevis"]:
+        approval = contracts.approval_contract(plan)
+        if not approval["approved"]:
+            rep.fail(approval["reason"])
+        elif not lifecycle["invalidSceneStatuses"]:
+            rep.ok("PREVIS lifecycle is backed by canonical shotlistApproved=true")
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -1190,19 +1208,24 @@ def main():
         ap.add_argument(f"--{key.replace('_', '-')}", type=float, default=value)
     args = ap.parse_args()
 
-    with open(args.plan, encoding="utf-8") as fh:
+    plan_path = state.project_path(state.project_root(__file__), args.plan)
+    with plan_path.open(encoding="utf-8") as fh:
         plan = json.load(fh)
     scenes = plan.get("scenes", [])
     fps = plan.get("fps", 30)
     thresholds = {k: getattr(args, k) for k in DEFAULTS}
 
+    root = state.project_root(plan_path)
     words_path = args.words or plan.get("wordsFile")
+    if words_path:
+        words_path = state.project_path(root, words_path)
     try:
         words = load_words(words_path)
     except (OSError, KeyError, json.JSONDecodeError):
         words = None
 
     rep = Report()
+    gate_lifecycle(plan, rep)
     if not scenes:
         rep.fail("plan contains no scenes")
     else:

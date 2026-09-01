@@ -59,6 +59,7 @@ import json
 import pathlib
 import sys
 
+import pipeline_contracts as contracts
 import render_review_sheet as review_evidence
 import stage_state as state
 
@@ -105,12 +106,12 @@ def measure(frame_path):
     return float(rows.mean()), longest * CANVAS_H / h
 
 
-def scene_source(plan, sid):
+def scene_source(root, plan, sid):
     """src/scenes/V10Scene13.jsx for S13, if it exists."""
     video = plan.get("video") or ""
     if not video or not sid.startswith("S"):
         return None
-    p = pathlib.Path("src/scenes") / f"{video}Scene{sid[1:]}.jsx"
+    p = state.video_paths(root, video)["scenes"] / f"{video}Scene{sid[1:]}.jsx"
     return p if p.exists() else None
 
 
@@ -128,14 +129,15 @@ def main():
                          "stale, unreadable or blank review evidence still blocks")
     args = ap.parse_args()
 
-    plan_path = pathlib.Path(args.plan)
+    plan_path = state.project_path(state.project_root(__file__), args.plan)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
     scenes = plan.get("scenes", [])
 
-    review_path = pathlib.Path(args.review) if args.review else pathlib.Path(
-        str(plan_path).replace("scene_plan", "review"))
+    review_path = (state.project_path(root, args.review) if args.review
+                   else state.review_path_for_plan(plan_path, plan))
 
-    # A video that has not been BUILT yet has nothing to look at. build_gate
+    # A video that has not entered PREVIS yet has nothing to look at. build_gate
     # already skips scenes whose status is "planned"; this gate had no notion
     # of phase at all, so it demanded a review pass the moment a plan went
     # active - which made it impossible to end a turn at the shot-list
@@ -143,9 +145,9 @@ def main():
     #
     # This is a phase check, NOT an opt-out: the requirement returns the
     # instant any scene reports a status past "planned".
-    built = [s for s in scenes if s.get("status") not in (None, "planned")]
-    if not built and not review_path.exists():
-        print(f"OK   {len(scenes)} scene(s) still at plan stage - nothing built to review yet")
+    lifecycle = contracts.lifecycle_contract(plan)
+    if not lifecycle["anyPrevis"] and not review_path.exists():
+        print(f"OK   {len(scenes)} scene(s) still at PLAN - no PREVIS to review yet")
         print("\nPASSED (0 problem(s))")
         sys.exit(0)
 
@@ -228,10 +230,10 @@ def main():
                     else:
                         problems.append(message + " (fix it, or explicitly acknowledge the debt)")
 
-            src = scene_source(plan, sid)
+            src = scene_source(root, plan, sid)
             valid_paths = []
             for evidence in evidence_frames:
-                fpath = pathlib.Path(str(evidence).replace("\\", "/"))
+                fpath = state.project_path(root, evidence)
                 if not fpath.exists():
                     problems.append(f"{sid}: frame {fpath} does not exist - temporal review "
                                     f"evidence is incomplete. Re-run render_review_sheet.py.")
@@ -260,7 +262,7 @@ def main():
 
             if args.no_measure or not frame:
                 continue
-            fpath = pathlib.Path(str(frame).replace("\\", "/"))
+            fpath = state.project_path(root, frame)
             if fpath not in valid_paths:
                 continue
 

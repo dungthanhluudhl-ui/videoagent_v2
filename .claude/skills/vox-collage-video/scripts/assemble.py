@@ -9,7 +9,8 @@ Ba thứ trước nay viết tay mỗi video, dù 100% suy ra được từ plan
                                TransitionSeries (SKILL.md bước 7) là nguồn lỗi
                                đã ghi nhận: đệm thiếu rail ĐẦU kéo mọi cảnh từ
                                S2 trở đi sớm nửa giây so với audio của chính nó.
-  3. src/Root.jsx            - khối đăng ký composition, quản lý bằng marker.
+  3. src/PrevisRoot.tsx      - root composition cô lập, sở hữu hoàn toàn bởi script.
+     src/index.ts            - chỉ đăng ký PrevisRoot, không import root production.
 
 Chạy từ GỐC dự án. Mặc định chạy cả ba bước, mỗi bước tự biết "chưa tới lúc":
 
@@ -21,8 +22,8 @@ Chạy từ GỐC dự án. Mặc định chạy cả ba bước, mỗi bước 
   có sẵn (V3-V11) được giữ nguyên - chỉ so nội dung, không đè.
 - master:   chỉ sinh khi MỌI file cảnh trong plan đã tồn tại; thiếu cảnh nào
   thì liệt kê rồi bỏ qua (chưa tới lúc KHÁC có lỗi - bài học của cutout_gate).
-- register: chèn/làm mới khối giữa hai marker ASSEMBLE:V<N> trong Root.jsx;
-  cảnh nào đã được đăng ký tay bên ngoài khối thì không đăng ký lại.
+- register: sinh lại toàn bộ PrevisRoot.tsx từ đúng plan đang chọn và chuẩn hoá
+  index.ts. Không đọc, import hay sửa src/Root.jsx.
 
 Transition: mặc định cắt thẳng. Chỉ khai "transitionIn": "fade" khi quan hệ
 giữa hai cảnh thật sự cần giữ cảm giác liên tục; "none" vẫn được chấp nhận như
@@ -40,6 +41,8 @@ import json
 import pathlib
 import re
 import sys
+
+import stage_state as state
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -335,87 +338,82 @@ def n_fades_msg(parts):
 
 # ---------------------------------------------------------------- register
 
-IMP_MARK = "// ===== ASSEMBLE:V{n} imports - khối máy sinh, đừng sửa tay ====="
-IMP_END = "// ===== /ASSEMBLE:V{n} imports ====="
-COMP_MARK = "      {{/* ===== ASSEMBLE:V{n} - khối máy sinh, đừng sửa tay ===== */}}"
-COMP_END = "      {{/* ===== /ASSEMBLE:V{n} ===== */}}"
+INDEX_TS = '''import { registerRoot } from "remotion";
+import { PrevisRoot } from "./PrevisRoot";
+
+registerRoot(PrevisRoot);
+'''
 
 
-def _splice(text, start_mark, end_mark, block, insert_before):
-    """Thay nội dung giữa 2 marker; chưa có marker thì chèn trước insert_before."""
-    if start_mark in text:
-        pre = text[:text.index(start_mark)]
-        rest = text[text.index(end_mark) + len(end_mark):]
-        if not block:
-            return pre.rstrip("\n") + "\n" + rest.lstrip("\n")
-        return pre + start_mark + "\n" + block + "\n" + end_mark + rest
-    if not block:
-        return text
-    i = text.index(insert_before)
-    return (text[:i] + start_mark + "\n" + block + "\n" + end_mark + "\n\n"
-            + text[i:])
+def previs_root_tsx(plan, n, parts, project_root=pathlib.Path(".")):
+    """Generate the complete isolated root for exactly one selected plan."""
+    project_root = pathlib.Path(project_root)
+    source_dir = project_root / "src"
+    built = [(component, duration) for _, component, duration, _transition in parts
+             if (source_dir / "scenes" / f"{component}.jsx").is_file()]
+    master_path = source_dir / f"V{n}Master.jsx"
+    has_master = master_path.is_file()
+    fps = int(plan.get("fps", 30))
+    width = int(plan.get("width", 1080))
+    height = int(plan.get("height", 1920))
+    header = (f"/** {AUTOGEN}. Source: input/scene_plan{n}.json.\n"
+              " * Isolated previs registration; production roots are intentionally not imported.\n"
+              " */\n")
+    if not built and not has_master:
+        return header + "export const PrevisRoot = () => null;\n"
+
+    remotion_names = "Composition, Folder" if built else "Composition"
+    imports = [f'import {{ {remotion_names} }} from "remotion";']
+    imports.extend(f'import {{ {component}, {duration} }} from "./scenes/{component}";'
+                   for component, duration in built)
+    if has_master:
+        imports.append(f'import {{ V{n}Master, MASTER{n}_DURATION }} from "./V{n}Master";')
+
+    body = []
+    if built:
+        body.append(f'      <Folder name="V{n}-Scenes">')
+        body.extend(
+            f'        <Composition id="{component}" component={{{component}}} '
+            f'durationInFrames={{{duration}}} fps={{{fps}}} width={{{width}}} height={{{height}}} />'
+            for component, duration in built)
+        body.append("      </Folder>")
+    if has_master:
+        body.append(
+            f'      <Composition id="V{n}Master" component={{V{n}Master}} '
+            f'durationInFrames={{MASTER{n}_DURATION}} fps={{{fps}}} '
+            f'width={{{width}}} height={{{height}}} />')
+    return (header + "\n".join(imports) + "\n\n"
+            "export const PrevisRoot = () => (\n"
+            "  <>\n" + "\n".join(body) + "\n  </>\n);\n")
 
 
-def _outside_block(text, start_mark, end_mark):
-    if start_mark not in text:
-        return text
-    return (text[:text.index(start_mark)]
-            + text[text.index(end_mark) + len(end_mark):])
-
-
-def build_register_blocks(root_text, n, parts, canvas="LUATSU_CANVAS"):
-    imp_mark, imp_end = IMP_MARK.format(n=n), IMP_END.format(n=n)
-    comp_mark, comp_end = COMP_MARK.format(n=n), COMP_END.format(n=n)
-    outside_imp = _outside_block(root_text, imp_mark, imp_end)
-    outside_comp = _outside_block(root_text, comp_mark, comp_end)
-
-    built = [(c, d) for _, c, d, _t in parts
-             if pathlib.Path(f"src/scenes/{c}.jsx").exists()]
-    imp_lines, comp_lines = [], []
-    for comp, dur in built:
-        if f'from "./scenes/{comp}"' not in outside_imp:
-            imp_lines.append(f'import {{ {comp}, {dur} }} from "./scenes/{comp}";')
-        if f'id="{comp}"' not in outside_comp:
-            comp_lines.append(
-                f'        <Composition id="{comp}" component={{{comp}}} '
-                f"durationInFrames={{{dur}}} fps={{{canvas}.fps}} "
-                f"width={{{canvas}.width}} height={{{canvas}.height}} />")
-    if comp_lines:
-        comp_lines = ([f'      <Folder name="V{n}-Scenes">'] + comp_lines + ["      </Folder>"])
-
-    master_path = pathlib.Path(f"src/V{n}Master.jsx")
-    if master_path.exists():
-        if f'from "./V{n}Master"' not in outside_imp:
-            imp_lines.append(
-                f'import {{ V{n}Master, MASTER{n}_DURATION }} from "./V{n}Master";')
-        if f'id="V{n}Master"' not in outside_comp:
-            comp_lines.append(
-                f'      <Composition id="V{n}Master" component={{V{n}Master}} '
-                f"durationInFrames={{MASTER{n}_DURATION}} fps={{{canvas}.fps}} "
-                f"width={{{canvas}.width}} height={{{canvas}.height}} />")
-    return "\n".join(imp_lines), "\n".join(comp_lines)
-
-
-def step_register(plan, n, parts, check, root_path=pathlib.Path("src/Root.jsx")):
-    if not root_path.exists():
-        print(f"register: không thấy {root_path} - chạy từ gốc dự án.")
-        return False
-    text = root_path.read_text(encoding="utf-8")
-    imp_block, comp_block = build_register_blocks(text, n, parts)
-    new = _splice(text, IMP_MARK.format(n=n), IMP_END.format(n=n), imp_block,
-                  "export const RemotionRoot")
-    new = _splice(new, COMP_MARK.format(n=n), COMP_END.format(n=n), comp_block,
-                  "    </>")
-    if new == text:
-        print("register: Root.jsx đã đúng, không có gì để thêm.")
+def step_register(plan, n, parts, check, force=False, project_root=None):
+    """Own PrevisRoot/index deterministically without reading the production root."""
+    project_root = pathlib.Path(project_root or pathlib.Path.cwd()).resolve()
+    paths = state.video_paths(project_root, f"V{n}")
+    root_path, index_path = paths["previs_root"], paths["entry"]
+    expected_root = previs_root_tsx(plan, n, parts, project_root)
+    current_root = root_path.read_text(encoding="utf-8") if root_path.is_file() else None
+    current_index = index_path.read_text(encoding="utf-8") if index_path.is_file() else None
+    if current_root == expected_root and current_index == INDEX_TS:
+        print("register: PrevisRoot.tsx và index.ts đã đúng, không có gì để thêm.")
         return True
     if check:
-        print("register: Root.jsx LỆCH - còn composition chưa đăng ký hoặc khối "
-              "marker cũ. Chạy assemble để làm mới.")
+        changed = []
+        if current_root != expected_root:
+            changed.append("src/PrevisRoot.tsx")
+        if current_index != INDEX_TS:
+            changed.append("src/index.ts")
+        print(f"register: {', '.join(changed)} LỆCH hợp đồng previs cô lập - chạy assemble.")
         return False
-    root_path.write_text(new, encoding="utf-8")
-    added = (imp_block.count("import") if imp_block else 0)
-    print(f"register: đã cập nhật {root_path} ({added} import trong khối ASSEMBLE:V{n}).")
+    if current_root is not None and AUTOGEN not in current_root and not force:
+        print("register: src/PrevisRoot.tsx không mang dấu AUTO-GENERATED; "
+              "không đè (dùng --force nếu chắc chắn).")
+        return False
+    root_path.parent.mkdir(parents=True, exist_ok=True)
+    root_path.write_text(expected_root, encoding="utf-8")
+    index_path.write_text(INDEX_TS, encoding="utf-8")
+    print(f"register: đã ghi {root_path} và chuẩn hoá {index_path} cho V{n}.")
     return True
 
 
@@ -443,7 +441,8 @@ def main():
     if args.only in (None, "master"):
         ok = step_master(plan, n, m, parts, args.check, args.force) and ok
     if args.only in (None, "register"):
-        ok = step_register(plan, n, parts, args.check) and ok
+        project_root = state.project_root(args.plan)
+        ok = step_register(plan, n, parts, args.check, args.force, project_root) and ok
     return 0 if ok else 1
 
 

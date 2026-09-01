@@ -1,5 +1,5 @@
 """
-build_gate.py - verify the BUILT scenes still match the approved scene plan.
+build_gate.py - verify the PREVIS scenes still match the approved scene plan.
 
 The defect this exists to catch, in the words of the video it was written
 after: the V10/Itaewon plan called for a hero image in S2 and S11, and the
@@ -39,6 +39,9 @@ import json
 import pathlib
 import re
 import sys
+
+import pipeline_contracts as contracts
+import stage_state as state
 
 # Attribute forms: key="str" | key={num} | key: "str" | key: num
 # The leading (?<![A-Za-z]) matters: without it, searching for `y` matched the
@@ -272,7 +275,10 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    plan = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
+    plan_path = state.project_path(state.project_root(__file__), args.plan)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
+    scenes_dir = state.project_path(root, args.scenes_dir)
     video = plan.get("video", "V")
     scenes = plan.get("scenes", [])
     if args.scene:
@@ -281,16 +287,22 @@ def main():
             print(f"no scene {args.scene!r} in {args.plan}", file=sys.stderr)
             sys.exit(2)
 
-    punch_defaults = template_punch_defaults(
-        pathlib.Path(args.scenes_dir) / "SceneTemplates.jsx")
+    punch_defaults = template_punch_defaults(scenes_dir / "SceneTemplates.jsx")
 
-    problems, checked = [], 0
+    approval = contracts.approval_contract(plan)
+    problems = [] if approval["approved"] else [approval["reason"]]
+    checked = 0
     for scene in scenes:
         sid = scene.get("id", "")
-        path = pathlib.Path(args.scenes_dir) / f"{video}Scene{sid.lstrip('S')}.jsx"
+        path = scenes_dir / f"{video}Scene{sid.lstrip('S')}.jsx"
         if not path.exists():
-            if scene.get("status") in (None, "planned"):
-                continue          # not built yet - plan_gate covers planning
+            try:
+                scene_stage = contracts.scene_status_stage(scene.get("status"))
+            except ValueError as exc:
+                problems.append(f"{sid}: {exc}")
+                continue
+            if scene_stage == "PLAN":
+                continue          # not in PREVIS yet - plan_gate covers planning
             problems.append(f"{sid}: status={scene.get('status')!r} but {path} does not exist")
             continue
         built = parse_scene_file(path, punch_defaults)
@@ -333,7 +345,7 @@ def main():
         for p in problems:
             print(f"FAIL {p}")
         if not problems:
-            print(f"OK   all {checked} built scene(s) match the approved plan")
+            print(f"OK   all {checked} PREVIS scene(s) match the approved plan")
         print(f"\n{'FAILED' if problems else 'PASSED'} "
               f"({checked} scene(s) checked, {len(problems)} problem(s))")
 
