@@ -1,5 +1,5 @@
 """
-init_video.py - từ (audio + kịch bản) ra input/words<N>_aligned.json. Bước 0+1.
+init_video.py - từ (audio + kịch bản) ra input/V<N>/words_aligned.json. Bước 0+1.
 
 Trước script này, mỗi video đều bắt đầu bằng một nắm lệnh Python gõ inline:
 kiểm môi trường, chép audio, gọi whisper, rồi ghép chữ của kịch bản với thời
@@ -13,9 +13,9 @@ danh từ riêng ("Itaewon" -> "Y Tự Quận", 1 từ thành 3), nên đếm t�
 Bốn bước, mỗi bước tự bỏ qua nếu đã có kết quả (dùng --force để làm lại):
 
   env        đủ whisper/rembg/scipy/PIL/numpy/requests chưa
-  audio      chép về public/audio<N>.mp3
-  transcribe whisper word_timestamps -> input/transcript<N>.json
-  align      kịch bản + thời gian whisper -> input/words<N>_aligned.json
+  audio      chép về public/V<N>/audio.mp3
+  transcribe whisper word_timestamps -> input/V<N>/transcript.json
+  align      kịch bản + thời gian whisper -> input/V<N>/words_aligned.json
 
 LUẬT GHÉP (tái dựng từ words10/11_aligned.json đã ship, không phải bịa ra):
 

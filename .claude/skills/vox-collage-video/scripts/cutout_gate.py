@@ -43,12 +43,8 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-# Chỉ hai vai trò này mới PHẢI là ảnh đã tách nền. `background` là ảnh toàn
-# khung của BackgroundPhoto - cắt nền nó là vô nghĩa; `document`, `map`,
-# `diagram` cũng dùng nguyên khung hình chữ nhật. Bản đầu của gate này chấm
-# tất tật và báo 12 lỗi giả chỉ vì ảnh nền không có kênh alpha - luật sai chứ
-# không phải ảnh sai, đúng kiểu hỏng đã trả giá một lần với STROKE_SLACK.
-CUTOUT_ROLES = {"hero", "support"}
+# Visual role and processing need are separate. Only an explicit/recorded cutout
+# declaration makes this conditional gate applicable.
 
 OPAQUE = 200                # alpha coi như đặc
 PRESENT = 20                # alpha coi như có mực (khớp clean_mask/crop_to_content)
@@ -78,7 +74,11 @@ def chroma_mask(rgb):
 
 
 def measure(path):
-    im = Image.open(path)
+    try:
+        im = Image.open(path)
+        im.load()
+    except (OSError, ValueError) as exc:
+        return {"error": f"không đọc được output cutout: {exc}"}
     if im.mode != "RGBA":
         return {"error": f"không phải RGBA ({im.mode}) - ảnh này chưa tách nền"}
     arr = np.asarray(im)
@@ -184,23 +184,24 @@ def main():
                          "unreadable/empty output blocks")
     args = ap.parse_args()
 
-    roles = {}
+    declared = set()
     if args.plan:
         args.plan = state.project_path(state.project_root(__file__), args.plan)
         data = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
+        root = state.project_root(args.plan)
+        manifest = state.read_json(state.video_paths(root, data.get("video", "V"))["asset_manifest"], {})
         for scene in data.get("scenes", []):
             for asset in scene.get("assets", []):
                 src = (asset.get("src") or "").replace("\\", "/").split("/")[-1]
-                if src:
-                    roles.setdefault(src, set()).add(asset.get("role"))
+                if src and state.asset_requires_cutout(asset, manifest):
+                    declared.add(src)
 
     files = []
     for p in args.paths:
         path = pathlib.Path(p)
         if path.is_dir():
             if args.plan:
-                files += sorted(path / name for name, role_set in roles.items()
-                                if role_set & CUTOUT_ROLES and (path / name).exists())
+                files += sorted(path / name for name in declared if (path / name).exists())
             else:
                 pat = f"el{args.video}_*.png" if args.video else "el*_*.png"
                 files += sorted(path.glob(pat))
@@ -226,14 +227,13 @@ def main():
 
     rows, problems, blockers, skipped = {}, [], [], []
     for f in files:
-        r = roles.get(f.name)
-        if r is not None and not (r & CUTOUT_ROLES):
-            skipped.append(f"{f.name} ({'/'.join(sorted(x or '?' for x in r))})")
+        if args.plan and f.name not in declared:
+            skipped.append(f"{f.name} (cutout not declared/recorded)")
             continue
         m = measure(f)
         # Không có plan thì không thể biết ảnh RGB là nền toàn khung (đúng) hay
         # là hero quên cắt (sai). Báo ra chứ không kết tội.
-        if r is None and "error" in m and "RGBA" in m["error"]:
+        if not args.plan and "error" in m and "RGBA" in m["error"]:
             skipped.append(f"{f.name} (không có trong plan, không phải RGBA)")
             continue
         rows[f.name] = m

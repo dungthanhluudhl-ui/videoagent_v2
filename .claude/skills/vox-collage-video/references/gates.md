@@ -17,7 +17,7 @@ quality/aesthetics are advisory.
 Conditional only when applicable:
 
 - `icon_gate.py`: source actually uses registered icon components;
-- `cutout_gate.py`: the plan actually uses hero/support cutouts.
+- `cutout_gate.py`: an asset explicitly declares or records cutout processing.
 
 `review_vision.py` is an explicit advisory review tool. Stop never invokes a
 model. There is no unconditional baseline, asset, block, or separate pixel gate.
@@ -37,7 +37,9 @@ model. There is no unconditional baseline, asset, block, or separate pixel gate.
   promoted conformance.
 - Once promoted/draft/review/final state exists, Stop requires those receipts and
   relevant downstream integrity. Stop does not create them.
-- Final also requires canonical review and the at-most-one-local-correction closure.
+- Final also requires canonical review and a current correction-decision closure.
+  Close it with `changed-scenes=[]` when review finds no correction necessary; the
+  empty decision still closes review and permits final command generation.
 
 ## Normal invocation
 

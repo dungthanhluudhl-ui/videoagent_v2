@@ -4,7 +4,7 @@
   "fps": 30,
   "audioFile": "audio14.mp3",
   "wordsFile": "input/words14_aligned.json",
-  "status": "active",
+  "status": "shipped",
   "shotlistApproved": true,
   "_howToUse": [
     "M2A stops before scene JSX: generated assets are intentionally absent until the customer returns the three manual generations.",

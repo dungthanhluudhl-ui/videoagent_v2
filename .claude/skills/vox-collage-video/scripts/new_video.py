@@ -1,5 +1,5 @@
 """
-new_video.py - scaffold `input/scene_plan<N>.json` so step 2 cannot be skipped.
+new_video.py - scaffold `input/V<N>/scene_plan.json` so step 2 cannot be skipped.
 
 The plan is the contract every later gate checks against, and `hook_gate.py`
 now refuses to let a scene file for a new video be written before its plan
@@ -12,8 +12,8 @@ purpose - `plan_gate.py` fails on placeholders, so a scaffold cannot be
 mistaken for a plan. The scaffold's only job is to get the boundaries, the
 timing and the field names right so the thinking has somewhere to land.
 
-    py -3 new_video.py 11 --words input/words11_aligned.json
-    py -3 new_video.py 11 --words input/words11_aligned.json --target-scene-sec 4.2
+    py -3 new_video.py 11 --words input/V11/words_aligned.json
+    py -3 new_video.py 11 --words input/V11/words_aligned.json --target-scene-sec 4.2
 
 Scene boundaries are seeded from the transcript's own segment breaks, then
 merged/split toward `--target-scene-sec`. They are a STARTING POINT and are
@@ -102,7 +102,7 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("number", type=int, help="video number, e.g. 11 for V11")
-    ap.add_argument("--words", default=None, help="input/words<N>_aligned.json")
+    ap.add_argument("--words", default=None, help="input/V<N>/words_aligned.json")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--target-scene-sec", type=float, default=4.0)
     ap.add_argument("--out", default=None)

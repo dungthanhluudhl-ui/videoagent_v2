@@ -108,6 +108,13 @@ Select authentic meaning-bearing assets and store them under
 - sync/accept `input/V<N>/asset_manifest.json` where applicable;
 - never let a same-name replacement inherit stale acceptance.
 
+Semantic PLAN approval freezes asset intent, not later lock implementation. Adding
+`src`, byte-lock fields, selection rationale, processing output, or implementation
+geometry/timing does not stale PLAN while role, meaning/describes, and evidence
+identity/regions remain unchanged. PREVIS approval still binds the selected bytes.
+Set `requiresCutout: true` only for assets that actually need transparent cutout
+processing; `hero` or `support` role alone does not imply a cutout.
+
 `build_gate.py` checks existence, readability, locked bytes, and actual use. A
 direct bespoke `<Img src={staticFile("V<N>/assets/doc.png")} />` is first-class;
 no named component, template, or generic renderer is mandatory.
@@ -135,8 +142,12 @@ py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>
 - `previs/frames_manifest.json` with frame roles/paths/hashes;
 - one whole-video `previs/contact_sheet.png`.
 
-Show that one contact sheet to the user. Ask for art-direction approval. Do not
-infer approval from a gate or from the existence of files. Record the human note:
+Show that one contact sheet to the user. The baseline PNGs remain immutable hash
+and conformance evidence, but the main agent does **not** open every OPEN/KEY PNG
+by default. It opens only the whole-video sheet when needed, plus individual frames
+flagged by user feedback, a deterministic gate, or cheap visual review. Ask for
+art-direction approval. Do not infer approval from a gate or from the existence of
+files. Record the human note:
 
 ```powershell
 py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py approve-previs input/V<N>/scene_plan.json --art-direction "<human note>"
@@ -178,14 +189,21 @@ py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>
 
 The temporal review is separate from PREVIS. Review the actual master for motion,
 timing, captions, transitions, evidence readability, and new temporal defects.
-Fill `input/V<N>/review.json`; run `review_gate.py`. `review_vision.py` is an
-explicit advisory tool and Stop never invokes a model.
+Cheap visual tools may triage this evidence; the main agent opens only flagged
+evidence needed to decide a correction. Fill `input/V<N>/review.json`; run
+`review_gate.py`. `review_vision.py`, `asset_vision.py`, `vision_check.py`, and
+`sheet_vision.py` remain explicit/advisory tools. Stop never invokes a model.
 
 Make **at most one local correction** to one scene when needed. Do not regenerate
-unrelated scenes. Recheck the affected evidence and close it:
+unrelated scenes. A completed temporal review always needs a correction decision:
+if no change is needed, close with an empty `changed-scenes` value; that no-change
+receipt is what permits final command generation. Recheck any affected evidence
+and close the decision:
 
 ```powershell
 py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py close-correction input/V<N>/scene_plan.json --changed-scenes Sxx --note "<local correction>"
+# No correction needed:
+py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py close-correction input/V<N>/scene_plan.json --changed-scenes "" --note "review complete; no correction needed"
 ```
 
 Then run `assemble.py --check` and render exactly one full-resolution final:

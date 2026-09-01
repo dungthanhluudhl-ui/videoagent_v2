@@ -17,6 +17,16 @@ import time
 SCHEMA = 1
 SMALL_HASH_LIMIT = 8 * 1024 * 1024
 
+ASSET_PLAN_IMPLEMENTATION_FIELDS = {
+    "src", "locked", "lockedSha256", "lockedAt", "selectionRationale",
+    "processing", "processingKind", "processingMetadata", "processingReceipt",
+    "processedFile", "processingState", "generatedPath", "generationId",
+    "lineagePath", "outputPath", "sourcePath", "requiresCutout",
+    "width", "height", "x", "y", "top", "right", "bottom", "left", "slot",
+    "crop", "fit", "scale", "rotation", "opacity", "zIndex", "style", "transform",
+    "delay", "from", "to", "visibleFor", "entranceTiming", "easing",
+}
+
 
 def canonical(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True,
@@ -275,6 +285,22 @@ def asset_path(root, video, src):
     return next((path.resolve() for path in candidates if path.is_file()), candidates[0].resolve())
 
 
+def asset_requires_cutout(asset, manifest=None):
+    """Cutout processing is explicit/recorded; visual role alone is never a signal."""
+    if asset.get("requiresCutout") is True:
+        return True
+    src = pathlib.Path(str(asset.get("src") or "")).name
+    if not src:
+        return False
+    for key, item in ((manifest or {}).get("assets") or {}).items():
+        processed = pathlib.Path(str((item.get("processedFile") or {}).get("path") or "")).name
+        source_key = str(key).replace("\\", "/").split("/")[-1]
+        recorded = item.get("processingKind") == "cutout" or bool(item.get("processingReceipt"))
+        if recorded and (processed == src or source_key == f"SOURCE:{src}"):
+            return True
+    return False
+
+
 def audio_path(root, plan):
     video = plan.get("video", "V")
     paths = video_paths(root, video)
@@ -341,7 +367,7 @@ def plan_contract(plan, plan_path):
             if key in item:
                 item[key] = [
                     {k: v for k, v in asset.items()
-                     if k not in {"delay", "from", "to", "visibleFor", "entranceTiming", "easing"}}
+                     if k not in ASSET_PLAN_IMPLEMENTATION_FIELDS}
                     for asset in item.get(key) or []
                 ]
         if isinstance(item.get("punch"), dict):
@@ -491,7 +517,8 @@ def append_telemetry(root, video, record):
     allowed = {"stage", "owner", "elapsedMs", "cache", "subprocessCount",
                "affectedItems", "output", "outputSize", "visionCalls",
                "visionTokens", "renderMode", "renderParameters", "receiptId",
-               "mainTokens"}
+               "mainTokens", "mode", "sceneCount", "requestedStateCount",
+               "renderWallMs", "contactSheetAssemblyMs", "outputIdentity"}
     safe.update({k: v for k, v in record.items() if k in allowed})
     with path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(safe, ensure_ascii=False, separators=(",", ":")) + "\n")

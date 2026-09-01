@@ -603,7 +603,8 @@ def stop(root, plan):
                                 if path.is_file())
         if re.search(r"<Icon[A-Z]\w*\b", source_text):
             checks.append(("icon_gate.py", [str(plan_path)], "icon integrity when applicable", True))
-        if any(asset.get("role") in {"hero", "support"}
+        asset_manifest = state.read_json(paths["asset_manifest"], {})
+        if any(state.asset_requires_cutout(asset, asset_manifest)
                for scene in plan_data.get("scenes") or [] for asset in scene.get("assets") or []):
             checks.append(("cutout_gate.py",
                            [str(paths["assets"]), "--video",

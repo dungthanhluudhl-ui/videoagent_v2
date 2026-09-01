@@ -424,6 +424,11 @@ def _contract(args, raw_path, out_path, do_shadow):
     return root, video, receipt_path, inputs, tool, params
 
 
+def manifest_path(root, video, supplied=None):
+    """Write canonical manifests by default; preserve an explicitly supplied legacy path."""
+    return state.project_path(root, supplied) if supplied else state.video_paths(root, video)["asset_manifest"]
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("pairs", nargs="+", help="raw1 out1 raw2 out2 ...")
@@ -473,13 +478,13 @@ if __name__ == "__main__":
             state.append_telemetry(root, video, {"stage": "cutout", "owner": "script",
                                    "cache": "hit", "subprocessCount": 0,
                                    "affectedItems": 1, "receiptId": receipt["receiptId"]})
-            manifest = args.manifest or str(pathlib.Path("input") /
-                                            f"asset_manifest{video.lstrip('Vv')}.json")
+            manifest = manifest_path(root, video, args.manifest)
             if video != "VUNKNOWN":
                 lineage_path, generation_id = state.find_generation(root, inputs["source"])
                 identity = state.digest({"source": inputs["source"], "parameters": params})
                 state.update_manifest(manifest, video, f"SOURCE:{pathlib.Path(out_path).name}",
-                                      {"source": inputs["source"], "processingReceipt": str(rpath),
+                                       {"source": inputs["source"], "processingKind": "cutout",
+                                        "processingReceipt": str(rpath),
                                        "processedFile": state.file_input(out_path),
                                        "generationId": generation_id,
                                        "lineagePath": str(lineage_path) if lineage_path else None},
@@ -507,12 +512,12 @@ if __name__ == "__main__":
                                "affectedItems": 1, "output": str(out_path),
                                "outputSize": pathlib.Path(out_path).stat().st_size,
                                "receiptId": receipt["receiptId"]})
-        manifest = args.manifest or str(pathlib.Path("input") /
-                                        f"asset_manifest{video.lstrip('Vv')}.json")
+        manifest = manifest_path(root, video, args.manifest)
         if video != "VUNKNOWN":
             identity = state.digest({"source": inputs["source"], "parameters": params})
             state.update_manifest(manifest, video, f"SOURCE:{pathlib.Path(out_path).name}",
-                                  {"source": inputs["source"], "processingReceipt": str(rpath),
+                                   {"source": inputs["source"], "processingKind": "cutout",
+                                    "processingReceipt": str(rpath),
                                    "processedFile": state.file_input(out_path),
                                    "generationId": generation_id,
                                    "lineagePath": str(lineage_path) if lineage_path else None}, identity)

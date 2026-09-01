@@ -14,7 +14,7 @@ import sys
 import stage_state as state
 
 HERE = pathlib.Path(__file__).resolve().parent
-PLAN_VERSION = "semantic-plan-approval-v2"
+PLAN_VERSION = "semantic-plan-approval-v3"
 PREVIS_VERSION = "actual-pixel-previs-approval-v2"
 CORRECTION_VERSION = "local-correction-v2"
 HANDOFF_VERSION = "stage-handoff-v2"
@@ -328,7 +328,7 @@ def previs_is_closed(plan_path):
     return current, path, receipt
 
 
-def close_correction(plan_path, note="one local correction complete", changed_scenes=()):
+def close_correction(plan_path, note="correction decision complete", changed_scenes=()):
     plan_path = resolve_plan_path(plan_path)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
@@ -392,7 +392,7 @@ def main():
     parser.add_argument("plan"); parser.add_argument("--manifest")
     parser.add_argument("--art-direction"); parser.add_argument("--check", action="store_true")
     parser = sub.add_parser("close-correction")
-    parser.add_argument("plan"); parser.add_argument("--note", default="one local correction complete")
+    parser.add_argument("plan"); parser.add_argument("--note", default="correction decision complete")
     parser.add_argument("--changed-scenes", default="")
     parser = sub.add_parser("handoff")
     parser.add_argument("plan"); parser.add_argument("--closed-stage", required=True)

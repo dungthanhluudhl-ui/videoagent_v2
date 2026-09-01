@@ -16,6 +16,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import time
 
 import stage_state as state
 import render_video
@@ -119,15 +120,19 @@ def render_previs(plan_path, plan, paths, command_only=False, manifest_only=Fals
     if command_only:
         print(json.dumps(commands, ensure_ascii=False))
         return 0
+    render_start = time.perf_counter()
+    subprocess_count = 0
     if not manifest_only:
         for item, command in zip(requests, commands):
             pathlib.Path(item["path"]).parent.mkdir(parents=True, exist_ok=True)
             proc = subprocess.run(command, cwd=root, capture_output=True, text=True,
                                   encoding="utf-8", errors="replace",
                                   shell=(sys.platform == "win32"))
+            subprocess_count += 1
             if proc.returncode:
                 raise ValueError(f"PREVIS still failed for {item['scene']}/{item['role']}: "
                                  f"{(proc.stderr or proc.stdout)[-800:]}")
+    render_wall_ms = round((time.perf_counter() - render_start) * 1000, 2)
     frames = []
     for item in requests:
         proof = state.file_input(item["path"])
@@ -142,15 +147,30 @@ def render_previs(plan_path, plan, paths, command_only=False, manifest_only=Fals
     manifest = {"schema": 1, "version": PREVIS_VERSION, "video": plan.get("video"),
                 "source": "actual production-compatible scene JSX", "frames": frames}
     changed = []
+    sheet_wall_ms = 0.0
     if not promoted and not manifest_only:
         thumbs = [(f"{item['scene']} {item['role']} @f{item['localFrame']}", pathlib.Path(item["path"]))
                   for item in requests]
+        sheet_start = time.perf_counter()
         build_sheet(thumbs, paths["contact_sheet"], max_cols=4)
+        sheet_wall_ms = round((time.perf_counter() - sheet_start) * 1000, 2)
         manifest["contactSheet"] = str(paths["contact_sheet"])
         manifest["contactSheetSha256"] = state.hash_file(paths["contact_sheet"])
         changed.append(paths["contact_sheet"])
     state.write_json(manifest_path, manifest)
     changed.append(manifest_path)
+    if not command_only:
+        output_path = paths["contact_sheet"] if not promoted and not manifest_only else manifest_path
+        state.append_telemetry(root, plan.get("video", "V"), {
+            "stage": "previs-capture", "owner": "script",
+            "mode": "promoted-previs" if promoted else "baseline-previs",
+            "sceneCount": len({item["scene"] for item in requests}),
+            "requestedStateCount": len(requests), "subprocessCount": subprocess_count,
+            "renderWallMs": render_wall_ms, "contactSheetAssemblyMs": sheet_wall_ms,
+            "cache": "manifest-only" if manifest_only else "miss",
+            "affectedItems": len(requests), "output": str(output_path),
+            "outputIdentity": state.file_input(output_path),
+        })
     print(state.compact_result("CLOSED" if not manifest_only else "OPEN",
                                changed=changed, details=manifest_path,
                                receipt=state.digest(manifest)))
@@ -257,23 +277,22 @@ def sample_source_proof(root, plan_path, plan, sample, render_params):
     index = next(i for i, scene in enumerate(scenes) if scene.get("id") == sample["scene"])
     relevant = scenes[max(0, index - 1):min(len(scenes), index + 2)]
     video = plan.get("video", "V")
+    paths = state.video_paths(root, video)
     scene_files = [state.scene_source(root, video, s.get("id")) for s in relevant]
     files = render_video.local_dependency_files(scene_files)
-    files += [state.video_paths(root, video)["master"], root / "remotion.config.ts",
-              root / "package.json"]
-    files += [state.video_paths(root, video)["captions"],
-              root / "src" / "scenes" / f"shared{suffix}.jsx"]
+    files += [paths["master"], paths["captions"], paths["shared"],
+              root / "remotion.config.ts", root / "package.json"]
     for scene in relevant:
         for asset in scene.get("assets") or []:
             if asset.get("src"):
-                files.append(root / "public" / asset["src"])
+                files.append(state.asset_path(root, video, asset["src"]))
     local_contract = state.plan_slice(
         {"scenes": relevant}, scene_fields=("id", "startSec", "endSec", "durationInFrames",
                                              "masterStartFrame", "transitionIn", "assets"))["scenes"]
     return {"localScenes": local_contract,
             "files": [state.file_input(path) for path in files],
             "rootRegistration": render_video.selected_registration(root, f"{video}Master"),
-            "alignedWords": state.json_input(root / str(plan.get("wordsFile") or "")),
+            "alignedWords": state.json_input(state.words_path(root, plan)),
             "renderParameters": render_params,
             "mapping": {"masterFrame": sample["masterFrame"], "fps": plan.get("fps", 30)}}
 
