@@ -405,6 +405,9 @@ def _pkg_version(name):
 def _video_id(args, output):
     if args.video:
         return str(args.video) if str(args.video).startswith("V") else f"V{args.video}"
+    m = re.search(r"(?:^|[\\/])public[\\/]V(\d+)(?:[\\/]|$)", str(output), re.I)
+    if m:
+        return f"V{m.group(1)}"
     m = re.search(r"(?:el|anle)(\d+)", pathlib.Path(output).name, re.I)
     return f"V{m.group(1)}" if m else "VUNKNOWN"
 
@@ -451,7 +454,7 @@ if __name__ == "__main__":
                              "Use the slot's render width: an asset smaller than its slot "
                              "gets upscaled and reads soft.")
     parser.add_argument("--video", default=None,
-                        help="video id for receipts/manifest (otherwise inferred from output filename)")
+                        help="video id for receipts/manifest (otherwise inferred from output path or filename)")
     parser.add_argument("--manifest", default=None,
                         help="optional per-video asset manifest to update")
     args = parser.parse_args()

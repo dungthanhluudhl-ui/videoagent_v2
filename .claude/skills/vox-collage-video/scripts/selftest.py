@@ -3,6 +3,7 @@
 import argparse
 import copy
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -238,17 +239,58 @@ def checks(tmp):
     results.append(("PREVIS authoring works before human PREVIS approval",
                     checked == 1 and not source_problems))
 
-    # Canonical cutout manifest selection never invents input/asset_manifest99.json.
+    # Canonical cutout inference drives receipt, telemetry, and manifest paths.
     import process_cutout
-    canonical_manifest = process_cutout.manifest_path(tmp, "V99")
+    cutout_args = argparse.Namespace(video=None, color=False, shadow_color="ff7a1a",
+                                     bg_mode="auto", model="isnet-general-use", fit=None,
+                                     min_content_px=0)
+    raw_cutout = tmp / "raw-cutout.png"; raw_cutout.write_bytes(b"raw-cutout")
+    canonical_output = paths["assets"] / "hero.png"
+    previous_cwd = pathlib.Path.cwd()
+    os.chdir(tmp)
+    try:
+        root, inferred_video, cutout_receipt, inputs, tool, params = process_cutout._contract(
+            cutout_args, raw_cutout, canonical_output, False)
+        arbitrary_video = process_cutout._contract(
+            cutout_args, raw_cutout, paths["assets"] / "document-final.png", False)[1]
+        explicit_args = copy.copy(cutout_args); explicit_args.video = 42
+        explicit_video = process_cutout._contract(
+            explicit_args, raw_cutout, canonical_output, False)[1]
+        legacy_video = process_cutout._contract(
+            cutout_args, raw_cutout, tmp / "legacy" / "anle18_example.png", False)[1]
+        unknown_video = process_cutout._contract(
+            cutout_args, raw_cutout, tmp / "other" / "hero.png", False)[1]
+        state.make_receipt(cutout_receipt, "cutout", inputs, tool, params, outputs=())
+        cutout_telemetry_path = state.append_telemetry(
+            root, inferred_video, {"stage": "cutout", "fixture": True})
+        cutout_telemetry = json.loads(cutout_telemetry_path.read_text(encoding="utf-8"))
+        cutout_telemetry_path.unlink()
+        canonical_manifest = process_cutout.manifest_path(root, inferred_video)
+        state.update_manifest(canonical_manifest, inferred_video, "SOURCE:hero.png",
+                              {"processingKind": "cutout"})
+    finally:
+        os.chdir(previous_cwd)
     explicit_legacy = process_cutout.manifest_path(tmp, "V99", "input/asset_manifest99.json")
-    state.update_manifest(canonical_manifest, "V99", "SOURCE:fixture.png",
-                          {"processingKind": "cutout"})
-    results.append(("process_cutout defaults to canonical V99 asset manifest",
-                    canonical_manifest == paths["asset_manifest"] and canonical_manifest.is_file()))
-    results.append(("canonical cutout manifest update creates no legacy manifest",
-                    not (tmp / "input/asset_manifest99.json").exists()
+    results.append(("process_cutout infers V99 from canonical output path",
+                    inferred_video == "V99"))
+    results.append(("process_cutout infers canonical video with arbitrary filename",
+                    arbitrary_video == "V99"))
+    results.append(("process_cutout explicit video overrides canonical output path",
+                    explicit_video == "V42"))
+    results.append(("process_cutout preserves legacy filename inference",
+                    legacy_video == "V18"))
+    results.append(("process_cutout keeps unknown fallback for noncanonical output",
+                    unknown_video == "VUNKNOWN"))
+    results.append(("inferred cutout defaults to canonical V99 asset manifest",
+                    canonical_manifest == paths["asset_manifest"] and canonical_manifest.is_file()
+                    and not (tmp / "input/asset_manifest99.json").exists()
                     and explicit_legacy == tmp / "input/asset_manifest99.json"))
+    results.append(("inferred cutout creates no VUNKNOWN runtime target",
+                    cutout_receipt.parent.parent.parent == paths["runtime"]
+                    and cutout_telemetry_path == paths["economics"]
+                    and cutout_telemetry.get("video") == "V99"
+                    and not (tmp / "input/.videoagent/VUNKNOWN").exists()
+                    and not (tmp / "input/VUNKNOWN").exists()))
 
     # Cutout applicability: role is not processing; explicit/recorded declaration is.
     photo = paths["assets"] / "hero-photo.png"
