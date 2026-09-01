@@ -28,6 +28,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
+import stage_state as state
+
 
 SKELETON_SCENE = {
     "id": "",
@@ -109,13 +111,15 @@ def main():
     args = ap.parse_args()
 
     n = args.number
-    out = pathlib.Path(args.out or f"input/scene_plan{n}.json")
+    root = state.project_root(__file__)
+    paths = state.video_paths(root, f"V{n}")
+    out = state.project_path(root, args.out) if args.out else paths["plan"]
     if out.exists() and not args.force:
         print(f"new_video: {out} already exists - refusing to overwrite. "
               f"Pass --force only if you really mean to discard it.", file=sys.stderr)
         return 1
 
-    words_path = args.words or f"input/words{n}_aligned.json"
+    words_path = state.project_path(root, args.words) if args.words else paths["words"]
     try:
         words = json.loads(pathlib.Path(words_path).read_text(encoding="utf-8"))["words"]
     except (OSError, KeyError, json.JSONDecodeError):
@@ -137,22 +141,22 @@ def main():
     plan = {
         "video": f"V{n}",
         "fps": args.fps,
-        "wordsFile": words_path,
+        "wordsFile": str(words_path.relative_to(root)).replace("\\", "/"),
+        "audioFile": f"V{n}/audio.mp3",
         "status": "active",
         # Chốt duyệt: hook chặn MỌI file cảnh của video này khi cờ chưa true.
         # Chỉ đặt true sau khi user thật sự duyệt shot list (hoặc đã dặn chạy
         # end-to-end từ đầu).
         "shotlistApproved": False,
         "_howToUse": [
-            "Mọi trường biên tập bắt buộc còn rỗng đều PHẢI điền; template/block là tùy chọn.",
-            "Điền theo thứ tự 2a -> 2b-0 -> 2b trong SKILL.md. Nghĩa trước, component sau.",
+            "Mọi trường biên tập bắt buộc còn rỗng đều PHẢI điền; bespoke JSX là mặc định.",
+            "Điền semantic intent trước, khóa asset, rồi viết PREVIS bằng production source thật.",
             "startSec/endSec chỉ là điểm khởi đầu lấy từ segment của Whisper. "
             "Phải dời lại theo comprehensionLoad: cảnh người xem phải ĐỌC cần >=4s "
             "và >=1.6s mỗi nhịp; cảnh chỉ để NHÌN thì không.",
-            "Chạy plan_gate.py, rồi baseline_gate.py check, rồi đưa shot list cho user duyệt "
-            "TRƯỚC khi source bất kỳ ảnh nào. User duyệt xong mới đặt "
-            "shotlistApproved=true - hook chặn mọi file cảnh khi cờ còn false.",
-            "Đặt status='shipped' khi pipeline/build và review artifact đã hoàn tất để hook "
+            "Chạy plan_gate.py rồi đưa semantic plan cho user duyệt. Sau shotlistApproved=true, "
+            "khóa asset, viết PREVIS source, render OPEN/KEY contact sheet và xin approve-previs.",
+            "Đặt status='shipped' khi PREVIS, draft review và final artifact đã hoàn tất để hook "
             "im lặng; trạng thái này tự nó không có nghĩa user đã duyệt chất lượng sản phẩm.",
             "Ảnh/tài liệu/hình ảnh thật là lựa chọn đầu tiên. Diagram và icon chỉ dùng khi "
             "chúng giải thích quan hệ, quá trình, thời gian, số lượng, địa lý hoặc cấu trúc "
@@ -162,7 +166,14 @@ def main():
         ],
         "scenes": scenes,
     }
-    out.parent.mkdir(parents=True, exist_ok=True)
+    for directory in (paths["input"], paths["previs_frames"], paths["assets"],
+                      paths["scenes"], paths["output"] / "draft", paths["review_dir"],
+                      paths["output"] / "final", paths["receipts"], paths["cache"],
+                      paths["logs"]):
+        directory.mkdir(parents=True, exist_ok=True)
+    if not paths["asset_manifest"].exists():
+        state.write_json(paths["asset_manifest"], {"schema": 1, "video": f"V{n}", "assets": {}})
+    paths["economics"].touch(exist_ok=True)
     out.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
 
     total = spans[-1][1] - spans[0][0] if spans else 0

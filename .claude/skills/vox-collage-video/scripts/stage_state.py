@@ -161,20 +161,43 @@ def video_paths(root, video):
     """
     root = pathlib.Path(root).resolve()
     video = normalize_video(video)
-    suffix = video[1:]
-    input_dir = root / "input"
-    runtime = input_dir / ".videoagent" / video
+    input_root = root / "input"
+    input_dir = input_root / video
+    public_dir = root / "public" / video
+    source_dir = root / "src" / "videos" / video
+    output_dir = root / "out" / video
+    previs_dir = input_dir / "previs"
+    review_dir = output_dir / "review"
+    runtime = input_root / ".videoagent" / video
     receipts = runtime / "receipts"
     return {
         "root": root,
         "input": input_dir,
-        "output": root / "out",
-        "source": root / "src",
-        "scenes": root / "src" / "scenes",
-        "plan": input_dir / f"scene_plan{suffix}.json",
-        "review": input_dir / f"review{suffix}.json",
-        "review_frames": input_dir / f"review_frames_{video.lower()}",
-        "asset_manifest": input_dir / f"asset_manifest{suffix}.json",
+        "plan": input_dir / "scene_plan.json",
+        "transcript": input_dir / "transcript.json",
+        "words": input_dir / "words_aligned.json",
+        "asset_manifest": input_dir / "asset_manifest.json",
+        "review": input_dir / "review.json",
+        "previs": previs_dir,
+        "previs_frames": previs_dir / "frames",
+        "previs_manifest": previs_dir / "frames_manifest.json",
+        "promoted_previs_frames": previs_dir / "promoted_frames",
+        "promoted_previs_manifest": previs_dir / "promoted_frames_manifest.json",
+        "contact_sheet": previs_dir / "contact_sheet.png",
+        "public": public_dir,
+        "audio": public_dir / "audio.mp3",
+        "assets": public_dir / "assets",
+        "output": output_dir,
+        "review_dir": review_dir,
+        "review_frames": review_dir / "frames",
+        "temporal_sheet": review_dir / "contact_sheet.jpg",
+        "scene_summary_sheet": review_dir / "scene_summary_sheet.jpg",
+        "targeted_review": review_dir / "targeted_full_res",
+        "source": source_dir,
+        "scenes": source_dir / "scenes",
+        "master": source_dir / "Master.jsx",
+        "captions": source_dir / "captions.js",
+        "shared": source_dir / "shared.jsx",
         "runtime": runtime,
         "receipts": receipts,
         "gate_receipts": receipts / "gates",
@@ -182,12 +205,91 @@ def video_paths(root, video):
         "cache": runtime / "cache",
         "logs": runtime / "logs",
         "economics": runtime / "economics.jsonl",
-        "master": root / "src" / f"{video}Master.jsx",
         "previs_root": root / "src" / "PrevisRoot.tsx",
         "entry": root / "src" / "index.ts",
-        "draft": root / "out" / f"{video}_draft.mp4",
-        "final": root / "out" / f"{video}_final.mp4",
+        "draft": output_dir / "draft" / "master.mp4",
+        "final": output_dir / "final" / "master.mp4",
     }
+
+
+def legacy_video_paths(root, video):
+    """Read-only compatibility paths for shipped fixtures; never write new work here."""
+    root = pathlib.Path(root).resolve()
+    video = normalize_video(video)
+    suffix = video[1:]
+    return {
+        "plan": root / "input" / f"scene_plan{suffix}.json",
+        "transcript": root / "input" / f"transcript{suffix}.json",
+        "words": root / "input" / f"words{suffix}_aligned.json",
+        "asset_manifest": root / "input" / f"asset_manifest{suffix}.json",
+        "review": root / "input" / f"review{suffix}.json",
+        "public": root / "public",
+        "assets": root / "public",
+        "audio": root / "public" / f"audio{suffix}.mp3",
+        "source": root / "src",
+        "scenes": root / "src" / "scenes",
+        "master": root / "src" / f"{video}Master.jsx",
+    }
+
+
+def existing_or_canonical(root, video, key):
+    """Prefer canonical layout, with legacy reads only for historical fixtures."""
+    canonical_path = video_paths(root, video)[key]
+    if canonical_path.exists():
+        return canonical_path
+    return legacy_video_paths(root, video).get(key, canonical_path)
+
+
+def scene_stem(scene_id):
+    value = str(scene_id or "S").strip()
+    suffix = value[1:] if value[:1].upper() == "S" else value
+    return f"S{int(suffix):02d}" if suffix.isdigit() else f"S{suffix}"
+
+
+def scene_source(root, video, scene_id, compatibility=True):
+    paths = video_paths(root, video)
+    canonical_path = paths["scenes"] / f"{scene_stem(scene_id)}.jsx"
+    if canonical_path.is_file() or not compatibility:
+        return canonical_path
+    suffix = str(scene_id or "S").lstrip("Ss")
+    return legacy_video_paths(root, video)["scenes"] / f"{normalize_video(video)}Scene{suffix}.jsx"
+
+
+def words_path(root, plan):
+    video = plan.get("video", "V")
+    canonical_path = video_paths(root, video)["words"]
+    raw = plan.get("wordsFile")
+    if raw:
+        supplied = project_path(root, raw)
+        if supplied.is_file():
+            return supplied
+    return canonical_path if canonical_path.exists() else existing_or_canonical(root, video, "words")
+
+
+def asset_path(root, video, src):
+    """Meaning-bearing assets live in public/V<N>/assets; legacy reads remain possible."""
+    raw = pathlib.Path(str(src or "").replace("\\", "/"))
+    paths = video_paths(root, video)
+    candidates = [paths["assets"] / raw.name, paths["public"] / raw,
+                  pathlib.Path(root) / "public" / raw]
+    return next((path.resolve() for path in candidates if path.is_file()), candidates[0].resolve())
+
+
+def audio_path(root, plan):
+    video = plan.get("video", "V")
+    paths = video_paths(root, video)
+    raw = plan.get("audioFile")
+    if raw:
+        candidates = [paths["public"] / pathlib.Path(str(raw)).name,
+                      pathlib.Path(root) / "public" / str(raw)]
+        found = next((path for path in candidates if path.is_file()), None)
+        if found:
+            return found.resolve()
+    return paths["audio"]
+
+
+def static_asset_name(video, src):
+    return f"{normalize_video(video)}/assets/{pathlib.Path(str(src)).name}"
 
 
 def project_path(root, path):
@@ -219,16 +321,36 @@ def cache_put(root, video, family, key, result, metadata=None):
 
 
 def plan_contract(plan, plan_path):
-    """Editorial true inputs; workflow/review state changes do not reopen a plan."""
-    ignored_top = {"status", "shotlistApproved", "_howToUse"}
-    ignored_scene = {"status"}
+    """Semantic editorial inputs; implementation timing and workflow state are excluded."""
+    ignored_top = {"status", "shotlistApproved", "_howToUse", "planReceiptId"}
+    ignored_scene = {
+        "status", "startSec", "endSec", "durationInFrames", "masterStartFrame",
+        "transitionIn", "transitionOut", "transitionTiming", "entranceTiming", "easing",
+    }
     clean = {k: v for k, v in plan.items() if k not in ignored_top and k != "scenes"}
-    clean["scenes"] = [
-        {k: v for k, v in scene.items() if k not in ignored_scene}
-        for scene in plan.get("scenes") or []
-    ]
+    clean_scenes = []
+    for scene in plan.get("scenes") or []:
+        item = {k: v for k, v in scene.items() if k not in ignored_scene}
+        if "visualEvents" in item:
+            item["visualEvents"] = [
+                {k: v for k, v in event.items()
+                 if k not in {"frame", "from", "to", "durationInFrames", "easing"}}
+                for event in item.get("visualEvents") or []
+            ]
+        for key in ("assets",):
+            if key in item:
+                item[key] = [
+                    {k: v for k, v in asset.items()
+                     if k not in {"delay", "from", "to", "visibleFor", "entranceTiming", "easing"}}
+                    for asset in item.get(key) or []
+                ]
+        if isinstance(item.get("punch"), dict):
+            item["punch"] = {k: v for k, v in item["punch"].items()
+                             if k not in {"from", "to", "visibleFor", "easing"}}
+        clean_scenes.append(item)
+    clean["scenes"] = clean_scenes
     root = project_root(plan_path)
-    words = root / str(plan.get("wordsFile") or "")
+    words = words_path(root, plan)
     sources = []
     raw_sources = plan.get("sourceAuthority") or plan.get("sourceAuthorities") or []
     if isinstance(raw_sources, str):

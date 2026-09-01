@@ -20,17 +20,21 @@ review and `sheet_vision.py`, not inferred from implementation labels.
 
 ## The languages
 
+These are treatment vocabulary, not a component menu. Realize the chosen
+treatment directly in `src/videos/V<N>/scenes/Sxx.jsx`. PREVIS approval judges
+actual OPEN/KEY pixels from that production source; the same source is promoted.
+
 | If the narration is about… | visualLanguage | Build it with |
 |---|---|---|
-| A specific object or person | `cutout` | `EditorialHero` / `EditorialSupport` (`shared.jsx`); settled by default |
+| A specific object or person | `cutout` | Bespoke composition; settled by default |
 | A place, a location, a district | `map` | `MapGraphic` (`MapGraphic.jsx`) — real MapLibre map |
 | A relationship, legal structure, layout, size, distance, density | `diagram` | Use only when it explains more clearly than imagery; `DiagramCanvas` + relevant primitives |
 | A sequence of events in time | `timeline` | `Timeline` (`visualLanguage.jsx`) |
-| Cause → effect, a mechanism | `flow` | `FlowArrow`, `FlowDiagramScene` |
+| Cause → effect, a mechanism | `flow` | Bespoke relation plus a meaningful directional primitive |
 | A number, a trend | `data` | `StatCounter`, `AnimatedLineChart` |
 | Atmosphere, setting, a moment | `background-photo` | `BackgroundPhoto` — full-bleed |
-| Two things set against each other | `split` | `SplitCompareScene` |
-| Someone's words | `quote` | `SpeechBubbleQuote`, `QuoteBubbleScene` |
+| Two things set against each other | `split` | Bespoke spatial comparison |
+| Someone's words | `quote` | Source-faithful bespoke quote treatment |
 | A document, a record, an archive | `document` | `DocumentEvidence` (`visualLanguage.jsx`) — authentic raster source, timed crop/focus/highlight regions |
 | A detail inside a wider image | `annotated` | `AnnotatedPhoto` — leader lines + labels |
 | A screen, a broadcast, a phone | `mockup` | `DeviceMockup` |
@@ -77,10 +81,10 @@ connectors.
 
 ## Choosing honestly
 
-The failure this is meant to prevent isn't "picked the wrong template" — it's
-picking the template first and reverse-engineering a justification. Write
-`visualTransformation` (the relationship the viewer must SEE form) before
-`visualLanguage`, and `visualLanguage` before `template`. If a scene's
+The failure this is meant to prevent is picking a layout first and
+reverse-engineering a justification. Write `visualTransformation` (the
+relationship the viewer must SEE form) before `visualLanguage`, then compose
+bespoke production source. If a scene's
 `visualTransformation` is empty, the scene will be background + text no matter
 which component gets used.
 

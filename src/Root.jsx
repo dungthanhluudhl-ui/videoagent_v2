@@ -135,22 +135,6 @@ import {
 import {
   VLDemoChain, VLDemoDots, VLDemoForce, VLDemoShops, VLDEMO2_DURATION,
 } from "./scenes/VLDemo2";
-// Nghiệm thu kho block (bước 2). Ngoài plan của mọi video - probe, không phải
-// cảnh - nên đăng ký tay ở đây là đúng chỗ theo SKILL.md §9.
-import {
-  ProbeS1, ProbeS3, ProbeS6, ProbeS21, ProbeS26,
-  PROBE_S1_DURATION, PROBE_S3_DURATION, PROBE_S6_DURATION,
-  PROBE_S21_DURATION, PROBE_S26_DURATION,
-  ProbeS2, ProbeS12, ProbeS16, ProbeS8, ProbeS25, ProbeS22,
-  PROBE_S2_DURATION, PROBE_S12_DURATION, PROBE_S16_DURATION,
-  PROBE_S8_DURATION, PROBE_S25_DURATION, PROBE_S22_DURATION,
-  ProbeS13, ProbeS23, ProbeS14,
-  PROBE_S13_DURATION, PROBE_S23_DURATION, PROBE_S14_DURATION,
-} from "./blocks/BlockProbe";
-// Đo chuyển giao giữa hai video: block trích từ V10 dựng nội dung của V13.
-import {
-  V13S1Block, V13S4Block, V13S1_BLOCK_DURATION, V13S4_BLOCK_DURATION,
-} from "./blocks/V13Rebuild";
 // ===== ASSEMBLE:V12 imports - khối máy sinh, đừng sửa tay =====
 import { V12Master, MASTER12_DURATION } from "./V12Master";
 // ===== /ASSEMBLE:V12 imports =====
@@ -357,22 +341,6 @@ export const RemotionRoot = () => {
         <Composition id="VLDemoDots" component={VLDemoDots} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="VLDemoChain" component={VLDemoChain} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
         <Composition id="VLDemoShops" component={VLDemoShops} durationInFrames={VLDEMO2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS1" component={ProbeS1} durationInFrames={PROBE_S1_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS3" component={ProbeS3} durationInFrames={PROBE_S3_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS6" component={ProbeS6} durationInFrames={PROBE_S6_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS21" component={ProbeS21} durationInFrames={PROBE_S21_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS26" component={ProbeS26} durationInFrames={PROBE_S26_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS2" component={ProbeS2} durationInFrames={PROBE_S2_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS12" component={ProbeS12} durationInFrames={PROBE_S12_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS16" component={ProbeS16} durationInFrames={PROBE_S16_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS8" component={ProbeS8} durationInFrames={PROBE_S8_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS25" component={ProbeS25} durationInFrames={PROBE_S25_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS22" component={ProbeS22} durationInFrames={PROBE_S22_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS13" component={ProbeS13} durationInFrames={PROBE_S13_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS23" component={ProbeS23} durationInFrames={PROBE_S23_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="ProbeS14" component={ProbeS14} durationInFrames={PROBE_S14_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="V13S1Block" component={V13S1Block} durationInFrames={V13S1_BLOCK_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
-        <Composition id="V13S4Block" component={V13S4Block} durationInFrames={V13S4_BLOCK_DURATION} fps={LUATSU_CANVAS.fps} width={LUATSU_CANVAS.width} height={LUATSU_CANVAS.height} />
       </Folder>
 
       <Folder name="V12-Coldstart-Test-Scenes">

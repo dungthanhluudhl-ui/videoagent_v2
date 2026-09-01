@@ -24,8 +24,8 @@ size against a body, a force meeting a wall, a count reaching a number, a chain
 that exists and then fails.
 
 If the answer is "there isn't one, it's just mood", say so honestly and make it
-a `background-photo` scene — but keep those under ~23% of the video and never
-let them cluster at the end. See `baseline.json`.
+a `background-photo` scene. Judge repetition from the whole-video PREVIS contact
+sheet and actual draft; do not impose a medium quota from one historical video.
 
 ---
 

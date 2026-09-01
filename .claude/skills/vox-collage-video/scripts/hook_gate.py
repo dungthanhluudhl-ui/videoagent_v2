@@ -63,12 +63,13 @@ import subprocess
 import sys
 
 import pipeline_contracts as contracts
+import build_gate
 import stage_state as state
 import review_vision
 
 SCRIPTS = pathlib.Path(__file__).resolve().parent
-SCENE_FILE_HINT = "src/scenes/"
-SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
+SCENE_FILE_HINT = "src/videos/"
+SCENE_FILE_RE = re.compile(r"src/videos/V(\d+)/scenes/S\w+\.jsx$")
 
 # Every gate the Stop hook must run. A MISSING one used to be skipped with a
 # quiet `continue` - so deleting or renaming a gate file disabled it and
@@ -76,10 +77,9 @@ SCENE_FILE_RE = re.compile(r"V(\d+)Scene\w*\.jsx$")
 # returned 0 on a video with no review at all. Fail-open protects against a
 # gate that CRASHES (a bug in the gate should not brick the repo); it must not
 # protect against a gate that has VANISHED, which is a broken install.
-REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "review_gate.py",
-                  "baseline_gate.py", "text_gate.py", "icon_gate.py",
-                  "cutout_gate.py", "asset_gate.py", "block_gate.py",
-                  "pixel_gate.py", "assemble.py", "review_vision.py", "selftest.py")
+REQUIRED_GATES = ("plan_gate.py", "build_gate.py", "text_gate.py",
+                  "assemble.py", "review_gate.py", "selftest.py")
+CONDITIONAL_GATES = ("icon_gate.py", "cutout_gate.py")
 
 
 IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp")
@@ -186,7 +186,9 @@ def find_active_plan(root):
     to catch. Report it and block.
     """
     plans, broken = [], []
-    for path in sorted((root / "input").glob("scene_plan*.json")):
+    candidates = [*(root / "input").glob("V*/scene_plan.json"),
+                  *(root / "input").glob("scene_plan*.json")]
+    for path in sorted(candidates):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
@@ -223,8 +225,11 @@ def find_active_plan(root):
 def planned_video_numbers(root):
     """{10, 11, ...} - every video that has a plan file, active or not."""
     nums = set()
-    for path in (root / "input").glob("scene_plan*.json"):
-        m = re.search(r"scene_plan(\d+)\.json$", path.name)
+    candidates = [*(root / "input").glob("V*/scene_plan.json"),
+                  *(root / "input").glob("scene_plan*.json")]
+    for path in candidates:
+        m = re.search(r"(?:[/\\]V|scene_plan)(\d+)(?:[/\\]scene_plan)?\.json$",
+                      str(path).replace("\\", "/"))
         if m:
             nums.add(int(m.group(1)))
     return nums
@@ -241,7 +246,7 @@ def guard_planless_scene(payload, root):
     make impossible, reachable again simply by doing things in the wrong order.
 
     Rule: a scene file for a video NEWER than every planned video must not be
-    written until that video has `input/scene_plan<N>.json`. Older videos
+    written until that video has `input/V<N>/scene_plan.json`. Older videos
     (V3-V9 here) predate the convention and are deliberately left alone -
     blocking edits to already-shipped work would be a bug, not enforcement.
     """
@@ -260,13 +265,12 @@ def guard_planless_scene(payload, root):
 
     print(
         f"[vox-gate] {pathlib.Path(edited_norm).name} belongs to video V{video}, which has "
-        f"no plan file. `input/scene_plan{video}.json` must exist BEFORE any scene of it "
+        f"no plan file. `input/V{video}/scene_plan.json` must exist BEFORE any scene of it "
         f"is written.\n"
         f"Scaffold it with:\n"
         f"    py -3 .claude/skills/vox-collage-video/scripts/new_video.py {video} "
-        f"--words input/words{video}_aligned.json\n"
-        f"then fill in step 2a/2b per SKILL.md, get it past plan_gate.py and past "
-        f"baseline_gate.py check, and show the shot list to the user for approval.\n"
+        f"--words input/V{video}/words_aligned.json\n"
+        f"then complete semantic intent, pass plan_gate.py, and get the plan approved.\n"
         f"Building scenes from a shot list that only exists in chat is the exact defect "
         f"this skill was built to make impossible.",
         file=sys.stderr)
@@ -291,7 +295,7 @@ def guard_premature_shipped(payload, root):
     tool_input = payload.get("tool_input") or {}
     edited = str(tool_input.get("file_path") or tool_input.get("path") or "")
     norm = edited.replace("\\", "/")
-    if "input/scene_plan" not in norm or not norm.endswith(".json"):
+    if not (norm.endswith("/scene_plan.json") or re.search(r"input/scene_plan\d+\.json$", norm)):
         return 0
     path = pathlib.Path(edited)
     try:
@@ -306,24 +310,24 @@ def guard_premature_shipped(payload, root):
         failures.append("### shot list chưa duyệt\n"
                         "Video sắp ship mà \"shotlistApproved\" chưa phải true - shot list "
                         "chưa từng được user duyệt (hoặc chốt đã bị gỡ khỏi plan).")
-    advisories = []
-    for script, args, blocking in (("plan_gate.py", [str(path), "--hook"], True),
-                                   ("build_gate.py", [str(path)], True),
-                                   ("review_gate.py", [str(path), "--hook"], True),
-                                   ("text_gate.py", [str(path), "--hook"], True),
-                                   ("icon_gate.py", [str(path)], True),
-                                   ("assemble.py", [str(path), "--check"], True),
-                                   ("baseline_gate.py", ["check", str(path)], False)):
+    approved, approval_path, _receipt = contracts.previs_is_closed(path)
+    if not approved:
+        failures.append(f"### PREVIS approval\nCurrent human approval missing/stale: {approval_path}")
+    conformed, conformance_path, _receipt = build_gate.conformance_is_current(path)
+    if not conformed:
+        failures.append(f"### promoted conformance\nCurrent OPEN/KEY conformance missing/stale: {conformance_path}")
+    for script, args in (("plan_gate.py", [str(path), "--hook"]),
+                         ("build_gate.py", [str(path)]),
+                         ("review_gate.py", [str(path), "--hook"]),
+                         ("text_gate.py", [str(path), "--hook"]),
+                         ("assemble.py", [str(path), "--check"]),
+                         ("selftest.py", [])):
         if not (SCRIPTS / script).exists():
             failures.append(f"{script}: MISSING")
             continue
         code, out = run(script, *args)
         if code != 0:
-            target = failures if blocking else advisories
-            target.append(f"### {script}\n{out.strip()}")
-    if advisories:
-        print("[vox-gate] advisory quality findings while shipping:\n\n"
-              + "\n\n".join(advisories), file=sys.stderr)
+            failures.append(f"### {script}\n{out.strip()}")
     if not failures:
         return 0
 
@@ -346,7 +350,7 @@ def run(script, *args):
 
 def _plan_files(root, plan_data):
     video = plan_data.get("video", "V")
-    return [root / "src" / "scenes" / f"{video}Scene{s.get('id','S')[1:]}.jsx"
+    return [state.scene_source(root, video, s.get("id"))
             for s in plan_data.get("scenes") or []]
 
 
@@ -355,13 +359,13 @@ def _asset_files(root, plan_data, roles=None):
     for scene in plan_data.get("scenes") or []:
         for asset in scene.get("assets") or []:
             if asset.get("src") and (roles is None or asset.get("role") in roles):
-                paths.append(root / "public" / asset["src"])
+                paths.append(state.asset_path(root, plan_data.get("video", "V"), asset["src"]))
     return paths
 
 
 def gate_dependencies(root, plan_path, plan_data, script, args):
     """Normalized logical plan slices plus files actually consumed by a gate family."""
-    words = root / str(plan_data.get("wordsFile") or "")
+    words = state.words_path(root, plan_data)
     scenes = _plan_files(root, plan_data)
     paths = state.video_paths(root, plan_data.get("video", "V"))
     review = paths["review"]
@@ -379,23 +383,16 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
     if script == "build_gate.py":
         selected = next((args[i + 1] for i, x in enumerate(args[:-1]) if x == "--scene"), None)
         if selected:
-            scenes = [root / "src" / "scenes" /
-                      f"{plan_data.get('video')}Scene{selected.lstrip('S')}.jsx"]
+            scenes = [state.scene_source(root, plan_data.get("video"), selected)]
         fields = ("id", "durationInFrames", "visualTransformation", "visualLanguage",
                   "template", "backdrop", "variant", "assets", "visualEvents", "punch")
         contract = state.plan_slice(plan_data, fields=("video", "fps"), scene_fields=fields,
                                     scene_ids=[selected] if selected else None)
-        return [{"planContract": contract}, *common, *scenes,
-                root / "src" / "scenes" / "SceneTemplates.jsx",
-                root / "src" / "scenes" / "shared.jsx",
-                root / "src" / "scenes" / "visualLanguage.jsx"]
-    if script in ("text_gate.py", "icon_gate.py", "block_gate.py"):
-        extra = [root / "src" / "scenes" / "shared.jsx",
-                 root / "src" / "scenes" / "visualLanguage.jsx"]
+        return [{"planContract": contract}, *common, *scenes]
+    if script in ("text_gate.py", "icon_gate.py"):
+        extra = [paths["shared"]]
         if script == "icon_gate.py":
             extra.append(root / "src" / "scenes" / "iconVocabulary.jsx")
-        if script == "block_gate.py":
-            extra.append(root / "src" / "blocks" / "registry.json")
         fields = ("id", "assets", "punch", "visualLanguage", "template")
         return [{"planContract": state.plan_slice(plan_data, fields=("video",),
                                                    scene_fields=fields)},
@@ -405,10 +402,6 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
                    if a.get("role") in {"hero", "support"}]} for s in plan_data.get("scenes") or []]
         return [{"assetContract": assets}, *common,
                 *_asset_files(root, plan_data, {"hero", "support"})]
-    if script == "asset_gate.py":
-        assets = [{"id": s.get("id"), "assets": s.get("assets") or []}
-                  for s in plan_data.get("scenes") or []]
-        return [{"assetContract": assets}, *common, *_asset_files(root, plan_data)]
     if script == "assemble.py":
         video = plan_data.get("video", "V")
         contract = state.plan_slice(plan_data, fields=("video", "fps", "audioFile", "wordsFile"),
@@ -416,24 +409,9 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
                                                   "masterStartFrame", "transitionIn"))
         return [{"assemblyContract": contract}, *common, words,
                 paths["master"], paths["previs_root"], paths["entry"], *scenes]
-    if script == "baseline_gate.py":
-        contract = state.plan_slice(plan_data, fields=("video", "fps"),
-                                    scene_fields=("id", "startSec", "endSec", "visualLanguage",
-                                                  "template", "backdrop", "visualEvents"))
-        return [{"baselineContract": contract}, *common,
-                SCRIPTS.parent / "references" / "baseline.json"]
-    if script in ("review_gate.py", "pixel_gate.py"):
+    if script == "review_gate.py":
         review_data = state.read_json(review, {})
-        if script == "pixel_gate.py":
-            review_contract = {"reviewGeneration": review_data.get("reviewGeneration"),
-                               "scenes": [{"id": entry.get("id"),
-                                           "frame": entry.get("frame"),
-                                           "frames": entry.get("frames"),
-                                           "evidence": entry.get("evidence")}
-                                          for entry in review_data.get("scenes") or []]}
-            paths = [{"reviewEvidence": review_contract}, *common, *scenes]
-        else:
-            paths = [{"review": review_data}, *common, *scenes]
+        paths = [{"review": review_data}, *common, *scenes]
         try:
             for entry in review_data.get("scenes") or []:
                 for raw in entry.get("frames") or [entry.get("frame")]:
@@ -492,13 +470,14 @@ def run_incremental(root, plan_path, plan_data, script, args):
 
 
 def scene_id_for(path, plan_data):
-    """Map src/scenes/V10Scene13.jsx -> "S13" using the plan's own video
-    prefix, so V9/V10 files never gate against each other's plan."""
+    """Map canonical src/videos/V10/scenes/S13.jsx to its semantic scene id."""
     video = plan_data.get("video", "")
-    stem = pathlib.Path(path).stem
-    if not video or not stem.startswith(f"{video}Scene"):
+    normalized = str(path).replace("\\", "/")
+    if not video or f"/src/videos/{video}/scenes/" not in "/" + normalized.lstrip("/"):
         return None
-    return "S" + stem[len(f"{video}Scene"):]
+    stem = pathlib.Path(path).stem
+    suffix = stem.lstrip("Ss0") or "0"
+    return f"S{int(suffix)}" if suffix.isdigit() else stem
 
 
 def post_edit(payload, root, plan):
@@ -524,14 +503,14 @@ def post_edit(payload, root, plan):
     if not contracts.approval_contract(plan_data)["approved"]:
         print(f"[vox-gate] {sid}: shot list của {plan_path.name} CHƯA được user duyệt "
               f"(\"shotlistApproved\" chưa phải true) - chưa được làm PREVIS cảnh nào.\n"
-              f"  Thứ tự đúng: plan qua plan_gate + baseline_gate -> TRÌNH shot list "
+              f"  Thứ tự đúng: plan qua plan_gate -> TRÌNH semantic plan "
               f"cho user -> user đồng ý -> đặt \"shotlistApproved\": true -> mới làm PREVIS.\n"
               f"  Chỉ đặt true sau khi user THẬT SỰ duyệt, hoặc họ đã dặn từ đầu là "
               f"chạy end-to-end không cần hỏi. Tự đặt true để vượt chốt này không phải "
               f"là quên - là khai man có chủ đích.", file=sys.stderr)
         return 2
 
-    code, out = run("build_gate.py", str(plan_path), "--scene", sid)
+    code, out = run("build_gate.py", str(plan_path), "--previs", "--scene", sid)
     if code != 0:
         print(f"[vox-gate] {sid} no longer matches the approved plan ({plan_path.name}):\n"
               f"{out.strip()}\n"
@@ -595,31 +574,49 @@ def stop(root, plan):
     review_path = paths["review"]
     review_exists = review_path.is_file()
     vision_current = review_vision.is_current(plan_path, plan_data)[0] if review_exists else False
+    source_files = _plan_files(root, plan_data)
+    authored_previs = any(path.is_file() for path in source_files)
+    downstream_exists = any(path.is_file() for path in (
+        paths["promoted_previs_manifest"], paths["draft"], paths["final"], review_path,
+        paths["receipts"] / "render-draft.json", paths["receipts"] / "render-final.json"))
+
+    if downstream_exists:
+        approved, approval_path, _approval = contracts.previs_is_closed(plan_path)
+        if not approved:
+            failures.append("### PREVIS approval currentness\n"
+                            f"Promoted/draft/review state exists but approval is stale/missing: {approval_path}")
+        conformed, conformance_path, _conformance = build_gate.conformance_is_current(plan_path)
+        if not conformed:
+            failures.append("### promoted OPEN/KEY conformance\n"
+                            f"Promoted/draft/review state exists but conformance is stale/missing: {conformance_path}")
 
     checks = [("plan_gate.py", [str(plan_path), "--hook"], "scene plan integrity", True)]
-    if any_previs:
-        checks.append(("build_gate.py", [str(plan_path)], "PREVIS scenes vs plan", True))
+    if authored_previs or any_previs:
+        checks.append(("build_gate.py", [str(plan_path), "--previs"],
+                       "production-compatible PREVIS source", True))
     if previs_complete:
         checks += [
             ("text_gate.py", [str(plan_path), "--hook"], "rendered text implementation", True),
-            ("icon_gate.py", [str(plan_path)], "icon registry/import when used", True),
-            ("cutout_gate.py",
-             ["public", "--video", str(plan_data.get("video", "V")).lstrip("Vv"),
-              "--plan", str(plan_path), "--hook"], "cutout integrity", True),
-            ("asset_gate.py", [str(plan_path), "--hook"], "asset integrity", True),
-            ("block_gate.py", [str(plan_path)], "optional block contracts", True),
             ("assemble.py", [str(plan_path), "--check"], "generated assembly", True),
-            ("baseline_gate.py", ["check", str(plan_path)], "baseline quality", False),
         ]
+        source_text = "\n".join(path.read_text(encoding="utf-8") for path in source_files
+                                if path.is_file())
+        if re.search(r"<Icon[A-Z]\w*\b", source_text):
+            checks.append(("icon_gate.py", [str(plan_path)], "icon integrity when applicable", True))
+        if any(asset.get("role") in {"hero", "support"}
+               for scene in plan_data.get("scenes") or [] for asset in scene.get("assets") or []):
+            checks.append(("cutout_gate.py",
+                           [str(paths["assets"]), "--video",
+                            str(plan_data.get("video", "V")).lstrip("Vv"),
+                            "--plan", str(plan_path), "--hook"],
+                           "cutout integrity when applicable", True))
     if review_exists:
-        checks += [
-            ("review_gate.py", [str(plan_path), "--hook"], "review evidence", True),
-            ("pixel_gate.py", [str(plan_path)], "rendered text pixels", True),
-        ]
+        checks.append(("review_gate.py", [str(plan_path), "--hook"], "review evidence", True))
     if not skip_selftest:
         checks.append(("selftest.py", [], "gate self-test", True))
 
-    missing = [name for name in REQUIRED_GATES if not (SCRIPTS / name).exists()]
+    missing = [name for name in (*REQUIRED_GATES, *CONDITIONAL_GATES)
+               if not (SCRIPTS / name).exists()]
     if missing:
         failures.append("### broken gate installation\nMissing: " + ", ".join(missing))
 

@@ -12,6 +12,8 @@ import re
 import subprocess
 import sys
 
+import build_gate
+import pipeline_contracts as contracts
 import stage_state as state
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -154,10 +156,10 @@ def source_inputs(root, plan_path, plan):
     for scene in plan.get("scenes") or []:
         for asset in scene.get("assets") or []:
             if asset.get("src"):
-                paths.append(root / "public" / asset["src"])
+                paths.append(state.asset_path(root, video, asset["src"]))
     audio = plan.get("audioFile")
     if audio:
-        paths.append(root / "public" / audio)
+        paths.append(state.audio_path(root, plan))
     return [{"renderPlan": render_plan_slice(plan)},
             {"rootRegistration": selected_registration(root, f"{video}Master")},
             {"resolvedRenderVersions": resolved_render_versions(root, paths)},
@@ -173,6 +175,29 @@ def render_contract(plan_path, mode="draft", output=None, scale=None, codec="h26
     if mode == "final" and scale != 1.0:
         raise ValueError("final render must remain full-resolution (scale=1)")
     paths = state.video_paths(root, video)
+    if mode == "draft":
+        approved, approval_path, _approval = contracts.previs_is_closed(plan_path)
+        if not approved:
+            raise ValueError(f"draft blocked before Remotion: current human PREVIS approval required ({approval_path})")
+        conformed, conformance_path, _conformance = build_gate.conformance_is_current(plan_path)
+        if not conformed:
+            raise ValueError("draft blocked before Remotion: promoted OPEN/KEY PREVIS conformance "
+                             f"is stale or missing ({conformance_path})")
+    elif mode == "final":
+        review = state.read_json(paths["review"], {})
+        if not paths["review"].is_file() or not review.get("reviewGeneration"):
+            raise ValueError("final blocked: canonical temporal review is missing")
+        proc = subprocess.run([sys.executable, str(HERE / "review_gate.py"), str(plan_path),
+                               "--hook", "--no-measure"], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace")
+        if proc.returncode:
+            detail = "\n".join(line for line in ((proc.stdout or "") + (proc.stderr or "")).splitlines()
+                               if line.startswith("FAIL "))
+            raise ValueError("final blocked: temporal review is stale or incomplete"
+                             + (f": {detail}" if detail else ""))
+        correction, correction_path, _correction = contracts.correction_is_closed(plan_path)
+        if not correction:
+            raise ValueError(f"final blocked: current local-correction closure required ({correction_path})")
     output = state.project_path(root, output) if output else paths[mode]
     params = {"mode": mode, "composition": f"{video}Master", "scale": scale,
               "fps": plan.get("fps", 30), "codec": codec}

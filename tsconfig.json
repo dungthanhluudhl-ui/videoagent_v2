@@ -13,5 +13,6 @@
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true
   },
+  "include": ["src/index.ts", "src/PrevisRoot.tsx", "src/videos/**/*"],
   "exclude": ["remotion.config.ts"]
 }

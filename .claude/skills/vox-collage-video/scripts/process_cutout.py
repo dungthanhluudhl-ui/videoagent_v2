@@ -321,7 +321,7 @@ def fit_to_aspect(rgba, aspect):
 def stamp(content_size, aspect_raw, removal):
     """Provenance written INTO the PNG, not into a sidecar file.
 
-    asset_gate.py needs the size of the real CONTENT to catch an asset being
+    build_gate.py needs the size of the real CONTENT to catch an asset being
     rendered larger than its source (the V10/S25 defect: a 622px-wide crop
     placed in a width=760 slot, i.e. blown up 122% and visibly soft). Once
     fit_to_aspect() pads the file, the PNG's own dimensions include the
@@ -440,7 +440,7 @@ if __name__ == "__main__":
                         help="pad with transparency to exactly this aspect ratio "
                              "(e.g. 3:4). Never crops, never distorts. Required when "
                              "the asset goes into a declared template slot - see "
-                             "asset_gate.py.")
+              "build_gate.py.")
     parser.add_argument("--min-content-px", type=int, default=0, metavar="N",
                         help="refuse an image whose content's SHORT side is under N px. "
                              "Use the slot's render width: an asset smaller than its slot "

@@ -1,193 +1,220 @@
 ---
 name: vox-collage-video
-description: Videoagent 2 workflow for narrated legal and investigative documentary videos in Remotion. Meaning and authentic evidence lead; integrity is hard, quality is advisory.
+description: PREVIS-in-place workflow for narrated legal and investigative Remotion videos. Human art direction approves actual pixels; deterministic gates protect integrity.
 ---
 
-# Videoagent 2
+# Videoagent 2 — PREVIS in place
 
-## Authority
+## Authority and policy
 
-This file orchestrates the workflow. Current scripts and component code are the
-mechanical truth. References are lazy-loaded by topic; they are not a mandatory
-reading bundle.
+This file is the runtime orchestration authority. Script `--help` and current
+code are mechanical truth. Load `references/visual-language.md`,
+`references/primitives.md`, or `references/gates.md` only for the current task.
+Search `worked-examples.md` or `lessons.md` only when precedent is needed; never
+read the lesson archive end-to-end as a production ritual.
 
-Final accepted V10/V11 output is the product-quality reference, never a literal
-template. Do not edit shipped V10/V11 sources or golden media to make new work
-pass. Build new scenes bespoke by default; the parked block library is optional.
+**Integrity is HARD. Quality and aesthetics are ADVISORY.** Human approval of
+the whole-video PREVIS contact sheet owns art direction. Gates own mechanical
+truth: plan validity, locked bytes, actual evidence, same-source promotion,
+approved-pixel conformance, text safety, assembly, and review currentness.
 
-**Policy: integrity is HARD. Quality and aesthetics are ADVISORY.** A gate may
-block broken plans, missing assets, plan/build drift, invalid imports, malformed
-assembly, or missing/stale/blank review evidence. Pacing, density, repetition,
-composition and other quality signals remain visible but rendered evidence and
-editorial judgment decide them.
+The default lifecycle is exactly:
 
-## Core editorial order
+1. **INGEST**
+2. **PLAN**
+3. **ASSET LOCK**
+4. **PREVIS**
+5. **PROMOTE**
+6. **REVIEW + FINAL**
 
-**NARRATION MEANING → VISUAL TREATMENT → EVIDENCE/ASSET NEED → COMPONENT.**
+PREVIS uses actual production source. It is not a storyboard implementation,
+template pass, generic renderer, or alternative scene representation. The same
+bespoke JSX is promoted. No layout DSL, block library, archetype, template
+system, database, scheduler, or orchestrator is required. The generic renderer
+and layout/template production route are retired.
 
-### Compact director contract
+## Canonical video layout
 
-Show the **relationship**, not merely the topic. Mechanism means setup/attempt →
-consequence/failure; reversal means one state visibly gives way; “not X but Y”
-must show X before negation/replacement. Quantity must be perceived, not merely
-read as a numeral, and comparison must create a real spatial relation.
-`visualTransformation` promises a visible state change, not prose metadata.
-Authentic evidence should support the claim, but document evidence does not imply
-one centered document-card composition. Add a second treatment only when it adds
-meaning. Use `worked-examples.md` lazily when a difficult decision needs precedent.
+New `V<N>` work lives here; `stage_state.video_paths()` is the only path authority:
 
-Prefer authentic, relevant visuals: source documents, real places, specific
-people/objects, maps, and source-preserving crops. Generated imagery must still
-be relevant and honest. Do not use generic symbols, decorative diagrams, icons,
-lines, grids, labels, or extra layers as filler. Zero-icon videos are valid.
+```text
+input/V<N>/                       public/V<N>/
+  scene_plan.json                   audio.mp3
+  transcript.json                   assets/
+  words_aligned.json
+  asset_manifest.json             src/videos/V<N>/
+  review.json                       Master.jsx
+  previs/                           captions.js
+    contact_sheet.png               shared.jsx
+    frames_manifest.json            scenes/S01.jsx ...
+    frames/
 
-Write each scene's `visualTransformation`: what the viewer watches change or
-become clear. Then select a visual language. Use a diagram only when a relation,
-process, geography, quantity, or legal structure is clearer drawn than shown.
+out/V<N>/draft/master.mp4         input/.videoagent/V<N>/
+out/V<N>/review/                    receipts/ cache/ logs/
+out/V<N>/final/master.mp4           economics.jsonl
+```
 
-New cutouts use `EditorialHero` / `EditorialSupport`: entrance, settle, hold.
-Continuous sway/tremble/bob is explicit opt-in for an editorial reason. Legacy
-`Hero` / `Support` remain available for shipped composition compatibility.
-The camera is also stable by default: no automatic Ken Burns drift or slow zoom.
-Move it only for a semantic event such as context → detail/evidence, reveal,
-authority takeover, or spatial displacement.
+Do not migrate historical V3–V17 trees while producing a new video. Generated
+`src/index.ts` registers only `PrevisRoot`; production roots are not operational
+dependencies.
 
-## Pipeline and state
+## 1. INGEST
 
-Disk is authoritative pipeline memory. Receipts under `input/.videoagent/<V>/`
-bind true inputs/tool/config to outputs. After closure, load only the compact
-contract, required artifacts and editorial exceptions—not prior logs, prompt
-packs, clean reports, unrelated code or reasoning. Changed inputs reopen only
-their stage.
+Start from the user's script and audio:
 
-1. **Initialize timing**
-   - New work: `init_video.py <N> --audio <file> --script <file>`.
-   - Script-authoritative alignment supplies timing. Content receipts close
-     audio/transcription/alignment; script-only changes reuse transcription and
-     reopen alignment. Never overwrite/rebind manual alignment without acceptance.
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/init_video.py <N> --audio <audio> --script <script>
+```
 
-2. **Plan**
-   - Scaffold with `new_video.py <N> --words input/words<N>_aligned.json`.
-   - Fill editorial meaning, timing, visual language, assets/anchors, real
-     `visualEvents`, and implementation intent.
-   - A document used only for context/authority may stay whole or cropped. A
-     document cited as proof should normally map exact narrated phrases to
-     normalized source `evidenceRegions`; timing comes from aligned words.
-   - Run `plan_gate.py input/scene_plan<N>.json --hook`: integrity failures
-     block; quality/editorial heuristics warn. Use strict standalone mode only
-     for deliberate diagnostics.
-   - Before sourcing/build, perform one whole-plan treatment preflight. Review
-      exact advisory clusters and shared planned grammar; preserve authentic
-      evidence and change spatial treatment only when meaning benefits. This is
-      one director pass, not a quota, blocker, or automatic rewrite.
-   - Present the shot list before sourcing unless the user explicitly requested
-     end-to-end execution. Set `shotlistApproved` only after approval.
-   - `pipeline_contracts.py approve-plan <plan>` closes a valid approved plan
-     against narration/timing, sources, style and content. Advisories do not loop.
+Script text is authoritative; Whisper supplies timing. Inspect alignment before
+accepting a preserved hand edit. Do not overwrite accepted alignment casually.
+Then scaffold canonical state:
 
-3. **Source**
-   - Manual image mode is default: `generate_board.py` prepares prompts/crops;
-   - Lineage connects brief → generation/prompt → expected/returned file.
-     `asset_manifest.py` carries processing, QA, acceptance and replacements;
-     same-name byte changes invalidate. Batch cutouts skip unchanged source/config;
-     cheap vision caches each file+brief+prompt/model independently.
-   - Reuse valid artifacts. Record source and preserve authentic document text.
-   - Process only assets that actually need cutouts.
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/new_video.py <N> --words input/V<N>/words_aligned.json
+```
 
-4. **Build**
-   - Freeze global plan/visual/authenticity, then emit bounded adjacent-scene
-     `worker-packet`s. Native subagents may own non-overlapping chunks; otherwise
-     use packets sequentially—no custom scheduler. Bespoke JSX stays first-class;
-     the main agent retains global summary/rhythm/repetition/final judgment.
-   - Build bespoke scene compositions from current primitives.
-   - Anchor entrances to aligned narration using `beat_sync.py frame`.
-   - Keep plan and source synchronized; PostEdit runs immediate build/contract
-     integrity only. Text/icon/asset/cutout checks run later as a batch.
-   - Use `assemble.py input/scene_plan<N>.json`; generated master/captions remain
-     plan-derived and script-authoritative.
-   - Omitted `transitionIn` means an editorial hard cut. Request the existing
-     `fade` only when continuity/passage of time benefits; other meaning-driven
-     transitions belong in a deliberate handwritten master, not a variety quota.
+## 2. PLAN
 
-5. **Review rendered evidence**
-   - `render_video.py --mode draft` makes one medium-resolution actual-master
-     draft at normal FPS. `render_review_sheet.py` maps event samples to master
-     frames, extracts stale items in one ffmpeg process, then derives temporal +
-     summary sheets. No normal per-frame Remotion still fan-out.
-   - Targeted full-res evidence selects document/text/pixel-sensitive declarations
-     and manual escalations; draft pixels never replace source/text/edge inspection.
-   - Inspect temporal evidence against `visualTransformation` and the summary
-     sheet for cross-scene composition. In the one broad correction pass, read
-     these pixel findings together with outstanding plan pacing/comprehension/
-     dead-air advisories and acknowledged quality debt. Warnings are clues, not
-     score targets, and may remain when narrative/rendered evidence supports it.
-   - Prioritize defects that materially affect comprehension, evidence location,
-     source honesty, visible transformation, legal-conclusion timing, or major
-     composition repetition before minor cosmetic debt.
-   - A resolved quality fail is acknowledged/accepted debt, not a pass. Missing,
-     stale, unreadable, or blank evidence is hard failure.
-   - Cheap vision is an explicit review action: `review_vision.py <plan>`. Its
-      per-item/per-sheet caches make unchanged work free and its per-video receipt
-      records current completion. Stop checks that receipt and never calls a model.
-      Open only flagged images; the pre-read image-context budget remains hard.
+Write semantic intent before components. Every scene answers:
 
-6. **Finish**
-   - `assemble.py --check` must pass.
-   - Close the one broad correction with `pipeline_contracts.py close-correction`.
-     Render exactly one final full-resolution MP4 with `render_video.py --mode final`
-     when requested; final scale remains 1.0 and normal production quality.
-   - Mark `status: "shipped"` only after mandatory mechanical artifacts are
-     complete and review evidence exists. It records pipeline/build completion;
-     it is not by itself user or product-quality approval.
-   - Never commit or push unless explicitly approved.
+- `narrativeFunction`: what the scene does in the argument;
+- `viewerQuestion`: the one question raised or answered;
+- `visualTransformation`: what relationship/state the viewer watches change;
+- `contrastWithPrevious`: why this scene is not the previous treatment again;
+- `visualLanguage`, backdrop, density, comprehension intent;
+- authentic evidence/asset need and `evidenceRegions` where a source claim is cited.
 
-Scene state progresses `planned → built → reviewed`; top-level workflow state is
-`active → shipped`. Existing artifacts infer the hook phase; do not add a second
-phase system.
+Meaning order is **narration → treatment → evidence/asset → component**. Show the
+relationship, not merely the topic. Do not add symbols, diagrams, labels, lines,
+layers, or motion as filler.
 
-Scripts/workers return `STATUS`, `HARD`, `ADVISORY`, changed artifacts, unresolved
-questions, details and receipt; hard issues stay explicit, successful logs/reasoning
-stay on disk. `economics.jsonl` records timing/cache/subprocess/vision/render facts;
-unavailable main-token usage is `UNKNOWN`.
+Run `plan_gate.py input/V<N>/scene_plan.json`. Present the semantic plan to the
+user, set `shotlistApproved: true` only after approval, then run:
 
-## Correction policy
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py approve-plan input/V<N>/scene_plan.json
+```
 
-**HARD INTEGRITY:** repair the objective local defect, rerun only affected
-dependencies/gates, and repeat only until mechanically valid. **EDITORIAL
-QUALITY:** director/plan → early preflight → build → actual-master review → one
-targeted correction → delta review → final. Do not optimize until a metric turns
-green. After the intended correction, report remaining aesthetic debt explicitly;
-do not rewrite unrelated scenes to silence an advisory. A local S5 repair normally
-reopens S5 evidence/review and only genuinely affected neighbor/global summaries.
+PLAN is valid before any PREVIS frame or source exists.
 
-## Execution and context management
+## 3. ASSET LOCK
 
-Normal end-to-end production is one continuous Codex task: **PLAN → SOURCE →
-BUILD → actual-master REVIEW → one targeted editorial CORRECTION → delta REVIEW
-as required → FINAL**. Do not ask the user to restart Codex between stages. Use
-the runtime's native context management or compaction for a long continuous task
-when available; do not build a custom compaction or orchestration system.
+Select authentic meaning-bearing assets and store them under
+`public/V<N>/assets/`. For each meaning-bearing plan asset:
 
-Disk receipts, manifests, plans and handoff artifacts are authoritative persistent
-pipeline state. They reduce what a task needs to reload, but do not shrink an
-already-open model context. Existing bounded worker packets likewise narrow the
-material a task needs to read; unless the runtime actually provides isolated
-workers, a packet is not a new LLM context or a context reset.
+- record semantic identity, role, rationale, and evidence identity/regions;
+- set `locked: true` and `lockedSha256` to the actual byte hash;
+- sync/accept `input/V<N>/asset_manifest.json` where applicable;
+- never let a same-name replacement inherit stale acceptance.
 
-`pipeline_contracts.py handoff` remains an optional checkpoint for a real
-continuation boundary: recovery after interruption, an intentionally separate
-session, user-requested stage separation, or explicit delegation where the
-environment provides isolation. Creating a handoff does not require another
-session and is not part of the default continuous production path.
+`build_gate.py` checks existence, readability, locked bytes, and actual use. A
+direct bespoke `<Img src={staticFile("V<N>/assets/doc.png")} />` is first-class;
+no named component, template, or generic renderer is mandatory.
 
-## Reference routing
+## 4. PREVIS
 
-Read `.claude/skills/vox-collage-video/references/README.md` for the existing
-index. Load only the topic that applies: visual language while choosing a
-treatment, primitives while implementing, animation variants while designing
-motion, gates while troubleshooting enforcement, and lessons by searching for a
-relevant known defect. Official Remotion skills under `.agents/skills/` apply to
-their specific topics and must match the installed Remotion version.
+Author bespoke production-compatible scenes directly in
+`src/videos/V<N>/scenes/S01.jsx`, `S02.jsx`, and so on. PREVIS authoring is legal
+before PREVIS approval. Use final assets, real evidence crops, real typography,
+and the intended composition. Rough motion is optional; pixels are not fake.
 
-Use each script's `--help` for current commands/options. Do not duplicate its
-thresholds or turn this file back into a procedural manual.
+Generate captions/registration as needed and check rough source:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/V<N>/scene_plan.json
+py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/V<N>/scene_plan.json --previs
+py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json --previs
+```
+
+`--previs` renders the real scene compositions to:
+
+- one OPEN PNG per scene;
+- one KEY PNG per scene;
+- MID only when explicitly declared;
+- `previs/frames_manifest.json` with frame roles/paths/hashes;
+- one whole-video `previs/contact_sheet.png`.
+
+Show that one contact sheet to the user. Ask for art-direction approval. Do not
+infer approval from a gate or from the existence of files. Record the human note:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py approve-previs input/V<N>/scene_plan.json --art-direction "<human note>"
+```
+
+Creative approval binds semantic/treatment/evidence intent, locked asset bytes,
+approved OPEN/KEY/MID pixels, contact sheet, and the human note. Source SHA is
+provenance only. Timing, transitions, easing, statuses, receipt IDs, and JSX byte
+changes alone do not stale creative approval.
+
+## 5. PROMOTE
+
+Promote the **same JSX** by adding motion, timing, captions, and transitions in
+place. Do not redraw approved scenes in a second implementation. An approved
+meaning-bearing element must remain mounted at its approved state: animate
+opacity/transform/reveal, but do not move it behind a late `Sequence` that makes
+it absent at approved OPEN/KEY.
+
+Regenerate canonical assembly, render the approved roles from promoted source,
+and enforce conformance:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/V<N>/scene_plan.json
+py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json --previs --promoted
+py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/V<N>/scene_plan.json --previs-baseline
+```
+
+Material approved-pixel drift, locked asset changes, missing approved elements,
+or stale approval are hard failures. Resolve them before draft command creation.
+
+## 6. REVIEW + FINAL
+
+After current approval and conformance, create exactly one draft:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/render_video.py input/V<N>/scene_plan.json --mode draft
+py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json
+```
+
+The temporal review is separate from PREVIS. Review the actual master for motion,
+timing, captions, transitions, evidence readability, and new temporal defects.
+Fill `input/V<N>/review.json`; run `review_gate.py`. `review_vision.py` is an
+explicit advisory tool and Stop never invokes a model.
+
+Make **at most one local correction** to one scene when needed. Do not regenerate
+unrelated scenes. Recheck the affected evidence and close it:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py close-correction input/V<N>/scene_plan.json --changed-scenes Sxx --note "<local correction>"
+```
+
+Then run `assemble.py --check` and render exactly one full-resolution final:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/render_video.py input/V<N>/scene_plan.json --mode final
+```
+
+Final rendering requires current review/correction state. Mark `status: shipped`
+only after PREVIS approval, promoted conformance, draft review, correction closure,
+and final integrity are current. Shipping status is not aesthetic approval.
+
+## Enforcement surface
+
+The unconditional Stop installation is exactly:
+
+`plan_gate.py`, `build_gate.py`, `text_gate.py`, `assemble.py`,
+`review_gate.py`, `selftest.py`.
+
+`icon_gate.py` and `cutout_gate.py` are conditional only when applicable.
+Initial planning and PREVIS authoring do not require PREVIS pixels/approval.
+Once promoted, draft, review, or final state exists, Stop requires current real
+PREVIS approval, promoted baseline conformance, and downstream integrity. Stop is
+a consistency guard, not an orchestrator.
+
+## Correction and context discipline
+
+Repair hard integrity defects until mechanically valid. Do not optimize toward
+quality metrics; quality remains rendered editorial judgment. Persist state in
+plans, manifests, receipts, review artifacts, and optional handoffs. Do not build
+a custom scheduler or packet system. Do not ask for a fresh session between
+stages unless the user requests a real continuation boundary.

@@ -308,10 +308,10 @@ def collect(frames, plan):
         if review_path.is_file():
             paths.extend(_review_evidence(review_path))
         else:
-            # Backward compatibility for pre-review-artifact workflows only.
+            # Read-only compatibility for historical review fixtures only.
             p = json.loads(plan_path.read_text(encoding="utf-8"))
             vid = str(p.get("video") or "").lstrip("Vv")
-            root = state.project_root(plan_path) / "input" / "review_frames"
+            root = state.video_paths(state.project_root(plan_path), p.get("video", "V"))["review_frames"]
             for sc in p.get("scenes", []):
                 paths.extend(sorted(str(x) for x in
                                     root.glob("V%sScene%s_f*.png" % (vid, sc["id"][1:]))))

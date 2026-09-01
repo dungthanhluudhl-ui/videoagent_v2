@@ -20,7 +20,7 @@ def inputs_for(plan_path, plan):
     for scene in plan.get("scenes") or []:
         for asset in scene.get("assets") or []:
             if asset.get("src"):
-                paths.append(root / "public" / asset["src"])
+                paths.append(state.asset_path(root, plan.get("video", "V"), asset["src"]))
     for key in ("temporalSheet", "sceneSummarySheet"):
         if review.get(key):
             paths.append(state.project_path(root, review[key]))

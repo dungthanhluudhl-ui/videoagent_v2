@@ -234,7 +234,8 @@ def find_root(plan_path):
 
 
 def jobs_from_plan(plan_path):
-    plan = json.loads(pathlib.Path(plan_path).read_text(encoding="utf-8"))
+    plan_path = state.project_path(state.project_root(__file__), plan_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = find_root(plan_path)
     out = []
     for sc in plan.get("scenes", []):
@@ -242,7 +243,7 @@ def jobs_from_plan(plan_path):
             src = a.get("src")
             if not src:
                 continue                      # map/ve tay - khong co file
-            p = root / "public" / src
+            p = state.asset_path(root, plan.get("video", "V"), src)
             meta = dict(sid=sc["id"], name=a.get("name"), src=a.get("src"), role=a.get("role"),
                         describes=a.get("describes") or [],
                         transformation=sc.get("visualTransformation"),
@@ -361,6 +362,7 @@ def main():
 
     jobs = []
     if args.plan:
+        args.plan = state.project_path(state.project_root(__file__), args.plan)
         jobs = jobs_from_plan(args.plan)
     for f in args.files:
         for p in (sorted(glob.glob(f)) if any(c in f for c in "*?[") else [f]):

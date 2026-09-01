@@ -37,6 +37,8 @@ import json
 import pathlib
 import sys
 
+import stage_state as state
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -184,6 +186,7 @@ def main():
 
     roles = {}
     if args.plan:
+        args.plan = state.project_path(state.project_root(__file__), args.plan)
         data = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
         for scene in data.get("scenes", []):
             for asset in scene.get("assets", []):

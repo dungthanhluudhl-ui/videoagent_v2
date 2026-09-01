@@ -13,14 +13,14 @@ import stage_state as state
 
 
 def plan_assets(plan_path):
-    plan_path = pathlib.Path(plan_path)
+    plan_path = state.project_path(state.project_root(__file__), plan_path)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
     for scene in plan.get("scenes") or []:
         for asset in scene.get("assets") or []:
             if not asset.get("src"):
                 continue
-            path = root / "public" / asset["src"]
+            path = state.asset_path(root, plan.get("video", "V"), asset["src"])
             brief = state.asset_contract(scene, asset)
             yield plan, root, state.asset_usage_id(scene, asset), path, brief
 
@@ -51,6 +51,7 @@ def sync(plan_path):
 
 
 def accept(plan_path, asset_id, advisory=None, replacement_for=None):
+    plan_path = state.project_path(state.project_root(__file__), plan_path)
     manifest_path, manifest = sync(plan_path)
     if not manifest_path or asset_id not in manifest.get("assets", {}):
         raise ValueError(f"unknown asset: {asset_id}")

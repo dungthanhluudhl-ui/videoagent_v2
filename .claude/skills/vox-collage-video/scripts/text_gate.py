@@ -61,6 +61,14 @@ import re
 import sys
 import unicodedata
 
+import stage_state as state
+
+try:
+    import numpy as np
+    from PIL import Image
+except ImportError:
+    np = Image = None
+
 CANVAS_W, CANVAS_H = 1080, 1920
 CAPTION_TOP = 1420          # captions mount at bottom:440 -> top edge ~1420
 CHAR_EM = 0.76              # fallback only, used when data/font_metrics.json is
@@ -98,6 +106,9 @@ MAX_STRIKE_LINES = 1        # `struck` used to skip ALL stroke-collision checks
                             # COUNT, not on a width nobody's shipped work has
                             # ever exceeded.
 METRICS_PATH = pathlib.Path(__file__).resolve().parent.parent / "data" / "font_metrics.json"
+PIXEL_MIN_INK = 0.02
+PIXEL_MIN_CONTRAST = 40
+PIXEL_APPEAR_FRAMES = 10
 
 
 def _load_metrics():
@@ -819,12 +830,99 @@ def narration_runs(words_path, start, end):
             for i in range(max(0, len(toks) - MIN_NARRATION_RUN + 1))}
 
 
+def sequence_offset(src, index):
+    depth = []
+    tokens = re.compile(r"<Sequence\b[^>]*>|</Sequence>", re.S)
+    for match in tokens.finditer(src):
+        if match.start() >= index:
+            break
+        if match.group(0).startswith("</"):
+            if depth:
+                depth.pop()
+        elif not match.group(0).endswith("/>"):
+            frm = re.search(r"\bfrom=\{\s*(\d+)\s*\}", match.group(0))
+            depth.append(int(frm.group(1)) if frm else 0)
+    return sum(depth)
+
+
+def rendered_review_frames(root, plan):
+    review = state.read_json(state.video_paths(root, plan.get("video", "V"))["review"], {})
+    result = {}
+    for entry in review.get("scenes") or []:
+        raw = entry.get("frame")
+        if not raw:
+            continue
+        normalized = str(raw).replace("\\", "/")
+        metadata = next((item for item in entry.get("evidence") or []
+                         if str(item.get("path", "")).replace("\\", "/") == normalized), {})
+        local = metadata.get("localFrame")
+        if local is None:
+            match = re.search(r"_f(\d+)(?:_|\.)", normalized)
+            local = int(match.group(1)) if match else None
+        result[entry.get("id")] = (state.project_path(root, raw), local)
+    return result
+
+
+def pixel_probe(image, box):
+    scale = image.shape[1] / CANVAS_W
+    x0, y0, x1, y1 = [value * scale for value in box]
+    height, width = image.shape
+    x0, y0 = max(0, int(x0) - 2), max(0, int(y0) - 2)
+    x1, y1 = min(width, int(x1) + 3), min(height, int(y1) + 3)
+    if x1 - x0 < 2 or y1 - y0 < 2:
+        return None
+    patch = image[y0:y1, x0:x1].astype(np.int16)
+    background = int(np.bincount(patch.ravel().clip(0, 255)).argmax())
+    difference = np.abs(patch - background)
+    ink = difference > 26
+    return float(ink.mean()), float(difference[ink].mean()) if ink.any() else 0.0
+
+
+def rendered_pixel_problems(scene, src, labels, punches, review_frame):
+    if not review_frame or np is None or Image is None:
+        return []
+    path, at = review_frame
+    if not path.is_file():
+        return [f"{scene.get('id')}: rendered text evidence is missing: {path}"]
+    try:
+        image = np.asarray(Image.open(path).convert("L"))
+    except OSError as exc:
+        return [f"{scene.get('id')}: rendered text evidence is unreadable: {exc}"]
+    probes = []
+    for label in labels:
+        if not label.get("box") or not label.get("text"):
+            continue
+        hit = src.find(label["text"])
+        start = int(label.get("from", 0)) + (sequence_offset(src, hit) if hit >= 0 else 0)
+        probes.append((label["text"], label["box"], start + PIXEL_APPEAR_FRAMES))
+    for punch in punches:
+        if punch.get("box"):
+            probes.append((" / ".join(punch.get("lines") or []) or "headline",
+                           punch["box"], int(punch.get("from", 0)) + PIXEL_APPEAR_FRAMES))
+    problems = []
+    for text, box, start in probes:
+        if at is not None and start > at:
+            continue
+        measured = pixel_probe(image, box)
+        if measured is None:
+            problems.append(f"{scene.get('id')}: visible text {text!r} is outside rendered canvas")
+            continue
+        ink, contrast = measured
+        if ink < PIXEL_MIN_INK:
+            problems.append(f"{scene.get('id')}: visible text {text!r} has no rendered ink at its "
+                            "declared geometry (clipped, covered, or absent)")
+        elif contrast < PIXEL_MIN_CONTRAST:
+            problems.append(f"{scene.get('id')}: visible text {text!r} has unsafe rendered contrast "
+                            f"({contrast:.0f}/255)")
+    return problems
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("plan")
-    ap.add_argument("--scenes-dir", default="src/scenes")
-    ap.add_argument("--public-dir", default="public")
+    ap.add_argument("--scenes-dir", default=None)
+    ap.add_argument("--public-dir", default=None)
     ap.add_argument("--scene", default=None)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--hook", action="store_true",
@@ -832,25 +930,30 @@ def main():
                          "warn; readability and collision failures still block")
     args = ap.parse_args()
 
-    plan = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
+    plan_path = state.project_path(state.project_root(__file__), args.plan)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
+    canonical = state.video_paths(root, plan.get("video", "V"))
+    scenes_dir = state.project_path(root, args.scenes_dir) if args.scenes_dir else canonical["scenes"]
     video = plan.get("video", "V")
     scenes = plan.get("scenes", [])
     if args.scene:
         scenes = [s for s in scenes if s.get("id") == args.scene]
-    words_path = pathlib.Path("input") / (plan.get("wordsFile") or "")
-    public_dir = pathlib.Path(args.public_dir)
+    words_path = state.words_path(root, plan)
+    public_dir = state.project_path(root, args.public_dir) if args.public_dir else canonical["assets"]
+    review_frames = rendered_review_frames(root, plan)
 
     problems, advisories, checked, total_words, unchecked = [], [], 0, 0, []
-    problems += font_family_problems(args.scenes_dir)
-    for name, line, size, snippet in primitive_font_sizes(args.scenes_dir):
+    problems += font_family_problems(scenes_dir)
+    for name, line, size, snippet in primitive_font_sizes(scenes_dir):
         problems.append(
             f"{name}:{line}: hardcoded fontSize {size}. Shared primitives must draw at "
-            f"LABEL_SIZE or SUBLABEL_SIZE (src/scenes/visualLanguage.jsx), or take the size "
+            f"LABEL_SIZE or SUBLABEL_SIZE in the canonical per-video shared source, or take the size "
             f"from the caller - a loose number here is a label no scene check can see. "
             f"[{snippet}]")
     for scene in scenes:
         sid = scene.get("id", "")
-        path = pathlib.Path(args.scenes_dir) / f"{video}Scene{sid.lstrip('S')}.jsx"
+        path = state.scene_source(root, video, sid)
         if not path.exists():
             continue
         # Inline the scene's own helper components first, so a label passed in
@@ -863,6 +966,8 @@ def main():
         strokes = parse_strokes(src, dur)
         icons = parse_icons(src, dur)
         punches = parse_punch(src, dur)
+        problems += rendered_pixel_problems(scene, src, labels, punches,
+                                            review_frames.get(sid))
         map_labels = parse_map_labels(src, dur)
         comp_measured, comp_listed = parse_component_labels(src, dur)
         unchecked += [(sid, f"{c} {v!r} ({why})") for c, v, why in comp_listed]

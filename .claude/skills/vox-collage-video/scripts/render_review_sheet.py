@@ -26,6 +26,7 @@ except ImportError:
     sys.exit("Pillow is required: py -3 -m pip install pillow")
 
 VERSION = "master-draft-extraction-v2"
+PREVIS_VERSION = "actual-production-scene-stills-v2"
 SETTLE = 20
 
 
@@ -47,6 +48,113 @@ def build_sheet(thumbs, out_path, max_cols=6):
     pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     sheet.save(out_path, quality=88)
     return len(images)
+
+
+def _declared_previs_frames(scene):
+    """OPEN/KEY defaults plus MID only when the semantic plan explicitly asks."""
+    duration = max(1, int(scene.get("durationInFrames") or 1))
+    declared = scene.get("previsFrames") or scene.get("previsFrameRoles") or []
+    values = {}
+    if isinstance(declared, dict):
+        source = declared.get("roles") if isinstance(declared.get("roles"), list) else declared
+        if isinstance(source, dict):
+            for role, frame in source.items():
+                if str(role).upper() in {"OPEN", "KEY", "MID"}:
+                    values[str(role).upper()] = int(frame)
+        else:
+            declared = source
+    if isinstance(declared, list):
+        for item in declared:
+            if isinstance(item, dict):
+                role = str(item.get("role") or "").upper()
+                if role in {"OPEN", "KEY", "MID"}:
+                    values[role] = int(item.get("localFrame", item.get("frame", 0)))
+            elif str(item).upper() == "MID":
+                values["MID"] = duration // 2
+    values.setdefault("OPEN", int(scene.get("previsOpenFrame") or 0))
+    events = [int(item.get("frame") or 0) for item in scene.get("visualEvents") or []]
+    default_key = min(duration - 1, max(events or [max(0, duration // 2)]) + SETTLE)
+    values.setdefault("KEY", int(scene.get("previsKeyFrame", default_key)))
+    if scene.get("previsMidRequired") is True:
+        values.setdefault("MID", int(scene.get("previsMidFrame", duration // 2)))
+    return [(role, max(0, min(duration - 1, frame)))
+            for role, frame in (("OPEN", values["OPEN"]), ("KEY", values["KEY"]),
+                                ("MID", values.get("MID"))) if frame is not None]
+
+
+def previs_requests(plan, paths, promoted=False):
+    video = plan.get("video", "V")
+    target_dir = paths["promoted_previs_frames"] if promoted else paths["previs_frames"]
+    if promoted:
+        baseline = state.read_json(paths["previs_manifest"], {})
+        requests = [{"scene": item.get("scene"), "role": str(item.get("role") or "").upper(),
+                     "localFrame": int(item.get("localFrame", item.get("frame", 0)))}
+                    for item in baseline.get("frames") or []]
+    else:
+        requests = [{"scene": scene.get("id"), "role": role, "localFrame": frame}
+                    for scene in plan.get("scenes") or []
+                    for role, frame in _declared_previs_frames(scene)]
+    for item in requests:
+        stem = state.scene_stem(item["scene"])
+        source = state.scene_source(paths["root"], video, item["scene"])
+        item["composition"] = f"{video}{stem}"
+        item["path"] = str(target_dir / f"{stem}_{item['role']}.png")
+        item["sourcePath"] = str(source)
+        item["sourceSha256"] = state.hash_file(source) if source.is_file() else None
+    return requests
+
+
+def previs_command(item, entry="src/index.ts"):
+    return ["npx", "remotion", "still", str(entry), item["composition"], item["path"],
+            f"--frame={item['localFrame']}", "--image-format=png", "--overwrite"]
+
+
+def render_previs(plan_path, plan, paths, command_only=False, manifest_only=False,
+                  promoted=False):
+    root = state.project_root(plan_path)
+    requests = previs_requests(plan, paths, promoted)
+    if not requests:
+        raise ValueError("semantic plan has no scenes to render as PREVIS")
+    commands = [previs_command(item) for item in requests]
+    if command_only:
+        print(json.dumps(commands, ensure_ascii=False))
+        return 0
+    if not manifest_only:
+        for item, command in zip(requests, commands):
+            pathlib.Path(item["path"]).parent.mkdir(parents=True, exist_ok=True)
+            proc = subprocess.run(command, cwd=root, capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace",
+                                  shell=(sys.platform == "win32"))
+            if proc.returncode:
+                raise ValueError(f"PREVIS still failed for {item['scene']}/{item['role']}: "
+                                 f"{(proc.stderr or proc.stdout)[-800:]}")
+    frames = []
+    for item in requests:
+        proof = state.file_input(item["path"])
+        frame = {"scene": item["scene"], "role": item["role"],
+                 "localFrame": item["localFrame"], "composition": item["composition"],
+                 "path": item["path"], "sourcePath": item["sourcePath"],
+                 "sourceSha256": item["sourceSha256"]}
+        if not proof.get("missing"):
+            frame["sha256"] = proof["sha256"]
+        frames.append(frame)
+    manifest_path = paths["promoted_previs_manifest"] if promoted else paths["previs_manifest"]
+    manifest = {"schema": 1, "version": PREVIS_VERSION, "video": plan.get("video"),
+                "source": "actual production-compatible scene JSX", "frames": frames}
+    changed = []
+    if not promoted and not manifest_only:
+        thumbs = [(f"{item['scene']} {item['role']} @f{item['localFrame']}", pathlib.Path(item["path"]))
+                  for item in requests]
+        build_sheet(thumbs, paths["contact_sheet"], max_cols=4)
+        manifest["contactSheet"] = str(paths["contact_sheet"])
+        manifest["contactSheetSha256"] = state.hash_file(paths["contact_sheet"])
+        changed.append(paths["contact_sheet"])
+    state.write_json(manifest_path, manifest)
+    changed.append(manifest_path)
+    print(state.compact_result("CLOSED" if not manifest_only else "OPEN",
+                               changed=changed, details=manifest_path,
+                               receipt=state.digest(manifest)))
+    return 0
 
 
 def scene_summary_thumbs(review_entries):
@@ -149,14 +257,11 @@ def sample_source_proof(root, plan_path, plan, sample, render_params):
     index = next(i for i, scene in enumerate(scenes) if scene.get("id") == sample["scene"])
     relevant = scenes[max(0, index - 1):min(len(scenes), index + 2)]
     video = plan.get("video", "V")
-    scene_files = [root / "src" / "scenes" / f"{video}Scene{s.get('id','S')[1:]}.jsx"
-                   for s in relevant]
+    scene_files = [state.scene_source(root, video, s.get("id")) for s in relevant]
     files = render_video.local_dependency_files(scene_files)
-    files += [root / "src" / f"{video}Master.jsx", root / "remotion.config.ts",
+    files += [state.video_paths(root, video)["master"], root / "remotion.config.ts",
               root / "package.json"]
-    words_name = pathlib.Path(str(plan.get("wordsFile") or "")).name
-    suffix = words_name.replace("words", "").replace("_aligned.json", "")
-    files += [root / "src" / f"captionData{suffix}.js",
+    files += [state.video_paths(root, video)["captions"],
               root / "src" / "scenes" / f"shared{suffix}.jsx"]
     for scene in relevant:
         for asset in scene.get("assets") or []:
@@ -296,6 +401,10 @@ def main():
     ap.add_argument("--command-only", action="store_true")
     ap.add_argument("--keep-review", action="store_true")
     ap.add_argument("--full-res-scene", action="append", default=[])
+    ap.add_argument("--previs", action="store_true",
+                    help="render actual scene JSX OPEN/KEY/MID evidence before a motion draft")
+    ap.add_argument("--promoted", action="store_true",
+                    help="with --previs, re-render approved roles after promotion for conformance")
     args = ap.parse_args()
 
     plan_path = state.project_path(state.project_root(__file__), args.plan)
@@ -303,6 +412,13 @@ def main():
     root = state.project_root(plan_path)
     video = plan.get("video", "V")
     paths = state.video_paths(root, video)
+    if args.previs:
+        try:
+            return render_previs(plan_path, plan, paths, args.command_only,
+                                 args.manifest_only, args.promoted)
+        except ValueError as exc:
+            print(state.compact_result("HARD", hard=1, details=str(exc)), file=sys.stderr)
+            return 1
     draft = state.project_path(root, args.draft) if args.draft else paths["draft"]
     out_dir = (state.project_path(root, args.out_dir) if args.out_dir
                else paths["review_frames"])

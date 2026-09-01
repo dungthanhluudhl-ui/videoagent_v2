@@ -107,11 +107,11 @@ def measure(frame_path):
 
 
 def scene_source(root, plan, sid):
-    """src/scenes/V10Scene13.jsx for S13, if it exists."""
+    """Canonical production scene source for this review entry."""
     video = plan.get("video") or ""
     if not video or not sid.startswith("S"):
         return None
-    p = state.video_paths(root, video)["scenes"] / f"{video}Scene{sid[1:]}.jsx"
+    p = state.scene_source(root, video, sid)
     return p if p.exists() else None
 
 
@@ -120,7 +120,7 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("plan")
     ap.add_argument("--review", default=None,
-                    help="review file; defaults to input/review<N>.json beside the plan")
+                    help="review file; defaults to canonical input/V<N>/review.json")
     ap.add_argument("--no-measure", action="store_true",
                     help="skip the frame measurements (verdicts only)")
     ap.add_argument("--json", action="store_true")

@@ -181,7 +181,7 @@ Each entry is here because it cost a rebuild. None of them are hypothetical.
   (step 2a "Editorial Director" decides `narrativeFunction` /
   `visualTransformation` / pacing BEFORE step 2b picks any
   template/animation), a step 2.5 sample checkpoint, and two new script
-  gates (`scene_plan_check.py` for repetition/homogeneity,
+  checks (the retired scene-plan CLI for repetition/homogeneity,
   `check_overlap.py`'s new safe-zone + proportion flags) — mechanizing
   the checkable half of this failure mode. Recorded honestly: a script
   can catch a repeated or empty field, it cannot manufacture the right

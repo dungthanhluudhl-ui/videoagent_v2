@@ -8,7 +8,11 @@ never touched: at the time of the V10 review only **3 of 12** available
 
 ## Project primitives
 
-### `src/scenes/shared.jsx` — the core kit
+### `src/videos/V<N>/shared.jsx` — per-video shared primitives
+
+New scenes are bespoke under `src/videos/V<N>/scenes/`. Reuse a primitive only
+when it expresses the intended relationship; no primitive name is required by a
+gate. Direct Remotion JSX and `staticFile("V<N>/assets/<file>")` are first-class.
 
 | Component | Use |
 |---|---|
@@ -29,7 +33,7 @@ never touched: at the time of the V10 review only **3 of 12** available
 | `Captions` | Word-synced captions, mounted once at master level |
 | `SAFE_ZONE` | Placement exclusion band; mirrored in `check_overlap.py` |
 
-### `src/scenes/visualLanguage.jsx` — beyond the cutout
+### Historical shared visual primitives — copy deliberately, do not depend on a template
 
 | Component | Use |
 |---|---|
@@ -116,55 +120,12 @@ A map that fails to tile renders **successfully**, with a hole in it, because
 `MapGraphic` releases its `delayRender` handle on a deadline rather than
 hanging. Check the still, and check the render log for 404s.
 
-### `src/blocks/` — PARKED. Build bespoke; a block is the exception.
+### Bespoke is the canonical path
 
-Five blocks extracted from the V10 scenes the viewer kept. They work, and they
-are **not** the default route into a scene. Measured coverage on plans:
-
-| | |
-|---|---|
-| V10 — the video they were extracted FROM | 54% (overfit, not a result) |
-| **V11 — part 2 of that same story** | **25%** |
-| V13 — a different subject | 25% |
-
-On any video the blocks have not already seen — including a direct sequel with
-the same assets and style — three scenes in four have no block that fits. So
-the library is a small convenience, not a scaffold, and the build step must not
-open with "check the library". There is no minimum block share, no maximum
-bespoke share, and repetition percentages are advisory rather than blocking.
-
-That framing is what killed `SceneTemplates.jsx`, and it contradicts this
-skill's own first rule: *meaning first, component second.*
-
-**Use one only when a scene's `narrativeFunction × visualLanguage` already
-lands in a block's `fits` AND its `whenNotToUse` does not describe your scene.**
-Then declare `"block": "..."` in the plan. Declaring nothing means bespoke, and
-that is the normal case — `block_gate.py` does not ask.
-
-`ChannelOutro` is the one worth reaching for by default: every video ends the
-same way, so it is reusable by construction rather than by evidence.
-
-Blocks hold **no absolute frames** — entrances arrive through `beats` from
-`beat_sync.py`, so one block fits a 90-frame scene and a 152-frame one.
-
-Monotony is reviewed on output, not constrained by media quotas:
-`sheet_vision.py` reads the rendered scene-summary sheet (one representative
-frame per scene) and reports the largest look-alike group (V10 23–38%, V11 54–67%,
-matching the viewer's own "liked" / "exhausting"). That is a better instrument
-than a plan-time quota derived from one video — the derived constants failed to
-transfer twice (`mood` on V10/S22, `place` on V13/S1).
-
-### `src/scenes/SceneTemplates.jsx` — DEAD, do not use
-
-Seven composed arrangements (`CollageScene`, `SplitCompareScene`,
-`StatCalloutScene`, `NewspaperSpotlightScene`, `QuoteBubbleScene`,
-`FlowDiagramScene`, `MapLocationScene`). Used by V3–V9; used by **zero** scenes of
-V10–V13. They are one scene in seven arrangements — same `zoom 1→1.0x`, same
-`rise/grow/dropSpin`, same `idle="sway"`, same `visibleFor={durationInFrames}`
-— and they are named after layouts, which forces the pick to be made on
-layout instead of on meaning. Superseded by `src/blocks/`, which is itself parked - see above.
-
-`MapLocationScene` renders a pin with no map. Prefer `MapGraphic`.
+There is no active block registry or scene-template layer. Do not recreate one.
+Compose semantic intent directly in production source, render OPEN/KEY actual
+pixels, and let human contact-sheet approval decide art direction. Monotony is
+judged from rendered output, not constrained by media, layer, or component quotas.
 
 ## Remotion packages — installed and available
 

@@ -1,37 +1,10 @@
-"""
-build_gate.py - verify the PREVIS scenes still match the approved scene plan.
+"""Verify bespoke production-compatible PREVIS source and promoted pixels.
 
-The defect this exists to catch, in the words of the video it was written
-after: the V10/Itaewon plan called for a hero image in S2 and S11, and the
-built files shipped with neither - the model decided mid-build that sourcing
-them "wasn't worth the round-trip" and wrote that reasoning into a code
-comment. Every existing check passed, because every existing check only ever
-looked at what WAS built, never at what was PROMISED.
-
-plan_gate.py checks the plan is good. This checks the build is the plan.
-Together they close the loop: an approved plan can no longer quietly decay
-into a thinner video.
-
-Usage:
-    py -3 build_gate.py input/scene_plan10.json --scenes-dir src/scenes
-    py -3 build_gate.py input/scene_plan10.json --scene S13     # one scene
-    py -3 build_gate.py input/scene_plan10.json --json
-
-Exit code is non-zero when the build drifts from the plan.
-
---- HOW IT READS JSX ---
-
-No real parser; the codebase's two element forms are matched directly:
-
-  template props   hero={{ name: "Hero-X", src: "el10_x.png", width: 700, ... }}
-                   supports={[{ name: "...", src: "...", delay: 50, ... }]}
-  bespoke JSX      <Sequence from={114}><Hero name="..." src="..." width={560} .../>
-
-For bespoke elements the entrance frame comes from the enclosing
-`<Sequence from={N}>`; for template objects it comes from the object's own
-`delay:`. Anything the parser cannot make sense of is reported as a FAILURE,
-never silently skipped - a gate that quietly passes on a file it couldn't
-read is worse than no gate.
+Normal/--previs mode checks the semantic plan and locked assets against the real
+scene JSX. --previs-baseline checks promoted OPEN/KEY pixels against the human-
+approved baseline and proves approved meaning-bearing elements remain mounted at
+their approved frame roles. No template, renderer, or layout component is
+required.
 """
 
 import argparse
@@ -43,314 +16,333 @@ import sys
 import pipeline_contracts as contracts
 import stage_state as state
 
-# Attribute forms: key="str" | key={num} | key: "str" | key: num
-# The leading (?<![A-Za-z]) matters: without it, searching for `y` matched the
-# tail of `fontFamily:` and reported a scene's hero as sitting at
-# y="Be Vietnam Pro". A gate that misreads the build is worse than none.
-_ATTR = r'(?<![A-Za-z]){key}\s*[:=]\s*[{{"]?\s*([^,}}"\n]+?)\s*[}}"]?\s*[,}}\n/]'
+try:
+    from PIL import Image, ImageFilter
+except ImportError:
+    Image = ImageFilter = None
+
+PIXEL_VERSION = "promoted-open-key-v2"
+MAX_BLOCK_MAE = 0.42
+MAX_CENTROID_DISPLACEMENT = 0.13
+MAX_BBOX_DISPLACEMENT = 0.24
 
 
-def _attr(block, key):
-    m = re.search(_ATTR.format(key=re.escape(key)), block)
-    if not m:
+def scene_source(root, video, scene):
+    return state.scene_source(root, video, scene.get("id"))
+
+
+def meaning_assets(scene):
+    return contracts.meaning_assets(scene)
+
+
+def static_file_references(text):
+    """Literal public identities used by direct bespoke JSX."""
+    return {pathlib.Path(raw).name for raw in re.findall(
+        r"staticFile\s*\(\s*[\"']([^\"']+)[\"']\s*\)", text)}
+
+
+def source_asset_references(text):
+    found = static_file_references(text)
+    found.update(pathlib.Path(raw).name for raw in re.findall(
+        r"(?:src|docSrc)\s*[:=]\s*(?:\{\s*)?[\"']([^\"']+\.(?:png|jpg|jpeg|webp|svg|pdf))[\"']",
+        text, re.I))
+    return found
+
+
+def sequence_ranges(text):
+    """Return Sequence opening/body ranges with literal `from` frames."""
+    token = re.compile(r"<Sequence\b[^>]*>|</Sequence>", re.S)
+    stack, ranges = [], []
+    for match in token.finditer(text):
+        if match.group(0).startswith("</"):
+            if stack:
+                opening = stack.pop()
+                ranges.append((opening[0], match.end(), opening[1]))
+            continue
+        frm = re.search(r"\bfrom\s*=\s*\{\s*(\d+)\s*\}", match.group(0))
+        stack.append((match.start(), int(frm.group(1)) if frm else 0))
+    return ranges
+
+
+def asset_mount_frame(text, src):
+    """Earliest literal Sequence frame enclosing this asset; 0 means mounted at OPEN."""
+    name = pathlib.Path(str(src)).name
+    hits = []
+    patterns = (
+        r"staticFile\s*\(\s*[\"'][^\"']*" + re.escape(name) + r"[\"']\s*\)",
+        r"(?:src|docSrc)\s*[:=]\s*(?:\{\s*)?[\"'][^\"']*" + re.escape(name) + r"[\"']",
+    )
+    for pattern in patterns:
+        hits.extend(match.start() for match in re.finditer(pattern, text, re.I))
+    if not hits:
         return None
-    raw = m.group(1).strip()
-    if re.fullmatch(r"-?\d+(\.\d+)?", raw):
-        return float(raw) if "." in raw else int(raw)
-    return raw
+    ranges = sequence_ranges(text)
+    starts = []
+    for hit in hits:
+        enclosing = [frm for start, end, frm in ranges if start <= hit < end]
+        starts.append(sum(enclosing) if enclosing else 0)
+    return min(starts)
 
 
-def template_punch_defaults(templates_path):
-    """Entrance frame each named template gives a punch phrase when the scene
-    file doesn't override it.
-
-    Needed because a scene file can be entirely silent about timing that is
-    still very much on screen: MapLocationScene hardcodes
-    `<Sequence from={45}>` around its PunchPhrase, so reading only the scene
-    file reports frame 0 and the gate raises a false alarm. A gate that cries
-    wolf gets ignored, which is how real drift slips through."""
-    defaults = {}
-    if not templates_path.exists():
-        return defaults
-    text = templates_path.read_text(encoding="utf-8")
-    for m in re.finditer(r"export const (\w+) = \(\{(.*?)\}\) => \{(.*?)\n\};", text, re.S):
-        name, params, body = m.group(1), m.group(2), m.group(3)
-        pm = re.search(r"punchFrom\s*=\s*(\d+)", params)
-        if pm:
-            defaults[name] = int(pm.group(1))
-            continue
-        bm = re.search(r"punchLines &&.*?<Sequence\s+from=\{(\d+)\}", body, re.S)
-        if bm:
-            defaults[name] = int(bm.group(1))
-    return defaults
+def role_frame(item):
+    value = item.get("localFrame")
+    if value is None:
+        value = item.get("frame")
+    return int(value or 0)
 
 
-def _element_block(text, hit):
-    """The attributes of exactly ONE JSX element or object literal.
-
-    Replaces a fixed +/-400-character window, which bled across element
-    boundaries and produced a wall of false failures on bespoke scenes: a
-    background photo inherited the delay of the DiagramCanvas after it, a
-    support inherited an x from the hero before it, and a hero picked up a y
-    from an SVG <text>. Every one of those looked exactly like a real drift.
-
-    Walks back to the element's own `<Tag` (or `{` for an object literal in a
-    props array) and forward to the end of that opening tag, so an attribute
-    can only ever be read from the element it belongs to.
-    """
-    start = max(text.rfind("<", 0, hit), text.rfind("{", 0, hit))
-    if start < 0:
-        start = 0
-    i, depth = hit, 0
-    while i < len(text):
-        c = text[i]
-        if c == "{":
-            depth += 1
-        elif c == "}":
-            if depth == 0:
-                break
-            depth -= 1
-        elif c == ">" and depth == 0:
-            i += 1
-            break
-        i += 1
-    return text[start:i]
-
-
-# A planned asset with no `src` is drawn in code, not sourced. It is still a
-# real illustration, and the "renders NO image at all" check must not treat a
-# map or a diagram as an empty scene - which it did, failing 8 correct scenes.
-CODE_DRAWN_COMPONENTS = {
-    # MapPanel is MapGraphic windowed into a band of the canvas - same
-    # illustration, different framing - so it satisfies a planned `map` too.
-    "map": ("MapGraphic", "MapPanel"),
-    "diagram": ("DiagramCanvas", "DensityGrid", "DimensionLine", "DrawnPath",
-                "ForceArrow", "MemorialDots", "ChainBreak", "StreetElevation",
-                "SlopeIndicator", "AnnotatedPhoto"),
-    "timeline": ("Timeline",),
-    "chart": ("AnimatedLineChart", "StatCounter"),
-    "mockup": ("DeviceMockup",),
-}
-
-
-def parse_scene_file(path, punch_defaults=None):
-    """Return {"assets": [...], "punch": {...}|None}"""
-    text = path.read_text(encoding="utf-8")
-    punch_defaults = punch_defaults or {}
-
-    # Map every character offset to the entrance frame of its enclosing
-    # <Sequence from={N}>, so a bespoke <Hero> inherits the right delay.
-    seq_at = {}
-    for m in re.finditer(r"<Sequence\s+from=\{(\d+)\}", text):
-        depth, i, frm = 0, m.end(), int(m.group(1))
-        # Walk forward to this Sequence's matching close tag.
-        while i < len(text):
-            if text.startswith("<Sequence", i):
-                depth += 1
-            elif text.startswith("</Sequence>", i):
-                if depth == 0:
-                    break
-                depth -= 1
-            i += 1
-        for pos in range(m.start(), min(i, len(text))):
-            seq_at.setdefault(pos, frm)
-
-    assets = []
-    # Any construct carrying both a name and an image src, in either form.
-    pattern = re.compile(
-        r'name\s*[:=]\s*[{"]?([A-Za-z0-9_-]+)["}]?'      # name
-        r'(?:(?!name\s*[:=]).){0,400}?'                   # no other name between
-        r'src\s*[:=]\s*[{"]?([A-Za-z0-9_./-]+\.(?:png|jpg|jpeg|webp))',
-        re.S)
-    for m in pattern.finditer(text):
-        block = _element_block(text, m.start())
-        delay = _attr(block, "delay")
-        if delay is None:
-            delay = seq_at.get(m.start(), 0)
-        assets.append({
-            "name": m.group(1),
-            "src": pathlib.Path(m.group(2)).name,
-            "delay": int(delay or 0),
-            "width": _attr(block, "width"),
-            "x": _attr(block, "x"),
-            "y": _attr(block, "y"),
-            "visibleFor": _attr(block, "visibleFor"),
-        })
-
-    # Document-style assets carry no `name`.
-    for m in re.finditer(r'docSrc\s*[:=]\s*[{"]?([A-Za-z0-9_./-]+\.\w+)', text):
-        assets.append({"name": "Document", "src": pathlib.Path(m.group(1)).name,
-                       "delay": seq_at.get(m.start(), 0), "width": None,
-                       "x": None, "y": None, "visibleFor": None})
-
-    punch = None
-    pm = (re.search(r"punchLines\s*=\s*\{\[(.*?)\]\}", text, re.S)
-          or re.search(r"lines=\{\[(.*?)\]\}", text, re.S))
-    if pm:
-        lines = re.findall(r'"([^"]*)"', pm.group(1))
-        frm = _attr(text, "punchFrom")
-        if frm is None:
-            lm = re.search(r"lines=\{\[", text)
-            if lm and lm.start() in seq_at:
-                frm = seq_at[lm.start()]          # bespoke: wrapping <Sequence from>
-            else:
-                # Template-driven: the frame lives in SceneTemplates.jsx, not here.
-                used = [t for t in punch_defaults if re.search(rf"<{t}\b", text)]
-                frm = punch_defaults[used[0]] if used else 0
-        punch = {"lines": lines, "from": int(frm or 0),
-                 "top": _attr(text, "punchTop") or _attr(text, "top")}
-
-    return {"assets": assets, "punch": punch, "text": text}
-
-
-def compare(scene, built, tolerance):
-    """Differences between one planned scene and its built file."""
+def locked_asset_problems(root, video, scene, text, require_lock=True):
     problems = []
-    sid = scene.get("id")
-
-    planned = [a for a in scene.get("assets", []) if a.get("src")]
-    built_by_src = {}
-    for b in built["assets"]:
-        built_by_src.setdefault(pathlib.Path(b["src"]).name, []).append(b)
-
-    for asset in planned:
-        src = pathlib.Path(asset["src"]).name
-        matches = built_by_src.get(src)
-        if not matches:
-            problems.append(
-                f"{sid}: planned asset {asset.get('name') or src!r} ({src}) is MISSING from "
-                f"the built scene - the plan promised it and the build dropped it")
+    used = source_asset_references(text)
+    for asset in meaning_assets(scene):
+        src = pathlib.Path(str(asset.get("src"))).name
+        path = state.asset_path(root, video, src)
+        if not path.is_file():
+            problems.append(f"{scene.get('id')}: meaning-bearing asset does not exist: {path}")
             continue
-        b = matches[0]
-        want = asset.get("delay")
-        if want is not None and abs(b["delay"] - int(want)) > tolerance:
-            problems.append(
-                f"{sid}/{asset.get('name') or src}: entrance frame {b['delay']} in the build "
-                f"vs {int(want)} in the plan (tolerance {tolerance})")
-        for key in ("width", "x", "y"):
-            want_v, got_v = asset.get(key), b.get(key)
-            if want_v is None or got_v is None:
-                continue
-            if str(want_v) != str(got_v):
-                problems.append(f"{sid}/{asset.get('name') or src}: {key}={got_v} in the build "
-                                f"vs {want_v} in the plan")
-
-    planned_srcs = {pathlib.Path(a["src"]).name for a in planned}
-    for src, entries in built_by_src.items():
-        if src not in planned_srcs:
-            problems.append(
-                f"{sid}: built scene uses {src} ({entries[0]['name']}) which is NOT in the plan - "
-                f"add it to the plan (with a `describes`) or remove it from the scene")
-
-    p_punch, b_punch = scene.get("punch"), built.get("punch")
-    # The plan schema carries an explicit empty punch object on scenes that do
-    # not use typography. It is absence, not a promise to render a zero-size
-    # component (which pixel_gate correctly reads as missing content).
-    if p_punch and not (p_punch.get("lines") or []):
-        p_punch = None
-    if p_punch and not b_punch:
-        problems.append(f"{sid}: plan has a punch phrase {p_punch.get('lines')} but the build has none")
-    elif b_punch and not p_punch:
-        problems.append(f"{sid}: build shows a punch phrase {b_punch.get('lines')} not in the plan")
-    elif p_punch and b_punch:
-        if [l.strip() for l in p_punch.get("lines", [])] != [l.strip() for l in b_punch.get("lines", [])]:
-            problems.append(f"{sid}: punch text differs - plan {p_punch.get('lines')} "
-                            f"vs build {b_punch.get('lines')}")
-        want = p_punch.get("from")
-        if want is not None and abs(b_punch["from"] - int(want)) > tolerance:
-            problems.append(f"{sid}/punch: appears at frame {b_punch['from']} in the build "
-                            f"vs {int(want)} in the plan")
-
+        try:
+            with path.open("rb") as handle:
+                handle.read(1)
+        except OSError as exc:
+            problems.append(f"{scene.get('id')}/{src}: asset is unreadable: {exc}")
+            continue
+        actual = state.hash_file(path)
+        expected = asset.get("lockedSha256")
+        if require_lock and (asset.get("locked") is not True or not expected):
+            problems.append(f"{scene.get('id')}/{src}: meaning-bearing asset is not locked")
+        elif expected and expected != actual:
+            problems.append(f"{scene.get('id')}/{src}: locked asset bytes changed")
+        if src not in used:
+            problems.append(f"{scene.get('id')}: locked meaning-bearing asset is absent from bespoke source: {src}")
     return problems
 
 
+def previs_source_check(plan_path, plan, scene_id=None):
+    root = state.project_root(plan_path)
+    video = plan.get("video", "V")
+    problems, checked = [], 0
+    plan_closed, plan_receipt, _receipt = contracts.plan_is_closed(plan_path)
+    if not plan_closed:
+        problems.append(f"current approved semantic plan required before PREVIS authoring: {plan_receipt}")
+    for scene in plan.get("scenes") or []:
+        if scene_id and scene.get("id") != scene_id:
+            continue
+        source = scene_source(root, video, scene)
+        if not source.is_file():
+            # PLAN remains legal before PREVIS authoring.
+            if contracts.scene_status_stage(scene.get("status")) == "PLAN":
+                continue
+            problems.append(f"{scene.get('id')}: production-compatible scene source missing: {source}")
+            continue
+        checked += 1
+        try:
+            text = source.read_text(encoding="utf-8")
+        except OSError as exc:
+            problems.append(f"{scene.get('id')}: source is unreadable: {exc}")
+            continue
+        problems += locked_asset_problems(root, video, scene, text)
+        for key in ("narrativeFunction", "viewerQuestion", "visualTransformation",
+                    "contrastWithPrevious", "visualLanguage"):
+            if not scene.get(key):
+                problems.append(f"{scene.get('id')}: semantic PREVIS intent missing {key}")
+        if not re.search(r"(?:export\s+(?:const|function)|export\s+default)", text):
+            problems.append(f"{scene.get('id')}: scene JSX exports no production component")
+    if scene_id and checked == 0 and not any(s.get("id") == scene_id for s in plan.get("scenes") or []):
+        problems.append(f"no scene {scene_id!r} in plan")
+    return problems, checked
+
+
+def _manifest_frames(path, root):
+    path = state.project_path(root, path)
+    data = state.read_json(path, {})
+    frames = {}
+    for item in data.get("frames") or []:
+        role = str(item.get("role") or "").upper()
+        if role not in {"OPEN", "KEY", "MID"}:
+            continue
+        frames[(item.get("scene"), role)] = (state.project_path(root, item.get("path")), item)
+    return data, frames
+
+
+def _visual_signature(path):
+    """Bounded structural signature proven on the historical PREVIS WIP."""
+    import numpy as np
+
+    image = Image.open(path).convert("RGB").resize((54, 96), Image.Resampling.LANCZOS)
+    image = image.filter(ImageFilter.GaussianBlur(radius=0.7))
+    rgb = np.asarray(image, dtype=np.float32) / 255.0
+    lum = rgb[..., 0] * 0.2126 + rgb[..., 1] * 0.7152 + rgb[..., 2] * 0.0722
+    norm = (lum - lum.mean()) / max(float(lum.std()), 0.08)
+    gx = np.abs(np.diff(lum, axis=1, prepend=lum[:, :1]))
+    gy = np.abs(np.diff(lum, axis=0, prepend=lum[:1, :]))
+    mass = gx + gy + np.std(rgb, axis=2) * 0.35
+    threshold = max(float(np.quantile(mass, 0.72)), 0.025)
+    ys, xs = np.nonzero(mass >= threshold)
+    if len(xs) == 0:
+        centroid, bbox = (0.5, 0.5), (0.0, 0.0, 1.0, 1.0)
+    else:
+        weights = mass[ys, xs]
+        centroid = (float(np.average(xs, weights=weights) / 53),
+                    float(np.average(ys, weights=weights) / 95))
+        bbox = (float(xs.min() / 53), float(ys.min() / 95),
+                float(xs.max() / 53), float(ys.max() / 95))
+    return norm, centroid, bbox
+
+
+def compare_previs_pixels(approved, promoted):
+    if Image is None:
+        return {"passed": False, "reason": "Pillow is required for PREVIS pixel conformance"}
+    try:
+        import numpy as np
+        before, base_centroid, base_bbox = _visual_signature(approved)
+        after, current_centroid, current_bbox = _visual_signature(promoted)
+    except (OSError, ValueError) as exc:
+        return {"passed": False, "reason": f"unreadable frame: {exc}"}
+    block_mae = float(np.mean(np.abs(before - after)))
+    centroid = (((base_centroid[0] - current_centroid[0]) ** 2
+                 + (base_centroid[1] - current_centroid[1]) ** 2) ** 0.5)
+    bbox = max(abs(a - b) for a, b in zip(base_bbox, current_bbox))
+    return {
+        "passed": block_mae <= MAX_BLOCK_MAE and centroid <= MAX_CENTROID_DISPLACEMENT
+                  and bbox <= MAX_BBOX_DISPLACEMENT,
+        "blockMae": round(block_mae, 5), "centroidDisplacement": round(centroid, 5),
+        "bboxDisplacement": round(bbox, 5),
+    }
+
+
+def previs_baseline_check(plan_path, plan, baseline_manifest, promoted_manifest):
+    root = state.project_root(plan_path)
+    video = plan.get("video", "V")
+    base_data, baseline = _manifest_frames(baseline_manifest, root)
+    promoted_data, promoted = _manifest_frames(promoted_manifest, root)
+    problems, comparisons = [], []
+    if not base_data.get("frames"):
+        problems.append("approved baseline manifest contains no frame proofs")
+    if not promoted_data.get("frames"):
+        problems.append("promoted manifest contains no frame proofs")
+    for scene in plan.get("scenes") or []:
+        sid = scene.get("id")
+        source = scene_source(root, video, scene)
+        text = source.read_text(encoding="utf-8") if source.is_file() else ""
+        problems += locked_asset_problems(root, video, scene, text)
+        roles = ["OPEN", "KEY"] + (["MID"] if contracts.mid_required(scene) else [])
+        for role in roles:
+            before = baseline.get((sid, role))
+            after = promoted.get((sid, role))
+            if not before or not before[0].is_file():
+                problems.append(f"{sid}/{role}: approved baseline frame missing")
+                continue
+            if not after or not after[0].is_file():
+                problems.append(f"{sid}/{role}: promoted comparison frame missing")
+                continue
+            result = compare_previs_pixels(before[0], after[0])
+            comparisons.append({"scene": sid, "role": role, "approved": str(before[0]),
+                                "promoted": str(after[0]), **result})
+            if not result.get("passed"):
+                problems.append(f"{sid}/{role}: approved-pixel drift {result}")
+            approved_frame = role_frame(before[1])
+            for asset in meaning_assets(scene):
+                mount = asset_mount_frame(text, asset.get("src"))
+                if mount is None:
+                    continue
+                if mount > approved_frame:
+                    problems.append(
+                        f"{sid}/{role}: approved element {pathlib.Path(str(asset.get('src'))).name} "
+                        f"is absent at approved frame {approved_frame}; promoted source mounts it "
+                        f"inside Sequence from={mount}. Keep it mounted and animate opacity/transform.")
+    return problems, comparisons
+
+
+def baseline_receipt_path(root, video):
+    return state.video_paths(root, video)["receipts"] / "previs-conformance.json"
+
+
+def baseline_inputs(plan_path, plan, baseline, promoted):
+    root = state.project_root(plan_path)
+    paths = state.video_paths(root, plan.get("video", "V"))
+    baseline_path = state.project_path(root, baseline)
+    promoted_path = state.project_path(root, promoted)
+    baseline_data = state.read_json(baseline_path, {})
+    promoted_data = state.read_json(promoted_path, {})
+    return {"creativeApproval": state.json_input(
+                state.video_paths(root, plan.get("video", "V"))["receipts"] / "previs-approved.json"),
+            "baseline": state.json_input(baseline_path),
+            "baselinePixels": [state.file_input(state.project_path(root, item.get("path")))
+                               for item in baseline_data.get("frames") or []],
+            "promoted": state.json_input(promoted_path),
+            "promotedPixels": [state.file_input(state.project_path(root, item.get("path")))
+                               for item in promoted_data.get("frames") or []],
+            "sources": [state.file_input(path) for path in sorted(
+                (path for path in paths["source"].rglob("*")
+                 if path.is_file() and path.suffix.lower() in {".js", ".jsx", ".ts", ".tsx"}),
+                key=str)] + [state.file_input(paths["entry"]), state.file_input(paths["previs_root"])]}
+
+
+def conformance_is_current(plan_path):
+    plan_path = contracts.resolve_plan_path(plan_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
+    paths = state.video_paths(root, plan.get("video", "V"))
+    approval = state.read_json(paths["receipts"] / "previs-approved.json", {})
+    baseline = (approval.get("metadata") or {}).get("approvalBaselineManifest")
+    promoted = paths["promoted_previs_manifest"]
+    receipt_path = baseline_receipt_path(root, plan.get("video", "V"))
+    if not baseline:
+        return False, receipt_path, {}
+    inputs = baseline_inputs(plan_path, plan, baseline, promoted)
+    tool = state.tool_identity(pathlib.Path(__file__), versions={"baseline": PIXEL_VERSION})
+    current, receipt = state.receipt_current(receipt_path, "previs-conformance", inputs, tool, {},
+                                             require_outputs=False)
+    return current, receipt_path, receipt
+
+
 def main():
-    ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("plan")
-    ap.add_argument("--scenes-dir", default="src/scenes")
-    ap.add_argument("--scene", default=None, help="check only this scene id (e.g. S13)")
-    ap.add_argument("--tolerance", type=int, default=6,
-                    help="allowed entrance-frame drift (~0.2s at 30fps)")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--previs", action="store_true")
+    mode.add_argument("--previs-baseline", action="store_true")
+    ap.add_argument("--baseline-manifest")
+    ap.add_argument("--promoted-manifest")
+    ap.add_argument("--scene")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    plan_path = state.project_path(state.project_root(__file__), args.plan)
+    plan_path = contracts.resolve_plan_path(args.plan)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     root = state.project_root(plan_path)
-    scenes_dir = state.project_path(root, args.scenes_dir)
-    video = plan.get("video", "V")
-    scenes = plan.get("scenes", [])
-    if args.scene:
-        scenes = [s for s in scenes if s.get("id") == args.scene]
-        if not scenes:
-            print(f"no scene {args.scene!r} in {args.plan}", file=sys.stderr)
-            sys.exit(2)
-
-    punch_defaults = template_punch_defaults(scenes_dir / "SceneTemplates.jsx")
-
-    approval = contracts.approval_contract(plan)
-    problems = [] if approval["approved"] else [approval["reason"]]
-    checked = 0
-    for scene in scenes:
-        sid = scene.get("id", "")
-        path = scenes_dir / f"{video}Scene{sid.lstrip('S')}.jsx"
-        if not path.exists():
-            try:
-                scene_stage = contracts.scene_status_stage(scene.get("status"))
-            except ValueError as exc:
-                problems.append(f"{sid}: {exc}")
-                continue
-            if scene_stage == "PLAN":
-                continue          # not in PREVIS yet - plan_gate covers planning
-            problems.append(f"{sid}: status={scene.get('status')!r} but {path} does not exist")
-            continue
-        built = parse_scene_file(path, punch_defaults)
-        checked += 1
-        # A planned asset with no `src` is drawn in code. Check the file
-        # actually renders the component that draws it, then stop calling the
-        # scene empty just because it contains no PNG.
-        for asset in scene.get("assets", []):
-            if asset.get("src"):
-                continue
-            wanted = CODE_DRAWN_COMPONENTS.get(asset.get("role"), ())
-            if wanted and not any(re.search(rf"<{c}\b", built["text"]) for c in wanted):
-                problems.append(
-                    f"{sid}: plan promises a code-drawn {asset.get('role')} "
-                    f"({asset.get('name')}) but {path.name} renders none of "
-                    f"{', '.join(wanted)}")
-        code_drawn = [a for a in scene.get("assets", []) if not a.get("src")]
-        if scene.get("assets") and not built["assets"] and not code_drawn:
-            # Two very different situations; saying the wrong one sends the
-            # fix in the wrong direction.
-            mentions_image = re.search(r"\.(png|jpg|jpeg|webp)", path.read_text(encoding="utf-8"))
-            if mentions_image:
-                problems.append(
-                    f"{sid}: plan lists {len(scene['assets'])} asset(s) and {path.name} does "
-                    f"reference an image, but the parser could not read it - build_gate needs "
-                    f"fixing, do NOT assume this scene is fine")
-            else:
-                names = ", ".join(a.get("name") or a.get("src", "?") for a in scene["assets"])
-                problems.append(
-                    f"{sid}: plan promises {len(scene['assets'])} illustration(s) ({names}) but "
-                    f"{path.name} renders NO image at all - this is the 'scene silently "
-                    f"simplified' defect; source the asset or change the plan")
-            continue
-        problems += compare(scene, built, args.tolerance)
+    paths = state.video_paths(root, plan.get("video", "V"))
+    comparisons = []
+    if args.previs_baseline:
+        current, _approval_path, approval = contracts.previs_is_closed(plan_path)
+        if not current:
+            problems = ["current human PREVIS approval is required before promoted conformance"]
+        else:
+            baseline = args.baseline_manifest or (approval.get("metadata") or {}).get(
+                "approvalBaselineManifest")
+            promoted = args.promoted_manifest or paths["promoted_previs_manifest"]
+            problems, comparisons = previs_baseline_check(plan_path, plan, baseline, promoted)
+            if not problems:
+                inputs = baseline_inputs(plan_path, plan, baseline, promoted)
+                tool = state.tool_identity(pathlib.Path(__file__), versions={"baseline": PIXEL_VERSION})
+                state.make_receipt(baseline_receipt_path(root, plan.get("video", "V")),
+                                   "previs-conformance", inputs, tool, {}, outputs=())
+        checked = len(comparisons)
+    else:
+        problems, checked = previs_source_check(plan_path, plan, args.scene)
 
     if args.json:
         print(json.dumps({"passed": not problems, "checked": checked,
-                          "problems": problems}, ensure_ascii=False, indent=2))
+                          "problems": problems, "comparisons": comparisons}, indent=2))
     else:
-        for p in problems:
-            print(f"FAIL {p}")
+        for problem in problems:
+            print(f"FAIL {problem}")
         if not problems:
-            print(f"OK   all {checked} PREVIS scene(s) match the approved plan")
-        print(f"\n{'FAILED' if problems else 'PASSED'} "
-              f"({checked} scene(s) checked, {len(problems)} problem(s))")
-
-    sys.exit(1 if problems else 0)
+            label = "promoted PREVIS baseline" if args.previs_baseline else "bespoke PREVIS source"
+            print(f"OK   {label}: {checked} check(s)")
+        print(f"\n{'FAILED' if problems else 'PASSED'} ({len(problems)} problem(s))")
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

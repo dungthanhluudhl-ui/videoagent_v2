@@ -74,11 +74,15 @@ ALIGN_VERSION = "script-authoritative-segment-alignment-v1"
 
 
 def _root():
-    return state.project_root(pathlib.Path.cwd())
+    return state.project_root(__file__)
 
 
 def _receipt(n, name):
     return state.runtime_dir(_root(), f"V{n}") / "receipts" / f"{name}.json"
+
+
+def _paths(n):
+    return state.video_paths(_root(), f"V{n}")
 
 
 def _package_version(name):
@@ -112,7 +116,7 @@ def step_env():
 # ---------------------------------------------------------------- bước audio
 
 def step_audio(n, audio_src, force):
-    dest = pathlib.Path(f"public/audio{n}.mp3")
+    dest = _paths(n)["audio"]
     if not audio_src:
         if dest.exists():
             print(f"audio: đã có {dest}.")
@@ -147,8 +151,8 @@ def step_audio(n, audio_src, force):
 # ----------------------------------------------------------- bước transcribe
 
 def step_transcribe(n, language, model_name, force):
-    out = pathlib.Path(f"input/transcript{n}.json")
-    audio = pathlib.Path(f"public/audio{n}.mp3")
+    out = _paths(n)["transcript"]
+    audio = _paths(n)["audio"]
     if not audio.exists():
         print(f"transcribe: chưa có {audio} - chạy bước audio trước.")
         return False
@@ -245,8 +249,8 @@ def align(transcript, script_text):
 
 
 def step_align(n, script_path, check, force, accept_existing=False):
-    tpath = pathlib.Path(f"input/transcript{n}.json")
-    out = pathlib.Path(f"input/words{n}_aligned.json")
+    tpath = _paths(n)["transcript"]
+    out = _paths(n)["words"]
     if not tpath.exists():
         print(f"align: chưa có {tpath} - chạy bước transcribe trước.")
         return False
@@ -335,6 +339,7 @@ def step_align(n, script_path, check, force, accept_existing=False):
     if check:
         print(f"align: {out} chưa tồn tại - sẽ được dựng ({len(words)} từ).")
         return True
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     receipt = state.make_receipt(_receipt(n, "alignment"), "alignment", inputs, tool,
                                  params, [out], accepted={"manual": False})
@@ -385,7 +390,7 @@ def main():
     if ok and not args.check and (args.only in (None, "align")):
         print(f"\nTiếp theo - dựng khung kế hoạch rồi điền bước 2a/2b (SKILL.md):\n"
               f"    py -3 .claude/skills/vox-collage-video/scripts/new_video.py {args.n} "
-              f"--words input/words{args.n}_aligned.json")
+              f"--words input/V{args.n}/words_aligned.json")
     return 0 if ok else 1
 
 

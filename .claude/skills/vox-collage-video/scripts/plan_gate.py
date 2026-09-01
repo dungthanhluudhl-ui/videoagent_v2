@@ -1,7 +1,7 @@
 """
 plan_gate.py - the machine-checkable contract gate for a video's scene plan.
 
-Replaces scene_plan_check.py's CLI-string interface with a real JSON file
+Uses a durable semantic JSON plan rather than a transient CLI-string interface
 (`input/scene_plan<N>.json`) that survives the whole build and can be
 re-checked at any time by any tool (or a hook). This is the single source of
   truth: plan_gate checks the plan, build_gate checks the PREVIS against the
@@ -1216,9 +1216,7 @@ def main():
     thresholds = {k: getattr(args, k) for k in DEFAULTS}
 
     root = state.project_root(plan_path)
-    words_path = args.words or plan.get("wordsFile")
-    if words_path:
-        words_path = state.project_path(root, words_path)
+    words_path = state.project_path(root, args.words) if args.words else state.words_path(root, plan)
     try:
         words = load_words(words_path)
     except (OSError, KeyError, json.JSONDecodeError):
