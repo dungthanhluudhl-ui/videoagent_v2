@@ -46,9 +46,80 @@ def static_file_references(text):
 def source_asset_references(text):
     found = static_file_references(text)
     found.update(pathlib.Path(raw).name for raw in re.findall(
-        r"(?:src|docSrc)\s*[:=]\s*(?:\{\s*)?[\"']([^\"']+\.(?:png|jpg|jpeg|webp|svg|pdf))[\"']",
+        r"(?:src|docSrc)\s*[:=]\s*(?:\{\s*)?[\"']([^\"']+\.(?:png|jpg|jpeg|webp|gif|svg|pdf|mp4|mov|m4v|webm))[\"']",
         text, re.I))
     return found
+
+
+def literal_media_references(text):
+    """Literal media identities used by fresh JSX; dynamic sources cannot prove a lock."""
+    direct = re.findall(r"staticFile\s*\(\s*[\"']([^\"']+)[\"']\s*\)", text)
+    direct += re.findall(
+        r"(?:src|docSrc)\s*[:=]\s*(?:\{\s*)?[\"']([^\"']+)[\"']", text, re.I)
+    direct += re.findall(r"url\s*\(\s*[\"']?([^\"')]+)", text, re.I)
+    literals = re.findall(r"[\"']([^\"']+)[\"']", text)
+    media_suffix = re.compile(r"\.(?:png|jpe?g|webp|gif|svg|pdf|mp4|mov|m4v|webm)(?:[?#].*)?$", re.I)
+    return ({raw for raw in direct if re.match(r"^(?:https?:|data:|blob:)", raw, re.I)
+             or media_suffix.search(raw)} |
+            {raw for raw in literals if re.match(r"^(?:data:|blob:)", raw, re.I)
+             or media_suffix.search(raw)})
+
+
+def _literal_prop(opening, name):
+    match = re.search(rf"\b{re.escape(name)}\s*=\s*(?:{{\s*)?[\"']([^\"']+)[\"']", opening)
+    return match.group(1) if match else None
+
+
+def fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed):
+    """Enforce declared material <-> meaning-bearing fresh-source identity both ways."""
+    sid = scene.get("id")
+    problems = []
+    materials = state.scene_materials(scene)
+    declared_files = {pathlib.Path(str(item.get("src"))).name for item in materials
+                      if item.get("src") and item.get("meaningBearing", True) is not False
+                      and item.get("decorative") is not True}
+    _manifest_path, manifest = state.sync_asset_manifest(plan_path)
+    for raw in sorted(literal_media_references(text)):
+        if re.match(r"^(?:https?:|data:|blob:)", raw, re.I):
+            problems.append(f"{sid}: fresh production media bypasses ASSET LOCK with remote/data/blob src: {raw[:48]}")
+            continue
+        name = pathlib.Path(raw).name
+        if name not in declared_files:
+            problems.append(f"{sid}: undeclared meaning-bearing local media in fresh source: {name}")
+            continue
+        material = next(item for item in materials
+                        if item.get("src") and pathlib.Path(str(item["src"])).name == name)
+        accepted = (manifest.get("assets") or {}).get(state.asset_usage_id(scene, material), {})
+        if accepted.get("acceptance") not in {"ACCEPTED", "ACCEPTED_WITH_ADVISORY"}:
+            problems.append(f"{sid}/{name}: selected media lacks current ASSET LOCK acceptance")
+
+    component_contracts = {
+        "RelationDiagram": "diagram-exception",
+        "MapGraphic": "map",
+        "DataChart": "chart",
+    }
+    for component, intent in component_contracts.items():
+        for opening in re.findall(rf"<{component}\b[^>]*>", text, re.S):
+            material_id = _literal_prop(opening, "materialId")
+            material = next((item for item in materials
+                             if str(item.get("id") or item.get("name")) == material_id), None)
+            prefix = f"{sid}/{component}"
+            if not material_id or material is None or material.get("materialIntent") != intent:
+                problems.append(f"{prefix}: requires literal materialId matching declared materialIntent={intent}")
+                continue
+            if component == "RelationDiagram":
+                if len(str(material.get("diagramJustification") or "").strip()) < 30 or not plan_closed:
+                    problems.append(f"{prefix}/{material_id}: requires current human-approved matching diagram-exception")
+            elif component == "MapGraphic":
+                if not str(material.get("mapDataIdentity") or "").strip():
+                    problems.append(f"{prefix}/{material_id}: matching map material requires mapDataIdentity")
+            else:
+                data = material.get("numericData")
+                numeric = isinstance(data, list) and bool(data) and all(
+                    isinstance(value, (int, float)) and not isinstance(value, bool) for value in data)
+                if not numeric or not str(material.get("dataSource") or "").strip():
+                    problems.append(f"{prefix}/{material_id}: matching chart requires real numericData and dataSource")
+    return problems
 
 
 def sequence_ranges(text):
@@ -208,6 +279,7 @@ def previs_source_check(plan_path, plan, scene_id=None):
         problems += promotion_timing_problems(plan_path, plan, scene, text)
         if plan.get("schemaVersion") == "media-first-plan-v1":
             problems += fresh_import_problems(root, video, source, text)
+            problems += fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed)
         for key in ("narrativeFunction", "viewerQuestion", "visualTransformation",
                     "contrastWithPrevious"):
             if not scene.get(key):

@@ -20,13 +20,14 @@ import time
 
 import stage_state as state
 import render_video
+import beat_sync
 
 try:
     from PIL import Image, ImageDraw
 except ImportError:
     sys.exit("Pillow is required: py -3 -m pip install pillow")
 
-VERSION = "master-frame-batched-pages-v3"
+VERSION = "master-frame-batched-pages-v4"
 PREVIS_VERSION = "selective-production-scene-stills-v3"
 SETTLE = 20
 MAX_BATCH = 40
@@ -228,12 +229,14 @@ def scene_summary_thumbs(review_entries):
             for entry in review_entries if entry.get("frame")]
 
 
-def local_sample_frames(scene, fps=30, per_scene=2, settle=SETTLE):
+def local_sample_frames(scene, fps=30, per_scene=2, settle=SETTLE, promoted_beats=()):
     total = state.scene_duration(scene, fps)
     if total <= 1:
         return []
-    beats = sorted({int(e.get("frame") or 0) for e in scene.get("visualEvents") or []})
-    picks = {min(total - 2, b + settle) for b in beats if b + settle < total}
+    beats = sorted({int(frame) for frame in promoted_beats})
+    if not beats:  # historical-plan compatibility only
+        beats = sorted({int(e.get("frame") or 0) for e in scene.get("visualEvents") or []})
+    picks = {max(1, min(total - 1, beat + settle)) for beat in beats}
     picks.add(max(1, total - 6))
     if len(picks) < per_scene:
         picks |= {int(total * (i + 1) / (per_scene + 1)) for i in range(per_scene)}
@@ -262,16 +265,20 @@ def needs_full_res(scene):
     return False
 
 
-def sample_manifest(plan, out_dir, per_scene=2, manual_full_res=()):
+def sample_manifest(plan, out_dir, per_scene=2, manual_full_res=(), promotion_timing=None):
     fps = int(plan.get("fps", 30))
     video = plan.get("video", "V")
     starts = scene_master_starts(plan)
     samples, targeted = [], []
     manual = set(manual_full_res or [])
+    resolved = (promotion_timing or {}).get("beats", {})
     for scene in plan.get("scenes") or []:
         sid = scene.get("id", "")
         scene_samples = []
-        for frame in local_sample_frames(scene, fps, per_scene):
+        promoted_beats = [item["frame"] for key, item in resolved.items()
+                          if key.startswith(f"{sid}:")]
+        for frame in local_sample_frames(scene, fps, per_scene,
+                                         promoted_beats=promoted_beats):
             master = starts[sid] + frame
             item = {"id": f"{sid}-f{frame}", "scene": sid, "localFrame": frame,
                     "masterFrame": master, "masterTimeSec": round(master / fps, 6),
@@ -521,7 +528,11 @@ def main():
     draft = state.project_path(root, args.draft) if args.draft else paths["draft"]
     out_dir = (state.project_path(root, args.out_dir) if args.out_dir
                else paths["review_frames"])
-    manifest = sample_manifest(plan, out_dir, args.per_scene, args.full_res_scene)
+    promotion_timing = None
+    if plan.get("schemaVersion") == "media-first-plan-v1":
+        _resolved_plan, _resolved_root, promotion_timing = beat_sync.resolve_contract(plan_path)
+    manifest = sample_manifest(plan, out_dir, args.per_scene, args.full_res_scene,
+                               promotion_timing)
     manifest_path = out_dir / "sample_manifest.json"
     targeted_path = out_dir / "targeted_full_res_manifest.json"
     state.write_json(manifest_path, manifest)

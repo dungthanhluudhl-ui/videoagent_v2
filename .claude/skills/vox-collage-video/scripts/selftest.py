@@ -17,10 +17,13 @@ import tempfile
 import beat_sync
 import build_gate
 import cleanup
+import fetch_pexels
 import pipeline_contracts as contracts
 import plan_gate
+import process_cutout
 import render_review_sheet as review
 import stage_state as state
+import start_video
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = state.project_root(__file__)
@@ -178,6 +181,101 @@ def media_checks(paths, plan, rows):
            manifest_path == paths["asset_manifest"] and state.hash_file(target) == plan["scenes"][0]["materials"][0]["lockedSha256"])
 
 
+def fresh_integrity_checks(paths, plan, rows):
+    plan_path = paths["plan"]
+    clean = copy.deepcopy(plan)
+    scene = clean["scenes"][0]
+    undeclared = build_gate.fresh_source_integrity_problems(
+        plan_path, clean, scene,
+        'const secret="V99/assets/secret.jpg"; <Img src={secret} />', True)
+    result(rows, "fresh undeclared local meaning-bearing media hard fails",
+           any("undeclared meaning-bearing local media" in item for item in undeclared))
+    bypasses = [build_gate.fresh_source_integrity_problems(
+        plan_path, clean, scene, f'<Img src="{src}" />', True)
+        for src in ("http://example.test/a.jpg", "https://example.test/a.jpg",
+                    "data:image/png;base64,AA", "blob:fixture-media")]
+    result(rows, "fresh remote/data/blob media bypass hard fails",
+           all(any("bypasses ASSET LOCK" in item for item in problems) for problems in bypasses))
+
+    original_gate = contracts.run_plan_gate
+    contracts.run_plan_gate = lambda _path: None
+    try:
+        state.write_json(plan_path, clean)
+        contracts.approve_plan(plan_path)
+        relation = copy.deepcopy(clean)
+        relation_material = {
+            "id": "relation", "materialIntent": "diagram-exception",
+            "anchorPhrase": "evidence 1",
+            "mediaBrief": "Show the abstract legal dependency between the two case identities.",
+            "diagramJustification": "No photo, document, map, chart, video, or reconstruction can show this abstract legal dependency clearly.",
+        }
+        relation["scenes"][0]["materials"].append(relation_material)
+        state.write_json(plan_path, relation)
+        stale = not contracts.plan_is_closed(plan_path)[0]
+        negative_relation = build_gate.fresh_source_integrity_problems(
+            plan_path, relation, relation["scenes"][0],
+            '<RelationDiagram materialId="relation" />', False)
+        contracts.approve_plan(plan_path)
+        relation_current = contracts.plan_is_closed(plan_path)[0]
+        positive_relation = build_gate.fresh_source_integrity_problems(
+            plan_path, relation, relation["scenes"][0],
+            '<RelationDiagram materialId="relation" />', relation_current)
+        missing_relation = build_gate.fresh_source_integrity_problems(
+            plan_path, relation, relation["scenes"][0],
+            '<RelationDiagram materialId="undeclared" />', relation_current)
+        result(rows, "adding diagram exception after approval stales PLAN receipt", stale)
+        result(rows, "RelationDiagram without current approved matching exception hard fails",
+               bool(negative_relation) and bool(missing_relation))
+        result(rows, "current approved matching diagram-exception may pass", not positive_relation)
+
+        map_plan = copy.deepcopy(clean)
+        map_asset = paths["assets"] / "map.png"; image(map_asset)
+        map_material = {
+            "id": "map", "materialIntent": "map", "anchorPhrase": "evidence 1",
+            "mediaBrief": "Show the authoritative geography and route relevant to this evidence.",
+            "mapDataIdentity": "fixture-route-v1", "src": "map.png", "meaningBearing": True,
+            "locked": True, "lockedSha256": state.hash_file(map_asset),
+            "provenance": "official: fixture mapping authority",
+            "selectionRationale": "The authoritative map directly establishes the route.",
+        }
+        map_plan["scenes"][0]["materials"] = [map_material]
+        state.write_json(plan_path, map_plan); state.sync_asset_manifest(plan_path)
+        state.accept_asset(plan_path, state.asset_usage_id(map_plan["scenes"][0], map_material))
+        map_source = '<MapGraphic materialId="map" src={staticFile("V99/assets/map.png")} />'
+        positive_map = build_gate.fresh_source_integrity_problems(
+            plan_path, map_plan, map_plan["scenes"][0], map_source, True)
+        negative_map = build_gate.fresh_source_integrity_problems(
+            plan_path, map_plan, map_plan["scenes"][0],
+            map_source.replace('materialId="map"', 'materialId="undeclared"'), True)
+        result(rows, "undeclared MapGraphic hard fails", bool(negative_map))
+        result(rows, "matching valid map material may pass", not positive_map)
+
+        chart_plan = copy.deepcopy(clean)
+        chart_material = {
+            "id": "chart", "materialIntent": "chart", "anchorPhrase": "evidence 1",
+            "mediaBrief": "Show the real numeric comparison established by the cited evidence.",
+            "numericData": [12, 31, 47], "dataSource": "fixture official table",
+        }
+        chart_plan["scenes"][0]["materials"] = [chart_material]
+        state.write_json(plan_path, chart_plan)
+        chart_source = '<DataChart materialId="chart" data={[12,31,47]} />'
+        positive_chart = build_gate.fresh_source_integrity_problems(
+            plan_path, chart_plan, chart_plan["scenes"][0], chart_source, True)
+        negative_chart = build_gate.fresh_source_integrity_problems(
+            plan_path, chart_plan, chart_plan["scenes"][0],
+            chart_source.replace('materialId="chart"', 'materialId="undeclared"'), True)
+        result(rows, "undeclared DataChart hard fails", bool(negative_chart))
+        result(rows, "matching chart with real numericData and dataSource may pass", not positive_chart)
+    finally:
+        contracts.run_plan_gate = original_gate
+        state.write_json(plan_path, clean)
+        state.sync_asset_manifest(plan_path)
+        for clean_scene in clean["scenes"]:
+            for material in state.scene_materials(clean_scene):
+                if material.get("src"):
+                    state.accept_asset(plan_path, state.asset_usage_id(clean_scene, material))
+
+
 def timing_checks(paths, plan, rows):
     contract = beat_sync.resolve_plan(plan, beat_sync.load_words(paths["words"]))
     result(rows, "meaning-bearing anchor resolves to scene-local frame",
@@ -194,6 +292,22 @@ def timing_checks(paths, plan, rows):
     result(rows, "ambient camera motion has no speech-anchor requirement",
            not build_gate.promotion_timing_problems(paths["plan"], plan, plan["scenes"][0],
                '<MediaPlate motion={{from:0,to:60}} />'))
+    fresh = {"schemaVersion": plan_gate.SCHEMA_VERSION, "video": "V99", "fps": 30,
+             "scenes": [{"id": "S1", "startSec": 0, "endSec": 3,
+                         "visualTransformation": "two meaning-bearing proofs resolve in sequence",
+                         "materials": [
+                             {"id": "first", "anchorPhrase": "alpha"},
+                             {"id": "second", "anchorPhrase": "beta"}]}]}
+    fresh_words = [["alpha", 0.1, 0.2, 0], ["then", 0.5, 0.7, 0],
+                   ["beta", 1.2, 1.3, 0]]
+    fresh_timing = beat_sync.resolve_plan(fresh, fresh_words)
+    manifest = review.sample_manifest(fresh, paths["review_frames"] / "beat-fixture", 2,
+                                      promotion_timing=fresh_timing)
+    produced = [item["localFrame"] for item in manifest["samples"]]
+    expected = [23, 56]
+    result(rows, "fresh review needs no visualEvents and samples resolved beat_sync anchors",
+           "visualEvents" not in fresh["scenes"][0] and all(frame in produced for frame in expected),
+           f"expected beat frames={expected}; produced={produced}")
     timing_path, _ = beat_sync.write_timing(paths["plan"])
     source = state.scene_source(paths["root"], "V99", "S1")
     before = source.resolve()
@@ -320,6 +434,74 @@ def review_checks(tmp, rows):
     result(rows, "no mega-sheet is generated", not (tmp / "contact_sheet.png").exists())
 
 
+def pexels_checks(tmp, rows):
+    calls = []
+    photos = [{"id": index, "width": 900, "height": 1200,
+               "photographer": f"Photographer {index}",
+               "url": f"https://www.pexels.com/photo/{index}/",
+               "src": {"medium": f"https://images.pexels.com/{index}-preview.jpg",
+                       "original": f"https://images.pexels.com/{index}.jpg"}}
+              for index in range(1, 10)]
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"photos": photos}
+
+    def fake_get(url, **kwargs):
+        calls.append((url, kwargs)); return Response()
+
+    candidates = fetch_pexels.search("fixture query", "portrait", 99,
+                                     api_key="fixture-secret", get=fake_get)
+    required = {"provider", "mediaType", "pexelsId", "photographer", "pageUrl",
+                "previewUrl", "width", "height", "orientation", "retrievedAt",
+                "provenance", "license"}
+    result(rows, "Pexels PHOTO structured candidate schema is usable",
+           len(candidates) == 8 and all(required <= set(item) for item in candidates)
+           and all(item["provider"] == "pexels" and item["mediaType"] == "photo"
+                   and item["license"] is None for item in candidates))
+    result(rows, "Pexels search request and returned candidates are capped at eight",
+           calls[0][1]["params"]["per_page"] == 8 and len(candidates) == 8)
+    result(rows, "Pexels adapter remains PHOTO-only",
+           "video" not in (HERE / "fetch_pexels.py").read_text(encoding="utf-8").lower())
+    try:
+        fetch_pexels.load_api_key(environ={}, start=tmp); missing = ""
+    except RuntimeError as exc:
+        missing = str(exc)
+    result(rows, "missing Pexels key has explicit safe runtime status",
+           missing == fetch_pexels.MISSING_KEY_STATUS and "fixture-secret" not in missing)
+    text = (HERE / "fetch_pexels.py").read_text(encoding="utf-8")
+    result(rows, "Pexels key is sourced only from environment or untracked .env and never printed",
+           "tracked_by_git" in text and "print(key" not in text and "print(load_api_key" not in text)
+    result(rows, "Pexels default is visual plate and cutout is conditional",
+           "actual visual plates by default" in text and "specific approved scene treatment" in text)
+
+
+def optional_dependency_checks(rows):
+    imported = []
+
+    def record_core(name):
+        imported.append(name)
+        return object()
+
+    standalone_env = start_video.step_env(importer=record_core)
+
+    def missing_cutout_only(name):
+        if name in {"rembg", "scipy"}:
+            raise ImportError(name)
+        return object()
+
+    core = start_video.step_env(("audio", "align", "plan"), importer=missing_cutout_only)
+    missing = process_cutout.optional_dependency_status(missing_cutout_only)
+    result(rows, "standalone core environment check uses exact normal dependency set",
+           standalone_env and imported == ["whisper"])
+    result(rows, "normal core INGEST passes mocked missing rembg/scipy", core)
+    result(rows, "actual cutout capability reports mocked missing rembg/scipy",
+           missing == ["scipy", "rembg"])
+
+
 def layout_fixture(root, safe):
     directory = pathlib.Path(tempfile.mkdtemp(prefix="layout-fixture-", dir=root))
     entry = directory / "index.ts"
@@ -360,16 +542,44 @@ def layout_checks(rows):
 def source_scout_checks(rows):
     path = ROOT / ".claude" / "agents" / "source-scout.md"
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
-    result(rows, "Source Scout uses native project agent convention", path.is_file())
+    skill = (HERE.parent / "SKILL.md").read_text(encoding="utf-8")
+    compact_text = " ".join(text.split())
+    compact_skill = " ".join(skill.split())
+    result(rows, "Claude-compatible Source Scout file is retained without false Codex-native claim",
+           path.is_file() and "Claude-compatible" in text and "not a Codex-native" in text)
+    result(rows, "Source Scout policy is native-first with exactly one native attempt",
+           "NATIVE-FIRST + BOUNDED FALLBACK-MAIN" in skill and
+           "attempt Source Scout delegation exactly once" in skill)
+    result(rows, "one failed/unavailable native spawn falls back to main without retry",
+           "sourceScoutMode` to `fallback-main`" in compact_skill and
+           "do not retry it" in compact_skill)
     result(rows, "Source Scout compact brief excludes full plan/transcript",
            "approximately 2 KB or less" in text and "Reject whole transcripts" in text)
     result(rows, "Source Scout candidate cap is eight", "at most 8 candidates" in text)
     result(rows, "Source Scout retry cap is one", "at most one refined" in text)
     result(rows, "Source Scout write scope excludes canonical production paths",
-           "input/.videoagent/V<N>/candidates/<sceneId>/" in text and
+           "input/.videoagent/V<N>/candidates/<needId>/" in text and
            "Never write `src/`, `input/V<N>/`, or `public/V<N>/`" in text)
     result(rows, "Source Scout cannot recursively spawn agents",
-           "may not call" in text and "spawn another agent" in text)
+           "may not call" in compact_text.lower() and "spawn another agent" in compact_text)
+    result(rows, "fallback-main cannot claim proven subagent economics",
+           "NOT PROVEN — native Codex" in skill and "never PASS" in skill)
+
+
+def active_workflow_checks(rows):
+    stale = ROOT / "docs" / "Non-tech làm AI _ SKILL VOX-STYLE VIDEO.md"
+    active = [HERE.parent / "SKILL.md", *sorted((HERE.parent / "references").glob("*.md"))]
+    text = "\n".join(path.read_text(encoding="utf-8") for path in active if path.is_file()).lower()
+    result(rows, "stale Non-tech workflow document is absent", not stale.exists())
+    result(rows, "active fresh-production documentation has no generate_sfx reference",
+           "generate_sfx.py" not in text)
+    obsolete = ("run every downloaded photo through", "every pexels image", "every photo through rembg")
+    result(rows, "active fresh-production documentation has no every-photo-cutout instruction",
+           not any(phrase in text for phrase in obsolete))
+    forbidden = ("fetch_pixabay.py", "fetch_unsplash.py", "fetch_wikimedia.py",
+                 "fetch_pexels_video.py", "media_sources.py")
+    result(rows, "Pexels PHOTO remains the only structured external provider",
+           all(not (HERE / name).exists() for name in forbidden))
 
 
 def cleanup_checks(tmp, paths, plan, rows):
@@ -423,11 +633,15 @@ def checks(tmp):
     paths, plan = project(tmp)
     plan_checks(tmp, paths, plan, rows)
     media_checks(paths, plan, rows)
+    fresh_integrity_checks(paths, plan, rows)
     timing_checks(paths, plan, rows)
     conformance_checks(paths, plan, rows)
     review_checks(tmp / "review-scale", rows)
+    pexels_checks(tmp / "pexels-key-fixture", rows)
+    optional_dependency_checks(rows)
     layout_checks(rows)
     source_scout_checks(rows)
+    active_workflow_checks(rows)
     cleanup_checks(tmp, paths, plan, rows)
     architecture_checks(paths, plan, rows)
     return rows

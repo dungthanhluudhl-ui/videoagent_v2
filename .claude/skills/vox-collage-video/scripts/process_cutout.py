@@ -84,6 +84,7 @@ Flags (apply to every pair in the call — run separately for mixed needs):
 """
 
 import argparse
+import importlib
 import importlib.metadata
 import pathlib
 import re
@@ -91,11 +92,34 @@ import sys
 
 import stage_state as state
 
-import numpy as np
-from PIL import Image, ImageOps
-from PIL.PngImagePlugin import PngInfo
-from rembg import remove, new_session
-from scipy import ndimage
+np = Image = ImageOps = PngInfo = remove = new_session = ndimage = None
+
+OPTIONAL_DEPENDENCIES = ("numpy", "PIL", "scipy", "rembg")
+
+
+def optional_dependency_status(importer=importlib.import_module):
+    missing = []
+    for module in OPTIONAL_DEPENDENCIES:
+        try:
+            importer(module)
+        except ImportError:
+            missing.append(module)
+    return missing
+
+
+def load_optional_dependencies():
+    missing = optional_dependency_status()
+    if missing:
+        return missing
+    global np, Image, ImageOps, PngInfo, remove, new_session, ndimage
+    np = importlib.import_module("numpy")
+    Image = importlib.import_module("PIL.Image")
+    ImageOps = importlib.import_module("PIL.ImageOps")
+    PngInfo = importlib.import_module("PIL.PngImagePlugin").PngInfo
+    rembg = importlib.import_module("rembg")
+    remove, new_session = rembg.remove, rembg.new_session
+    ndimage = importlib.import_module("scipy.ndimage")
+    return []
 
 MARGIN_FRAC = 0.04
 MIN_BLOB_FRAC = 0.02  # drop connected components smaller than this fraction of the largest blob
@@ -433,6 +457,9 @@ def manifest_path(root, video, supplied=None):
 
 
 if __name__ == "__main__":
+    dependency_problems = load_optional_dependencies()
+    if dependency_problems:
+        sys.exit("cutout: missing optional dependencies: " + ", ".join(dependency_problems))
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("pairs", nargs="+", help="raw1 out1 raw2 out2 ...")
     parser.add_argument("--color", action="store_true", help="keep full color instead of desaturating")

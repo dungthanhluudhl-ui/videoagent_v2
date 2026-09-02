@@ -86,11 +86,27 @@ py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py sync-assets
 py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py accept-asset input/V<N>/scene_plan.json Sxx:<materialId>
 ```
 
-A same-name byte or brief replacement resets acceptance. If suitable media is not
-locked, invoke the native `.claude/agents/source-scout.md` role with one ≤2 KB
-scene brief. It writes ≤8 candidates only under
-`input/.videoagent/V<N>/candidates/<sceneId>/`; one refined retry maximum. Cheap
-vision may triage candidates. The main agent selects and locks; do not bulk-open.
+A same-name byte or brief replacement resets acceptance. If ASSET LOCK needs a
+Pexels photo, use **NATIVE-FIRST + BOUNDED FALLBACK-MAIN** sourcing. When the
+runtime exposes native delegation, attempt Source Scout delegation exactly once.
+Set `sourceScoutMode` to `native` only if that child starts; if delegation is
+unavailable or that one spawn fails, do not retry it: set `sourceScoutMode` to
+`fallback-main` and have the main agent execute the identical bounded contract.
+
+The contract is one approximately ≤2 KB need brief (`sceneId` or compact related
+`needId`, `anchorPhrase`, `mediaBrief`, `materialIntent`, `shortCaseFacts`, and
+`styleContract`), ≤8 candidates, and ≤1 sourcing refinement total. It excludes
+whole transcripts/plans and unrelated repository context, forbids recursive
+agents, and permits discovery writes only under
+`input/.videoagent/V<N>/candidates/<needId>/` — never `src/`, `input/V<N>/`, or
+`public/V<N>/`. The main agent selects and locks the final asset and owns material
+intent/art direction. `.claude/agents/source-scout.md` is a retained
+Claude-compatible role description, not proof of Codex-native delegation.
+
+When `sourceScoutMode` is `fallback-main`, product/workflow/wall-time/Pexels and
+PREVIS/PROMOTE results remain evaluable, but subagent economics, main-context
+savings, and worker-token savings must be recorded as **NOT PROVEN — native Codex
+delegation unavailable/failed**, never PASS.
 
 ## 4. PREVIS
 

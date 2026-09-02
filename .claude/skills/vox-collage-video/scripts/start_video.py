@@ -12,7 +12,7 @@ danh từ riêng ("Itaewon" -> "Y Tự Quận", 1 từ thành 3), nên đếm t�
 
 Bốn bước, mỗi bước tự bỏ qua nếu đã có kết quả (dùng --force để làm lại):
 
-  env        đủ whisper/rembg/scipy/PIL/numpy/requests chưa
+  env        đủ dependency thực sự dùng bởi audio/transcribe/align/plan chưa
   audio      chép về public/V<N>/audio.mp3
   transcribe whisper word_timestamps -> input/V<N>/transcript.json
   align      kịch bản + thời gian whisper -> input/V<N>/words_aligned.json
@@ -66,7 +66,12 @@ try:
 except AttributeError:
     pass
 
-NEEDED = ("whisper", "rembg", "scipy", "PIL", "numpy", "requests")
+CORE_DEPENDENCIES = {
+    "audio": (),
+    "transcribe": ("whisper",),
+    "align": (),
+    "plan": (),
+}
 ROUND = 3
 AUDIO_VERSION = "audio-copy-v1"
 TRANSCRIBE_VERSION = "whisper-word-timestamps-v1"
@@ -99,17 +104,20 @@ def norm(w):
 
 # ------------------------------------------------------------------ bước env
 
-def step_env():
+def step_env(steps=None, importer=__import__):
+    requested = tuple(steps or CORE_DEPENDENCIES)
+    needed = tuple(dict.fromkeys(
+        dependency for step in requested for dependency in CORE_DEPENDENCIES.get(step, ())))
     missing = []
-    for mod in NEEDED:
+    for mod in needed:
         try:
-            __import__(mod)
+            importer(mod)
         except ImportError:
             missing.append(mod)
     if missing:
         print(f"env: THIẾU {', '.join(missing)} - cài trước khi chạy tiếp.")
         return False
-    print(f"env: đủ {len(NEEDED)} gói.")
+    print(f"env: đủ {len(needed)} gói core ({', '.join(needed) or 'stdlib-only'}).")
     return True
 
 
@@ -449,7 +457,8 @@ def main():
     ok = True
     for step in todo:
         if step == "env":
-            ok = step_env() and ok
+            core_steps = [name for name in todo if name in CORE_DEPENDENCIES]
+            ok = step_env(core_steps or None) and ok
         elif step == "audio":
             ok = step_audio(args.n, args.audio, args.force) and ok
         elif step == "transcribe":

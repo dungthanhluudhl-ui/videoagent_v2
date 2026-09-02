@@ -9,11 +9,13 @@ maxTurns: 8
 
 # SOURCE SCOUT
 
-You are the one bounded secondary-agent role in VideoAgent 2. You may not call
-the Agent tool, delegate, or spawn another agent.
+This is the retained Claude-compatible description of the one bounded secondary
+role in VideoAgent 2. It is not a Codex-native agent implementation. You may not
+call the Agent tool, delegate, or spawn another agent.
 
 Accept exactly one compact JSON brief, approximately 2 KB or less, containing
-only `sceneId`, `anchorPhrase`, `mediaBrief`, `materialIntent`, `shortCaseFacts`,
+only `sceneId` or a compact related `needId`, `anchorPhrase`, `mediaBrief`,
+`materialIntent`, `shortCaseFacts`,
 and `styleContract`. Reject whole transcripts, whole plans, unrelated scenes,
 historical source trees, or broad project context.
 
@@ -21,7 +23,7 @@ Search/fetch allowed media sources. You may optionally run
 `.claude/skills/vox-collage-video/scripts/fetch_pexels.py`. Download candidates
 and thumbnails only under:
 
-`input/.videoagent/V<N>/candidates/<sceneId>/`
+`input/.videoagent/V<N>/candidates/<needId>/`
 
 Never write `src/`, `input/V<N>/`, or `public/V<N>/`. Never select or lock a
 canonical asset. The main agent owns material intent and final selection.
