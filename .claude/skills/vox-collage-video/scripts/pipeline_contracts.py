@@ -14,12 +14,12 @@ import sys
 import stage_state as state
 
 HERE = pathlib.Path(__file__).resolve().parent
-PLAN_VERSION = "semantic-plan-approval-v3"
-PREVIS_VERSION = "actual-pixel-previs-approval-v2"
+PLAN_VERSION = "semantic-media-plan-approval-v4"
+PREVIS_VERSION = "actual-pixel-paginated-previs-approval-v3"
 CORRECTION_VERSION = "local-correction-v2"
 HANDOFF_VERSION = "stage-handoff-v2"
 
-CANONICAL_STAGES = ("PLAN", "PREVIS", "REVIEW", "CORRECTION", "FINAL")
+CANONICAL_STAGES = ("PLAN", "PREVIS", "PROMOTE", "REVIEW", "CORRECTION", "FINAL")
 STAGE_ALIASES = {"BUILD": "PREVIS"}
 SCENE_STATUS_STAGES = {
     None: "PLAN", "planned": "PLAN", "previs": "PREVIS", "built": "PREVIS",
@@ -132,29 +132,60 @@ def semantic_scene(scene):
     """Creative intent only: implementation timing and workflow fields never enter."""
     fields = (
         "id", "narrativeFunction", "viewerQuestion", "visualTransformation",
-        "contrastWithPrevious", "visualLanguage", "treatment", "backdrop", "density",
-        "comprehensionLoad", "evidenceIdentity", "evidenceRegions",
+        "contrastWithPrevious", "comprehensionLoad", "materialIntent", "mediaBrief",
+        "evidenceIdentity", "evidenceRegions", "diagramJustification",
     )
     result = {key: scene.get(key) for key in fields if key in scene}
     result["assets"] = [
         {key: asset.get(key) for key in (
-            "name", "src", "role", "meaningBearing", "describes", "sourceConstraint",
-            "evidenceIdentity", "evidenceRegions", "selectionRationale",
+            "id", "name", "role", "meaningBearing", "describes", "sourceConstraint",
+            "materialIntent", "mediaBrief", "anchorPhrase", "evidenceIdentity",
+            "evidenceRegions", "diagramJustification", "mapDataIdentity", "numericData",
+            "dataSource", "reconstructionLabel",
         ) if key in asset}
-        for asset in scene.get("assets") or []
+        for asset in state.scene_materials(scene)
     ]
     return result
 
 
 def meaning_assets(scene):
-    return [asset for asset in scene.get("assets") or []
+    return [asset for asset in state.scene_materials(scene)
             if asset.get("src") and asset.get("meaningBearing", True) is not False
             and asset.get("decorative") is not True]
+
+
+def material_lock_required(material):
+    return material.get("materialIntent") in {
+        "authentic", "contextual", "document", "reconstruction", "map",
+    } or (material.get("materialIntent") is None and material.get("src"))
+
+
+def validate_media_metadata(scene, material, path):
+    intent = material.get("materialIntent")
+    if intent in {"authentic", "contextual", "document", "reconstruction", "map"} \
+            and not material.get("src"):
+        raise ValueError(f"{scene.get('id')}/{material.get('id') or material.get('name')}: "
+                         f"materialIntent={intent} requires a real locked file; CSS/SVG geometry is not media")
+    if not path or path.suffix.lower() == ".pdf":
+        return
+    if intent is None:  # historical compatibility; fresh media always declares intent
+        return
+    provenance = str(material.get("provenance") or "").strip()
+    if not provenance:
+        raise ValueError(f"{scene.get('id')}/{path.name}: non-PDF media requires provenance")
+    local = provenance.lower().startswith(("official:", "local-authoritative:"))
+    if not local and not str(material.get("license") or "").strip():
+        raise ValueError(f"{scene.get('id')}/{path.name}: external media requires license")
+    if not local and not str(material.get("retrievedAt") or "").strip():
+        raise ValueError(f"{scene.get('id')}/{path.name}: external media requires retrievedAt")
 
 
 def locked_asset_contract(root, video, scene):
     rows = []
     rationale = str(scene.get("assetRationale") or "").strip()
+    for material in state.scene_materials(scene):
+        if material_lock_required(material) and not material.get("src"):
+            validate_media_metadata(scene, material, None)
     for asset in meaning_assets(scene):
         src = pathlib.Path(str(asset.get("src"))).name
         path = state.asset_path(root, video, src)
@@ -167,6 +198,7 @@ def locked_asset_contract(root, video, scene):
             raise ValueError(f"{scene.get('id')}: meaning-bearing asset is unreadable: {path}: {exc}") from exc
         expected = asset.get("lockedSha256")
         actual = state.hash_file(path)
+        validate_media_metadata(scene, asset, path)
         if asset.get("locked") is not True or not expected:
             raise ValueError(f"{scene.get('id')}/{src}: meaning-bearing asset must be locked with lockedSha256")
         if expected != actual:
@@ -174,11 +206,20 @@ def locked_asset_contract(root, video, scene):
         asset_rationale = str(asset.get("selectionRationale") or rationale).strip()
         if not asset_rationale:
             raise ValueError(f"{scene.get('id')}/{src}: locked asset needs selection rationale")
+        manifest_path, manifest = state.sync_asset_manifest(
+            state.video_paths(root, video)["plan"])
+        usage = state.asset_usage_id(scene, asset)
+        accepted = (manifest.get("assets") or {}).get(usage, {})
+        if accepted.get("acceptance") not in {"ACCEPTED", "ACCEPTED_WITH_ADVISORY"}:
+            raise ValueError(f"{scene.get('id')}/{src}: current byte+brief identity is not accepted in {manifest_path}")
         rows.append({
             "scene": scene.get("id"), "name": asset.get("name"), "src": src,
             "role": asset.get("role"), "sha256": actual,
             "evidenceIdentity": asset.get("evidenceIdentity"),
             "evidenceRegions": asset.get("evidenceRegions") or [],
+            "materialIntent": asset.get("materialIntent"),
+            "provenance": asset.get("provenance"), "license": asset.get("license"),
+            "retrievedAt": asset.get("retrievedAt"),
         })
     return rows
 
@@ -190,7 +231,8 @@ def mid_required(scene):
     return scene.get("previsMidRequired") is True or "MID" in {str(x).upper() for x in declared}
 
 
-def validate_previs_manifest(plan_path, plan, manifest_path, require_source_current=False):
+def validate_previs_manifest(plan_path, plan, manifest_path, require_source_current=False,
+                             allow_missing_review_pages=False):
     root = state.project_root(plan_path)
     paths = state.video_paths(root, plan.get("video", "V"))
     manifest_path = state.project_path(root, manifest_path or paths["previs_manifest"])
@@ -236,14 +278,30 @@ def validate_previs_manifest(plan_path, plan, manifest_path, require_source_curr
         if not mid_required(scene) and (sid, "MID") in by_scene:
             raise ValueError(f"{sid}: MID is allowed only when explicitly declared")
 
-    contact = state.project_path(root, manifest.get("contactSheet") or paths["contact_sheet"])
-    contact_proof = state.file_input(contact)
-    if contact_proof.get("missing") or not contact_proof.get("size"):
-        raise ValueError(f"one whole-video PREVIS contact sheet is required: {contact}")
-    declared_contact = manifest.get("contactSheetSha256")
-    if declared_contact and declared_contact != contact_proof.get("sha256"):
-        raise ValueError("PREVIS contact sheet hash disagrees with frames_manifest.json")
-    return manifest_path, manifest, frame_inputs, contact_proof
+    review_pages = []
+    for item in manifest.get("reviewPages") or []:
+        if int(item.get("width", 0)) * int(item.get("height", 0)) > 4_000_000:
+            raise ValueError(f"PREVIS review page exceeds 4 MP: {item.get('path')}")
+        path = state.project_path(root, item.get("path"))
+        proof = state.file_input(path)
+        if proof.get("missing") and allow_missing_review_pages:
+            continue
+        if proof.get("missing") or item.get("sha256") != proof.get("sha256"):
+            raise ValueError(f"PREVIS review page is missing/stale: {path}")
+        review_pages.append(proof)
+    if not review_pages and allow_missing_review_pages and manifest.get("reviewPages"):
+        pass
+    elif not review_pages:
+        # Historical compatibility only. Fresh captures always write reviewPages.
+        contact = state.project_path(root, manifest.get("contactSheet") or paths["contact_sheet"])
+        contact_proof = state.file_input(contact)
+        if contact_proof.get("missing") or not contact_proof.get("size"):
+            raise ValueError("paginated PREVIS review pages are required")
+        declared = manifest.get("contactSheetSha256")
+        if declared and declared != contact_proof.get("sha256"):
+            raise ValueError("historical PREVIS contact sheet hash disagrees with manifest")
+        review_pages = [contact_proof]
+    return manifest_path, manifest, frame_inputs, review_pages
 
 
 def previs_receipt_path(plan_path, plan):
@@ -257,7 +315,7 @@ def previs_tool():
 
 
 def previs_approval_contract(plan_path, manifest_path=None, approval_note=None,
-                             require_source_current=False):
+                             require_source_current=False, allow_missing_review_pages=False):
     plan_path = resolve_plan_path(plan_path)
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     closed, _path, _receipt = plan_is_closed(plan_path)
@@ -269,8 +327,9 @@ def previs_approval_contract(plan_path, manifest_path=None, approval_note=None,
     root = state.project_root(plan_path)
     video = plan.get("video", "V")
     paths = state.video_paths(root, video)
-    manifest_path, _manifest, frame_inputs, contact = validate_previs_manifest(
-        plan_path, plan, manifest_path or paths["previs_manifest"], require_source_current)
+    manifest_path, _manifest, frame_inputs, review_pages = validate_previs_manifest(
+        plan_path, plan, manifest_path or paths["previs_manifest"], require_source_current,
+        allow_missing_review_pages)
     locked, semantics, provenance = [], [], []
     for scene in plan.get("scenes") or []:
         locked.extend(locked_asset_contract(root, video, scene))
@@ -287,7 +346,7 @@ def previs_approval_contract(plan_path, manifest_path=None, approval_note=None,
         "treatmentIntent": plan.get("globalVisualContract") or plan.get("styleContract") or {},
         "semanticScenes": semantics, "lockedAssets": locked,
         "approvedFrames": sorted(frame_inputs, key=lambda x: (str(x["scene"]), x["role"])),
-        "contactSheet": contact, "humanApprovalNote": str(approval_note or "").strip(),
+        "reviewPages": review_pages, "humanApprovalNote": str(approval_note or "").strip(),
     }
     return plan, root, manifest_path, inputs, provenance
 
@@ -296,14 +355,22 @@ def approve_previs(plan_path, manifest_path=None, art_direction=None):
     note = str(art_direction or "").strip()
     if not note:
         raise ValueError("a non-empty human art-direction approval note is required")
-    plan, _root, manifest_path, inputs, provenance = previs_approval_contract(
+    plan, root, manifest_path, inputs, provenance = previs_approval_contract(
         plan_path, manifest_path, note, require_source_current=True)
+    import build_gate
+    dependencies = [{"scene": scene.get("id"),
+                     "fingerprint": state.scene_dependency_fingerprint(
+                         root, plan, scene, build_gate.PIXEL_VERSION),
+                     "contract": state.scene_dependency_contract(
+                         root, plan, scene, build_gate.PIXEL_VERSION)}
+                    for scene in plan.get("scenes") or []]
     path = previs_receipt_path(resolve_plan_path(plan_path), plan)
     receipt = state.make_receipt(
         path, "previs-approved", inputs, previs_tool(), {}, outputs=(),
         accepted={"manual": True, "artDirection": note},
         metadata={"approvalBaselineManifest": str(manifest_path),
                   "sourceProvenance": provenance,
+                  "sceneDependencies": dependencies,
                   "note": "source SHA is provenance only; same-source promotion may add motion"})
     return path, receipt
 
@@ -320,7 +387,9 @@ def previs_is_closed(plan_path):
         return False, path, existing
     try:
         _plan, _root, _manifest, inputs, _provenance = previs_approval_contract(
-            plan_path, manifest, note)
+            plan_path, manifest, note, allow_missing_review_pages=True)
+        if not inputs.get("reviewPages"):
+            inputs["reviewPages"] = (existing.get("inputs") or {}).get("reviewPages") or []
     except (OSError, ValueError, json.JSONDecodeError):
         return False, path, existing
     current, receipt = state.receipt_current(path, "previs-approved", inputs,
@@ -388,6 +457,9 @@ def main():
     sub = ap.add_subparsers(dest="command", required=True)
     for command in ("approve-plan", "plan-status"):
         parser = sub.add_parser(command); parser.add_argument("plan")
+    parser = sub.add_parser("sync-assets"); parser.add_argument("plan")
+    parser = sub.add_parser("accept-asset"); parser.add_argument("plan"); parser.add_argument("asset")
+    parser.add_argument("--advisory")
     parser = sub.add_parser("approve-previs")
     parser.add_argument("plan"); parser.add_argument("--manifest")
     parser.add_argument("--art-direction"); parser.add_argument("--check", action="store_true")
@@ -408,6 +480,13 @@ def main():
             closed, path, receipt = plan_is_closed(args.plan)
             print(state.compact_result("CLOSED" if closed else "HARD", hard=0 if closed else 1,
                                        details=path, receipt=receipt or "missing")); return 0 if closed else 1
+        if args.command == "sync-assets":
+            path, manifest = state.sync_asset_manifest(resolve_plan_path(args.plan))
+            print(state.compact_result("CLOSED", changed=[path], details=path,
+                                       receipt=state.digest(manifest))); return 0
+        if args.command == "accept-asset":
+            path = state.accept_asset(resolve_plan_path(args.plan), args.asset, args.advisory)
+            print(state.compact_result("CLOSED", changed=[path], details=path)); return 0
         if args.command == "approve-previs":
             if args.check:
                 closed, path, receipt = previs_is_closed(args.plan)

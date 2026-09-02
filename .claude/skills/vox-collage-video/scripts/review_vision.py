@@ -18,7 +18,7 @@ def inputs_for(plan_path, plan):
     review = state.read_json(review_path, {})
     paths = []
     for scene in plan.get("scenes") or []:
-        for asset in scene.get("assets") or []:
+        for asset in state.scene_materials(scene):
             if asset.get("src"):
                 paths.append(state.asset_path(root, plan.get("video", "V"), asset["src"]))
     for key in ("temporalSheet", "sceneSummarySheet"):

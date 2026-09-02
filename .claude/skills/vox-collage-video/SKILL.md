@@ -1,173 +1,128 @@
 ---
 name: vox-collage-video
-description: PREVIS-in-place workflow for narrated legal and investigative Remotion videos. Human art direction approves actual pixels; deterministic gates protect integrity.
+description: MEDIA-FIRST / graphics-by-exception PREVIS-in-place workflow for narrated Remotion videos.
 ---
 
-# Videoagent 2 — PREVIS in place
+# VideoAgent 2
 
-## Authority and policy
+## Product contract
 
-This file is the runtime orchestration authority. Script `--help` and current
-code are mechanical truth. Load `references/visual-language.md`,
-`references/primitives.md`, or `references/gates.md` only for the current task.
-Search `worked-examples.md` or `lessons.md` only when precedent is needed; never
-read the lesson archive end-to-end as a production ritual.
+Lifecycle: **INGEST → PLAN → ASSET LOCK → PREVIS → PROMOTE → REVIEW + FINAL**.
 
-**Integrity is HARD. Quality and aesthetics are ADVISORY.** Human approval of
-the whole-video PREVIS contact sheet owns art direction. Gates own mechanical
-truth: plan validity, locked bytes, actual evidence, same-source promotion,
-approved-pixel conformance, text safety, assembly, and review currentness.
+PREVIS is production source, not a storyboard implementation. Human approval is
+of actual selected media, crop, typography, composition, layers and pixels. PROMOTE
+modifies that same scene JSX only to add temporal behavior. Remotion registers,
+renders and proves the actual source; it is not a scene generator or replacement DSL.
 
-The default lifecycle is exactly:
+Default policy is **MEDIA-FIRST / GRAPHICS-BY-EXCEPTION**:
 
-1. **INGEST**
-2. **PLAN**
-3. **ASSET LOCK**
-4. **PREVIS**
-5. **PROMOTE**
-6. **REVIEW + FINAL**
+1. authentic case/official source;
+2. relevant real contextual photo/video;
+3. truthful document/article/archive material;
+4. clearly labelled editorial/AI reconstruction;
+5. map for geography/route;
+6. chart for real quantitative comparison;
+7. relation diagram only with a specific exception justification.
 
-PREVIS uses actual production source. It is not a storyboard implementation,
-template pass, generic renderer, or alternative scene representation. The same
-bespoke JSX is promoted. No layout DSL, block library, archetype, template
-system, database, scheduler, or orchestrator is required. The generic renderer
-and layout/template production route are retired.
+Ask: **What does this material show or prove that the viewer needs for this
+narration?** Category filler is not an answer. There is no media, diagram, layer,
+transition, icon, or text percentage quota.
 
-## Canonical video layout
+## Canonical paths
 
-New `V<N>` work lives here; `stage_state.video_paths()` is the only path authority:
+`stage_state.video_paths()` is the sole path authority:
 
 ```text
-input/V<N>/                       public/V<N>/
-  scene_plan.json                   audio.mp3
-  transcript.json                   assets/
-  words_aligned.json
-  asset_manifest.json             src/videos/V<N>/
-  review.json                       Master.jsx
-  previs/                           captions.js
-    contact_sheet.png               shared.jsx
-    frames_manifest.json            scenes/S01.jsx ...
-    frames/
-
-out/V<N>/draft/master.mp4         input/.videoagent/V<N>/
-out/V<N>/review/                    receipts/ cache/ logs/
-out/V<N>/final/master.mp4           economics.jsonl
+input/V<N>/scene_plan.json          public/V<N>/audio.mp3
+input/V<N>/transcript.json          public/V<N>/assets/<selected files>
+input/V<N>/words_aligned.json       src/videos/V<N>/scenes/Sxx.jsx
+input/V<N>/asset_manifest.json      src/videos/V<N>/scene-helpers.jsx (optional)
+input/V<N>/previs/frames/           src/videos/V<N>/Master.jsx
+input/V<N>/previs/review_pages/     out/V<N>/draft/master.mp4
+input/V<N>/review.json              out/V<N>/review/pages/
+input/.videoagent/V<N>/             out/V<N>/final/master.mp4
 ```
 
-Do not migrate historical V3–V17 trees while producing a new video. Generated
-`src/index.ts` registers only `PrevisRoot`; production roots are not operational
-dependencies.
+Fresh scene source may import only `src/primitives/`, Remotion libraries, and the
+optional per-video `scene-helpers`/generated `timing.js`. Historical V3–V17 files
+remain in place but are not a reusable production kit.
 
 ## 1. INGEST
 
-Start from the user's script and audio:
-
 ```powershell
-py -3 .claude/skills/vox-collage-video/scripts/init_video.py <N> --audio <audio> --script <script>
+py -3 .claude/skills/vox-collage-video/scripts/start_video.py <N> --audio <audio> --script <script>
 ```
 
-Script text is authoritative; Whisper supplies timing. Inspect alignment before
-accepting a preserved hand edit. Do not overwrite accepted alignment casually.
-Then scaffold canonical state:
-
-```powershell
-py -3 .claude/skills/vox-collage-video/scripts/new_video.py <N> --words input/V<N>/words_aligned.json
-```
+This one entry checks the environment, copies audio, transcribes, aligns script
+words to speech, initializes canonical directories, and writes an incomplete
+semantic plan skeleton. Script text is WHAT; aligned words supply WHEN.
 
 ## 2. PLAN
 
-Write semantic intent before components. Every scene answers:
+Each fresh scene contains only editorial intent:
 
-- `narrativeFunction`: what the scene does in the argument;
-- `viewerQuestion`: the one question raised or answered;
-- `visualTransformation`: what relationship/state the viewer watches change;
-- `contrastWithPrevious`: why this scene is not the previous treatment again;
-- `visualLanguage`, backdrop, density, comprehension intent;
-- authentic evidence/asset need and `evidenceRegions` where a source claim is cited.
+- `id`, `startSec`, `endSec`;
+- `narrativeFunction`, `viewerQuestion`, `visualTransformation`;
+- `contrastWithPrevious`, `comprehensionLoad`;
+- `materials[]`: `id`, `anchorPhrase`, `mediaBrief`, `materialIntent`;
+- source/evidence identity/regions where applicable;
+- `diagramJustification` only for `diagram-exception`.
 
-Meaning order is **narration → treatment → evidence/asset → component**. Show the
-relationship, not merely the topic. Do not add symbols, diagrams, labels, lines,
-layers, or motion as filler.
-
-Run `plan_gate.py input/V<N>/scene_plan.json`. Present the semantic plan to the
-user, set `shotlistApproved: true` only after approval, then run:
-
-```powershell
-py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py approve-plan input/V<N>/scene_plan.json
-```
-
-PLAN is valid before any PREVIS frame or source exists.
+Do not put template/backdrop/variant/component/geometry/delay/visibleFor/frame or
+`durationInFrames` in a fresh plan. Duration is mechanically derived from
+start/end/fps. Run `plan_gate.py`, obtain human shot-list approval, set
+`shotlistApproved: true`, then record `approve-plan`.
 
 ## 3. ASSET LOCK
 
-Select authentic meaning-bearing assets and store them under
-`public/V<N>/assets/`. For each meaning-bearing plan asset:
+Real-media intents must bind to real files in `public/V<N>/assets/`. CSS gradients
+and SVG drawings cannot satisfy authentic/contextual/document/reconstruction.
+Selected bytes require `lockedSha256`; non-PDF external media adds compact
+`provenance`, `license`, and `retrievedAt`. `official:` or
+`local-authoritative:` provenance may truthfully omit URL-style metadata.
 
-- record semantic identity, role, rationale, and evidence identity/regions;
-- set `locked: true` and `lockedSha256` to the actual byte hash;
-- sync/accept `input/V<N>/asset_manifest.json` where applicable;
-- never let a same-name replacement inherit stale acceptance.
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py sync-assets input/V<N>/scene_plan.json
+py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py accept-asset input/V<N>/scene_plan.json Sxx:<materialId>
+```
 
-Semantic PLAN approval freezes asset intent, not later lock implementation. Adding
-`src`, byte-lock fields, selection rationale, processing output, or implementation
-geometry/timing does not stale PLAN while role, meaning/describes, and evidence
-identity/regions remain unchanged. PREVIS approval still binds the selected bytes.
-Set `requiresCutout: true` only for assets that actually need transparent cutout
-processing; `hero` or `support` role alone does not imply a cutout.
-
-`build_gate.py` checks existence, readability, locked bytes, and actual use. A
-direct bespoke `<Img src={staticFile("V<N>/assets/doc.png")} />` is first-class;
-no named component, template, or generic renderer is mandatory.
+A same-name byte or brief replacement resets acceptance. If suitable media is not
+locked, invoke the native `.claude/agents/source-scout.md` role with one ≤2 KB
+scene brief. It writes ≤8 candidates only under
+`input/.videoagent/V<N>/candidates/<sceneId>/`; one refined retry maximum. Cheap
+vision may triage candidates. The main agent selects and locks; do not bulk-open.
 
 ## 4. PREVIS
 
-Author bespoke production-compatible scenes directly in
-`src/videos/V<N>/scenes/S01.jsx`, `S02.jsx`, and so on. PREVIS authoring is legal
-before PREVIS approval. Use final assets, real evidence crops, real typography,
-and the intended composition. Rough motion is optional; pixels are not fake.
-
-Generate captions/registration as needed and check rough source:
+Compose actual material in `src/videos/V<N>/scenes/Sxx.jsx`. Use the compact
+`src/primitives/` surface or direct Remotion JSX. Default primitives are static:
+no hidden reveal, camera drift or decorative motion during PREVIS.
 
 ```powershell
 py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/V<N>/scene_plan.json
-py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/V<N>/scene_plan.json --previs
 py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json --previs
-```
-
-`--previs` renders the real scene compositions to:
-
-- one OPEN PNG per scene;
-- one KEY PNG per scene;
-- MID only when explicitly declared;
-- `previs/frames_manifest.json` with frame roles/paths/hashes;
-- one whole-video `previs/contact_sheet.png`.
-
-Show that one contact sheet to the user. The baseline PNGs remain immutable hash
-and conformance evidence, but the main agent does **not** open every OPEN/KEY PNG
-by default. It opens only the whole-video sheet when needed, plus individual frames
-flagged by user feedback, a deterministic gate, or cheap visual review. Ask for
-art-direction approval. Do not infer approval from a gate or from the existence of
-files. Record the human note:
-
-```powershell
 py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py approve-previs input/V<N>/scene_plan.json --art-direction "<human note>"
 ```
 
-Creative approval binds semantic/treatment/evidence intent, locked asset bytes,
-approved OPEN/KEY/MID pixels, contact sheet, and the human note. Source SHA is
-provenance only. Timing, transitions, easing, statuses, receipt IDs, and JSX byte
-changes alone do not stale creative approval.
+PREVIS keeps high-resolution frame/hash evidence and creates compact JPEG review
+pages ≤4 MP. Inspect one page at a time. `LayoutSafety` measures actual browser DOM
+geometry for direct bespoke JSX; source parsing remains only a historical fast check.
 
 ## 5. PROMOTE
 
-Promote the **same JSX** by adding motion, timing, captions, and transitions in
-place. Do not redraw approved scenes in a second implementation. An approved
-meaning-bearing element must remain mounted at its approved state: animate
-opacity/transform/reveal, but do not move it behind a late `Sequence` that makes
-it absent at approved OPEN/KEY.
+Edit the approved scene files in place. Add only meaning-bearing reveals, timing,
+easing, camera travel, parallax, document focus, map/chart reveal, transitions,
+caption integration and polish. A genuinely static scene may remain unchanged.
 
-Regenerate canonical assembly, render the approved roles from promoted source,
-and enforce conformance:
+For each meaning-bearing `Reveal`, use a plan `anchorPhrase` and generated
+`PROMOTION_TIMING["Sxx:<materialId>"]`. Resolve/check it with:
+
+```powershell
+py -3 .claude/skills/vox-collage-video/scripts/beat_sync.py resolve-plan input/V<N>/scene_plan.json
+```
+
+Manual timing requires `anchorPhrase: "manual — <specific reason>"` and matching
+`manualReason` in source. Ambient camera motion does not require a speech anchor.
 
 ```powershell
 py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/V<N>/scene_plan.json
@@ -175,64 +130,42 @@ py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>
 py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/V<N>/scene_plan.json --previs-baseline
 ```
 
-Material approved-pixel drift, locked asset changes, missing approved elements,
-or stale approval are hard failures. Resolve them before draft command creation.
+Approval stores each scene's source/helper/primitive/asset/render/font/tool
+fingerprint. Unchanged scenes explicitly reuse approved baseline identity with no
+Remotion still. Changed dependencies render only affected approved roles; global
+font/config/tool changes invalidate every affected scene.
 
 ## 6. REVIEW + FINAL
 
-After current approval and conformance, create exactly one draft:
+After conformance, render one medium-resolution master draft. Temporal extraction
+uses bounded ffmpeg batches (≤40 unique master frames), verifies every requested
+identity/count, preserves manifest ordering, and paginates review proxies ≤4 MP.
+Canonical high-resolution evidence remains separate.
 
 ```powershell
 py -3 .claude/skills/vox-collage-video/scripts/render_video.py input/V<N>/scene_plan.json --mode draft
 py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json
+py -3 .claude/skills/vox-collage-video/scripts/review_gate.py input/V<N>/scene_plan.json
 ```
 
-The temporal review is separate from PREVIS. Review the actual master for motion,
-timing, captions, transitions, evidence readability, and new temporal defects.
-Cheap visual tools may triage this evidence; the main agent opens only flagged
-evidence needed to decide a correction. Fill `input/V<N>/review.json`; run
-`review_gate.py`. `review_vision.py`, `asset_vision.py`, `vision_check.py`, and
-`sheet_vision.py` remain explicit/advisory tools. Stop never invokes a model.
-
-Make **at most one local correction** to one scene when needed. Do not regenerate
-unrelated scenes. A completed temporal review always needs a correction decision:
-if no change is needed, close with an empty `changed-scenes` value; that no-change
-receipt is what permits final command generation. Recheck any affected evidence
-and close the decision:
+Cheap vision scripts are advisory and Stop invokes no model. Make at most one local
+correction decision, close it with `pipeline_contracts.py close-correction`, then
+render the single full-resolution final. Cleanup is always explicit and dry-run by
+default:
 
 ```powershell
-py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py close-correction input/V<N>/scene_plan.json --changed-scenes Sxx --note "<local correction>"
-# No correction needed:
-py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py close-correction input/V<N>/scene_plan.json --changed-scenes "" --note "review complete; no correction needed"
+py -3 .claude/skills/vox-collage-video/scripts/cleanup.py input/V<N>/scene_plan.json
 ```
 
-Then run `assemble.py --check` and render exactly one full-resolution final:
+Never auto-delete selected assets, plan/transcript/alignment/manifest, production
+source, essential receipts, canonical PREVIS baseline evidence, or final delivery.
 
-```powershell
-py -3 .claude/skills/vox-collage-video/scripts/render_video.py input/V<N>/scene_plan.json --mode final
-```
+## Truth and enforcement
 
-Final rendering requires current review/correction state. Mark `status: shipped`
-only after PREVIS approval, promoted conformance, draft review, correction closure,
-and final integrity are current. Shipping status is not aesthetic approval.
+Integrity gates are `plan_gate.py`, `build_gate.py`, `text_gate.py`, `assemble.py`,
+`review_gate.py`, and `selftest.py`. `icon_gate.py` and `cutout_gate.py` are
+conditional historical capabilities. Stop is a currentness guard, not an
+orchestrator, model caller, renderer, cleanup trigger, or aesthetic scorer.
 
-## Enforcement surface
-
-The unconditional Stop installation is exactly:
-
-`plan_gate.py`, `build_gate.py`, `text_gate.py`, `assemble.py`,
-`review_gate.py`, `selftest.py`.
-
-`icon_gate.py` and `cutout_gate.py` are conditional only when applicable.
-Initial planning and PREVIS authoring do not require PREVIS pixels/approval.
-Once promoted, draft, review, or final state exists, Stop requires current real
-PREVIS approval, promoted baseline conformance, and downstream integrity. Stop is
-a consistency guard, not an orchestrator.
-
-## Correction and context discipline
-
-Repair hard integrity defects until mechanically valid. Do not optimize toward
-quality metrics; quality remains rendered editorial judgment. Persist state in
-plans, manifests, receipts, review artifacts, and optional handoffs. Do not build
-a custom scheduler or packet system. Do not ask for a fresh session between
-stages unless the user requests a real continuation boundary.
+`economics.jsonl` stores factual stage metrics. Main-agent token/context values are
+`UNKNOWN` because this harness exposes no trustworthy counters; never estimate them.

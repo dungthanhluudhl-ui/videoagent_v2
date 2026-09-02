@@ -10,7 +10,7 @@ input/raw_cache
 input/.videoagent/
 
 # Scene preview stills / contact sheets (scratch, regenerable)
-.preview
+.preview/
 
 # Large generated PNG cutouts (can be regenerated)
 #
@@ -52,6 +52,12 @@ input/linh tinh/
 public/linh tinh/
 __pycache__/
 *.pyc
+
+# Review proxies and temporary promotion evidence. Canonical high-resolution
+# PREVIS frames and selected public/V<N>/assets remain trackable.
+input/V*/previs/review_pages/
+input/V*/previs/promoted_frames/
+out/
 
 # Third-party skill archive (reference only, not part of this project)
 .claude/skills/*.zip

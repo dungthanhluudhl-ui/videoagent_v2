@@ -1,58 +1,22 @@
-# Gates — PREVIS-in-place troubleshooting
+# Current gates
 
-Code and each script's `--help` are mechanical truth. Integrity is hard;
-quality/aesthetics are advisory.
-
-## Unconditional Stop installation — exactly six
-
-| Script | Hard truth protected |
+| Authority | Hard integrity behavior |
 |---|---|
-| `plan_gate.py` | semantic plan schema, meaning, evidence anchors, coherent timing |
-| `build_gate.py` | locked assets are present/readable/used; bespoke PREVIS matches intent; promoted OPEN/KEY pixels conform |
-| `text_gate.py` | source geometry plus rendered clipping, absence, overflow, and unsafe visible-text contrast when review pixels exist |
-| `assemble.py` | canonical captions/master and isolated `PrevisRoot` registration |
-| `review_gate.py` | one current temporal review generation with actual-master evidence |
-| `selftest.py` | deterministic specification of the gates and lifecycle boundaries |
+| `plan_gate.py` | Fresh semantic fields only; no UI/template/timing/geometry fields; anchor integrity; honest map/chart/reconstruction/diagram declarations; duration derived mechanically |
+| `pipeline_contracts.py` | Human PLAN/PREVIS approvals; current byte+brief asset acceptance; compact provenance; approved frame/page hashes; per-scene dependency fingerprints |
+| `build_gate.py` | Locked material exists and is used in the same scene source; fresh imports stay on canonical surface; meaning reveals use generated timing or a manual reason; selective approved-pixel conformance |
+| `text_gate.py` | Fresh PREVIS requires actual browser DOM geometry evidence; catches text outside canvas/caption region, important text collision, and obstructive canonical content blocks; historical source checks remain preliminary |
+| `assemble.py` | Mechanical durations, word-synced captions, same-source master, isolated Remotion registration, layout wrapper |
+| `render_review_sheet.py` | Selective PREVIS stills; bounded ≤40-frame temporal batches; exact master-frame identity/count; JPEG pages ≤4 MP |
+| `review_gate.py` | Current actual-master evidence and completed scene verdicts; no aesthetic scalar score |
+| `cleanup.py` | Sole explicit cleanup authority; dry-run default; lifecycle-safe preservation |
+| `selftest.py` | Deterministic specification, including real 186-frame extraction and small real browser fixtures |
 
-Conditional only when applicable:
+`icon_gate.py` and `cutout_gate.py` are conditional compatibility tools. Cheap vision
+scripts are advisory. Stop never calls a model, renders, generates, or cleans.
 
-- `icon_gate.py`: source actually uses registered icon components;
-- `cutout_gate.py`: an asset explicitly declares or records cutout processing.
-
-`review_vision.py` is an explicit advisory review tool. Stop never invokes a
-model. There is no unconditional baseline, asset, block, or separate pixel gate.
-
-## Phase behavior
-
-- PLAN is legal with no scene JSX or PREVIS pixels.
-- PREVIS authoring is legal after the semantic plan is approved and before human
-  PREVIS approval.
-- `render_review_sheet.py --previs` creates actual OPEN/KEY evidence and one
-  whole-video contact sheet from production scene source.
-- `approve-previs` requires current plan approval, locked meaning-bearing bytes,
-  required frame hashes, contact sheet, and a non-empty human note.
-- `--previs-baseline` compares promoted actual pixels to approved actual pixels
-  and rejects approved elements that are no longer mounted at approved frames.
-- Draft command construction is impossible without current approval and current
-  promoted conformance.
-- Once promoted/draft/review/final state exists, Stop requires those receipts and
-  relevant downstream integrity. Stop does not create them.
-- Final also requires canonical review and a current correction-decision closure.
-  Close it with `changed-scenes=[]` when review finds no correction necessary; the
-  empty decision still closes review and permits final command generation.
-
-## Normal invocation
-
-```powershell
-py -3 .claude/skills/vox-collage-video/scripts/plan_gate.py input/V<N>/scene_plan.json --hook
-py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/V<N>/scene_plan.json --previs
-py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json --previs
-py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py approve-previs input/V<N>/scene_plan.json --art-direction "human note"
-py -3 .claude/skills/vox-collage-video/scripts/render_review_sheet.py input/V<N>/scene_plan.json --previs --promoted
-py -3 .claude/skills/vox-collage-video/scripts/build_gate.py input/V<N>/scene_plan.json --previs-baseline
-py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/V<N>/scene_plan.json --check
-```
-
-Do not weaken an integrity rule to accommodate a quality preference. Do not add
-decoration to satisfy a metric. Fix missing evidence/bytes/pixels/currentness;
-judge art direction from the human-approved contact sheet and actual draft.
+PLAN may describe a real-material need before bytes are selected. ASSET LOCK/PREVIS
+approval rejects real-material claims without actual accepted bytes and honest
+metadata. Human PREVIS approval owns art direction. PROMOTE modifies the approved
+source in place. Unchanged fingerprints reuse without render; changed dependencies
+render only affected approved states. No gate imposes aesthetic quotas.

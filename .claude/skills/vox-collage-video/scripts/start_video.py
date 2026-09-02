@@ -1,5 +1,5 @@
 """
-init_video.py - từ (audio + kịch bản) ra input/V<N>/words_aligned.json. Bước 0+1.
+start_video.py - canonical INGEST + semantic PLAN scaffold entry.
 
 Trước script này, mỗi video đều bắt đầu bằng một nắm lệnh Python gõ inline:
 kiểm môi trường, chép audio, gọi whisper, rồi ghép chữ của kịch bản với thời
@@ -7,8 +7,8 @@ gian của whisper bằng tay. Việc ghép đó không hề đơn giản - whis
 danh từ riêng ("Itaewon" -> "Y Tự Quận", 1 từ thành 3), nên đếm từ không khớp
 1:1 và mọi cách "cộng trừ độ lệch" đều sai từ chỗ nghe nhầm trở đi.
 
-    py -3 init_video.py 13 --audio "D:/thu/Audio13.mp3" --script "D:/thu/Script13.txt"
-    py -3 init_video.py 13 --only align --script ... --check   # chỉ so, không ghi
+    py -3 start_video.py 13 --audio "D:/thu/Audio13.mp3" --script "D:/thu/Script13.txt"
+    py -3 start_video.py 13 --only align --script ... --check
 
 Bốn bước, mỗi bước tự bỏ qua nếu đã có kết quả (dùng --force để làm lại):
 
@@ -353,7 +353,77 @@ def step_align(n, script_path, check, force, accept_existing=False):
 
 # -------------------------------------------------------------------- main
 
-STEPS = ("env", "audio", "transcribe", "align")
+STEPS = ("env", "audio", "transcribe", "align", "plan")
+
+
+def segments_from_words(words):
+    spans, current, segment = [], None, None
+    for entry in words:
+        start, end = float(entry[1]), float(entry[2])
+        index = entry[3] if len(entry) > 3 else 0
+        if index != segment:
+            if current:
+                spans.append(tuple(current))
+            current, segment = [start, end], index
+        else:
+            current[1] = end
+    if current:
+        spans.append(tuple(current))
+    return [(start, end) for start, end in spans if end > start]
+
+
+def shape_scenes(spans, target):
+    merged = []
+    for start, end in spans:
+        if merged and end - merged[-1][0] <= target * 1.35 and merged[-1][1] - merged[-1][0] < target * 0.7:
+            merged[-1] = (merged[-1][0], end)
+        else:
+            merged.append((start, end))
+    shaped = []
+    for start, end in merged:
+        duration = end - start
+        if duration > target * 1.9:
+            count = max(2, round(duration / target)); step = duration / count
+            shaped.extend((start + index * step, start + (index + 1) * step)
+                          for index in range(count))
+        else:
+            shaped.append((start, end))
+    return shaped
+
+
+def step_plan(n, words_arg=None, fps=30, target=4.0, force=False):
+    root = _root(); paths = _paths(n); out = paths["plan"]
+    if out.is_file() and not force:
+        print(f"plan: {out} already exists; refusing to overwrite")
+        return True
+    words_path = state.project_path(root, words_arg) if words_arg else paths["words"]
+    try:
+        words = json.loads(words_path.read_text(encoding="utf-8"))["words"]
+    except (OSError, KeyError, json.JSONDecodeError) as exc:
+        print(f"plan: cannot read aligned words: {exc}")
+        return False
+    scenes = [{"id": f"S{index}", "startSec": round(start, 3), "endSec": round(end, 3),
+               "narrativeFunction": "", "viewerQuestion": "", "visualTransformation": "",
+               "contrastWithPrevious": "", "comprehensionLoad": "", "materials": [],
+               "status": "planned"}
+              for index, (start, end) in enumerate(
+                  shape_scenes(segments_from_words(words), target), start=1)]
+    plan = {"schemaVersion": "media-first-plan-v1", "video": f"V{n}", "fps": int(fps),
+            "width": 1080, "height": 1920,
+            "wordsFile": str(words_path.relative_to(root)).replace("\\", "/"),
+            "audioFile": f"V{n}/audio.mp3", "status": "active",
+            "shotlistApproved": False, "styleContract": {}, "scenes": scenes}
+    for directory in (paths["input"], paths["assets"], paths["scenes"],
+                      paths["previs_frames"], paths["previs_review_pages"],
+                      paths["review_frames"], paths["review_pages"], paths["receipts"],
+                      paths["cache"], paths["logs"], paths["output"] / "draft",
+                      paths["output"] / "final"):
+        directory.mkdir(parents=True, exist_ok=True)
+    state.write_json(paths["asset_manifest"], {"schema": 1, "video": f"V{n}", "assets": {}})
+    paths["economics"].touch(exist_ok=True)
+    state.write_json(out, plan)
+    print(f"plan: wrote {out} with {len(scenes)} semantic scene skeletons")
+    return True
 
 
 def main():
@@ -365,6 +435,9 @@ def main():
     ap.add_argument("--language", default=None, help="mã ngôn ngữ whisper, mặc định tự nhận")
     ap.add_argument("--model", default="base", help="model whisper (mặc định base)")
     ap.add_argument("--only", choices=STEPS)
+    ap.add_argument("--words", help="aligned words override for PLAN scaffold")
+    ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--target-scene-sec", type=float, default=4.0)
     ap.add_argument("--check", action="store_true", help="chỉ so, không ghi")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--accept-existing-alignment", action="store_true",
@@ -384,13 +457,18 @@ def main():
         elif step == "align":
             ok = step_align(args.n, args.script, args.check, args.force,
                             args.accept_existing_alignment) and ok
+        elif step == "plan":
+            if args.check:
+                print("plan: check mode; scaffold write skipped")
+            else:
+                ok = step_plan(args.n, args.words, args.fps, args.target_scene_sec,
+                               args.force) and ok
         if not ok:
             break
 
-    if ok and not args.check and (args.only in (None, "align")):
-        print(f"\nTiếp theo - dựng khung kế hoạch rồi điền bước 2a/2b (SKILL.md):\n"
-              f"    py -3 .claude/skills/vox-collage-video/scripts/new_video.py {args.n} "
-              f"--words input/V{args.n}/words_aligned.json")
+    if ok and not args.check and args.only == "align":
+        ok = step_plan(args.n, args.words, args.fps, args.target_scene_sec,
+                       args.force) and ok
     return 0 if ok else 1
 
 
