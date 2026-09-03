@@ -19,6 +19,7 @@ import beat_sync
 import build_gate
 import cleanup
 import fetch_pexels
+import hook_gate
 import pipeline_contracts as contracts
 import plan_gate
 import process_cutout
@@ -97,6 +98,7 @@ def project(tmp, scenes=2):
                            "visualTreatment": "authentic document evidence with source context",
                            "status": "planned",
                            "materials": [{"id": "record", "materialIntent": "document",
+                               "documentEvidenceMode": "context",
                                "anchorPhrase": phrase,
                                "mediaBrief": "Show the authentic official record page that proves this exact claim.",
                                "evidenceIdentity": f"official-record-{index + 1}",
@@ -175,6 +177,42 @@ def plan_checks(tmp, paths, plan, rows):
     except ValueError as exc:
         blocked = "requires a real locked file" in str(exc)
     result(rows, "fake real-material claim fails at ASSET LOCK boundary", blocked)
+    missing_mode = copy.deepcopy(clean)
+    missing_mode["scenes"][0]["materials"][0].pop("documentEvidenceMode")
+    state.write_json(paths["plan"], missing_mode)
+    result(rows, "fresh document material requires documentEvidenceMode",
+           any("documentEvidenceMode" in item for item in run_plan(paths["plan"])))
+    invalid_mode = copy.deepcopy(clean)
+    invalid_mode["scenes"][0]["materials"][0]["documentEvidenceMode"] = "summary"
+    state.write_json(paths["plan"], invalid_mode)
+    result(rows, "documentEvidenceMode accepts only claim or context",
+           any("must be claim or context" in item for item in run_plan(paths["plan"])))
+    context = copy.deepcopy(clean)
+    context["scenes"][0]["materials"][0].pop("evidenceIdentity")
+    context["scenes"][0]["materials"][0].pop("evidenceRegions", None)
+    state.write_json(paths["plan"], context)
+    result(rows, "context document mode may omit evidence regions", not run_plan(paths["plan"]))
+    claim_missing_identity = copy.deepcopy(clean)
+    claim_missing_identity["scenes"][0]["materials"][0]["documentEvidenceMode"] = "claim"
+    claim_missing_identity["scenes"][0]["materials"][0].pop("evidenceIdentity")
+    claim_missing_identity["scenes"][0]["materials"][0]["evidenceRegions"] = [
+        {"anchorPhrase": "evidence 1", "region": [0.08, 0.18, 0.84, 0.12]}]
+    state.write_json(paths["plan"], claim_missing_identity)
+    result(rows, "claim document mode requires evidenceIdentity",
+           any("requires evidenceIdentity" in item for item in run_plan(paths["plan"])))
+    claim_missing_regions = copy.deepcopy(clean)
+    claim_missing_regions["scenes"][0]["materials"][0]["documentEvidenceMode"] = "claim"
+    claim_missing_regions["scenes"][0]["materials"][0].pop("evidenceRegions", None)
+    state.write_json(paths["plan"], claim_missing_regions)
+    result(rows, "claim document mode requires non-empty valid evidenceRegions",
+           any("requires non-empty evidenceRegions" in item for item in run_plan(paths["plan"])))
+    claim_invalid_region = copy.deepcopy(clean)
+    claim_invalid_region["scenes"][0]["materials"][0]["documentEvidenceMode"] = "claim"
+    claim_invalid_region["scenes"][0]["materials"][0]["evidenceRegions"] = [
+        {"anchorPhrase": "evidence 1", "region": [0.8, 0.2, 0.4, 0.2]}]
+    state.write_json(paths["plan"], claim_invalid_region)
+    result(rows, "claim document region must remain inside authentic raster",
+           any("normalized [x,y,w,h]" in item for item in run_plan(paths["plan"])))
     component = copy.deepcopy(clean); component["scenes"][0]["visualTreatment"] = "DocumentEvidence"
     state.write_json(paths["plan"], component)
     result(rows, "editorial visualTreatment is not a JSX component selector",
@@ -218,12 +256,26 @@ def plan_checks(tmp, paths, plan, rows):
         "visualTransformation": "fact pattern becomes the court's exact legal classification",
         "visualTreatment": "authentic document with exact legal wording and paragraph context",
     })
+    holding_material = holding["scenes"][0]["materials"][0]
+    holding_material["documentEvidenceMode"] = "context"
+    holding_material.pop("evidenceRegions", None)
     state.write_json(paths["plan"], holding)
-    result(rows, "legal holding and exact evidentiary claim may choose document treatment",
+    result(rows, "exact-evidence document treatment cannot escape through context-only mode",
+           any("valid claim-mode" in item for item in run_plan(paths["plan"])))
+    holding_material["documentEvidenceMode"] = "claim"
+    holding_material["evidenceRegions"] = [
+        {"anchorPhrase": "evidence 1", "region": [0.08, 0.18, 0.84, 0.12]}]
+    state.write_json(paths["plan"], holding)
+    result(rows, "exact-evidence document treatment passes with valid claim material",
            not run_plan(paths["plan"]))
 
     real_transform = copy.deepcopy(clean)
     real_transform["scenes"][0]["visualTransformation"] = "location becomes confinement, then confinement creates family pressure"
+    real_transform["scenes"][0]["visualTreatment"] = "contextual photographic reconstruction"
+    real_transform["scenes"][0]["materials"] = [{
+        "id": "place", "materialIntent": "reconstruction", "anchorPhrase": "evidence 1",
+        "mediaBrief": "Show a truthful photographic place plate where arrival becomes confinement.",
+        "reconstructionLabel": "EDITORIAL RECONSTRUCTION"}]
     state.write_json(paths["plan"], real_transform)
     result(rows, "real semantic visualTransformation passes", not run_plan(paths["plan"]))
     camera_only = copy.deepcopy(clean)
@@ -301,6 +353,15 @@ def media_checks(paths, plan, rows):
     result(rows, "official/local authoritative provenance is honest without fake URL metadata", official_ok)
     result(rows, "asset manifest remains canonical and byte hashed",
            manifest_path == paths["asset_manifest"] and state.hash_file(target) == plan["scenes"][0]["materials"][0]["lockedSha256"])
+    mode_changed = copy.deepcopy(plan)
+    mode_changed["scenes"][0]["materials"][0]["documentEvidenceMode"] = "claim"
+    mode_changed["scenes"][0]["materials"][0]["evidenceRegions"] = [
+        {"anchorPhrase": "evidence 1", "region": [0.08, 0.18, 0.84, 0.12]}]
+    state.write_json(paths["plan"], mode_changed)
+    _mode_path, mode_manifest = state.sync_asset_manifest(paths["plan"])
+    result(rows, "claim versus context mode change resets asset acceptance",
+           mode_manifest["assets"][asset_id].get("acceptance") == "PENDING")
+    state.write_json(paths["plan"], plan); state.sync_asset_manifest(paths["plan"]); state.accept_asset(paths["plan"], asset_id)
 
 
 def fresh_integrity_checks(paths, plan, rows):
@@ -354,6 +415,29 @@ def fresh_integrity_checks(paths, plan, rows):
             source.write_text(original_source, encoding="utf-8")
         result(rows, "generated timing.js and canonical src/primitives imports remain legal",
                timing_path.is_file() and timing_checked == 1 and not timing_problems)
+        rogue = paths["root"] / "src" / "primitives" / "VisualKit.jsx"
+        rogue.write_text("export const Card=()=>null; export const Person=()=>null;", encoding="utf-8")
+        source.write_text('import {Card} from "../../../primitives/VisualKit.jsx";\n' + original_source,
+                          encoding="utf-8")
+        try:
+            rogue_problems, rogue_checked = build_gate.previs_source_check(plan_path, clean, "S1")
+        finally:
+            source.write_text(original_source, encoding="utf-8")
+        result(rows, "arbitrary src/primitives VisualKit import hard fails canonical allowlist",
+               rogue_checked == 1 and any("canonical fresh primitive allowlist" in item
+                                          for item in rogue_problems))
+        fp_with_rogue = hook_gate.gate_fingerprint(paths["root"])
+        rogue.unlink()
+        fp_without_rogue = hook_gate.gate_fingerprint(paths["root"])
+        canonical_primitive = paths["root"] / "src" / "primitives" / "DocumentEvidence.jsx"
+        before_primitive = canonical_primitive.read_text(encoding="utf-8")
+        canonical_primitive.write_text(before_primitive + "\n// fingerprint fixture\n", encoding="utf-8")
+        fp_changed_primitive = hook_gate.gate_fingerprint(paths["root"])
+        canonical_primitive.write_text(before_primitive, encoding="utf-8")
+        result(rows, "adding rogue primitive changes selftest currentness fingerprint",
+               fp_with_rogue != fp_without_rogue)
+        result(rows, "changing canonical primitive changes selftest currentness fingerprint",
+               fp_changed_primitive != fp_without_rogue)
         helper = paths["source"] / "scene-helpers.jsx"
         helper.write_text(
             'export const SomeVisual=()=> <><img src="V99/assets/undeclared.jpg" />'
@@ -442,6 +526,7 @@ def fresh_integrity_checks(paths, plan, rows):
 
         document_plan = copy.deepcopy(clean)
         document_material = document_plan["scenes"][0]["materials"][0]
+        document_material["documentEvidenceMode"] = "claim"
         document_material["evidenceRegions"] = [{"anchorPhrase": "evidence 1",
                                                   "region": [0.08, 0.18, 0.84, 0.12]}]
         state.write_json(plan_path, document_plan); state.sync_asset_manifest(plan_path)
@@ -451,19 +536,38 @@ def fresh_integrity_checks(paths, plan, rows):
             '<div>The decisive claim was retyped here.</div>', True)
         exact_no_focus = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence materialId="record" src={staticFile("V99/assets/record-1.png")} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} />', True)
+        no_material_id = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12]}} />', True)
         exact_focus = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence materialId="record" src={staticFile("V99/assets/record-1.png")} focus={{region:[.08,.18,.84,.12]}} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
+        mismatched_focus = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.09,.18,.84,.12],panelWidth:"84%"}} />', True)
+        undersized_focus = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12],panelWidth:"60%"}} />', True)
         full_context = copy.deepcopy(document_plan)
+        full_context["scenes"][0]["materials"][0]["documentEvidenceMode"] = "context"
         full_context["scenes"][0]["materials"][0].pop("evidenceRegions")
+        state.write_json(plan_path, full_context); state.sync_asset_manifest(plan_path)
+        state.accept_asset(plan_path, state.asset_usage_id(
+            full_context["scenes"][0], full_context["scenes"][0]["materials"][0]))
         full_context_problems = build_gate.fresh_source_integrity_problems(
             plan_path, full_context, full_context["scenes"][0],
-            '<DocumentEvidence materialId="record" src={staticFile("V99/assets/record-1.png")} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="context" src={staticFile("V99/assets/record-1.png")} />', True)
         result(rows, "exact evidence cannot be replaced by fabricated or retyped claim text",
                any("cannot be replaced" in item for item in exact_missing))
         result(rows, "exact claim evidence requires truthful source-region focus",
                any("requires truthful focus" in item for item in exact_no_focus) and not exact_focus)
+        result(rows, "claim DocumentEvidence requires literal matching materialId",
+               any("requires literal materialId" in item for item in no_material_id))
+        result(rows, "mismatching exact claim focus region hard fails",
+               any("does not match" in item for item in mismatched_focus))
+        result(rows, "undersized exact claim focus panel hard fails",
+               any("at least 70%" in item for item in undersized_focus))
         result(rows, "full-page document context or source identity remains legal",
                not full_context_problems)
     finally:
@@ -789,13 +893,13 @@ def document_fixture(root, safe):
     directory = pathlib.Path(tempfile.mkdtemp(prefix="document-evidence-fixture-", dir=root))
     entry = directory / "index.ts"; scene = directory / "Root.jsx"
     entry.write_text('import {registerRoot} from "remotion";import {Root} from "./Root";registerRoot(Root);', encoding="utf-8")
-    region = "[0.08,0.18,0.84,0.12]" if safe else "[0.08,0.80,0.84,0.10]"
+    panel_width = "84%" if safe else "60%"
     raster = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='900'%3E%3Crect width='600' height='900' fill='white'/%3E%3Cpath d='M60 100h480M60 150h480M60 200h480' stroke='black'/%3E%3C/svg%3E"
     scene.write_text(
         'import {Composition} from "remotion";\n'
         'import {LayoutSafety} from "../src/primitives/LayoutSafety";\n'
         'import {DocumentEvidence} from "../src/primitives/DocumentEvidence";\n'
-        f'const Evidence=()=> <LayoutSafety><DocumentEvidence materialId="record" src={json.dumps(raster)} focus={{{{region:{region},safeMargin:.035}}}} /></LayoutSafety>;\n'
+        f'const Evidence=()=> <LayoutSafety><DocumentEvidence materialId="record" documentEvidenceMode="claim" src={json.dumps(raster)} sourceAspect={{2/3}} focus={{{{region:[.08,.02,.84,.08],safeMargin:.01,panelWidth:"{panel_width}"}}}} /></LayoutSafety>;\n'
         'export const Root=()=> <Composition id="DocumentFixture" component={Evidence} durationInFrames={30} fps={30} width={1080} height={1920}/>;',
         encoding="utf-8")
     output = directory / "frame.png"
@@ -826,9 +930,16 @@ def layout_checks(rows):
                document_proc.returncode == 0 and document_output.is_file(),
                ((document_proc.stdout or "") + (document_proc.stderr or ""))[-500:])
         document_bad_text = (document_bad_proc.stdout or "") + (document_bad_proc.stderr or "")
-        result(rows, "DocumentEvidence focus cannot enter caption exclusion region",
-               document_bad_proc.returncode != 0 and "VIDEOAGENT_LAYOUT" in document_bad_text,
+        result(rows, "DocumentEvidence focus below minimum width is rejected",
+               document_bad_proc.returncode != 0 and "at least 70%" in document_bad_text,
                document_bad_text[-500:])
+        geometry_source = (ROOT / "src" / "primitives" / "DocumentEvidence.jsx").read_text(encoding="utf-8")
+        result(rows, "DocumentEvidence maps source regions through actual contain geometry",
+               "containRect" in geometry_source and "mappedSafe.left" in geometry_source and
+               "contained.left + normalized[0] * contained.width" in geometry_source)
+        result(rows, "DocumentEvidence claim focus has deterministic 70 percent minimum",
+               "MIN_CLAIM_FOCUS_WIDTH_RATIO = 0.7" in geometry_source and
+               "data-videoagent-min-width-ratio" in geometry_source)
         shared = (ROOT / "src" / "scenes" / "shared.jsx").read_text(encoding="utf-8")
         result(rows, "Vietnamese diacritic line geometry remains protected",
                "lineHeight = 1.34" in shared and "overflow: \"hidden\"" in shared)
@@ -889,6 +1000,24 @@ def active_workflow_checks(rows):
                  "fetch_pexels_video.py", "media_sources.py")
     result(rows, "Pexels PHOTO remains the only structured external provider",
            all(not (HERE / name).exists() for name in forbidden))
+    adapter = ROOT / ".agents" / "skills" / "vox-collage-video" / "SKILL.md"
+    adapter_text = adapter.read_text(encoding="utf-8") if adapter.is_file() else ""
+    canonical = (HERE.parent / "SKILL.md").read_text(encoding="utf-8")
+    compact_adapter = " ".join(adapter_text.split())
+    compact_canonical = " ".join(canonical.split())
+    result(rows, "Codex project skill adapter exists", adapter.is_file())
+    result(rows, "Codex adapter points to canonical Claude skill authority",
+           ".claude/skills/vox-collage-video/SKILL.md" in adapter_text)
+    result(rows, "Codex adapter is thin and does not duplicate canonical workflow",
+           len(adapter_text.encode("utf-8")) < 1800 and len(adapter_text) < len(canonical) / 5 and
+           "## 1. INGEST" not in adapter_text)
+    result(rows, "Codex adapter distinguishes Claude hooks from Codex enforcement",
+           ".claude/settings.json" in compact_adapter and "Claude Code hook wiring" in compact_adapter and
+           "Never claim “Codex hooks passed”" in compact_adapter)
+    result(rows, "canonical skill documents explicit Codex gate behavior truthfully",
+           "thin `.agents/skills/vox-collage-video/SKILL.md` adapter" in compact_canonical and
+           "Codex must invoke the canonical integrity scripts explicitly" in compact_canonical and
+           "No platform may claim hook or gate enforcement it did not actually execute" in compact_canonical)
 
 
 def cleanup_checks(tmp, paths, plan, rows):
@@ -921,6 +1050,8 @@ def architecture_checks(paths, plan, rows):
     expected = {"DocumentEvidence.jsx", "MapGraphic.jsx", "DataChart.jsx", "Captions.jsx",
                 "media.jsx", "Reveal.jsx", "RelationDiagram.jsx", "LayoutSafety.jsx"}
     result(rows, "canonical primitive surface is compact and complete", primitives == expected)
+    result(rows, "build gate primitive allowlist exactly matches compact surface",
+           build_gate.CANONICAL_PRIMITIVE_FILES == expected)
     retired = {"Card", "Node", "Arrow", "Person", "Money", "Phone", "Vehicle", "Chain"}
     result(rows, "generic illustrative families are absent from primitive filenames",
            not retired.intersection({pathlib.Path(name).stem for name in primitives}))

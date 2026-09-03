@@ -18,6 +18,15 @@ describe authentic, contextual, document, reconstruction, map, timeline, chart,
 relation, or genuinely textual/quote treatment. The gate groups clear wording only to
 detect consecutive repetition; it does not impose a closed treatment taxonomy.
 
+Every fresh document material separates two evidence modes. `claim` is for an exact
+holding, paragraph, statutory phrase, evidentiary statement, or other claim grounded
+in a particular authentic source region; it requires `evidenceIdentity` and valid
+`evidenceRegions`. `context` is for document/page/source identity or the full page as
+an editorial object and may omit regions. A context-only full page is not proof of an
+exact-evidence document scene. Claim display preserves the contained full-page source
+context while presenting the approved authentic crop in a dedicated panel at least
+70% of composition width; this is a display invariant, not OCR or a readability score.
+
 ## Material intent
 
 - `authentic`: actual case/official visual source;

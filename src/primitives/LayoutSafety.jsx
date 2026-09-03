@@ -70,6 +70,20 @@ export const inspectRenderedLayout = (root, captionTop = CAPTION_TOP) => {
     if (rect.left < canvas.left - 0.5 || rect.top < canvas.top - 0.5 || rect.right > canvas.right + 0.5 || rect.bottom > canvas.bottom + 0.5) problems.push("canonical content block leaves the canvas");
     if (rect.bottom > captionBoundary) problems.push("canonical content block enters caption exclusion region");
   }
+  for (const panel of root.querySelectorAll("[data-videoagent-readable-evidence-focus='true']")) {
+    if (!visible(panel)) continue;
+    const rect = panel.getBoundingClientRect();
+    const minimum = Number(panel.getAttribute("data-videoagent-min-width-ratio") ?? 0.7);
+    if (rect.width < canvas.width * minimum - 0.5) problems.push("exact-claim focus panel is below 70% minimum composition width");
+    if (rect.left < canvas.left - 0.5 || rect.right > canvas.right + 0.5 || rect.top < canvas.top - 0.5 || rect.bottom > captionBoundary + 0.5) problems.push("exact-claim focus panel leaves the canvas/caption-safe region");
+  }
+  const documentSource = root.querySelector("[data-videoagent-contained-source='true']");
+  const documentHighlight = root.querySelector("[data-videoagent-evidence-context-highlight='true']");
+  if (documentSource && documentHighlight && visible(documentSource) && visible(documentHighlight)) {
+    const sourceRect = documentSource.getBoundingClientRect();
+    const highlightRect = documentHighlight.getBoundingClientRect();
+    if (highlightRect.left < sourceRect.left - 0.5 || highlightRect.top < sourceRect.top - 0.5 || highlightRect.right > sourceRect.right + 0.5 || highlightRect.bottom > sourceRect.bottom + 0.5) problems.push("document claim highlight is outside the actual contained source raster");
+  }
   for (let i = 0; i < blocks.length; i++) for (let j = i + 1; j < blocks.length; j++) {
     const a = blocks[i], b = blocks[j];
     if (a.contains(b) || b.contains(a)) continue;

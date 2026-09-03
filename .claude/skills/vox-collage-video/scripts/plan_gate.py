@@ -24,6 +24,7 @@ MATERIAL_INTENTS = {
     "authentic", "contextual", "document", "reconstruction", "map", "chart",
     "diagram-exception",
 }
+DOCUMENT_EVIDENCE_MODES = {"claim", "context"}
 REQUIRED_SCENE_FIELDS = (
     "id", "startSec", "endSec", "narrativeFunction", "viewerQuestion",
     "visualTransformation", "contrastWithPrevious", "comprehensionLoad",
@@ -164,6 +165,11 @@ def treatment_family(value):
     return text
 
 
+def document_based_treatment(value):
+    text = normalize(value)
+    return any(normalize(stem) in text for stem in TREATMENT_STEMS["document"])
+
+
 def narrative_kind(scene):
     text = normalize(" ".join(str(scene.get(key) or "") for key in
                               ("narrativeFunction", "viewerQuestion", "visualTransformation")))
@@ -184,6 +190,16 @@ def concrete_reason(value, minimum=24):
     vague = {"official source exists", "document is official", "no other option",
              "depiction would mislead", "use the document"}
     return len(str(value or "").strip()) >= minimum and text not in vague
+
+
+def valid_claim_document(material):
+    regions = material.get("evidenceRegions")
+    return (material.get("materialIntent") == "document"
+            and material.get("documentEvidenceMode") == "claim"
+            and not empty(material.get("evidenceIdentity"))
+            and isinstance(regions, list) and bool(regions)
+            and all(isinstance(item, dict) and bool(str(item.get("anchorPhrase") or "").strip())
+                    and valid_region(item.get("region")) for item in regions))
 
 
 def gate_material(scene, material, index, words, report):
@@ -230,14 +246,30 @@ def gate_material(scene, material, index, words, report):
             report.fail(f"{prefix}: chart requires dataSource")
     if intent == "reconstruction" and empty(material.get("reconstructionLabel")):
         report.fail(f"{prefix}: reconstruction requires a truthful reconstructionLabel")
-    if intent == "document" and material.get("evidenceIdentity"):
-        regions = material.get("evidenceRegions") or []
-        if not isinstance(regions, list):
+    if intent == "document":
+        mode = material.get("documentEvidenceMode")
+        if mode not in DOCUMENT_EVIDENCE_MODES:
+            report.fail(f"{prefix}: documentEvidenceMode must be claim or context")
+            return
+        regions = material.get("evidenceRegions")
+        if mode == "claim":
+            if empty(material.get("evidenceIdentity")):
+                report.fail(f"{prefix}: claim document requires evidenceIdentity")
+            if not isinstance(regions, list) or not regions:
+                report.fail(f"{prefix}: claim document requires non-empty evidenceRegions")
+                regions = []
+        elif regions is None:
+            regions = []
+        elif not isinstance(regions, list):
             report.fail(f"{prefix}: evidenceRegions must be a list")
-        else:
-            for ridx, mapping in enumerate(regions):
-                if not isinstance(mapping, dict) or not mapping.get("anchorPhrase") or not valid_region(mapping.get("region")):
-                    report.fail(f"{prefix}/evidenceRegions[{ridx}]: requires anchorPhrase and normalized [x,y,w,h]")
+            regions = []
+        for ridx, mapping in enumerate(regions):
+            if not isinstance(mapping, dict) or not mapping.get("anchorPhrase") or not valid_region(mapping.get("region")):
+                report.fail(f"{prefix}/evidenceRegions[{ridx}]: requires anchorPhrase and normalized [x,y,w,h]")
+                continue
+            if not phrase_in_scene(words, mapping["anchorPhrase"], float(scene.get("startSec", 0)),
+                                   float(scene.get("endSec", 0))):
+                report.fail(f"{prefix}/evidenceRegions[{ridx}]: anchorPhrase is not spoken inside the scene")
 
 
 def pacing_advisories(scenes, report):
@@ -310,7 +342,11 @@ def gate_canonical(plan, words, report):
                 report.fail(f"{sid}: duplicate material id {mid!r}")
             seen.add(mid)
             gate_material(scene, material, material_index, words, report)
-        if narrative_kind(scene) == "recount" and treatment_family(scene.get("visualTreatment")) == "document":
+        if (narrative_kind(scene) == "exact-evidence"
+                and document_based_treatment(scene.get("visualTreatment"))
+                and not any(valid_claim_document(material) for material in materials)):
+            report.fail(f"{sid}: exact-evidence document treatment requires at least one valid claim-mode document material")
+        if narrative_kind(scene) == "recount" and document_based_treatment(scene.get("visualTreatment")):
             if not concrete_reason(scene.get("documentOnlyJustification"), 30):
                 report.fail(f"{sid}: narrative/recount document-only treatment needs a concrete reason truthful depiction would mislead or fabricate")
         if index:

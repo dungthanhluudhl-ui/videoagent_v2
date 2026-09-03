@@ -521,7 +521,7 @@ def post_edit(payload, root, plan):
 STAMP = SCRIPTS.parent / "data" / ".selftest_stamp"
 
 
-def gate_fingerprint():
+def gate_fingerprint(root=None):
     """Hash of everything selftest.py actually exercises.
 
     Measured: the six real gates take 1.0s combined; selftest takes 14s,
@@ -530,15 +530,20 @@ def gate_fingerprint():
     answers "do the gates still catch what they claim to", and gates do not
     rot on their own between two edits to a scene file.
 
-    So: hash the gate sources plus the measurement data they read, and skip the
-    run while that hash is unchanged. This is not an opt-out. Touch any gate,
-    even by one character, and the hash moves and selftest runs again - which
-    is exactly the moment it has something to say. Delete the stamp and it runs
-    too, so the cautious state is the default state.
+    So: hash the gate sources, measurement data, and the bounded canonical
+    ``src/primitives/*.jsx`` names and contents exercised by fresh production.
+    Touch a gate/primitive, add a rogue primitive, or delete a canonical one and
+    the hash moves. Delete the stamp and it runs too, so the cautious state is
+    the default state.
     """
     h = hashlib.sha256()
     files = sorted(SCRIPTS.glob("*.py"))
     files += sorted((SCRIPTS.parent / "data").glob("*.json"))
+    project = pathlib.Path(root).resolve() if root else state.project_root(__file__)
+    primitive_dir = project / "src" / "primitives"
+    primitive_files = sorted(primitive_dir.glob("*.jsx"), key=lambda path: path.name)
+    h.update(json.dumps([path.name for path in primitive_files], separators=(",", ":")).encode())
+    files += primitive_files
     for f in files:
         try:
             h.update(f.name.encode())

@@ -521,6 +521,7 @@ def asset_contract(scene, asset):
             "provenance": asset.get("provenance"), "license": asset.get("license"),
             "retrievedAt": asset.get("retrievedAt"),
             "evidenceIdentity": asset.get("evidenceIdentity"),
+            "documentEvidenceMode": asset.get("documentEvidenceMode"),
             "evidenceRegions": asset.get("evidenceRegions") or [],
             "mapDataIdentity": asset.get("mapDataIdentity"),
             "numericData": asset.get("numericData"), "dataSource": asset.get("dataSource"),

@@ -1,0 +1,4 @@
+interface:
+  display_name: '/vox-collage-video'
+  short_description: 'Use the canonical VideoAgent narrated-video workflow'
+  default_prompt: '$vox-collage-video: Follow the canonical workflow for this narrated Remotion video.'

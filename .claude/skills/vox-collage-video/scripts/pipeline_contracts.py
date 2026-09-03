@@ -149,7 +149,7 @@ def semantic_scene(scene):
         {key: asset.get(key) for key in (
             "id", "name", "role", "meaningBearing", "describes", "sourceConstraint",
             "materialIntent", "mediaBrief", "anchorPhrase", "evidenceIdentity",
-            "evidenceRegions", "diagramJustification", "mapDataIdentity", "numericData",
+             "documentEvidenceMode", "evidenceRegions", "diagramJustification", "mapDataIdentity", "numericData",
             "dataSource", "reconstructionLabel",
         ) if key in asset}
         for asset in state.scene_materials(scene)
@@ -227,6 +227,7 @@ def locked_asset_contract(root, video, scene):
             "scene": scene.get("id"), "name": asset.get("name"), "src": src,
             "role": asset.get("role"), "sha256": actual,
             "evidenceIdentity": asset.get("evidenceIdentity"),
+            "documentEvidenceMode": asset.get("documentEvidenceMode"),
             "evidenceRegions": asset.get("evidenceRegions") or [],
             "materialIntent": asset.get("materialIntent"),
             "provenance": asset.get("provenance"), "license": asset.get("license"),

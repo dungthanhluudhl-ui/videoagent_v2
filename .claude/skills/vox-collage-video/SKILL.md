@@ -47,8 +47,9 @@ input/V<N>/review.json              out/V<N>/review/pages/
 input/.videoagent/V<N>/             out/V<N>/final/master.mp4
 ```
 
-Fresh scene source may import only canonical `src/primitives/`, Remotion/normal
-external package libraries, and generated `timing.js`. Arbitrary per-video visual
+Fresh scene source may import only the explicit canonical files listed in
+`references/primitives.md`, Remotion/normal external package libraries, and generated
+`timing.js`. Arbitrary files elsewhere under `src/primitives/` and per-video visual
 or helper modules are outside the fresh production boundary. Historical V3–V17
 files remain in place but are not a reusable production kit.
 
@@ -72,6 +73,13 @@ Each fresh scene contains only editorial intent:
 - `materials[]`: `id`, `anchorPhrase`, `mediaBrief`, `materialIntent`;
 - source/evidence identity/regions where applicable;
 - `diagramJustification` only for `diagram-exception`.
+
+Every fresh `document` material declares `documentEvidenceMode: "claim"|"context"`.
+Claim mode grounds exact wording/holdings/paragraphs/statutes/evidentiary statements
+with `evidenceIdentity` plus one or more valid `evidenceRegions`; context mode shows
+source/page identity and may remain full-page. An exact-evidence document treatment
+must include a valid claim-mode material—it cannot use a context-only full page as
+claim proof.
 
 `visualTreatment` is compact free editorial wording such as authentic, contextual,
 document, reconstruction, map, timeline, chart, relation, or genuinely textual/quote
@@ -205,3 +213,10 @@ orchestrator, model caller, renderer, cleanup trigger, or aesthetic scorer.
 
 `economics.jsonl` stores factual stage metrics. Main-agent token/context values are
 `UNKNOWN` because this harness exposes no trustworthy counters; never estimate them.
+
+This file is the one canonical cross-platform workflow authority. Claude Code wires
+`hook_gate.py` through `.claude/settings.json`. Codex discovers this workflow through
+the thin `.agents/skills/vox-collage-video/SKILL.md` adapter; when its runtime exposes
+no equivalent hooks, Codex must invoke the canonical integrity scripts explicitly at
+the lifecycle checkpoints above. No platform may claim hook or gate enforcement it
+did not actually execute.

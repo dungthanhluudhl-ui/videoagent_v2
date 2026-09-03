@@ -25,6 +25,11 @@ except ImportError:
 
 PIXEL_VERSION = "selective-promoted-open-key-v3"
 FRESH_SCHEMA = "v18-rebuilt-plan-v1"
+CANONICAL_PRIMITIVE_FILES = frozenset({
+    "Captions.jsx", "DataChart.jsx", "DocumentEvidence.jsx", "LayoutSafety.jsx",
+    "MapGraphic.jsx", "RelationDiagram.jsx", "Reveal.jsx", "media.jsx",
+})
+MIN_CLAIM_FOCUS_WIDTH_PERCENT = 70.0
 MAX_BLOCK_MAE = 0.42
 MAX_CENTROID_DISPLACEMENT = 0.13
 MAX_BBOX_DISPLACEMENT = 0.24
@@ -101,6 +106,27 @@ def _literal_focus_region(opening):
         return None
 
 
+def _document_source_name(opening):
+    static = re.search(r"\bsrc\s*=\s*{\s*staticFile\s*\(\s*[\"']([^\"']+)[\"']\s*\)\s*}", opening, re.S)
+    literal = re.search(r"\bsrc\s*=\s*[\"']([^\"']+)[\"']", opening, re.S)
+    raw = static.group(1) if static else (literal.group(1) if literal else None)
+    return pathlib.Path(raw).name if raw else None
+
+
+def _literal_positive_number_prop(opening, name):
+    match = re.search(rf"\b{re.escape(name)}\s*=\s*{{\s*(\d+(?:\.\d+)?)\s*}}", opening)
+    return float(match.group(1)) if match else None
+
+
+def _claim_focus_width(opening):
+    declared = re.search(r"\bpanelWidth\s*:\s*([^,}}]+)", opening)
+    if not declared:
+        return 84.0
+    value = declared.group(1).strip().strip("\"'")
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)%?", value)
+    return float(match.group(1)) if match else None
+
+
 def fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed):
     """Enforce declared material <-> meaning-bearing fresh-source identity both ways."""
     sid = scene.get("id")
@@ -141,7 +167,14 @@ def fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed):
                 problems.append(f"{prefix}: requires literal materialId matching declared materialIntent={intent}")
                 continue
             if component == "DocumentEvidence":
-                if material.get("evidenceIdentity") and material.get("evidenceRegions"):
+                mode = material.get("documentEvidenceMode")
+                source_name = _document_source_name(opening)
+                jsx_mode = _literal_prop(opening, "documentEvidenceMode")
+                if jsx_mode != mode:
+                    problems.append(f"{prefix}/{material_id}: literal documentEvidenceMode must match approved PLAN mode {mode!r}")
+                if source_name != pathlib.Path(str(material.get("src") or "")).name:
+                    problems.append(f"{prefix}/{material_id}: DocumentEvidence src must match the locked authentic document raster")
+                if mode == "claim":
                     region = _literal_focus_region(opening)
                     approved_regions = [item.get("region") for item in material.get("evidenceRegions") or []]
                     if not region:
@@ -149,6 +182,11 @@ def fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed):
                     elif not any(len(approved) == len(region) and all(abs(float(a) - float(b)) < 1e-6
                                      for a, b in zip(approved, region)) for approved in approved_regions if approved):
                         problems.append(f"{prefix}/{material_id}: focus region does not match an approved PLAN evidence region")
+                    if not _literal_positive_number_prop(opening, "sourceAspect"):
+                        problems.append(f"{prefix}/{material_id}: claim DocumentEvidence requires literal positive sourceAspect for truthful contain geometry")
+                    panel_width = _claim_focus_width(opening)
+                    if panel_width is None or panel_width < MIN_CLAIM_FOCUS_WIDTH_PERCENT:
+                        problems.append(f"{prefix}/{material_id}: claim focus panel width must be a literal value at least 70% of composition width")
             elif component == "RelationDiagram":
                 if len(str(material.get("diagramJustification") or "").strip()) < 30 or not plan_closed:
                     problems.append(f"{prefix}/{material_id}: requires current human-approved matching diagram-exception")
@@ -166,8 +204,7 @@ def fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed):
                                 any(abs(float(a) - float(b)) > 1e-9 for a, b in zip(used_data, data))):
                     problems.append(f"{prefix}/{material_id}: JSX numeric data must exactly match approved PLAN numericData")
     for material in materials:
-        if (material.get("materialIntent") == "document" and material.get("evidenceIdentity")
-                and material.get("evidenceRegions")):
+        if material.get("materialIntent") == "document" and material.get("documentEvidenceMode") == "claim":
             mid = re.escape(str(material.get("id") or material.get("name") or ""))
             if not re.search(rf"<DocumentEvidence\b[^>]*\bmaterialId\s*=\s*[\"']{mid}[\"']", text, re.S):
                 problems.append(f"{sid}/{material.get('id')}: exact evidence cannot be replaced by retyped claim text; use matching DocumentEvidence")
@@ -290,6 +327,7 @@ def fresh_import_problems(root, video, source, text):
         return []
     problems = []
     primitives = (pathlib.Path(root) / "src" / "primitives").resolve()
+    allowed_primitives = {(primitives / name).resolve() for name in CANONICAL_PRIMITIVE_FILES}
     per_video = state.video_paths(root, video)["source"].resolve()
     for raw in re.findall(r'(?:from\s+|import\s*)["\'](\.[^"\']+)["\']', text):
         base = (source.parent / raw).resolve()
@@ -297,10 +335,16 @@ def fresh_import_problems(root, video, source, text):
                       ("", ".js", ".jsx", ".ts", ".tsx", ".mjs")]
         resolved = next((item.resolve() for item in candidates if item.is_file()), base)
         allowed_generated = {per_video / "timing.js"}
-        if not (str(resolved).startswith(str(primitives) + os.sep) or resolved in allowed_generated):
+        if resolved in allowed_primitives or resolved in allowed_generated:
+            continue
+        if str(resolved).startswith(str(primitives) + os.sep):
+            problems.append(
+                f"{source.name}: primitive is outside the canonical fresh primitive allowlist "
+                f"({', '.join(sorted(CANONICAL_PRIMITIVE_FILES))}): {raw}")
+        else:
             problems.append(
                 f"{source.name}: arbitrary per-video scene/helper module is outside the fresh "
-                f"production import boundary (allowed: src/primitives, generated timing.js, "
+                f"production import boundary (allowed: canonical primitive allowlist, generated timing.js, "
                 f"or external packages): {raw}")
     return problems
 
