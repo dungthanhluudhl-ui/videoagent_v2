@@ -36,16 +36,17 @@ transition, icon, or text percentage quota.
 input/V<N>/scene_plan.json          public/V<N>/audio.mp3
 input/V<N>/transcript.json          public/V<N>/assets/<selected files>
 input/V<N>/words_aligned.json       src/videos/V<N>/scenes/Sxx.jsx
-input/V<N>/asset_manifest.json      src/videos/V<N>/scene-helpers.jsx (optional)
+input/V<N>/asset_manifest.json      src/videos/V<N>/timing.js (generated)
 input/V<N>/previs/frames/           src/videos/V<N>/Master.jsx
 input/V<N>/previs/review_pages/     out/V<N>/draft/master.mp4
 input/V<N>/review.json              out/V<N>/review/pages/
 input/.videoagent/V<N>/             out/V<N>/final/master.mp4
 ```
 
-Fresh scene source may import only `src/primitives/`, Remotion libraries, and the
-optional per-video `scene-helpers`/generated `timing.js`. Historical V3–V17 files
-remain in place but are not a reusable production kit.
+Fresh scene source may import only canonical `src/primitives/`, Remotion/normal
+external package libraries, and generated `timing.js`. Arbitrary per-video visual
+or helper modules are outside the fresh production boundary. Historical V3–V17
+files remain in place but are not a reusable production kit.
 
 ## 1. INGEST
 

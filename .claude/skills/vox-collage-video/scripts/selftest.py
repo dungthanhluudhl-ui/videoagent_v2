@@ -185,6 +185,8 @@ def fresh_integrity_checks(paths, plan, rows):
     plan_path = paths["plan"]
     clean = copy.deepcopy(plan)
     scene = clean["scenes"][0]
+    source = state.scene_source(paths["root"], clean["video"], scene["id"])
+    original_source = source.read_text(encoding="utf-8")
     undeclared = build_gate.fresh_source_integrity_problems(
         plan_path, clean, scene,
         'const secret="V99/assets/secret.jpg"; <Img src={secret} />', True)
@@ -202,6 +204,46 @@ def fresh_integrity_checks(paths, plan, rows):
     try:
         state.write_json(plan_path, clean)
         contracts.approve_plan(plan_path)
+        helper_rejections = []
+        for suffix in ("jsx", "js", "tsx", "ts"):
+            source.write_text(
+                f'import SomeVisual from "../scene-helpers.{suffix}";\n{original_source}',
+                encoding="utf-8")
+            problems, checked = build_gate.previs_source_check(plan_path, clean, "S1")
+            helper_rejections.append((problems, checked))
+        source.write_text(original_source, encoding="utf-8")
+        result(rows, "fresh scene-helpers.jsx/js/tsx/ts imports hard fail at production boundary",
+               all(checked == 1 and any("arbitrary per-video scene/helper module" in item
+                                        for item in problems)
+                   for problems, checked in helper_rejections))
+        timing_path, _ = beat_sync.write_timing(plan_path)
+        source.write_text(
+            'import {PROMOTION_TIMING} from "../timing.js";\n'
+            'import {LayoutSafety} from "../../../primitives/LayoutSafety.jsx";\n'
+            + original_source, encoding="utf-8")
+        try:
+            timing_problems, timing_checked = build_gate.previs_source_check(
+                plan_path, clean, "S1")
+        finally:
+            source.write_text(original_source, encoding="utf-8")
+        result(rows, "generated timing.js and canonical src/primitives imports remain legal",
+               timing_path.is_file() and timing_checked == 1 and not timing_problems)
+        helper = paths["source"] / "scene-helpers.jsx"
+        helper.write_text(
+            'export const SomeVisual=()=> <><img src="V99/assets/undeclared.jpg" />'
+            '<RelationDiagram /></>;\n', encoding="utf-8")
+        source.write_text(
+            f'import {{SomeVisual}} from "../scene-helpers.jsx";\n{original_source}',
+            encoding="utf-8")
+        try:
+            helper_bypass, _checked = build_gate.previs_source_check(plan_path, clean, "S1")
+        finally:
+            source.write_text(original_source, encoding="utf-8")
+            helper.unlink()
+        result(rows, "helper-mediated undeclared-media/diagram bypass hard fails at import boundary",
+               any("arbitrary per-video scene/helper module" in item for item in helper_bypass) and
+               not any("undeclared meaning-bearing local media" in item or "RelationDiagram" in item
+                       for item in helper_bypass))
         relation = copy.deepcopy(clean)
         relation_material = {
             "id": "relation", "materialIntent": "diagram-exception",

@@ -244,11 +244,12 @@ def fresh_import_problems(root, video, source, text):
         candidates = [pathlib.Path(str(base) + suffix) for suffix in
                       ("", ".js", ".jsx", ".ts", ".tsx", ".mjs")]
         resolved = next((item.resolve() for item in candidates if item.is_file()), base)
-        allowed_helpers = {per_video / "scene-helpers.jsx", per_video / "scene-helpers.js",
-                           per_video / "scene-helpers.tsx", per_video / "scene-helpers.ts",
-                           per_video / "timing.js"}
-        if not (str(resolved).startswith(str(primitives) + os.sep) or resolved in allowed_helpers):
-            problems.append(f"{source.name}: fresh production import leaves src/primitives or per-video helpers: {raw}")
+        allowed_generated = {per_video / "timing.js"}
+        if not (str(resolved).startswith(str(primitives) + os.sep) or resolved in allowed_generated):
+            problems.append(
+                f"{source.name}: arbitrary per-video scene/helper module is outside the fresh "
+                f"production import boundary (allowed: src/primitives, generated timing.js, "
+                f"or external packages): {raw}")
     return problems
 
 

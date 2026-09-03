@@ -1,7 +1,8 @@
 # Active primitive surface
 
-Fresh production may use only these canonical files, Remotion libraries, direct JSX,
-and an optional per-video `scene-helpers.jsx`:
+Fresh production may use only these canonical files, Remotion/normal external package
+libraries, direct JSX, and generated per-video `timing.js`; arbitrary per-video visual
+or helper modules are not allowed:
 
 | File | Responsibility |
 |---|---|
