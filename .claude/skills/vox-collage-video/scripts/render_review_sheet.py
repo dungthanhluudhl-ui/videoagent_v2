@@ -20,40 +20,63 @@ import time
 
 import stage_state as state
 import render_video
+import beat_sync
 
 try:
     from PIL import Image, ImageDraw
 except ImportError:
     sys.exit("Pillow is required: py -3 -m pip install pillow")
 
-VERSION = "master-draft-extraction-v2"
-PREVIS_VERSION = "actual-production-scene-stills-v2"
+VERSION = "master-frame-batched-pages-v4"
+PREVIS_VERSION = "selective-production-scene-stills-v3"
+FRESH_SCHEMA = "v18-rebuilt-plan-v1"
 SETTLE = 20
+MAX_BATCH = 40
+MAX_PAGE_PIXELS = 4_000_000
+THUMB_SIZE = (270, 480)
+PAGE_COLS = 4
+PAGE_ROWS = 2
 
 
-def build_sheet(thumbs, out_path, max_cols=6):
-    """Build another view of already-extracted evidence; never renders frames."""
-    if not thumbs:
-        return 0
-    images = [(label, Image.open(path).convert("RGB")) for label, path in thumbs]
-    w, h = images[0][1].size
-    cols = min(max_cols, len(images))
-    rows = (len(images) + cols - 1) // cols
-    cw, ch = w + 10, h + 30
-    sheet = Image.new("RGB", (cols * cw, rows * ch), (255, 255, 255))
-    draw = ImageDraw.Draw(sheet)
-    for i, (label, image) in enumerate(images):
-        x, y = (i % cols) * cw, (i // cols) * ch
-        sheet.paste(image, (x + 5, y + 5))
-        draw.text((x + 5, y + h + 10), label, fill=(0, 0, 0))
-    pathlib.Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-    sheet.save(out_path, quality=88)
-    return len(images)
+def build_review_pages(thumbs, out_dir, prefix):
+    """Compact review proxies; high-resolution evidence remains untouched."""
+    out_dir = pathlib.Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for old in out_dir.glob(f"{prefix}-*.jpg"):
+        old.unlink()
+    pages = []
+    page_size = PAGE_COLS * PAGE_ROWS
+    for page_index in range(0, len(thumbs), page_size):
+        chunk = thumbs[page_index:page_index + page_size]
+        cw, ch = THUMB_SIZE[0] + 12, THUMB_SIZE[1] + 34
+        width, height = PAGE_COLS * cw, PAGE_ROWS * ch
+        if width * height > MAX_PAGE_PIXELS:
+            raise ValueError(f"review proxy page would exceed {MAX_PAGE_PIXELS} pixels")
+        page = Image.new("RGB", (width, height), (245, 243, 238))
+        draw = ImageDraw.Draw(page)
+        labels = []
+        for index, (label, path) in enumerate(chunk):
+            with Image.open(path) as original:
+                image = original.convert("RGB")
+                image.thumbnail(THUMB_SIZE, Image.Resampling.LANCZOS)
+                cell = Image.new("RGB", THUMB_SIZE, (20, 20, 20))
+                cell.paste(image, ((THUMB_SIZE[0] - image.width) // 2,
+                                   (THUMB_SIZE[1] - image.height) // 2))
+            x, y = (index % PAGE_COLS) * cw, (index // PAGE_COLS) * ch
+            page.paste(cell, (x + 6, y + 6))
+            draw.text((x + 6, y + THUMB_SIZE[1] + 12), label, fill=(20, 20, 20))
+            labels.append(label)
+        path = out_dir / f"{prefix}-{page_index // page_size + 1:03d}.jpg"
+        page.save(path, format="JPEG", quality=82, optimize=True)
+        pages.append({"path": str(path), "width": width, "height": height,
+                      "megapixels": round(width * height / 1_000_000, 4),
+                      "labels": labels, "sha256": state.hash_file(path)})
+    return pages
 
 
-def _declared_previs_frames(scene):
+def _declared_previs_frames(scene, fps=30):
     """OPEN/KEY defaults plus MID only when the semantic plan explicitly asks."""
-    duration = max(1, int(scene.get("durationInFrames") or 1))
+    duration = state.scene_duration(scene, fps)
     declared = scene.get("previsFrames") or scene.get("previsFrameRoles") or []
     values = {}
     if isinstance(declared, dict):
@@ -74,7 +97,7 @@ def _declared_previs_frames(scene):
                 values["MID"] = duration // 2
     values.setdefault("OPEN", int(scene.get("previsOpenFrame") or 0))
     events = [int(item.get("frame") or 0) for item in scene.get("visualEvents") or []]
-    default_key = min(duration - 1, max(events or [max(0, duration // 2)]) + SETTLE)
+    default_key = min(duration - 1, max(events or [max(0, duration // 2)]) + (SETTLE if events else 0))
     values.setdefault("KEY", int(scene.get("previsKeyFrame", default_key)))
     if scene.get("previsMidRequired") is True:
         values.setdefault("MID", int(scene.get("previsMidFrame", duration // 2)))
@@ -86,15 +109,22 @@ def _declared_previs_frames(scene):
 def previs_requests(plan, paths, promoted=False):
     video = plan.get("video", "V")
     target_dir = paths["promoted_previs_frames"] if promoted else paths["previs_frames"]
+    changed = None
     if promoted:
         baseline = state.read_json(paths["previs_manifest"], {})
+        approval = state.read_json(paths["receipts"] / "previs-approved.json", {})
+        approved = {item.get("scene"): item.get("fingerprint") for item in
+                    (approval.get("metadata") or {}).get("sceneDependencies") or []}
+        changed = {scene.get("id") for scene in plan.get("scenes") or []
+                   if approved.get(scene.get("id")) != state.scene_dependency_fingerprint(
+                       paths["root"], plan, scene, __import__("build_gate").PIXEL_VERSION)}
         requests = [{"scene": item.get("scene"), "role": str(item.get("role") or "").upper(),
                      "localFrame": int(item.get("localFrame", item.get("frame", 0)))}
-                    for item in baseline.get("frames") or []]
+                    for item in baseline.get("frames") or [] if item.get("scene") in changed]
     else:
         requests = [{"scene": scene.get("id"), "role": role, "localFrame": frame}
                     for scene in plan.get("scenes") or []
-                    for role, frame in _declared_previs_frames(scene)]
+                    for role, frame in _declared_previs_frames(scene, plan.get("fps", 30))]
     for item in requests:
         stem = state.scene_stem(item["scene"])
         source = state.scene_source(paths["root"], video, item["scene"])
@@ -103,6 +133,18 @@ def previs_requests(plan, paths, promoted=False):
         item["sourcePath"] = str(source)
         item["sourceSha256"] = state.hash_file(source) if source.is_file() else None
     return requests
+
+
+def conformance_scene_records(plan, paths, rendered_scene_ids):
+    approval = state.read_json(paths["receipts"] / "previs-approved.json", {})
+    approved = {item.get("scene"): item.get("fingerprint") for item in
+                (approval.get("metadata") or {}).get("sceneDependencies") or []}
+    return [{"scene": scene.get("id"),
+             "status": "rendered" if scene.get("id") in rendered_scene_ids else "reused",
+             "approvedFingerprint": approved.get(scene.get("id")),
+             "currentFingerprint": state.scene_dependency_fingerprint(
+                 paths["root"], plan, scene, __import__("build_gate").PIXEL_VERSION)}
+            for scene in plan.get("scenes") or []]
 
 
 def previs_command(item, entry="src/index.ts"):
@@ -114,8 +156,13 @@ def render_previs(plan_path, plan, paths, command_only=False, manifest_only=Fals
                   promoted=False):
     root = state.project_root(plan_path)
     requests = previs_requests(plan, paths, promoted)
-    if not requests:
+    if not requests and not promoted:
         raise ValueError("semantic plan has no scenes to render as PREVIS")
+    if promoted and not requests and not manifest_only:
+        static = [scene for scene in plan.get("scenes") or []
+                  if len(str(scene.get("intentionalStaticRationale") or "").strip()) >= 20]
+        if len(static) != len(plan.get("scenes") or []):
+            raise ValueError("PROMOTE cannot close as a global no-op: every scene is unchanged and not every scene has a specific intentionalStaticRationale")
     commands = [previs_command(item) for item in requests]
     if command_only:
         print(json.dumps(commands, ensure_ascii=False))
@@ -144,23 +191,26 @@ def render_previs(plan_path, plan, paths, command_only=False, manifest_only=Fals
             frame["sha256"] = proof["sha256"]
         frames.append(frame)
     manifest_path = paths["promoted_previs_manifest"] if promoted else paths["previs_manifest"]
+    rendered_scene_ids = {item["scene"] for item in requests}
     manifest = {"schema": 1, "version": PREVIS_VERSION, "video": plan.get("video"),
-                "source": "actual production-compatible scene JSX", "frames": frames}
+                "source": "actual production-compatible scene JSX", "frames": frames,
+                "layoutSafetyVersion": "rendered-dom-geometry-v1"}
+    if promoted:
+        manifest["scenes"] = conformance_scene_records(plan, paths, rendered_scene_ids)
     changed = []
     sheet_wall_ms = 0.0
     if not promoted and not manifest_only:
         thumbs = [(f"{item['scene']} {item['role']} @f{item['localFrame']}", pathlib.Path(item["path"]))
                   for item in requests]
         sheet_start = time.perf_counter()
-        build_sheet(thumbs, paths["contact_sheet"], max_cols=4)
+        pages = build_review_pages(thumbs, paths["previs_review_pages"], "previs")
         sheet_wall_ms = round((time.perf_counter() - sheet_start) * 1000, 2)
-        manifest["contactSheet"] = str(paths["contact_sheet"])
-        manifest["contactSheetSha256"] = state.hash_file(paths["contact_sheet"])
-        changed.append(paths["contact_sheet"])
+        manifest["reviewPages"] = pages
+        changed.extend(pathlib.Path(page["path"]) for page in pages)
     state.write_json(manifest_path, manifest)
     changed.append(manifest_path)
     if not command_only:
-        output_path = paths["contact_sheet"] if not promoted and not manifest_only else manifest_path
+        output_path = pathlib.Path(manifest["reviewPages"][0]["path"]) if not promoted and not manifest_only else manifest_path
         state.append_telemetry(root, plan.get("video", "V"), {
             "stage": "previs-capture", "owner": "script",
             "mode": "promoted-previs" if promoted else "baseline-previs",
@@ -170,6 +220,9 @@ def render_previs(plan_path, plan, paths, command_only=False, manifest_only=Fals
             "cache": "manifest-only" if manifest_only else "miss",
             "affectedItems": len(requests), "output": str(output_path),
             "outputIdentity": state.file_input(output_path),
+            "reusedSceneCount": sum(item.get("status") == "reused" for item in manifest.get("scenes") or []),
+            "renderedSceneCount": len(rendered_scene_ids),
+            "reviewPageCount": len(manifest.get("reviewPages") or []),
         })
     print(state.compact_result("CLOSED" if not manifest_only else "OPEN",
                                changed=changed, details=manifest_path,
@@ -182,13 +235,14 @@ def scene_summary_thumbs(review_entries):
             for entry in review_entries if entry.get("frame")]
 
 
-def local_sample_frames(scene, fps=30, per_scene=2, settle=SETTLE):
-    total = int(scene.get("durationInFrames") or
-                round((scene.get("endSec", 0) - scene.get("startSec", 0)) * fps))
+def local_sample_frames(scene, fps=30, per_scene=2, settle=SETTLE, promoted_beats=()):
+    total = state.scene_duration(scene, fps)
     if total <= 1:
         return []
-    beats = sorted({int(e.get("frame") or 0) for e in scene.get("visualEvents") or []})
-    picks = {min(total - 2, b + settle) for b in beats if b + settle < total}
+    beats = sorted({int(frame) for frame in promoted_beats})
+    if not beats:  # historical-plan compatibility only
+        beats = sorted({int(e.get("frame") or 0) for e in scene.get("visualEvents") or []})
+    picks = {max(1, min(total - 1, beat + settle)) for beat in beats}
     picks.add(max(1, total - 6))
     if len(picks) < per_scene:
         picks |= {int(total * (i + 1) / (per_scene + 1)) for i in range(per_scene)}
@@ -209,7 +263,7 @@ def needs_full_res(scene):
     if any(scene.get(k) is True for k in ("fullResolutionEvidence", "pixelSensitive",
                                           "smallText", "highResolutionEvidence")):
         return True
-    for asset in scene.get("assets") or []:
+    for asset in state.scene_materials(scene):
         if asset.get("role") == "document" or asset.get("evidenceRegions"):
             return True
         if asset.get("fullResolutionEvidence") is True or asset.get("pixelSensitive") is True:
@@ -217,16 +271,20 @@ def needs_full_res(scene):
     return False
 
 
-def sample_manifest(plan, out_dir, per_scene=2, manual_full_res=()):
+def sample_manifest(plan, out_dir, per_scene=2, manual_full_res=(), promotion_timing=None):
     fps = int(plan.get("fps", 30))
     video = plan.get("video", "V")
     starts = scene_master_starts(plan)
     samples, targeted = [], []
     manual = set(manual_full_res or [])
+    resolved = (promotion_timing or {}).get("beats", {})
     for scene in plan.get("scenes") or []:
         sid = scene.get("id", "")
         scene_samples = []
-        for frame in local_sample_frames(scene, fps, per_scene):
+        promoted_beats = [item["frame"] for key, item in resolved.items()
+                          if key.startswith(f"{sid}:")]
+        for frame in local_sample_frames(scene, fps, per_scene,
+                                         promoted_beats=promoted_beats):
             master = starts[sid] + frame
             item = {"id": f"{sid}-f{frame}", "scene": sid, "localFrame": frame,
                     "masterFrame": master, "masterTimeSec": round(master / fps, 6),
@@ -244,14 +302,38 @@ def sample_manifest(plan, out_dir, per_scene=2, manual_full_res=()):
             "targetedFullResolution": targeted}
 
 
-def extraction_command(draft, samples, temp_pattern):
-    frames = [int(s["masterFrame"]) for s in samples]
-    if not frames:
-        return []
-    expr = "+".join(f"eq(n\\,{f})" for f in frames)
-    return ["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", str(draft),
-            "-vf", f"select='{expr}'", "-fps_mode", "passthrough", "-start_number", "0",
-            str(temp_pattern)]
+def extraction_batches(samples, batch_size=MAX_BATCH):
+    by_frame = {}
+    for sample in samples:
+        by_frame.setdefault(int(sample["masterFrame"]), []).append(sample)
+    unique = [{"masterFrame": frame, "samples": grouped}
+              for frame, grouped in sorted(by_frame.items())]
+    return [unique[index:index + batch_size] for index in range(0, len(unique), batch_size)]
+
+
+def extraction_command(draft, batch, _filter_script, temp_dir):
+    """One bounded process with explicit master-frame-named outputs."""
+    if not batch:
+        return [], ""
+    labels = "".join(f"[v{index}]" for index in range(len(batch)))
+    lines = [f"[0:v]split={len(batch)}{labels};"]
+    for index, item in enumerate(batch):
+        lines.append(f"[v{index}]select=eq(n\\,{int(item['masterFrame'])})[o{index}];")
+    graph = "\n".join(lines)
+    command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(draft),
+               "-filter_complex", graph]
+    for index, item in enumerate(batch):
+        command += ["-map", f"[o{index}]", "-frames:v", "1",
+                    str(pathlib.Path(temp_dir) / f"master-{int(item['masterFrame'])}.png")]
+    return command, graph
+
+
+def verify_batch_outputs(temp_dir, batch):
+    requested = [int(item["masterFrame"]) for item in batch]
+    produced = [frame for frame in requested
+                if (pathlib.Path(temp_dir) / f"master-{frame}.png").is_file()]
+    return {"requested": requested, "produced": produced,
+            "exact": requested == produced}
 
 
 def targeted_full_res_command(manifest, out_dir, entry="src/index.ts"):
@@ -283,7 +365,7 @@ def sample_source_proof(root, plan_path, plan, sample, render_params):
     files += [paths["master"], paths["captions"], paths["shared"],
               root / "remotion.config.ts", root / "package.json"]
     for scene in relevant:
-        for asset in scene.get("assets") or []:
+        for asset in state.scene_materials(scene):
             if asset.get("src"):
                 files.append(state.asset_path(root, video, asset["src"]))
     local_contract = state.plan_slice(
@@ -314,27 +396,36 @@ def stale_samples(root, video, plan_path, plan, manifest, render_params):
 
 def extract_stale(root, video, draft, stale, command_only=False):
     temp_dir = state.video_paths(root, video)["runtime"] / "review-extract-temp"
-    temp_pattern = temp_dir / "frame_%04d.png"
-    cmd = extraction_command(draft, [x[0] for x in stale], temp_pattern)
+    batches = extraction_batches([item[0] for item in stale])
+    commands = []
+    for index, batch in enumerate(batches):
+        command, content = extraction_command(draft, batch, None, temp_dir)
+        commands.append({"command": command, "boundedFilter": content,
+                         "requested": [item["masterFrame"] for item in batch]})
     if command_only:
-        return cmd
-    if not cmd:
+        return commands
+    if not batches:
         return []
     temp_dir.mkdir(parents=True, exist_ok=True)
-    for old in temp_dir.glob("frame_*.png"):
+    for old in temp_dir.glob("master-*.png"):
         old.unlink()
-    proc = subprocess.run(cmd, cwd=root, capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", shell=(sys.platform == "win32"))
-    if proc.returncode:
-        raise RuntimeError(((proc.stderr or proc.stdout) or "ffmpeg extraction failed").strip())
-    produced = sorted(temp_dir.glob("frame_*.png"))
-    if len(produced) != len(stale):
-        raise RuntimeError(f"ffmpeg produced {len(produced)}/{len(stale)} requested frames")
+    for spec in commands:
+        proc = subprocess.run(spec["command"], cwd=root, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", shell=(sys.platform == "win32"))
+        if proc.returncode:
+            raise RuntimeError(((proc.stderr or proc.stdout) or "ffmpeg extraction failed").strip())
+        verification = verify_batch_outputs(temp_dir,
+            [{"masterFrame": frame} for frame in spec["requested"]])
+        if not verification["exact"]:
+            missing = [frame for frame in verification["requested"]
+                       if frame not in verification["produced"]]
+            raise RuntimeError(f"ffmpeg batch produced {len(verification['produced'])}/{len(verification['requested'])} requested master frames; missing {missing}")
     changed = []
-    for source, (sample, _key, receipt_path, inputs, tool, _old) in zip(produced, stale):
+    for sample, _key, receipt_path, inputs, tool, _old in stale:
+        source = temp_dir / f"master-{int(sample['masterFrame'])}.png"
         dest = pathlib.Path(sample["path"])
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(source), dest)
+        shutil.copy2(source, dest)
         state.make_receipt(receipt_path, "review-sample", inputs, tool, {}, [dest])
         changed.append(dest)
     return changed
@@ -399,6 +490,8 @@ def complete_review_generation(manifest, manifest_path, review_path, temporal, s
               "evidenceSource": "medium-resolution actual master draft",
               "sampleManifest": str(manifest_path), "temporalSheet": str(temporal),
               "sceneSummarySheet": str(summary), "targetedFullResolution": str(targeted_path),
+              "reviewPages": manifest.get("reviewPages") or [],
+              "sceneSummaryPages": manifest.get("sceneSummaryPages") or [],
               "renderParameters": render_params, "reviewGeneration": generation,
               "howToFill": "Judge actual-master evidence; quality fail may be acknowledged, missing/stale/blank evidence is hard.",
               "criteria": {"illustrated": "narration is shown",
@@ -441,7 +534,11 @@ def main():
     draft = state.project_path(root, args.draft) if args.draft else paths["draft"]
     out_dir = (state.project_path(root, args.out_dir) if args.out_dir
                else paths["review_frames"])
-    manifest = sample_manifest(plan, out_dir, args.per_scene, args.full_res_scene)
+    promotion_timing = None
+    if plan.get("schemaVersion") == FRESH_SCHEMA:
+        _resolved_plan, _resolved_root, promotion_timing = beat_sync.resolve_contract(plan_path)
+    manifest = sample_manifest(plan, out_dir, args.per_scene, args.full_res_scene,
+                               promotion_timing)
     manifest_path = out_dir / "sample_manifest.json"
     targeted_path = out_dir / "targeted_full_res_manifest.json"
     state.write_json(manifest_path, manifest)
@@ -477,19 +574,29 @@ def main():
     entries = review_entries(manifest)
     thumbs = [(f"{x['scene']}@m{x['masterFrame']}", pathlib.Path(x["path"]))
               for x in manifest["samples"]]
-    temporal = out_dir / "contact_sheet.jpg"
-    summary = out_dir / "scene_summary_sheet.jpg"
-    build_sheet(thumbs, temporal)
-    build_sheet(scene_summary_thumbs(entries), summary)
+    temporal_pages = build_review_pages(thumbs, paths["review_pages"], "temporal")
+    summary_pages = build_review_pages(scene_summary_thumbs(entries), paths["review_pages"], "summary")
+    if not temporal_pages or not summary_pages:
+        raise RuntimeError("review extraction produced no paginated review surface")
+    manifest["reviewPages"] = temporal_pages
+    manifest["sceneSummaryPages"] = summary_pages
+    state.write_json(manifest_path, manifest)
+    temporal = pathlib.Path(temporal_pages[0]["path"])
+    summary = pathlib.Path(summary_pages[0]["path"])
     review_path = paths["review"]
     review = complete_review_generation(
         manifest, manifest_path, review_path, temporal, summary, targeted_path,
         render_params, state.file_input(draft), args.keep_review)
     state.append_telemetry(root, video, {"stage": "review-extraction", "owner": "script",
                            "cache": f"{len(current)} hit/{len(stale)} miss",
-                           "subprocessCount": 1 if stale else 0,
-                           "affectedItems": len(stale), "output": str(temporal)})
-    print(state.compact_result("CLOSED", changed=[*changed, temporal, summary, review_path],
+                           "subprocessCount": len(extraction_batches([item[0] for item in stale])),
+                           "affectedItems": len(stale), "output": str(temporal),
+                           "reviewSampleCount": len(manifest["samples"]),
+                           "reviewBatchCount": len(extraction_batches([item[0] for item in stale])),
+                           "reviewPageCount": len(temporal_pages) + len(summary_pages)})
+    print(state.compact_result("CLOSED", changed=[*changed,
+                                *(pathlib.Path(item["path"]) for item in temporal_pages),
+                                *(pathlib.Path(item["path"]) for item in summary_pages), review_path],
                                details=manifest_path, receipt=review["reviewGeneration"]))
     return 0
 

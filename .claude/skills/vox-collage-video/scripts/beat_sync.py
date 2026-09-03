@@ -1,190 +1,164 @@
-#!/usr/bin/env python3
+"""Canonical PROMOTE timing resolver for meaning-bearing beats.
+
+Fresh PLAN stores anchor phrases, not authored frames. This resolver maps those
+phrases through words_aligned.json to scene-local frames and emits the one
+generated timing module imported by promoted scene source. Ambient camera motion
+does not enter this contract. A manual beat is legal only as ``manual — reason``;
+its actual frame remains an explicit source-level editorial override.
 """
-beat_sync.py — anchor a scene's hero/support/punchline entrance frames to the
-real word they illustrate, instead of a guessed delay number.
 
-Why this exists: hand-picked delay values (e.g. `delay=55`) have no relation
-to when the audio actually says the thing being illustrated. Checked head-to-
-head on VayTinChap Scene1: a "bẫy" (trap) warning icon was set to appear at
-frame 55 (~1.8s) while the phrase "sập bẫy" is actually spoken starting at
-frame ~224 (~7.47s) — a 6-second mismatch, invisible unless you look at the
-real timestamps. This script makes that lookup mechanical instead of
-eyeballed, and gives a way to verify a whole scene's assigned delays at once
-before wiring them into JSX.
+from __future__ import annotations
 
-Usage:
-  # find the local frame a phrase starts at, relative to a scene's own start
-  py -3 beat_sync.py frame input/words6_aligned.json --scene-start 0.0 --phrase "sập bẫy"
-
-  # verify a whole scene's assigned delays against their target phrases
-  py -3 beat_sync.py verify input/words6_aligned.json --scene-start 0.0 \
-      --anchor "Hero-Worried=Mượn tiền ngân hàng=0" \
-      --anchor "Support-Warning=sập bẫy=55"
-
-  # turn optional document evidenceRegions into DocumentEvidence `regions`
-  py -3 beat_sync.py evidence-regions input/scene_plan<N>.json
-
-`--scene-start` is the real Whisper timestamp (seconds) of the scene's first
-word — the same number used to compute that scene's arrival frame in the
-master timeline. Phrases match case-insensitively and ignore punctuation, but
-still need the real words verbatim (with Vietnamese diacritics) from the
-aligned transcript — copy them from there, don't retype from the script by
-hand.
-"""
 import argparse
 import json
 import pathlib
+import re
 import sys
+import unicodedata
+
+import stage_state as state
+
+VERSION = "anchor-phrase-promotion-v1"
+MANUAL = re.compile(r"^manual\s*[—-]\s*(.+)$", re.I)
+
+
+def normalize(value):
+    value = unicodedata.normalize("NFKC", str(value or "")).lower()
+    return " ".join(re.sub(r"[^\w]+", " ", value, flags=re.UNICODE).split())
 
 
 def load_words(path):
-    data = json.load(open(path, encoding="utf-8"))
-    return data["words"]  # [[text, start_sec, end_sec, segment_idx], ...]
-
-
-def strip(w):
-    return w.strip(".,?!:;\"'()").lower()
+    return json.loads(pathlib.Path(path).read_text(encoding="utf-8"))["words"]
 
 
 def find_phrase(words, phrase, scene_start=None, scene_end=None):
-    """Find the first match of `phrase` inside [scene_start, scene_end) if
-    given — a repeated phrase (very common in Vietnamese narration, e.g.
-    "trả chậm" said twice at different points) will otherwise silently
-    match its FIRST occurrence anywhere in the whole transcript, even one
-    that belongs to an earlier scene."""
-    target = [strip(t) for t in phrase.split()]
-    n = len(target)
-    for i in range(len(words) - n + 1):
-        if scene_start is not None and words[i][1] < scene_start:
+    target = normalize(phrase).split()
+    flattened = []
+    for word in words:
+        if scene_start is not None and float(word[1]) < float(scene_start):
             continue
-        if scene_end is not None and words[i][1] >= scene_end:
+        if scene_end is not None and float(word[1]) >= float(scene_end):
             continue
-        window = [strip(words[i + j][0]) for j in range(n)]
-        if window == target:
-            return words[i], words[i + n - 1]
+        for token in normalize(word[0]).split():
+            flattened.append((token, word))
+    for index in range(len(flattened) - len(target) + 1):
+        if [item[0] for item in flattened[index:index + len(target)]] == target:
+            return flattened[index][1], flattened[index + len(target) - 1][1]
     return None
 
 
-def to_frame(sec, scene_start, fps):
-    return round((sec - scene_start) * fps)
+def to_frame(seconds, scene_start, fps):
+    return int(round((float(seconds) - float(scene_start)) * int(fps)))
 
 
-def cmd_frame(args):
-    words = load_words(args.words)
-    match = find_phrase(words, args.phrase, args.scene_start, args.scene_end)
-    if not match:
-        print(f"NOT FOUND: '{args.phrase}'", file=sys.stderr)
-        sys.exit(1)
-    first, last = match
-    start_f = to_frame(first[1], args.scene_start, args.fps)
-    end_f = to_frame(last[2], args.scene_start, args.fps)
-    print(f"'{args.phrase}' -> local frame {start_f} (spoken {first[1]:.2f}s-{last[2]:.2f}s, ends frame {end_f})")
+def beat_id(scene, material, index):
+    material_id = material.get("id") or material.get("name") or f"material-{index + 1}"
+    return f"{scene.get('id')}:{material_id}"
 
 
-def cmd_verify(args):
-    words = load_words(args.words)
-    print(f"{'element':<24} {'phrase':<28} {'assigned':>9} {'real':>6} {'diff':>6}  status")
-    any_bad = False
-    for raw in args.anchor:
-        name, phrase, assigned = raw.rsplit("=", 2)
-        assigned = int(assigned)
-        match = find_phrase(words, phrase, args.scene_start, args.scene_end)
-        if not match:
-            print(f"{name:<24} {phrase:<28} {assigned:>9}      -       -  NOT FOUND")
-            any_bad = True
-            continue
-        first, _ = match
-        real_f = to_frame(first[1], args.scene_start, args.fps)
-        diff = assigned - real_f
-        status = "OK" if abs(diff) <= args.tolerance else "MISMATCH"
-        if status == "MISMATCH":
-            any_bad = True
-        print(f"{name:<24} {phrase:<28} {assigned:>9} {real_f:>6} {diff:>+6}  {status}")
-    if any_bad:
-        sys.exit(1)
+def resolve_plan(plan, words):
+    fps = int(plan.get("fps", 30))
+    resolved = {}
+    manual = {}
+    for scene in plan.get("scenes") or []:
+        start, end = float(scene.get("startSec", 0)), float(scene.get("endSec", 0))
+        for index, material in enumerate(state.scene_materials(scene)):
+            phrase = str(material.get("anchorPhrase") or "").strip()
+            if not phrase:
+                continue
+            key = beat_id(scene, material, index)
+            override = MANUAL.match(phrase)
+            if override:
+                reason = override.group(1).strip()
+                if len(reason) < 8:
+                    raise ValueError(f"{key}: manual beat reason is too vague")
+                manual[key] = reason
+                continue
+            match = find_phrase(words, phrase, start, end)
+            if not match:
+                raise ValueError(f"{key}: anchorPhrase {phrase!r} not found inside scene")
+            resolved[key] = {"frame": to_frame(match[0][1], start, fps),
+                             "anchorPhrase": phrase,
+                             "spokenStartSec": float(match[0][1]),
+                             "spokenEndSec": float(match[1][2])}
+    return {"version": VERSION, "fps": fps, "beats": resolved, "manual": manual}
+
+
+def timing_js(contract):
+    frames = {key: item["frame"] for key, item in sorted(contract["beats"].items())}
+    payload = json.dumps(frames, ensure_ascii=False, indent=2)
+    return (f"// AUTO-GENERATED by beat_sync.py; {VERSION}. Do not hand-edit.\n"
+            f"export const PROMOTION_TIMING = Object.freeze({payload});\n")
+
+
+def resolve_contract(plan_path):
+    plan_path = pathlib.Path(plan_path).resolve()
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    root = state.project_root(plan_path)
+    words = load_words(state.words_path(root, plan))
+    return plan, root, resolve_plan(plan, words)
+
+
+def write_timing(plan_path, check=False):
+    plan, root, contract = resolve_contract(plan_path)
+    path = state.video_paths(root, plan.get("video", "V"))["timing"]
+    expected = timing_js(contract)
+    current = path.read_text(encoding="utf-8") if path.is_file() else None
+    if check:
+        if current != expected:
+            raise ValueError(f"promotion timing is stale or missing: {path}")
+    elif current != expected:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(expected, encoding="utf-8")
+    return path, contract
 
 
 def resolve_evidence_regions(plan, words):
-    """Resolve plan phrase->source mappings through the same aligned words used
-    by every other beat. The plan stores no timing; returned `from` values are
-    scene-local frames ready for DocumentEvidence's existing `regions` prop."""
-    fps = int(plan.get("fps") or 30)
-    resolved = []
+    result = []
     for scene in plan.get("scenes") or []:
-        start, end = scene.get("startSec", 0), scene.get("endSec")
-        for asset in scene.get("assets") or []:
-            mappings = asset.get("evidenceRegions")
-            if not mappings:
-                continue
+        for index, material in enumerate(state.scene_materials(scene)):
             regions = []
-            for mapping in mappings:
-                phrase = mapping.get("anchorPhrase") or ""
-                match = find_phrase(words, phrase, start, end)
+            for mapping in material.get("evidenceRegions") or []:
+                match = find_phrase(words, mapping["anchorPhrase"], scene.get("startSec"), scene.get("endSec"))
                 if not match:
-                    raise ValueError(
-                        f"{scene.get('id')}/{asset.get('name') or 'document'}: "
-                        f"evidence anchorPhrase {phrase!r} not found in scene")
+                    raise ValueError(f"{beat_id(scene, material, index)}: evidence region anchor not found")
                 x, y, width, height = mapping["region"]
-                region = {
-                    "from": to_frame(match[0][1], start, fps),
-                    "x": x, "y": y, "width": width, "height": height,
-                }
-                if mapping.get("zoom") is not None:
-                    region["zoom"] = mapping["zoom"]
-                regions.append(region)
-            resolved.append({
-                "scene": scene.get("id"),
-                "asset": asset.get("name") or asset.get("src"),
-                "regions": regions,
-            })
-    return resolved
-
-
-def cmd_evidence_regions(args):
-    plan_path = pathlib.Path(args.plan)
-    plan = json.loads(plan_path.read_text(encoding="utf-8"))
-    words_path = pathlib.Path(plan.get("wordsFile") or "")
-    if not words_path.is_absolute() and not words_path.is_file():
-        words_path = plan_path.parent.parent / words_path
-    words = load_words(words_path)
-    try:
-        resolved = resolve_evidence_regions(plan, words)
-    except (KeyError, TypeError, ValueError) as exc:
-        print(f"evidence-regions: {exc}", file=sys.stderr)
-        sys.exit(1)
-    print(json.dumps(resolved, ensure_ascii=False, indent=2))
+                regions.append({"from": to_frame(match[0][1], scene.get("startSec"), plan.get("fps", 30)),
+                                "x": x, "y": y, "width": width, "height": height})
+            if regions:
+                result.append({"scene": scene.get("id"), "material": material.get("id"),
+                               "regions": regions})
+    return result
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = p.add_subparsers(dest="cmd", required=True)
-
-    pf = sub.add_parser("frame", help="find the local frame a single phrase starts at")
-    pf.add_argument("words")
-    pf.add_argument("--phrase", required=True)
-    pf.add_argument("--scene-start", type=float, required=True)
-    pf.add_argument("--scene-end", type=float, default=None, help="bound the search to this scene only — required whenever the phrase (or a word in it) could plausibly repeat elsewhere in the transcript")
-    pf.add_argument("--fps", type=int, default=30)
-    pf.set_defaults(func=cmd_frame)
-
-    pv = sub.add_parser("verify", help="check every assigned delay in a scene against its real word")
-    pv.add_argument("words")
-    pv.add_argument("--scene-start", type=float, required=True)
-    pv.add_argument("--scene-end", type=float, default=None)
-    pv.add_argument("--fps", type=int, default=30)
-    pv.add_argument("--tolerance", type=int, default=6, help="allowed frame drift (~0.2s) before flagging a mismatch")
-    pv.add_argument("--anchor", action="append", required=True, help="name=phrase=assigned_frame")
-    pv.set_defaults(func=cmd_verify)
-
-    pe = sub.add_parser(
-        "evidence-regions",
-        help="resolve optional document evidenceRegions to DocumentEvidence local frames")
-    pe.add_argument("plan")
-    pe.set_defaults(func=cmd_evidence_regions)
-
-    args = p.parse_args()
-    args.func(args)
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+    resolve = sub.add_parser("resolve-plan")
+    resolve.add_argument("plan"); resolve.add_argument("--check", action="store_true")
+    regions = sub.add_parser("evidence-regions")
+    regions.add_argument("plan")
+    frame = sub.add_parser("frame")
+    frame.add_argument("words"); frame.add_argument("--scene-start", required=True, type=float)
+    frame.add_argument("--scene-end", type=float); frame.add_argument("--phrase", required=True)
+    frame.add_argument("--fps", type=int, default=30)
+    args = parser.parse_args()
+    try:
+        if args.command == "resolve-plan":
+            path, contract = write_timing(args.plan, args.check)
+            print(json.dumps({"path": str(path), **contract}, ensure_ascii=False, indent=2)); return 0
+        if args.command == "evidence-regions":
+            plan_path = pathlib.Path(args.plan).resolve()
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            words = load_words(state.words_path(state.project_root(plan_path), plan))
+            print(json.dumps(resolve_evidence_regions(plan, words), ensure_ascii=False, indent=2)); return 0
+        match = find_phrase(load_words(args.words), args.phrase, args.scene_start, args.scene_end)
+        if not match:
+            raise ValueError(f"anchorPhrase {args.phrase!r} not found")
+        print(to_frame(match[0][1], args.scene_start, args.fps)); return 0
+    except (OSError, KeyError, ValueError, json.JSONDecodeError) as exc:
+        print(f"beat_sync: HARD {exc}", file=sys.stderr); return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

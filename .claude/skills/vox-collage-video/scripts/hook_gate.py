@@ -268,7 +268,7 @@ def guard_planless_scene(payload, root):
         f"no plan file. `input/V{video}/scene_plan.json` must exist BEFORE any scene of it "
         f"is written.\n"
         f"Scaffold it with:\n"
-        f"    py -3 .claude/skills/vox-collage-video/scripts/new_video.py {video} "
+        f"    py -3 .claude/skills/vox-collage-video/scripts/start_video.py {video} "
         f"--words input/V{video}/words_aligned.json\n"
         f"then complete semantic intent, pass plan_gate.py, and get the plan approved.\n"
         f"Building scenes from a shot list that only exists in chat is the exact defect "
@@ -357,7 +357,7 @@ def _plan_files(root, plan_data):
 def _asset_files(root, plan_data, roles=None):
     paths = []
     for scene in plan_data.get("scenes") or []:
-        for asset in scene.get("assets") or []:
+        for asset in state.scene_materials(scene):
             if asset.get("src") and (roles is None or asset.get("role") in roles):
                 paths.append(state.asset_path(root, plan_data.get("video", "V"), asset["src"]))
     return paths
@@ -372,10 +372,8 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
     common = [SCRIPTS / script, SCRIPTS / "hook_gate.py", SCRIPTS / "stage_state.py",
               SCRIPTS / "pipeline_contracts.py"]
     all_scene_fields = ("id", "startSec", "endSec", "durationInFrames", "masterStartFrame",
-                        "narrativeFunction", "viewerQuestion", "visualTransformation",
-                        "contrastWithPrevious", "visualLanguage", "template", "backdrop",
-                        "variant", "density", "comprehensionLoad", "textOnly", "assets",
-                        "visualEvents", "punch", "transitionIn")
+                         "narrativeFunction", "viewerQuestion", "visualTransformation",
+                         "contrastWithPrevious", "comprehensionLoad", "materials", "assets")
     if script == "plan_gate.py":
         contract = state.plan_slice(plan_data, fields=("video", "fps", "wordsFile"),
                                     scene_fields=all_scene_fields)
@@ -384,8 +382,7 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
         selected = next((args[i + 1] for i, x in enumerate(args[:-1]) if x == "--scene"), None)
         if selected:
             scenes = [state.scene_source(root, plan_data.get("video"), selected)]
-        fields = ("id", "durationInFrames", "visualTransformation", "visualLanguage",
-                  "template", "backdrop", "variant", "assets", "visualEvents", "punch")
+        fields = ("id", "startSec", "endSec", "visualTransformation", "materials", "assets")
         contract = state.plan_slice(plan_data, fields=("video", "fps"), scene_fields=fields,
                                     scene_ids=[selected] if selected else None)
         return [{"planContract": contract}, *common, *scenes]
@@ -393,12 +390,12 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
         extra = [paths["shared"]]
         if script == "icon_gate.py":
             extra.append(root / "src" / "scenes" / "iconVocabulary.jsx")
-        fields = ("id", "assets", "punch", "visualLanguage", "template")
+        fields = ("id", "materials", "assets", "punch")
         return [{"planContract": state.plan_slice(plan_data, fields=("video",),
                                                    scene_fields=fields)},
                 *common, *scenes, *extra]
     if script == "cutout_gate.py":
-        assets = [{"id": s.get("id"), "assets": [a for a in s.get("assets") or []
+        assets = [{"id": s.get("id"), "assets": [a for a in state.scene_materials(s)
                    if a.get("role") in {"hero", "support"}]} for s in plan_data.get("scenes") or []]
         return [{"assetContract": assets}, *common,
                 *_asset_files(root, plan_data, {"hero", "support"})]
@@ -406,7 +403,7 @@ def gate_dependencies(root, plan_path, plan_data, script, args):
         video = plan_data.get("video", "V")
         contract = state.plan_slice(plan_data, fields=("video", "fps", "audioFile", "wordsFile"),
                                     scene_fields=("id", "startSec", "endSec", "durationInFrames",
-                                                  "masterStartFrame", "transitionIn"))
+                                                   "masterStartFrame", "transitionIn"))
         return [{"assemblyContract": contract}, *common, words,
                 paths["master"], paths["previs_root"], paths["entry"], *scenes]
     if script == "review_gate.py":
@@ -605,7 +602,7 @@ def stop(root, plan):
             checks.append(("icon_gate.py", [str(plan_path)], "icon integrity when applicable", True))
         asset_manifest = state.read_json(paths["asset_manifest"], {})
         if any(state.asset_requires_cutout(asset, asset_manifest)
-               for scene in plan_data.get("scenes") or [] for asset in scene.get("assets") or []):
+               for scene in plan_data.get("scenes") or [] for asset in state.scene_materials(scene)):
             checks.append(("cutout_gate.py",
                            [str(paths["assets"]), "--video",
                             str(plan_data.get("video", "V")).lstrip("Vv"),

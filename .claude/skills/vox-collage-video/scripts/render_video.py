@@ -92,7 +92,7 @@ def render_plan_slice(plan):
     return {"video": plan.get("video"), "fps": plan.get("fps", 30),
             "audioFile": plan.get("audioFile"),
             "scenes": [{"id": scene.get("id"),
-                        "assets": [{"src": asset.get("src")} for asset in scene.get("assets") or []
+                        "assets": [{"src": asset.get("src")} for asset in state.scene_materials(scene)
                                    if asset.get("src")]}
                        for scene in plan.get("scenes") or []]}
 
@@ -154,7 +154,7 @@ def source_inputs(root, plan_path, plan):
     paths += referenced_public_files(root, paths)
     paths += [root / "remotion.config.ts"]
     for scene in plan.get("scenes") or []:
-        for asset in scene.get("assets") or []:
+        for asset in state.scene_materials(scene):
             if asset.get("src"):
                 paths.append(state.asset_path(root, video, asset["src"]))
     audio = plan.get("audioFile")

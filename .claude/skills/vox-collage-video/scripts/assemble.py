@@ -38,7 +38,7 @@ def scene_parts(plan, video=None):
             raise ValueError(f"{scene.get('id')}: only semantic fade/none transitions are supported")
         stem = state.scene_stem(scene.get("id"))
         component = f"{video}{stem}"
-        duration = f"{video}{stem.upper()}_DURATION"
+        duration = state.scene_duration(scene, plan.get("fps", 30))
         out.append((scene.get("id"), stem, component, duration, transition))
     return out
 
@@ -67,25 +67,9 @@ export const CAPTION_LINES = {payload};
 
 def shared_jsx():
     return f'''// {AUTOGEN}; canonical per-video caption presentation.
-import {{useCurrentFrame}} from "remotion";
 import {{CAPTION_LINES}} from "./captions";
-export const Captions = () => {{
-  const frame = useCurrentFrame();
-  const line = CAPTION_LINES.find((item) => item.length > 0 &&
-    frame >= item[0].startFrame && frame <= item[item.length - 1].endFrame + 10);
-  if (!line) return null;
-  return <div style={{{{position: "absolute", left: 0, right: 0, bottom: 440,
-    display: "flex", justifyContent: "center", zIndex: 100, padding: "0 40px"}}}}>
-    <div style={{{{backgroundColor: "rgba(20,20,20,0.85)", borderRadius: 14,
-      padding: "12px 24px", display: "flex", flexWrap: "wrap", justifyContent: "center",
-      gap: "0 0.32em", maxWidth: "100%"}}}}>
-      {{line.map((word, index) => <span key={{index}} style={{{{fontFamily: "Arial, sans-serif",
-        fontWeight: 700, fontSize: 38, lineHeight: 1.25,
-        color: frame >= word.startFrame && frame <= word.endFrame + 2 ? "#FF6A1A" : "#FFFFFF",
-        opacity: frame > word.endFrame + 2 ? 0.6 : 1}}}}>{{word.text}}</span>)}}
-    </div>
-  </div>;
-}};
+import {{Captions as WordSyncedCaptions}} from "../../primitives/Captions";
+export const Captions = () => <WordSyncedCaptions lines={{CAPTION_LINES}} />;
 '''
 
 
@@ -96,23 +80,25 @@ def master_jsx(plan, video, parts):
         pads.append(index == len(parts) - 1 or fade_after)
         fades += int(fade_after)
     imports = "\n".join(
-        f'import {{ {component}, {duration} }} from "./scenes/{stem}";'
+        f'import {{ {component} }} from "./scenes/{stem}";'
         for _sid, stem, component, duration, _transition in parts)
-    terms = " +\n  ".join(f"({part[3]} + T)" if pads[index] else part[3]
+    terms = " +\n  ".join(f"({part[3]} + T)" if pads[index] else str(part[3])
                             for index, part in enumerate(parts))
     body = []
     for index, (_sid, _stem, component, duration, transition) in enumerate(parts):
         if index > 0 and transition == "fade":
             body.append("      <TransitionSeries.Transition presentation={fade()} "
                         "timing={linearTiming({durationInFrames: T})} />")
-        rail = f"{duration} + T" if pads[index] else duration
+        rail = f"{duration} + T" if pads[index] else str(duration)
         body.append(f"      <TransitionSeries.Sequence durationInFrames={{{rail}}}>\n"
-                    f"        <{component} />\n      </TransitionSeries.Sequence>")
+                    f"        <LayoutSafety><{component} /></LayoutSafety>\n"
+                    "      </TransitionSeries.Sequence>")
     audio = state.static_asset_name(video, "audio.mp3").replace("/assets/audio.mp3", "/audio.mp3")
     return f'''/** {AUTOGEN}; canonical source input/{video}/scene_plan.json. */
 import {{AbsoluteFill, Audio, staticFile}} from "remotion";
 import {{TransitionSeries, linearTiming}} from "@remotion/transitions";
 import {{fade}} from "@remotion/transitions/fade";
+import {{LayoutSafety}} from "../../primitives/LayoutSafety";
 {imports}
 import {{Captions}} from "./shared";
 
@@ -138,25 +124,30 @@ def previs_root_tsx(plan, video, parts, project_root):
               " * Isolated PREVIS registration; production roots are unreachable.\n */\n")
     if not built and not has_master:
         return header + "export const PrevisRoot = () => null;\n"
-    imports = ['import {Composition, Folder} from "remotion";']
+    imports = ['import {Composition, Folder} from "remotion";',
+               'import {LayoutSafety} from "./primitives/LayoutSafety";']
     imports.extend(
-        f'import {{ {component}, {duration} }} from "./videos/{video}/scenes/{stem}";'
+        f'import {{ {component} }} from "./videos/{video}/scenes/{stem}";'
         for _sid, stem, component, duration, _transition in built)
     if has_master:
         imports.append(f'import {{Master, MASTER_DURATION}} from "./videos/{video}/Master";')
     fps = int(plan.get("fps", 30)); width = int(plan.get("width", 1080)); height = int(plan.get("height", 1920))
     body = []
     if built:
+        body.extend(f'const Safe{component} = () => <LayoutSafety><{component} /></LayoutSafety>;'
+                    for _sid, _stem, component, _duration, _transition in built)
         body.append(f'    <Folder name="{video}-Scenes">')
-        body.extend(f'      <Composition id="{component}" component={{{component}}} '
+        body.extend(f'      <Composition id="{component}" component={{Safe{component}}} '
                     f'durationInFrames={{{duration}}} fps={{{fps}}} width={{{width}}} height={{{height}}} />'
                     for _sid, _stem, component, duration, _transition in built)
         body.append("    </Folder>")
     if has_master:
         body.append(f'    <Composition id="{video}Master" component={{Master}} '
                     f'durationInFrames={{MASTER_DURATION}} fps={{{fps}}} width={{{width}}} height={{{height}}} />')
-    return header + "\n".join(imports) + "\n\nexport const PrevisRoot = () => <>\n" + \
-        "\n".join(body) + "\n</>;\n"
+    definitions = [line for line in body if line.startswith("const Safe")]
+    markup = [line for line in body if not line.startswith("const Safe")]
+    return header + "\n".join(imports) + "\n\n" + "\n".join(definitions) + \
+        "\n\nexport const PrevisRoot = () => <>\n" + "\n".join(markup) + "\n</>;\n"
 
 
 def compare_or_write(path, content, check, force):

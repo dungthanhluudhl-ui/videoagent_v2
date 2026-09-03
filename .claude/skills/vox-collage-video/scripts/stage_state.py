@@ -16,9 +16,11 @@ import time
 
 SCHEMA = 1
 SMALL_HASH_LIMIT = 8 * 1024 * 1024
+SCENE_DEPENDENCY_VERSION = "scene-render-dependencies-v1"
 
 ASSET_PLAN_IMPLEMENTATION_FIELDS = {
     "src", "locked", "lockedSha256", "lockedAt", "selectionRationale",
+    "provenance", "license", "retrievedAt",
     "processing", "processingKind", "processingMetadata", "processingReceipt",
     "processedFile", "processingState", "generatedPath", "generationId",
     "lineagePath", "outputPath", "sourcePath", "requiresCutout",
@@ -191,6 +193,7 @@ def video_paths(root, video):
         "previs": previs_dir,
         "previs_frames": previs_dir / "frames",
         "previs_manifest": previs_dir / "frames_manifest.json",
+        "previs_review_pages": previs_dir / "review_pages",
         "promoted_previs_frames": previs_dir / "promoted_frames",
         "promoted_previs_manifest": previs_dir / "promoted_frames_manifest.json",
         "contact_sheet": previs_dir / "contact_sheet.png",
@@ -202,12 +205,14 @@ def video_paths(root, video):
         "review_frames": review_dir / "frames",
         "temporal_sheet": review_dir / "contact_sheet.jpg",
         "scene_summary_sheet": review_dir / "scene_summary_sheet.jpg",
+        "review_pages": review_dir / "pages",
         "targeted_review": review_dir / "targeted_full_res",
         "source": source_dir,
         "scenes": source_dir / "scenes",
         "master": source_dir / "Master.jsx",
         "captions": source_dir / "captions.js",
         "shared": source_dir / "shared.jsx",
+        "timing": source_dir / "timing.js",
         "runtime": runtime,
         "receipts": receipts,
         "gate_receipts": receipts / "gates",
@@ -318,6 +323,94 @@ def static_asset_name(video, src):
     return f"{normalize_video(video)}/assets/{pathlib.Path(str(src)).name}"
 
 
+def scene_duration(scene, fps):
+    """Canonical mechanical timing: PLAN never authors duration frames."""
+    return max(1, int(round((float(scene.get("endSec", 0)) -
+                             float(scene.get("startSec", 0))) * int(fps))))
+
+
+def scene_materials(scene):
+    """Fresh plans use ``materials``; ``assets`` remains read-only compatibility."""
+    value = scene.get("materials")
+    return value if isinstance(value, list) else (scene.get("assets") or [])
+
+
+def local_dependency_files(seeds):
+    """Follow the local JS/TS graph without introducing a bundler dependency."""
+    import re
+    found, todo = set(), [pathlib.Path(path).resolve() for path in seeds]
+    pattern = re.compile(r'(?:from\s+|import\s*)["\'](\.[^"\']+)["\']')
+    extensions = ("", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".json")
+    while todo:
+        path = todo.pop()
+        if path in found or not path.is_file():
+            continue
+        found.add(path)
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for raw in pattern.findall(text):
+            base = (path.parent / raw).resolve()
+            candidates = [pathlib.Path(str(base) + ext) for ext in extensions]
+            candidates += [base / f"index{ext}" for ext in extensions[1:]]
+            child = next((item for item in candidates if item.is_file()), None)
+            if child and child not in found:
+                todo.append(child)
+    return sorted(found, key=str)
+
+
+def scene_dependency_contract(root, plan, scene, pixel_tool_version):
+    """All known dependencies capable of changing one scene's approved pixels."""
+    root = pathlib.Path(root).resolve()
+    video = plan.get("video", "V")
+    source = scene_source(root, video, scene.get("id"))
+    sources = local_dependency_files([source])
+    materials = []
+    for material in scene_materials(scene):
+        if material.get("src"):
+            path = asset_path(root, video, material["src"])
+            materials.append({"id": material.get("id") or material.get("name"),
+                              "declaredSha256": material.get("lockedSha256"),
+                              "file": file_input(path)})
+    font_lines = []
+    for path in sources:
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if "loadFont" in line or "fontFamily" in line:
+                    font_lines.append(f"{path.name}:{line.strip()}")
+        except (OSError, UnicodeDecodeError):
+            pass
+    global_sources = [root / "src" / "index.ts", root / "src" / "PrevisRoot.tsx",
+                      root / "src" / "primitives" / "LayoutSafety.jsx"]
+    font_files = sorted((path for path in (root / "public").rglob("*")
+                         if path.is_file() and path.suffix.lower() in
+                         {".woff", ".woff2", ".ttf", ".otf"}), key=str)
+    return {
+        "version": SCENE_DEPENDENCY_VERSION,
+        "scene": scene.get("id"),
+        "sources": [file_input(path) for path in sources],
+        "globalSources": [file_input(path) for path in global_sources],
+        "lockedAssets": materials,
+        "render": {"fps": int(plan.get("fps", 30)), "width": int(plan.get("width", 1080)),
+                   "height": int(plan.get("height", 1920)),
+                   "durationInFrames": scene_duration(scene, plan.get("fps", 30)),
+                   "config": file_input(root / "remotion.config.ts"),
+                   "package": json_input(root / "package.json"),
+                   "lock": json_input(root / "package-lock.json")},
+        "fontIdentity": {"declarations": sorted(font_lines),
+                         "files": [file_input(path) for path in font_files],
+                         "metrics": file_input(root / ".claude" / "skills" /
+                                               "vox-collage-video" / "data" /
+                                               "font_metrics.json")},
+        "pixelConformanceToolVersion": pixel_tool_version,
+    }
+
+
+def scene_dependency_fingerprint(root, plan, scene, pixel_tool_version):
+    return digest(scene_dependency_contract(root, plan, scene, pixel_tool_version))
+
+
 def project_path(root, path):
     """Resolve a caller-supplied artifact path against the project, never CWD."""
     candidate = pathlib.Path(str(path).replace("\\", "/"))
@@ -350,7 +443,7 @@ def plan_contract(plan, plan_path):
     """Semantic editorial inputs; implementation timing and workflow state are excluded."""
     ignored_top = {"status", "shotlistApproved", "_howToUse", "planReceiptId"}
     ignored_scene = {
-        "status", "startSec", "endSec", "durationInFrames", "masterStartFrame",
+        "status", "durationInFrames", "masterStartFrame",
         "transitionIn", "transitionOut", "transitionTiming", "entranceTiming", "easing",
     }
     clean = {k: v for k, v in plan.items() if k not in ignored_top and k != "scenes"}
@@ -363,7 +456,7 @@ def plan_contract(plan, plan_path):
                  if k not in {"frame", "from", "to", "durationInFrames", "easing"}}
                 for event in item.get("visualEvents") or []
             ]
-        for key in ("assets",):
+        for key in ("assets", "materials"):
             if key in item:
                 item[key] = [
                     {k: v for k, v in asset.items()
@@ -418,17 +511,26 @@ def review_path_for_plan(plan_path, plan=None):
 
 
 def asset_contract(scene, asset):
-    return {"scene": scene.get("id"), "name": asset.get("name"),
+    return {"scene": scene.get("id"), "id": asset.get("id"), "name": asset.get("name"),
             "src": asset.get("src"), "role": asset.get("role"),
             "describes": asset.get("describes") or [],
             "anchorPhrase": asset.get("anchorPhrase"), "slot": asset.get("slot"),
             "visualTransformation": scene.get("visualTransformation"),
-            "template": scene.get("template"),
+            "materialIntent": asset.get("materialIntent"),
+            "mediaBrief": asset.get("mediaBrief"),
+            "provenance": asset.get("provenance"), "license": asset.get("license"),
+            "retrievedAt": asset.get("retrievedAt"),
+            "evidenceIdentity": asset.get("evidenceIdentity"),
+            "evidenceRegions": asset.get("evidenceRegions") or [],
+            "mapDataIdentity": asset.get("mapDataIdentity"),
+            "numericData": asset.get("numericData"), "dataSource": asset.get("dataSource"),
+            "reconstructionLabel": asset.get("reconstructionLabel"),
+            "diagramJustification": asset.get("diagramJustification"),
             "generationId": asset.get("generationId")}
 
 
 def asset_usage_id(scene, asset):
-    return f"{scene.get('id', '?')}:{asset.get('name') or asset.get('src', '?')}"
+    return f"{scene.get('id', '?')}:{asset.get('id') or asset.get('name') or asset.get('src', '?')}"
 
 
 def update_manifest(path, video, asset_id, patch, identity=None):
@@ -449,6 +551,39 @@ def update_manifest(path, video, asset_id, patch, identity=None):
     assets[asset_id] = old
     write_json(path, manifest)
     return old
+
+
+def sync_asset_manifest(plan_path):
+    """Bind manifest identity to selected bytes + semantic brief."""
+    plan_path = pathlib.Path(plan_path).resolve()
+    plan = read_json(plan_path, {})
+    root = project_root(plan_path)
+    manifest_path = manifest_path_for_plan(plan_path, plan)
+    existing = read_json(manifest_path, {"schema": SCHEMA, "video": plan.get("video"),
+                                         "assets": {}})
+    for scene in plan.get("scenes") or []:
+        for material in scene_materials(scene):
+            if not material.get("src"):
+                continue
+            path = asset_path(root, plan.get("video", "V"), material["src"])
+            brief = asset_contract(scene, material)
+            identity = digest({"file": file_input(path), "brief": brief})
+            update_manifest(manifest_path, plan.get("video"), asset_usage_id(scene, material),
+                            {"sourceFile": file_input(path), "brief": brief,
+                             "briefId": digest(brief)}, identity)
+    return manifest_path, read_json(manifest_path, existing)
+
+
+def accept_asset(plan_path, asset_id, advisory=None):
+    manifest_path, manifest = sync_asset_manifest(plan_path)
+    item = (manifest.get("assets") or {}).get(asset_id)
+    if not item:
+        raise ValueError(f"unknown asset usage: {asset_id}")
+    acceptance = "ACCEPTED_WITH_ADVISORY" if advisory else "ACCEPTED"
+    update_manifest(manifest_path, manifest.get("video"), asset_id,
+                    {"acceptance": acceptance, "advisory": advisory or ""},
+                    item.get("identity"))
+    return manifest_path
 
 
 def find_generation(root, file_proof):
@@ -512,14 +647,19 @@ def append_telemetry(root, video, record):
     safe = {
         "schema": SCHEMA, "video": video,
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "mainTokens": "UNKNOWN",
+        "mainTokens": "UNKNOWN", "context": "UNKNOWN",
     }
     allowed = {"stage", "owner", "elapsedMs", "cache", "subprocessCount",
                "affectedItems", "output", "outputSize", "visionCalls",
                "visionTokens", "renderMode", "renderParameters", "receiptId",
-               "mainTokens", "mode", "sceneCount", "requestedStateCount",
-               "renderWallMs", "contactSheetAssemblyMs", "outputIdentity"}
+               "mode", "sceneCount", "requestedStateCount",
+               "renderWallMs", "contactSheetAssemblyMs", "outputIdentity",
+               "wallMs", "imageReadCount", "candidateCount", "sourceScoutInvocations",
+               "sourceScoutRetries", "reusedSceneCount", "renderedSceneCount",
+               "reviewSampleCount", "reviewBatchCount", "reviewPageCount"}
     safe.update({k: v for k, v in record.items() if k in allowed})
+    if "elapsedMs" in safe:
+        safe.setdefault("wallMs", safe["elapsedMs"])
     with path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(safe, ensure_ascii=False, separators=(",", ":")) + "\n")
     return path

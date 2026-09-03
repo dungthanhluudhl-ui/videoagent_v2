@@ -62,6 +62,7 @@ import sys
 import unicodedata
 
 import stage_state as state
+import pipeline_contracts as contracts
 
 try:
     import numpy as np
@@ -109,6 +110,24 @@ METRICS_PATH = pathlib.Path(__file__).resolve().parent.parent / "data" / "font_m
 PIXEL_MIN_INK = 0.02
 PIXEL_MIN_CONTRAST = 40
 PIXEL_APPEAR_FRAMES = 10
+RENDERED_GEOMETRY_VERSION = "rendered-dom-geometry-v1"
+
+
+def rendered_geometry_contract_problems(plan_path, plan):
+    """Fresh text safety is collected by the browser around direct scene JSX."""
+    if plan.get("schemaVersion") != "v18-rebuilt-plan-v1":
+        return []
+    root = state.project_root(plan_path)
+    manifest_path = state.video_paths(root, plan.get("video", "V"))["previs_manifest"]
+    try:
+        _path, manifest, _frames, _pages = contracts.validate_previs_manifest(
+            plan_path, plan, manifest_path, require_source_current=True,
+            allow_missing_review_pages=True)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return [f"rendered DOM geometry evidence is missing/stale: {exc}"]
+    if manifest.get("layoutSafetyVersion") != RENDERED_GEOMETRY_VERSION:
+        return [f"PREVIS was not rendered with {RENDERED_GEOMETRY_VERSION}"]
+    return []
 
 
 def _load_metrics():
@@ -944,6 +963,7 @@ def main():
     review_frames = rendered_review_frames(root, plan)
 
     problems, advisories, checked, total_words, unchecked = [], [], 0, 0, []
+    problems += rendered_geometry_contract_problems(plan_path, plan)
     problems += font_family_problems(scenes_dir)
     for name, line, size, snippet in primitive_font_sizes(scenes_dir):
         problems.append(
@@ -959,7 +979,7 @@ def main():
         # Inline the scene's own helper components first, so a label passed in
         # as a prop is checked exactly like one typed in place.
         src = expand_helpers(path.read_text(encoding="utf-8"))
-        dur = int(scene.get("durationInFrames") or 0)
+        dur = state.scene_duration(scene, plan.get("fps", 30))
         all_labels = parse_labels(src, dur)
         labels = [l for l in all_labels if not l.get("unchecked")]
         unchecked += [(sid, l["unchecked"]) for l in all_labels if l.get("unchecked")]
