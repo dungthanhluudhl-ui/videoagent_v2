@@ -141,7 +141,8 @@ def semantic_scene(scene):
     fields = (
         "id", "narrativeFunction", "viewerQuestion", "visualTransformation",
         "contrastWithPrevious", "comprehensionLoad", "visualTreatment",
-        "documentOnlyJustification", "intentionalStaticRationale", "materialIntent",
+        "documentEvidenceRequirement", "documentOnlyJustification",
+        "intentionalStaticRationale", "materialIntent",
         "mediaBrief", "evidenceIdentity", "evidenceRegions", "diagramJustification",
     )
     result = {key: scene.get(key) for key in fields if key in scene}

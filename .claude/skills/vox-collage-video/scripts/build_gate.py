@@ -113,9 +113,25 @@ def _document_source_name(opening):
     return pathlib.Path(raw).name if raw else None
 
 
-def _literal_positive_number_prop(opening, name):
-    match = re.search(rf"\b{re.escape(name)}\s*=\s*{{\s*(\d+(?:\.\d+)?)\s*}}", opening)
-    return float(match.group(1)) if match else None
+def _literal_positive_integer_prop(opening, name):
+    match = re.search(rf"\b{re.escape(name)}\s*=\s*{{\s*([1-9]\d*)\s*}}", opening)
+    return int(match.group(1)) if match else None
+
+
+def _locked_raster_dimensions(plan_path, plan, material):
+    path = state.asset_path(state.project_root(plan_path), plan.get("video", "V"),
+                            material.get("src"))
+    if Image is None:
+        raise ValueError("Pillow is required to verify locked document raster dimensions")
+    try:
+        with Image.open(path) as raster:
+            dimensions = tuple(raster.size)
+            raster.verify()
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError(f"locked document asset cannot provide raster dimensions: {path}: {exc}") from exc
+    if len(dimensions) != 2 or any(not isinstance(value, int) or value <= 0 for value in dimensions):
+        raise ValueError(f"locked document asset has invalid raster dimensions: {path}")
+    return dimensions
 
 
 def _claim_focus_width(opening):
@@ -182,8 +198,24 @@ def fresh_source_integrity_problems(plan_path, plan, scene, text, plan_closed):
                     elif not any(len(approved) == len(region) and all(abs(float(a) - float(b)) < 1e-6
                                      for a, b in zip(approved, region)) for approved in approved_regions if approved):
                         problems.append(f"{prefix}/{material_id}: focus region does not match an approved PLAN evidence region")
-                    if not _literal_positive_number_prop(opening, "sourceAspect"):
-                        problems.append(f"{prefix}/{material_id}: claim DocumentEvidence requires literal positive sourceAspect for truthful contain geometry")
+                    source_width = _literal_positive_integer_prop(opening, "sourceWidth")
+                    source_height = _literal_positive_integer_prop(opening, "sourceHeight")
+                    if source_width is None:
+                        problems.append(f"{prefix}/{material_id}: claim DocumentEvidence requires literal positive integer sourceWidth")
+                    if source_height is None:
+                        problems.append(f"{prefix}/{material_id}: claim DocumentEvidence requires literal positive integer sourceHeight")
+                    if re.search(r"\bsourceAspect\s*=", opening):
+                        problems.append(f"{prefix}/{material_id}: claim DocumentEvidence must derive aspect from locked sourceWidth/sourceHeight; sourceAspect is not permitted")
+                    try:
+                        actual_width, actual_height = _locked_raster_dimensions(
+                            plan_path, plan, material)
+                    except ValueError as exc:
+                        problems.append(f"{prefix}/{material_id}: {exc}")
+                    else:
+                        if source_width is not None and source_width != actual_width:
+                            problems.append(f"{prefix}/{material_id}: sourceWidth={source_width} does not match locked raster width {actual_width}")
+                        if source_height is not None and source_height != actual_height:
+                            problems.append(f"{prefix}/{material_id}: sourceHeight={source_height} does not match locked raster height {actual_height}")
                     panel_width = _claim_focus_width(opening)
                     if panel_width is None or panel_width < MIN_CLAIM_FOCUS_WIDTH_PERCENT:
                         problems.append(f"{prefix}/{material_id}: claim focus panel width must be a literal value at least 70% of composition width")

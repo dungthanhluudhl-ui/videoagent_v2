@@ -70,16 +70,20 @@ Each fresh scene contains only editorial intent:
 - `id`, `startSec`, `endSec`;
 - `narrativeFunction`, `viewerQuestion`, `visualTransformation`;
 - `contrastWithPrevious`, `comprehensionLoad`, `visualTreatment`;
+- `documentEvidenceRequirement: "claim"|"context"` only when the scene contains
+  one or more document materials;
 - `materials[]`: `id`, `anchorPhrase`, `mediaBrief`, `materialIntent`;
 - source/evidence identity/regions where applicable;
 - `diagramJustification` only for `diagram-exception`.
 
-Every fresh `document` material declares `documentEvidenceMode: "claim"|"context"`.
-Claim mode grounds exact wording/holdings/paragraphs/statutes/evidentiary statements
-with `evidenceIdentity` plus one or more valid `evidenceRegions`; context mode shows
-source/page identity and may remain full-page. An exact-evidence document treatment
-must include a valid claim-mode material—it cannot use a context-only full page as
-claim proof.
+Every fresh scene containing document material explicitly declares the scene-level
+`documentEvidenceRequirement`. `claim` grounds exact wording, holdings, paragraphs,
+statutes, evidentiary statements, or another specific proposition and requires at
+least one document material with `documentEvidenceMode: "claim"`, `evidenceIdentity`,
+and one or more valid `evidenceRegions`. `context` is for source/page/document identity,
+authority, title, or the document as an editorial object; every document material in
+that scene uses `documentEvidenceMode: "context"` and may remain full-page. English
+keyword inference never decides claim versus context.
 
 `visualTreatment` is compact free editorial wording such as authentic, contextual,
 document, reconstruction, map, timeline, chart, relation, or genuinely textual/quote
@@ -135,6 +139,9 @@ delegation unavailable/failed**, never PASS.
 Compose actual material in `src/videos/V<N>/scenes/Sxx.jsx`. Use the compact
 `src/primitives/` surface or direct Remotion JSX. Default primitives are static:
 no hidden reveal, camera drift or decorative motion during PREVIS.
+Claim `DocumentEvidence` declares literal positive integer `sourceWidth` and
+`sourceHeight`; `build_gate.py` compares both exactly to the canonical locked raster
+bytes, and the primitive derives its contain aspect internally.
 
 ```powershell
 py -3 .claude/skills/vox-collage-video/scripts/assemble.py input/V<N>/scene_plan.json

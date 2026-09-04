@@ -90,22 +90,23 @@ def project(tmp, scenes=2):
         phrase = f"evidence {index + 1}"
         words += [["evidence", start + .2, start + .6, index], [str(index + 1), start + .6, start + 1, index]]
         scene_rows.append({"id": sid, "startSec": start, "endSec": start + 2,
-                           "narrativeFunction": "evidence",
-                           "viewerQuestion": f"What proves claim {index + 1}?",
-                           "visualTransformation": "the authentic record becomes the decisive proof in view",
-                           "contrastWithPrevious": "new evidence identity and editorial focus",
+                           "narrativeFunction": "source orientation",
+                           "viewerQuestion": f"Which official record page is source {index + 1}?",
+                           "visualTransformation": "an unidentified archive page becomes a recognizable official source",
+                           "contrastWithPrevious": "new source identity and editorial focus",
                            "comprehensionLoad": "moderate",
-                           "visualTreatment": "authentic document evidence with source context",
+                           "visualTreatment": "authentic full-page document source context",
+                           "documentEvidenceRequirement": "context",
                            "status": "planned",
                            "materials": [{"id": "record", "materialIntent": "document",
                                "documentEvidenceMode": "context",
                                "anchorPhrase": phrase,
-                               "mediaBrief": "Show the authentic official record page that proves this exact claim.",
+                               "mediaBrief": "Show the full official record page so its source and page identity are clear.",
                                "evidenceIdentity": f"official-record-{index + 1}",
                                "src": f"record-{index + 1}.png", "meaningBearing": True,
                                "role": "document", "locked": True,
                                "provenance": "official: fixture authority",
-                               "selectionRationale": "This official page is the direct proof."}]})
+                               "selectionRationale": "This full official page establishes source identity and context."}]})
     state.write_json(paths["words"], {"words": words})
     paths["audio"].parent.mkdir(parents=True, exist_ok=True); paths["audio"].write_bytes(b"audio")
     for index, scene in enumerate(scene_rows, start=1):
@@ -160,6 +161,7 @@ def plan_checks(tmp, paths, plan, rows):
         "id": "relation", "materialIntent": "diagram-exception",
         "anchorPhrase": "evidence 1",
         "mediaBrief": "Show the legal relationship between two otherwise identical entities."}]
+    diagram["scenes"][0].pop("documentEvidenceRequirement")
     state.write_json(paths["plan"], diagram)
     result(rows, "diagram exception without justification fails",
            any("diagram-exception requires" in item for item in run_plan(paths["plan"])))
@@ -177,6 +179,18 @@ def plan_checks(tmp, paths, plan, rows):
     except ValueError as exc:
         blocked = "requires a real locked file" in str(exc)
     result(rows, "fake real-material claim fails at ASSET LOCK boundary", blocked)
+    missing_requirement = copy.deepcopy(clean)
+    missing_requirement["scenes"][0].pop("documentEvidenceRequirement")
+    state.write_json(paths["plan"], missing_requirement)
+    result(rows, "fresh document scene requires documentEvidenceRequirement",
+           any("documentEvidenceRequirement is required" in item
+               for item in run_plan(paths["plan"])))
+    invalid_requirement = copy.deepcopy(clean)
+    invalid_requirement["scenes"][0]["documentEvidenceRequirement"] = "summary"
+    state.write_json(paths["plan"], invalid_requirement)
+    result(rows, "documentEvidenceRequirement accepts only claim or context",
+           any("documentEvidenceRequirement must be claim or context" in item
+               for item in run_plan(paths["plan"])))
     missing_mode = copy.deepcopy(clean)
     missing_mode["scenes"][0]["materials"][0].pop("documentEvidenceMode")
     state.write_json(paths["plan"], missing_mode)
@@ -191,7 +205,8 @@ def plan_checks(tmp, paths, plan, rows):
     context["scenes"][0]["materials"][0].pop("evidenceIdentity")
     context["scenes"][0]["materials"][0].pop("evidenceRegions", None)
     state.write_json(paths["plan"], context)
-    result(rows, "context document mode may omit evidence regions", not run_plan(paths["plan"]))
+    result(rows, "context requirement with contextual document material passes",
+           not run_plan(paths["plan"]))
     claim_missing_identity = copy.deepcopy(clean)
     claim_missing_identity["scenes"][0]["materials"][0]["documentEvidenceMode"] = "claim"
     claim_missing_identity["scenes"][0]["materials"][0].pop("evidenceIdentity")
@@ -231,6 +246,7 @@ def plan_checks(tmp, paths, plan, rows):
                        "mediaBrief": "Show a truthful photographic place plate where arrival can become confinement.",
                        "reconstructionLabel": "EDITORIAL RECONSTRUCTION"}],
     })
+    scene.pop("documentEvidenceRequirement")
     state.write_json(paths["plan"], recount)
     result(rows, "narrative recount may choose contextual or reconstruction depiction",
            not run_plan(paths["plan"]))
@@ -241,6 +257,7 @@ def plan_checks(tmp, paths, plan, rows):
     document_recount = copy.deepcopy(recount)
     document_recount["scenes"][0]["visualTreatment"] = "document-only narrative recount"
     document_recount["scenes"][0]["materials"] = [copy.deepcopy(clean["scenes"][0]["materials"][0])]
+    document_recount["scenes"][0]["documentEvidenceRequirement"] = "context"
     state.write_json(paths["plan"], document_recount)
     result(rows, "document-only narrative recount without concrete exception is detected",
            any("document-only treatment" in item for item in run_plan(paths["plan"])))
@@ -251,23 +268,49 @@ def plan_checks(tmp, paths, plan, rows):
            not run_plan(paths["plan"]))
     holding = copy.deepcopy(clean)
     holding["scenes"][0].update({
-        "narrativeFunction": "quoted legal holding and exact paragraph identity",
-        "viewerQuestion": "What exact legal wording classifies the conduct?",
-        "visualTransformation": "fact pattern becomes the court's exact legal classification",
-        "visualTreatment": "authentic document with exact legal wording and paragraph context",
+        "narrativeFunction": "semantic adjudication",
+        "viewerQuestion": "What establishes the first proposition?",
+        "visualTransformation": "the authentic record resolves the disputed proposition",
+        "visualTreatment": "authentic document proposition with preserved page context",
+        "documentEvidenceRequirement": "claim",
     })
     holding_material = holding["scenes"][0]["materials"][0]
     holding_material["documentEvidenceMode"] = "context"
     holding_material.pop("evidenceRegions", None)
     state.write_json(paths["plan"], holding)
-    result(rows, "exact-evidence document treatment cannot escape through context-only mode",
-           any("valid claim-mode" in item for item in run_plan(paths["plan"])))
+    result(rows, "claim requirement cannot pass with context-only document material",
+           any("requires at least one valid claim-mode" in item
+               for item in run_plan(paths["plan"])))
     holding_material["documentEvidenceMode"] = "claim"
     holding_material["evidenceRegions"] = [
         {"anchorPhrase": "evidence 1", "region": [0.08, 0.18, 0.84, 0.12]}]
     state.write_json(paths["plan"], holding)
-    result(rows, "exact-evidence document treatment passes with valid claim material",
+    result(rows, "claim requirement passes with valid claim material independent of wording",
            not run_plan(paths["plan"]))
+    claim_reworded = copy.deepcopy(holding)
+    claim_reworded["scenes"][0].update({
+        "narrativeFunction": "turning point",
+        "viewerQuestion": "Why does the analysis change here?",
+        "visualTransformation": "a previously ambiguous source becomes decisive",
+    })
+    state.write_json(paths["plan"], claim_reworded)
+    result(rows, "substantial wording changes preserve explicit claim behavior",
+           not run_plan(paths["plan"]))
+    context_reworded = copy.deepcopy(clean)
+    context_reworded["scenes"][0].update({
+        "narrativeFunction": "quoted legal holding and exact paragraph identity",
+        "viewerQuestion": "What exact legal wording classifies the conduct?",
+        "visualTransformation": "fact pattern becomes the court's verbatim legal classification",
+    })
+    state.write_json(paths["plan"], context_reworded)
+    result(rows, "claim-like wording cannot override explicit context requirement",
+           not run_plan(paths["plan"]))
+    context_with_claim = copy.deepcopy(holding)
+    context_with_claim["scenes"][0]["documentEvidenceRequirement"] = "context"
+    state.write_json(paths["plan"], context_with_claim)
+    result(rows, "context requirement rejects claim-mode document material",
+           any("requires every document material" in item
+               for item in run_plan(paths["plan"])))
 
     real_transform = copy.deepcopy(clean)
     real_transform["scenes"][0]["visualTransformation"] = "location becomes confinement, then confinement creates family pressure"
@@ -276,6 +319,7 @@ def plan_checks(tmp, paths, plan, rows):
         "id": "place", "materialIntent": "reconstruction", "anchorPhrase": "evidence 1",
         "mediaBrief": "Show a truthful photographic place plate where arrival becomes confinement.",
         "reconstructionLabel": "EDITORIAL RECONSTRUCTION"}]
+    real_transform["scenes"][0].pop("documentEvidenceRequirement")
     state.write_json(paths["plan"], real_transform)
     result(rows, "real semantic visualTransformation passes", not run_plan(paths["plan"]))
     camera_only = copy.deepcopy(clean)
@@ -325,6 +369,13 @@ def plan_checks(tmp, paths, plan, rows):
     boundary_changed = copy.deepcopy(clean); boundary_changed["scenes"][0]["endSec"] -= .25
     result(rows, "semantic scene-boundary change invalidates approved PLAN identity",
            contract_before != state.digest(state.plan_contract(boundary_changed, paths["plan"])))
+    requirement_changed = copy.deepcopy(clean)
+    requirement_changed["scenes"][0]["documentEvidenceRequirement"] = "claim"
+    result(rows, "document evidence requirement changes PLAN approval identity",
+           contract_before != state.digest(state.plan_contract(requirement_changed, paths["plan"])))
+    result(rows, "document evidence requirement changes PREVIS semantic identity",
+           state.digest(contracts.semantic_scene(clean["scenes"][0])) !=
+           state.digest(contracts.semantic_scene(requirement_changed["scenes"][0])))
     state.write_json(paths["plan"], clean)
 
 
@@ -525,6 +576,7 @@ def fresh_integrity_checks(paths, plan, rows):
                any("exactly match" in item for item in changed_chart))
 
         document_plan = copy.deepcopy(clean)
+        document_plan["scenes"][0]["documentEvidenceRequirement"] = "claim"
         document_material = document_plan["scenes"][0]["materials"][0]
         document_material["documentEvidenceMode"] = "claim"
         document_material["evidenceRegions"] = [{"anchorPhrase": "evidence 1",
@@ -536,20 +588,36 @@ def fresh_integrity_checks(paths, plan, rows):
             '<div>The decisive claim was retyped here.</div>', True)
         exact_no_focus = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} sourceHeight={480} />', True)
         no_material_id = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12]}} />', True)
+            '<DocumentEvidence documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} sourceHeight={480} focus={{region:[.08,.18,.84,.12]}} />', True)
         exact_focus = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} sourceHeight={480} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
         mismatched_focus = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.09,.18,.84,.12],panelWidth:"84%"}} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} sourceHeight={480} focus={{region:[.09,.18,.84,.12],panelWidth:"84%"}} />', True)
         undersized_focus = build_gate.fresh_source_integrity_problems(
             plan_path, document_plan, document_plan["scenes"][0],
-            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12],panelWidth:"60%"}} />', True)
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} sourceHeight={480} focus={{region:[.08,.18,.84,.12],panelWidth:"60%"}} />', True)
+        wrong_width = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={320} sourceHeight={480} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
+        wrong_height = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} sourceHeight={500} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
+        missing_width = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceHeight={480} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
+        missing_height = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceWidth={270} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
+        arbitrary_aspect = build_gate.fresh_source_integrity_problems(
+            plan_path, document_plan, document_plan["scenes"][0],
+            '<DocumentEvidence materialId="record" documentEvidenceMode="claim" src={staticFile("V99/assets/record-1.png")} sourceAspect={0.667} focus={{region:[.08,.18,.84,.12],panelWidth:"84%"}} />', True)
         full_context = copy.deepcopy(document_plan)
+        full_context["scenes"][0]["documentEvidenceRequirement"] = "context"
         full_context["scenes"][0]["materials"][0]["documentEvidenceMode"] = "context"
         full_context["scenes"][0]["materials"][0].pop("evidenceRegions")
         state.write_json(plan_path, full_context); state.sync_asset_manifest(plan_path)
@@ -568,6 +636,23 @@ def fresh_integrity_checks(paths, plan, rows):
                any("does not match" in item for item in mismatched_focus))
         result(rows, "undersized exact claim focus panel hard fails",
                any("at least 70%" in item for item in undersized_focus))
+        result(rows, "known selftest locked document raster is exactly 270 by 480",
+               build_gate._locked_raster_dimensions(plan_path, document_plan, document_material) ==
+               (270, 480))
+        result(rows, "claim DocumentEvidence exact locked raster dimensions pass",
+               not exact_focus)
+        result(rows, "wrong claim sourceWidth hard fails against locked raster bytes",
+               any("sourceWidth=320" in item and "width 270" in item for item in wrong_width))
+        result(rows, "wrong claim sourceHeight hard fails against locked raster bytes",
+               any("sourceHeight=500" in item and "height 480" in item for item in wrong_height))
+        result(rows, "claim DocumentEvidence missing sourceWidth hard fails",
+               any("requires literal positive integer sourceWidth" in item
+                   for item in missing_width))
+        result(rows, "claim DocumentEvidence missing sourceHeight hard fails",
+               any("requires literal positive integer sourceHeight" in item
+                   for item in missing_height))
+        result(rows, "arbitrary caller-authored claim sourceAspect hard fails",
+               any("sourceAspect is not permitted" in item for item in arbitrary_aspect))
         result(rows, "full-page document context or source identity remains legal",
                not full_context_problems)
     finally:
@@ -899,7 +984,7 @@ def document_fixture(root, safe):
         'import {Composition} from "remotion";\n'
         'import {LayoutSafety} from "../src/primitives/LayoutSafety";\n'
         'import {DocumentEvidence} from "../src/primitives/DocumentEvidence";\n'
-        f'const Evidence=()=> <LayoutSafety><DocumentEvidence materialId="record" documentEvidenceMode="claim" src={json.dumps(raster)} sourceAspect={{2/3}} focus={{{{region:[.08,.02,.84,.08],safeMargin:.01,panelWidth:"{panel_width}"}}}} /></LayoutSafety>;\n'
+        f'const Evidence=()=> <LayoutSafety><DocumentEvidence materialId="record" documentEvidenceMode="claim" src={json.dumps(raster)} sourceWidth={{600}} sourceHeight={{900}} focus={{{{region:[.08,.02,.84,.08],safeMargin:.01,panelWidth:"{panel_width}"}}}} /></LayoutSafety>;\n'
         'export const Root=()=> <Composition id="DocumentFixture" component={Evidence} durationInFrames={30} fps={30} width={1080} height={1920}/>;',
         encoding="utf-8")
     output = directory / "frame.png"
@@ -937,6 +1022,9 @@ def layout_checks(rows):
         result(rows, "DocumentEvidence maps source regions through actual contain geometry",
                "containRect" in geometry_source and "mappedSafe.left" in geometry_source and
                "contained.left + normalized[0] * contained.width" in geometry_source)
+        result(rows, "DocumentEvidence derives claim aspect from source dimensions",
+               "sourceWidth / sourceHeight" in geometry_source and
+               "sourceAspect: derivedSourceAspect" in geometry_source)
         result(rows, "DocumentEvidence claim focus has deterministic 70 percent minimum",
                "MIN_CLAIM_FOCUS_WIDTH_RATIO = 0.7" in geometry_source and
                "data-videoagent-min-width-ratio" in geometry_source)

@@ -62,6 +62,8 @@ export const DocumentEvidence = ({
   alt = "Authentic source document",
   crop,
   focus,
+  sourceWidth,
+  sourceHeight,
   sourceAspect,
   dim = 0.56,
   style,
@@ -70,15 +72,22 @@ export const DocumentEvidence = ({
   if (!src) throw new Error("DocumentEvidence requires an authentic raster/document src");
   if (!materialId) throw new Error("DocumentEvidence requires approved document materialId");
   if (!["claim", "context"].includes(documentEvidenceMode)) throw new Error("DocumentEvidence requires documentEvidenceMode claim or context");
-  if (documentEvidenceMode === "claim" && (!Number.isFinite(Number(sourceAspect)) || Number(sourceAspect) <= 0)) {
-    throw new Error("Claim DocumentEvidence requires truthful positive sourceAspect");
+  if (documentEvidenceMode === "claim" && sourceAspect !== undefined) {
+    throw new Error("Claim DocumentEvidence derives aspect from sourceWidth/sourceHeight; sourceAspect is not accepted");
   }
+  if (documentEvidenceMode === "claim" && (!Number.isInteger(sourceWidth) || sourceWidth <= 0)) {
+    throw new Error("Claim DocumentEvidence requires positive integer sourceWidth");
+  }
+  if (documentEvidenceMode === "claim" && (!Number.isInteger(sourceHeight) || sourceHeight <= 0)) {
+    throw new Error("Claim DocumentEvidence requires positive integer sourceHeight");
+  }
+  const derivedSourceAspect = documentEvidenceMode === "claim" ? sourceWidth / sourceHeight : null;
   const claim = focus?.region ?? null;
   if (documentEvidenceMode === "claim" && !claim) throw new Error("Claim DocumentEvidence requires focus.region");
   if (documentEvidenceMode === "context" && claim) throw new Error("Context DocumentEvidence cannot present itself as exact claim focus");
   const safe = safeFocusRegion(claim, focus?.safeMargin ?? 0.035);
-  const mappedClaim = claim ? mapRegionToContainedRaster({region: claim, canvasWidth, canvasHeight, sourceAspect}) : null;
-  const mappedSafe = safe ? mapRegionToContainedRaster({region: safe, canvasWidth, canvasHeight, sourceAspect}) : null;
+  const mappedClaim = claim ? mapRegionToContainedRaster({region: claim, canvasWidth, canvasHeight, sourceAspect: derivedSourceAspect}) : null;
+  const mappedSafe = safe ? mapRegionToContainedRaster({region: safe, canvasWidth, canvasHeight, sourceAspect: derivedSourceAspect}) : null;
   const contained = mappedSafe?.contained;
   const panelWidth = percentNumber(focus?.panelWidth, 84);
   if (documentEvidenceMode === "claim" && panelWidth < MIN_CLAIM_FOCUS_WIDTH_RATIO * 100) {
@@ -131,7 +140,7 @@ export const DocumentEvidence = ({
               top: focus?.panelTop ?? "38%",
               width: `${panelWidth}%`,
               maxHeight: focus?.panelMaxHeight ?? "34%",
-              aspectRatio: String((Number(sourceAspect) * safe[2]) / safe[3]),
+              aspectRatio: String((derivedSourceAspect * safe[2]) / safe[3]),
               overflow: "hidden",
               backgroundColor: "white",
               border: `${focus?.borderWidth ?? 5}px solid ${focus?.color ?? "#FF6A1A"}`,

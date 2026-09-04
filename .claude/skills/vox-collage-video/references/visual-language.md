@@ -9,23 +9,28 @@ An official PDF can remain the strongest factual authority while a truthful
 contextual photograph, labelled photographic reconstruction, map, or contextual
 timeline is the clearest treatment for a place/action/recount beat. Do not default a
 narrative recount to a legal PDF merely because the PDF exists. Conversely, when the
-narration depends on exact legal wording, a holding, paragraph identity, statute,
-specific evidence statement, or official source identity, authentic document evidence
-may be the strongest treatment. Documents are first-class evidence, not a default.
+narration depends on exact legal wording, a holding, paragraph identity, statute, or
+specific evidence statement, authentic document evidence may be the strongest
+treatment. Documents are first-class evidence, not a default.
 
 `visualTreatment` is free semantic editorial wording, not a component name. It may
 describe authentic, contextual, document, reconstruction, map, timeline, chart,
 relation, or genuinely textual/quote treatment. The gate groups clear wording only to
 detect consecutive repetition; it does not impose a closed treatment taxonomy.
 
-Every fresh document material separates two evidence modes. `claim` is for an exact
-holding, paragraph, statutory phrase, evidentiary statement, or other claim grounded
-in a particular authentic source region; it requires `evidenceIdentity` and valid
-`evidenceRegions`. `context` is for document/page/source identity or the full page as
-an editorial object and may omit regions. A context-only full page is not proof of an
-exact-evidence document scene. Claim display preserves the contained full-page source
-context while presenting the approved authentic crop in a dedicated panel at least
-70% of composition width; this is a display invariant, not OCR or a readability score.
+Every fresh scene containing document material explicitly declares
+`documentEvidenceRequirement: "claim"|"context"`; natural-language keywords do not
+infer it. `claim` is for an exact holding, paragraph, statutory phrase, evidentiary
+statement, or other proposition grounded in a particular authentic source region. It
+requires at least one document material in claim mode with `evidenceIdentity` and valid
+`evidenceRegions`. `context` is for document/page/source identity, authority, title, or
+the full page as an editorial object; all document materials in that scene remain in
+context mode and may omit regions. Claim display preserves the contained full-page
+source context while presenting the approved authentic crop in a dedicated panel at
+least 70% of composition width. Claim JSX declares exact positive integer `sourceWidth`
+and `sourceHeight`; the build gate compares both to the locked raster bytes and the
+primitive derives aspect internally. This is a display invariant, not OCR or a
+readability score.
 
 ## Material intent
 

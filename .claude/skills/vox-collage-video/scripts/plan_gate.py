@@ -25,6 +25,7 @@ MATERIAL_INTENTS = {
     "diagram-exception",
 }
 DOCUMENT_EVIDENCE_MODES = {"claim", "context"}
+DOCUMENT_EVIDENCE_REQUIREMENTS = {"claim", "context"}
 REQUIRED_SCENE_FIELDS = (
     "id", "startSec", "endSec", "narrativeFunction", "viewerQuestion",
     "visualTransformation", "contrastWithPrevious", "comprehensionLoad",
@@ -69,10 +70,6 @@ RECOUNT_STEMS = (
     "recount", "narrative", "event", "action", "movement", "location", "place",
     "detention", "confinement", "coercion", "phone", "family", "transfer",
     "chronology", "chronological", "sequence", "journey", "what happened",
-)
-EVIDENCE_STEMS = (
-    "exact wording", "quoted holding", "legal holding", "paragraph", "statutory",
-    "statute", "source identity", "evidentiary statement", "verbatim", "quotation",
 )
 CAMERA_WORDS = {
     "crop", "cropped", "tighter", "tighten", "tightens", "zoom", "zooms", "zoomed",
@@ -173,8 +170,6 @@ def document_based_treatment(value):
 def narrative_kind(scene):
     text = normalize(" ".join(str(scene.get(key) or "") for key in
                               ("narrativeFunction", "viewerQuestion", "visualTransformation")))
-    if any(normalize(stem) in text for stem in EVIDENCE_STEMS):
-        return "exact-evidence"
     if any(normalize(stem) in text for stem in RECOUNT_STEMS):
         return "recount"
     return "other"
@@ -342,10 +337,21 @@ def gate_canonical(plan, words, report):
                 report.fail(f"{sid}: duplicate material id {mid!r}")
             seen.add(mid)
             gate_material(scene, material, material_index, words, report)
-        if (narrative_kind(scene) == "exact-evidence"
-                and document_based_treatment(scene.get("visualTreatment"))
-                and not any(valid_claim_document(material) for material in materials)):
-            report.fail(f"{sid}: exact-evidence document treatment requires at least one valid claim-mode document material")
+        document_materials = [material for material in materials
+                              if isinstance(material, dict)
+                              and material.get("materialIntent") == "document"]
+        requirement = scene.get("documentEvidenceRequirement")
+        if "documentEvidenceRequirement" in scene and requirement not in DOCUMENT_EVIDENCE_REQUIREMENTS:
+            report.fail(f"{sid}: documentEvidenceRequirement must be claim or context")
+        if document_materials and "documentEvidenceRequirement" not in scene:
+            report.fail(f"{sid}: documentEvidenceRequirement is required when the scene contains document material")
+        elif document_materials and requirement == "claim" \
+                and not any(valid_claim_document(material) for material in document_materials):
+            report.fail(f"{sid}: documentEvidenceRequirement=claim requires at least one valid claim-mode document material")
+        elif document_materials and requirement == "context" \
+                and any(material.get("documentEvidenceMode") != "context"
+                        for material in document_materials):
+            report.fail(f"{sid}: documentEvidenceRequirement=context requires every document material to use documentEvidenceMode=context")
         if narrative_kind(scene) == "recount" and document_based_treatment(scene.get("visualTreatment")):
             if not concrete_reason(scene.get("documentOnlyJustification"), 30):
                 report.fail(f"{sid}: narrative/recount document-only treatment needs a concrete reason truthful depiction would mislead or fabricate")
