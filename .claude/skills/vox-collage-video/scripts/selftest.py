@@ -869,48 +869,261 @@ def review_checks(tmp, rows):
 
 
 def pexels_checks(tmp, rows):
-    calls = []
-    photos = [{"id": index, "width": 900, "height": 1200,
-               "photographer": f"Photographer {index}",
-               "url": f"https://www.pexels.com/photo/{index}/",
-               "src": {"medium": f"https://images.pexels.com/{index}-preview.jpg",
-                       "original": f"https://images.pexels.com/{index}.jpg"}}
-              for index in range(1, 10)]
+    tmp.mkdir(parents=True, exist_ok=True)
+    fixture_bytes = image(tmp / "local-fixture.jpg", size=(90, 160)).read_bytes()
+
+    def photos(first):
+        return [{"id": index, "width": 900, "height": 1600,
+                 "photographer": f"Photographer {index}",
+                 "url": f"https://www.pexels.com/photo/{index}/",
+                 "src": {"medium": f"mock://thumb/{index}",
+                         "original": f"mock://original/{index}"}}
+                for index in range(first, first + 9)]
 
     class Response:
+        def __init__(self, payload=None, content=b""):
+            self.payload, self.content = payload, content
+
         def raise_for_status(self):
             return None
 
         def json(self):
-            return {"photos": photos}
+            return self.payload
 
-    def fake_get(url, **kwargs):
-        calls.append((url, kwargs)); return Response()
+    direct_calls = []
+
+    def direct_get(url, **kwargs):
+        direct_calls.append((url, kwargs))
+        return Response({"photos": photos(1)})
 
     candidates = fetch_pexels.search("fixture query", "portrait", 99,
-                                     api_key="fixture-secret", get=fake_get)
+                                     api_key="fixture-secret", get=direct_get)
     required = {"provider", "mediaType", "pexelsId", "photographer", "pageUrl",
                 "previewUrl", "width", "height", "orientation", "retrievedAt",
                 "provenance", "license"}
     result(rows, "Pexels PHOTO structured candidate schema is usable",
            len(candidates) == 8 and all(required <= set(item) for item in candidates)
            and all(item["provider"] == "pexels" and item["mediaType"] == "photo"
-                   and item["license"] is None for item in candidates))
+                   and item["license"] == "Pexels License" for item in candidates))
     result(rows, "Pexels search request and returned candidates are capped at eight",
-           calls[0][1]["params"]["per_page"] == 8 and len(candidates) == 8)
-    result(rows, "Pexels adapter remains PHOTO-only",
-           "video" not in (HERE / "fetch_pexels.py").read_text(encoding="utf-8").lower())
+           direct_calls[0][0] == "https://api.pexels.com/v1/search" and
+           direct_calls[0][1]["params"]["per_page"] == 8 and len(candidates) == 8)
+    source = (HERE / "fetch_pexels.py").read_text(encoding="utf-8")
+    result(rows, "Pexels adapter remains PHOTO endpoint only",
+           fetch_pexels.PEXELS_SEARCH_URL == "https://api.pexels.com/v1/search" and
+           "api.pexels.com/videos" not in source.lower())
     try:
         fetch_pexels.load_api_key(environ={}, start=tmp); missing = ""
     except RuntimeError as exc:
         missing = str(exc)
     result(rows, "missing Pexels key has explicit safe runtime status",
            missing == fetch_pexels.MISSING_KEY_STATUS and "fixture-secret" not in missing)
-    text = (HERE / "fetch_pexels.py").read_text(encoding="utf-8")
     result(rows, "Pexels key is sourced only from environment or untracked .env and never printed",
-           "tracked_by_git" in text and "print(key" not in text and "print(load_api_key" not in text)
-    result(rows, "Pexels default is visual plate and cutout is conditional",
-           "actual visual plates by default" in text and "specific approved scene treatment" in text)
+           "tracked_by_git" in source and "print(key" not in source and
+           "print(load_api_key" not in source)
+
+    packet = {
+        "needId": "S1-place", "sceneId": "S1", "anchorPhrase": "the actual place",
+        "mediaBrief": "Show the named brick station facade with useful portrait crop space.",
+        "materialIntent": "contextual-photo", "shortCaseFacts": ["station is brick"],
+        "styleContract": {"format": "9:16", "treatment": "contextual photographic plate"},
+        "orientation": "portrait",
+    }
+    result(rows, "Source Scout packet is exact and at most two KB",
+           set(packet) == fetch_pexels.PACKET_FIELDS and
+           len(fetch_pexels.compact_json_bytes(fetch_pexels.validate_need_packet(packet))) <= 2048)
+    oversized = copy.deepcopy(packet); oversized["mediaBrief"] = "x" * 2100
+    try:
+        fetch_pexels.validate_need_packet(oversized); packet_blocked = False
+    except ValueError:
+        packet_blocked = True
+    result(rows, "oversized Source Scout packet is rejected", packet_blocked)
+
+    blocked_calls = []
+
+    def must_not_call(url, **kwargs):
+        blocked_calls.append((url, kwargs))
+        raise AssertionError("benchmark block made an HTTP call")
+
+    try:
+        fetch_pexels.scout_phase(
+            tmp / "blocked", "V99", packet, "initial", query="station",
+            execution_mode="native-cheap-worker-required", get=must_not_call,
+            api_key="fixture-secret")
+        benchmark_blocked = False
+    except RuntimeError as exc:
+        benchmark_blocked = str(exc) == fetch_pexels.CHEAP_WORKER_BLOCK
+    result(rows, "benchmark-required native worker refuses fallback before Pexels",
+           benchmark_blocked and not blocked_calls)
+    fallback = fetch_pexels.worker_runtime("native-first")
+    native_unknown = fetch_pexels.worker_runtime(
+        "native-cheap-worker-required", native_worker_started=True)
+    result(rows, "native-worker mode is distinct from fallback-main",
+           fallback["workerMode"] == "fallback-main" and
+           native_unknown["workerMode"] == "native")
+    result(rows, "unobservable worker model and context remain UNKNOWN",
+           fallback["actualWorkerModel"] == "UNKNOWN" and
+           fallback["parentContextInherited"] == "UNKNOWN" and
+           native_unknown["actualWorkerModel"] == "UNKNOWN" and
+           native_unknown["parentContextInherited"] == "UNKNOWN")
+    with contextlib.redirect_stderr(io.StringIO()):
+        try:
+            fetch_pexels.build_parser().parse_args([
+                "scout", "V99", "need.json", "--phase", "initial",
+                "--execution-mode", "native-cheap-worker-required",
+                "--native-worker-started"])
+            cli_faked = True
+        except SystemExit:
+            cli_faked = False
+    result(rows, "CLI cannot self-assert a fake native-worker start", not cli_faked)
+
+    calls = []
+
+    def fake_get(url, **kwargs):
+        calls.append((url, kwargs))
+        if url == fetch_pexels.PEXELS_SEARCH_URL:
+            first = 9 if kwargs["params"]["query"] == "refined station" else 1
+            return Response({"photos": photos(first)})
+        if url.startswith("mock://thumb/") or url.startswith("mock://original/"):
+            return Response(content=fixture_bytes)
+        raise AssertionError(f"unexpected mocked URL {url}")
+
+    run_root = tmp / "scout-project"
+    status, search_state = fetch_pexels.scout_phase(
+        run_root, "V99", packet, "initial", query="brick station",
+        api_key="fixture-secret", get=fake_get)
+    paths = fetch_pexels.worker_paths(run_root, "V99", packet)
+    initial_search_calls = [call for call in calls if call[0] == fetch_pexels.PEXELS_SEARCH_URL]
+    thumb_calls = [call for call in calls if call[0].startswith("mock://thumb/")]
+    result(rows, "initial scout searches exactly once and downloads eight previews",
+           status == "SEARCHED" and search_state["queryCount"] == 1 and
+           search_state["initialQuery"] == "brick station" and
+           len(initial_search_calls) == 1 and len(thumb_calls) == 8)
+    result(rows, "all previews stay in the runtime candidate directory",
+           len(list(paths["directory"].glob("thumb-*.jpg"))) == 8 and
+           all(path.parent == paths["directory"] for path in paths["directory"].glob("thumb-*.jpg")) and
+           not state.video_paths(run_root, "V99")["assets"].exists())
+    before_repeat = len(calls)
+    repeat_status, _repeat = fetch_pexels.scout_phase(
+        run_root, "V99", packet, "initial", query="brick station",
+        api_key="fixture-secret", get=fake_get)
+    result(rows, "completed initial search is not redundantly repeated",
+           repeat_status == "SEARCHED" and len(calls) == before_repeat)
+
+    first_triage = {"visualInspection": {"performed": True, "method": "runtime-local-image"},
+                    "judgments": []}
+    for item in search_state["candidates"]:
+        first_triage["judgments"].append({
+            "pexelsId": item["pexelsId"], "thumbSha256": state.hash_file(item["localThumbPath"]),
+            "useful": False, "briefMatchNote": "poor mediaBrief match"})
+    unproven = copy.deepcopy(first_triage)
+    unproven["visualInspection"]["performed"] = False
+    result(rows, "visualTriage cannot report PASS without image-inspection evidence",
+           fetch_pexels.triage_decision(search_state, unproven)["visualTriage"] == "NOT_PROVEN")
+    try:
+        fetch_pexels.scout_phase(
+            run_root, "V99", packet, "finalize", triage=unproven,
+            require_visual_triage=True, api_key="fixture-secret", get=fake_get)
+        visual_blocked = False
+    except RuntimeError as exc:
+        visual_blocked = str(exc) == fetch_pexels.VISUAL_TRIAGE_BLOCK
+    result(rows, "required visual worker triage stops when inspection is unavailable",
+           visual_blocked and not list(paths["directory"].glob("original-*.jpg")))
+    status, refined_state = fetch_pexels.scout_phase(
+        run_root, "V99", packet, "refine", query="refined station", triage=first_triage,
+        api_key="fixture-secret", get=fake_get)
+    result(rows, "one refinement is allowed only after proven no-useful-result triage",
+           status == "REFINED" and refined_state["queryCount"] == 2 and
+           refined_state["refinedQuery"] == "refined station" and
+           len([call for call in calls if call[0] == fetch_pexels.PEXELS_SEARCH_URL]) == 2)
+    before_third = len(calls)
+    try:
+        fetch_pexels.scout_phase(
+            run_root, "V99", packet, "refine", query="forbidden third", triage=first_triage,
+            api_key="fixture-secret", get=fake_get)
+        third_blocked = False
+    except ValueError:
+        third_blocked = True
+    result(rows, "third Pexels search is impossible",
+           third_blocked and len(calls) == before_third)
+
+    final_triage = {"visualInspection": {"performed": True, "method": "runtime-local-image"},
+                    "judgments": []}
+    for item in refined_state["candidates"]:
+        useful = item["pexelsId"] in {9, 10}
+        final_triage["judgments"].append({
+            "pexelsId": item["pexelsId"], "thumbSha256": state.hash_file(item["localThumbPath"]),
+            "useful": useful, "rank": 1 if item["pexelsId"] == 10 else 2,
+            "briefMatchNote": "specific station facade and strong vertical crop" if useful
+                              else "poor mediaBrief match"})
+    status, worker_return = fetch_pexels.scout_phase(
+        run_root, "V99", packet, "finalize", triage=final_triage,
+        require_visual_triage=True, api_key="fixture-secret", get=fake_get)
+    original_calls = [call for call in calls if call[0].startswith("mock://original/")]
+    result(rows, "visual relevance rejects poor matches and ranks useful candidates",
+           status == "FINALIZED" and worker_return["visualTriage"] == "PASS" and
+           [item["pexelsId"] for item in worker_return["shortlist"]] == [10, 9] and
+           worker_return["rejectedCount"] == 14)
+    result(rows, "shortlist is at most three and originals download only for shortlist",
+           len(worker_return["shortlist"]) == 2 and len(original_calls) == 2 and
+           {call[0] for call in original_calls} == {"mock://original/9", "mock://original/10"} and
+           len(list(paths["directory"].glob("original-*.jpg"))) == 2)
+    result(rows, "worker cannot write or accept a final public asset",
+           not state.video_paths(run_root, "V99")["assets"].exists() and
+           "accept_asset" not in source and "pipeline_contracts" not in source)
+
+    on_disk = json.loads(paths["return"].read_text(encoding="utf-8"))
+    flat_return = paths["return"].read_text(encoding="utf-8")
+    result(rows, "worker_return is compact with the exact bounded schema",
+           set(on_disk) == fetch_pexels.RETURN_FIELDS and
+           all(set(item) == fetch_pexels.SHORTLIST_FIELDS for item in on_disk["shortlist"]) and
+           len(paths["return"].read_bytes()) < 4096)
+    result(rows, "worker_return omits raw/rejected/secret detail",
+           all(key not in on_disk for key in ("raw", "photos", "candidates", "rejectedCandidates")) and
+           all(key not in item for item in on_disk["shortlist"]
+               for key in ("previewUrl", "downloadUrl", "raw")) and
+           "fixture-secret" not in flat_return)
+    result(rows, "Pexels shortlist retains truthful traceability metadata",
+           all(item["provenance"] == item["pageUrl"] and
+               item["license"] == "Pexels License" and item["retrievedAt"].endswith("Z")
+               for item in on_disk["shortlist"]))
+    result(rows, "main final selection remains separate from worker ranking",
+           "main agent owns final inspection" in
+           (HERE.parent / "references" / "pexels-source-worker.md").read_text(encoding="utf-8").lower())
+
+    before_reuse = len(calls)
+    reuse_status, reused = fetch_pexels.scout_phase(
+        run_root, "V99", packet, "initial", query="ignored because current",
+        api_key="fixture-secret", get=fake_get)
+    result(rows, "unchanged need reuses current worker result without sourcing",
+           reuse_status == "REUSE" and reused == worker_return and len(calls) == before_reuse)
+    changed = copy.deepcopy(packet); changed["mediaBrief"] += " The clock must also be visible."
+    result(rows, "changed mediaBrief invalidates worker result",
+           fetch_pexels.current_worker_result(run_root, "V99", changed) is None)
+    missing_original = run_root / worker_return["shortlist"][0]["localOriginalPath"]
+    missing_original.unlink()
+    result(rows, "missing shortlisted candidate file invalidates reuse",
+           fetch_pexels.current_worker_result(run_root, "V99", packet) is None)
+
+    artifacts = "\n".join(path.read_text(encoding="utf-8", errors="replace")
+                            for path in paths["directory"].glob("*.json"))
+    telemetry_rows = [json.loads(line) for line in
+                      state.video_paths(run_root, "V99")["economics"].read_text(encoding="utf-8").splitlines()]
+    miss_record = next(item for item in telemetry_rows if item["cache"] == "miss")
+    result(rows, "Source Scout economics are factual and unknown counters stay UNKNOWN",
+           miss_record["sourceScoutMode"] == "fallback-main" and
+           miss_record["queryCount"] == 2 and miss_record["candidateCount"] == 16 and
+           miss_record["thumbnailDownloads"] == 16 and miss_record["originalDownloads"] == 2 and
+           miss_record["shortlistCount"] == 2 and miss_record["refinementCount"] == 1 and
+           miss_record["workerTokens"] == "UNKNOWN" and miss_record["mainTokens"] == "UNKNOWN" and
+           miss_record["context"] == "UNKNOWN" and
+           miss_record["parentContextInherited"] == "UNKNOWN")
+    result(rows, "API key never enters Source Scout JSON artifacts",
+           "fixture-secret" not in artifacts)
+    forbidden_classifier_terms = ("face recognition", "face detection", "legal-risk",
+                                  "content-policy scoring", "suspect", "victim")
+    result(rows, "Pexels selection code adds no legal/content/identity classifier",
+           not any(term in source.lower() for term in forbidden_classifier_terms))
 
 
 def optional_dependency_checks(rows):
@@ -1047,10 +1260,16 @@ def source_scout_checks(rows):
     path = ROOT / ".claude" / "agents" / "source-scout.md"
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
     skill = (HERE.parent / "SKILL.md").read_text(encoding="utf-8")
+    contract_path = HERE.parent / "references" / "pexels-source-worker.md"
+    contract = contract_path.read_text(encoding="utf-8") if contract_path.is_file() else ""
     compact_text = " ".join(text.split())
     compact_skill = " ".join(skill.split())
     result(rows, "Claude-compatible Source Scout file is retained without false Codex-native claim",
-           path.is_file() and "Claude-compatible" in text and "not a Codex-native" in text)
+           path.is_file() and "Claude-compatible" in text and
+           "not authoritative for Codex" in text)
+    result(rows, "one compact Pexels worker reference is canonical",
+           contract_path.is_file() and "canonical contract" in contract and
+           not (HERE.parent / "references" / "pexels-source-worker" / "SKILL.md").exists())
     result(rows, "Source Scout policy is native-first with exactly one native attempt",
            "NATIVE-FIRST + BOUNDED FALLBACK-MAIN" in skill and
            "attempt Source Scout delegation exactly once" in skill)
@@ -1058,16 +1277,19 @@ def source_scout_checks(rows):
            "sourceScoutMode` to `fallback-main`" in compact_skill and
            "do not retry it" in compact_skill)
     result(rows, "Source Scout compact brief excludes full plan/transcript",
-           "approximately 2 KB or less" in text and "Reject whole transcripts" in text)
-    result(rows, "Source Scout candidate cap is eight", "at most 8 candidates" in text)
-    result(rows, "Source Scout retry cap is one", "at most one refined" in text)
+           "at most 2,048 bytes" in text and "whole transcript/PLAN" in text)
+    result(rows, "Source Scout candidate cap is eight", "at most eight previews" in text)
+    result(rows, "Source Scout retry cap is one", "one optional refinement" in text)
     result(rows, "Source Scout write scope excludes canonical production paths",
            "input/.videoagent/V<N>/candidates/<needId>/" in text and
            "Never write `src/`, `input/V<N>/`, or `public/V<N>/`" in text)
     result(rows, "Source Scout cannot recursively spawn agents",
-           "may not call" in compact_text.lower() and "spawn another agent" in compact_text)
+           "never" in compact_text.lower() and "spawn another agent" in compact_text)
     result(rows, "fallback-main cannot claim proven subagent economics",
            "NOT PROVEN — native Codex" in skill and "never PASS" in skill)
+    result(rows, "benchmark-required Source Scout mode is fail-closed",
+           "native-cheap-worker-required" in skill and
+           "BLOCKED — PEXELS_CHEAP_WORKER_NOT_AVAILABLE" in skill)
 
 
 def active_workflow_checks(rows):
@@ -1110,6 +1332,10 @@ def active_workflow_checks(rows):
 
 def cleanup_checks(tmp, paths, plan, rows):
     rejected = paths["runtime"] / "candidates" / "S1" / "rejected.jpg"; image(rejected)
+    evidence = []
+    for name in ("need.json", "candidates.json", "triage.json",
+                 "worker_return.json", "worker_receipt.json"):
+        path = rejected.parent / name; path.write_text("{}\n", encoding="utf-8"); evidence.append(path)
     proxy = paths["previs_review_pages"] / "obsolete.jpg"; image(proxy)
     temp = paths["runtime"] / "review-extract-temp" / "master-1.png"; image(temp)
     promoted = paths["promoted_previs_frames"] / "S01_OPEN.png"; image(promoted)
@@ -1121,6 +1347,8 @@ def cleanup_checks(tmp, paths, plan, rows):
     targets = {pathlib.Path(item["path"]).resolve() for item in dry["targets"]}
     result(rows, "cleanup dry-run changes nothing", before == after)
     result(rows, "rejected candidates are disposable after PREVIS approval", rejected.resolve() in targets)
+    result(rows, "compact Pexels sourcing evidence survives cleanup",
+           all(path.resolve() not in targets for path in evidence))
     result(rows, "temporary extraction and promoted frames are deterministic disposables",
            temp.resolve() in targets and promoted.resolve() in targets)
     result(rows, "locked selected asset is never proposed", (paths["assets"] / "record-1.png").resolve() not in targets)
@@ -1159,7 +1387,8 @@ def architecture_checks(paths, plan, rows):
         "stage": "fixture", "mainTokens": 1234, "context": 5678})
     record = json.loads(telemetry.read_text(encoding="utf-8").splitlines()[-1])
     result(rows, "token/context telemetry remains truthful UNKNOWN",
-           record["mainTokens"] == "UNKNOWN" and record["context"] == "UNKNOWN")
+           record["workerTokens"] == "UNKNOWN" and record["mainTokens"] == "UNKNOWN" and
+           record["context"] == "UNKNOWN")
 
 
 def checks(tmp):

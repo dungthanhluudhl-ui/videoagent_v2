@@ -78,7 +78,8 @@ def cleanup_plan(root, plan_path, lifecycle=None):
     candidate_root = paths["runtime"] / "candidates"
     if lifecycle in {"PREVIS_APPROVED", "PROMOTED_CONFORMANT", "SHIPPED"}:
         for path in files_in(candidate_root):
-            if path.name in {"candidates.json", "triage.json"}:
+            if path.name in {"need.json", "candidates.json", "triage.json",
+                             "worker_return.json", "worker_receipt.json"}:
                 continue
             candidates.append((path, "rejected-or-unlocked-candidate"))
         for directory in (paths["runtime"] / "failed-generations",

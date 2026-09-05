@@ -648,7 +648,7 @@ def append_telemetry(root, video, record):
     safe = {
         "schema": SCHEMA, "video": video,
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "mainTokens": "UNKNOWN", "context": "UNKNOWN",
+        "workerTokens": "UNKNOWN", "mainTokens": "UNKNOWN", "context": "UNKNOWN",
     }
     allowed = {"stage", "owner", "elapsedMs", "cache", "subprocessCount",
                "affectedItems", "output", "outputSize", "visionCalls",
@@ -657,7 +657,10 @@ def append_telemetry(root, video, record):
                "renderWallMs", "contactSheetAssemblyMs", "outputIdentity",
                "wallMs", "imageReadCount", "candidateCount", "sourceScoutInvocations",
                "sourceScoutRetries", "reusedSceneCount", "renderedSceneCount",
-               "reviewSampleCount", "reviewBatchCount", "reviewPageCount"}
+               "reviewSampleCount", "reviewBatchCount", "reviewPageCount",
+               "sourceScoutMode", "workerModel", "workerSpawnCount", "workerWallSec",
+               "queryCount", "thumbnailDownloads", "originalDownloads", "shortlistCount",
+               "refinementCount", "parentContextInherited"}
     safe.update({k: v for k, v in record.items() if k in allowed})
     if "elapsedMs" in safe:
         safe.setdefault("wallMs", safe["elapsedMs"])

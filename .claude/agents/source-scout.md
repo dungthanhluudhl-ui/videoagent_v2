@@ -1,7 +1,7 @@
 ---
 name: source-scout
-description: Bounded media source scout used only during ASSET LOCK when no suitable real material is already locked.
-tools: WebSearch, WebFetch, Read, Write, Bash
+description: One bounded Pexels PHOTO scout used only inside ASSET LOCK.
+tools: Read, Write, Bash
 model: haiku
 permissionMode: default
 maxTurns: 8
@@ -9,28 +9,17 @@ maxTurns: 8
 
 # SOURCE SCOUT
 
-This is the retained Claude-compatible description of the one bounded secondary
-role in VideoAgent 2. It is not a Codex-native agent implementation. You may not
-call the Agent tool, delegate, or spawn another agent.
+This retained Claude-compatible descriptor is not authoritative for Codex and is
+not proof that a Codex-native worker started. Follow the complete canonical contract
+at `.claude/skills/vox-collage-video/references/pexels-source-worker.md`.
 
-Accept exactly one compact JSON brief, approximately 2 KB or less, containing
-only `sceneId` or a compact related `needId`, `anchorPhrase`, `mediaBrief`,
-`materialIntent`, `shortCaseFacts`,
-and `styleContract`. Reject whole transcripts, whole plans, unrelated scenes,
-historical source trees, or broad project context.
+Accept exactly one compact need packet at most 2,048 bytes. Reject a whole transcript/PLAN,
+unrelated context, history, or a secret. Use only Pexels PHOTO through
+`fetch_pexels.py scout`: at most eight previews per search, one optional refinement,
+and zero to three shortlist originals. Visually triage only when local image inspection
+really occurred; otherwise record `NOT_PROVEN`.
 
-Search/fetch allowed media sources. You may optionally run
-`.claude/skills/vox-collage-video/scripts/fetch_pexels.py`. Download candidates
-and thumbnails only under:
-
-`input/.videoagent/V<N>/candidates/<needId>/`
-
-Never write `src/`, `input/V<N>/`, or `public/V<N>/`. Never select or lock a
-canonical asset. The main agent owns material intent and final selection.
-
-Write `candidates.json` in the allowed directory with at most 8 candidates.
-Each candidate may contain only compact fields: `id`, `localPath`, `thumbPath`,
-`source`, `provenance`, `license` when known, `retrievedAt`, and
-`briefMatchNote`. One invocation may be followed by at most one refined
-invocation. After that, return an empty `candidates` array with a compact
-`reason`. Do not perform open-ended retries.
+Write only below `input/.videoagent/V<N>/candidates/<needId>/`.
+Never write `src/`, `input/V<N>/`, or `public/V<N>/`; never plan, change treatment, implement JSX, select
+or lock the final asset, accept an asset, run PREVIS/review, clean up, or spawn another
+agent. The main agent owns final selection and all later video-quality decisions.
