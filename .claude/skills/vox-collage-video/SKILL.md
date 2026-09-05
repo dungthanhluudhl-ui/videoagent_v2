@@ -114,42 +114,41 @@ py -3 .claude/skills/vox-collage-video/scripts/pipeline_contracts.py accept-asse
 
 A same-name byte or brief replacement resets acceptance. If ASSET LOCK needs a
 Pexels photo, follow the one canonical bounded worker contract in
-`references/pexels-source-worker.md`. Use **NATIVE-FIRST + BOUNDED FALLBACK-MAIN**
-sourcing: when the runtime exposes native delegation, first check for a current
-disk result, then attempt Source Scout delegation exactly once using the cheapest
-appropriate worker actually exposed. Prefer a fresh/isolated child when supported.
-Set `sourceScoutMode` to `native` only after that child actually starts; record the
-observed model/context behavior or `UNKNOWN`. If delegation is unavailable or that
-one spawn fails, do not retry it: ordinary runs set `sourceScoutMode` to
-`fallback-main` and have the main agent execute the identical bounded contract.
+`references/pexels-source-worker.md`. Candidate sourcing uses the external Gemini API
+cheap worker through the existing OpenAI-compatible router. Canonical worker mode is
+`gemini-api`; the configured default is `ag/gemini-3.7-flash-high` at
+`http://localhost:20128/v1`, with the existing hidden vision credential mechanism.
+It does not require Codex spawning, collaboration/model routing, Luna, or any native
+child-agent capability.
 
-V20 uses execution mode `native-cheap-worker-required`. In that mode, no actual
-native start means stop with `BLOCKED — PEXELS_CHEAP_WORKER_NOT_AVAILABLE`; never
-fall back to main. It may also require proven runtime thumbnail inspection, which
-must stop when unavailable rather than sending all candidates to main.
+For V20, `gemini-api` is **REQUIRED**. If the router, credential, or configured model
+cannot actually work, stop with `BLOCKED — GEMINI_CHEAP_WORKER_NOT_AVAILABLE`. MAIN
+Codex fallback is forbidden for V20 because it would invalidate the intended
+context/token economics. Any retained ordinary `fallback-main` compatibility is
+explicit, non-benchmark behavior and never masquerades as cheap-worker economics.
 
 The packet is approximately ≤2 KB and contains only `needId`, `sceneId`,
 `anchorPhrase`, `mediaBrief`, `materialIntent`, `shortCaseFacts`, `styleContract`,
-and `orientation`. It excludes whole transcripts/plans, unrelated scenes/history,
-and secrets. One PHOTO search returns ≤8 previews; only when proven triage finds no
-useful result may one refined search run. The worker returns 0–3 and downloads
+and `orientation`. It excludes whole transcripts/plans, conversation history,
+unrelated scenes/history, and secrets. Gemini formulates the semantic query and
+visually judges each local thumbnail. One PHOTO search returns ≤8 previews; only when
+Gemini finds no useful result may it formulate one refined query. The worker returns 0–3 and downloads
 originals only for that shortlist. Discovery writes only under
 `input/.videoagent/V<N>/candidates/<needId>/` — never `src/`, `input/V<N>/`, or
-`public/V<N>/`. It cannot select, lock, accept, implement, render, review, or spawn.
+`public/V<N>/`. Python owns Pexels HTTP, downloads, hashes, paths, receipts, and
+serialization. The external request is constructed only from compact task data, so
+`parentContextInherited = NO`.
 
 The main agent reads the compact `worker_return.json`, inspects only necessary
 shortlisted images, chooses and copies one selected asset to `public/V<N>/assets/`,
 records Pexels page provenance, factual retrieval time, `Pexels License`, selection
 rationale and locked hash, then uses `sync-assets` and `accept-asset`. Never
-auto-select worker rank 1. A current content-identity receipt is reusable by a new
-session; changed brief/contract or missing required files invalidates it.
-
-When `sourceScoutMode` is `fallback-main`, product/workflow/wall-time/Pexels and
-PREVIS/PROMOTE results remain evaluable, but subagent economics, main-context
-savings, and worker-token savings are **NOT PROVEN — native Codex delegation
-unavailable/failed**, never PASS. Record only observed economics; unavailable
-worker/main token and context counters remain `UNKNOWN`, and make no savings claim.
-`.claude/agents/source-scout.md` is Claude-compatible, not proof of Codex delegation.
+auto-select worker rank 1. Rejected thumbnails do not enter MAIN context or
+`worker_return.json`. A current content-identity receipt is reusable by a new session;
+changed image bytes, compact brief/style, model, prompt/implementation version, or
+missing required files invalidates it. Record only factual Gemini calls/tokens;
+unreported Gemini usage and unavailable MAIN token/context counters stay `UNKNOWN`.
+Make no savings claim before V20.
 
 ## 4. PREVIS
 

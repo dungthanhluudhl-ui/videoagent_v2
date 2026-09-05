@@ -30,7 +30,7 @@ Usage:
     py -3 vision_check.py input/review_frames/V13Scene1_f68.png
     py -3 vision_check.py "input/review_frames/V13*.png"
     py -3 vision_check.py --plan input/scene_plan13.json
-    py -3 vision_check.py frames.png --json out.json --model ag/gemini-3.7-flash-low
+    py -3 vision_check.py frames.png --json out.json --model ag/gemini-3.7-flash-high
     py -3 vision_check.py frames.png --all
 
 Exit 1 neu co khung bi gan co.
@@ -46,13 +46,14 @@ import os
 import pathlib
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
 import stage_state as state
 
 BASE = os.environ.get("VOX_VISION_BASE", "http://localhost:20128/v1")
-MODEL = os.environ.get("VOX_VISION_MODEL", "ag/gemini-3.7-flash-low")
+MODEL = os.environ.get("VOX_VISION_MODEL", "ag/gemini-3.7-flash-high")
 VISION_VERSION = "review-frame-v1"
 
 # Khoa KHONG duoc nam trong ma nguon. Repo nay la public, va mot khoa nhet lam
@@ -183,7 +184,13 @@ def encode(path, width=SEND_W):
 
 def sse_text(raw):
     """Router luon tra SSE ke ca khi khong xin stream. Gom content cac chunk."""
-    out, usage = [], {}
+    text, usage, _model = response_text(raw)
+    return text, usage
+
+
+def response_text(raw):
+    """Read either router SSE or a normal OpenAI-compatible JSON response."""
+    out, usage, response_model = [], {}, None
     for line in raw.decode("utf-8", "replace").splitlines():
         if not line.startswith("data:"):
             continue
@@ -194,6 +201,7 @@ def sse_text(raw):
             d = json.loads(payload)
         except json.JSONDecodeError:
             continue
+        response_model = d.get("model") or response_model
         if d.get("usage"):
             usage = d["usage"]
         for ch in d.get("choices") or []:
@@ -201,7 +209,20 @@ def sse_text(raw):
                      or (ch.get("message") or {}).get("content") or "")
             if piece:
                 out.append(piece)
-    return "".join(out), usage
+    if out:
+        return "".join(out), usage, response_model
+    try:
+        d = json.loads(raw.decode("utf-8", "replace"))
+    except json.JSONDecodeError:
+        return "", usage, response_model
+    response_model = d.get("model") or response_model
+    usage = d.get("usage") or usage
+    for ch in d.get("choices") or []:
+        piece = ((ch.get("message") or {}).get("content")
+                 or (ch.get("delta") or {}).get("content") or "")
+        if piece:
+            out.append(piece)
+    return "".join(out), usage, response_model
 
 
 def parse_json(text):
@@ -214,36 +235,76 @@ def parse_json(text):
         return None
 
 
-def ask(path, model=MODEL, retries=2):
+def parse_strict_json(text):
+    """Accept one JSON object and no markdown or explanatory wrapper."""
+    try:
+        value = json.loads(str(text).strip())
+    except (TypeError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def ask_json(text_prompt, image_path=None, model=None, retries=2, strict=False,
+             max_tokens=MAX_TOKENS):
+    """Small shared OpenAI-compatible JSON transport for cheap Gemini vision.
+
+    Returns ``(object_or_none, metadata)``. Metadata contains only non-secret,
+    factual response information; absent usage fields stay absent rather than being
+    estimated.
+    """
     require_key()
+    requested_model = model or MODEL
+    content = [{"type": "text", "text": text_prompt}]
+    if image_path is not None:
+        content.append({"type": "image_url",
+                        "image_url": {"url": "data:image/jpeg;base64," + encode(image_path)}})
     body = {
-        "model": model,
-        "messages": [{"role": "user", "content": [
-            {"type": "text", "text": PROMPT},
-            {"type": "image_url",
-             "image_url": {"url": "data:image/jpeg;base64," + encode(path)}},
-        ]}],
-        "max_tokens": MAX_TOKENS,
+        "model": requested_model,
+        "messages": [{"role": "user", "content": content}],
+        "max_tokens": max_tokens,
         "temperature": 0,
     }
     last = ""
+    request_count = 0
+    started = time.perf_counter()
     for _ in range(retries + 1):
+        request_count += 1
         try:
             req = urllib.request.Request(
-                BASE + "/chat/completions", data=json.dumps(body).encode(),
+                BASE.rstrip("/") + "/chat/completions", data=json.dumps(body).encode(),
                 headers={"Authorization": "Bearer " + KEY,
                          "Content-Type": "application/json"})
             raw = urllib.request.urlopen(req, timeout=180).read()
-        except (urllib.error.URLError, OSError) as e:
-            last = "%s: %s" % (type(e).__name__, e)
+        except (urllib.error.URLError, OSError) as exc:
+            last = "%s: %s" % (type(exc).__name__, exc)
             continue
-        text, usage = sse_text(raw)
-        d = parse_json(text)
-        if d is not None:
-            d["_tokens"] = usage.get("total_tokens", 0)
-            return d
+        text, usage, response_model = response_text(raw)
+        value = parse_strict_json(text) if strict else parse_json(text)
+        if value is not None:
+            return value, {
+                "requestedModel": requested_model,
+                "responseModel": response_model,
+                "usage": usage if isinstance(usage, dict) else {},
+                "requestCount": request_count,
+                "wallSec": round(time.perf_counter() - started, 3),
+            }
         last = "khong parse duoc JSON: " + text[:200]
-    return {"_error": last}
+    return None, {
+        "requestedModel": requested_model,
+        "responseModel": None,
+        "usage": {},
+        "requestCount": request_count,
+        "wallSec": round(time.perf_counter() - started, 3),
+        "error": last,
+    }
+
+
+def ask(path, model=MODEL, retries=2):
+    value, metadata = ask_json(PROMPT, path, model=model, retries=retries)
+    if value is None:
+        return {"_error": metadata.get("error", "khong parse duoc JSON")}
+    value["_tokens"] = metadata.get("usage", {}).get("total_tokens", 0)
+    return value
 
 
 def review_brief(path, review_map=None):

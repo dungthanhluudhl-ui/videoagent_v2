@@ -193,37 +193,11 @@ def build_prompt(name, role, describes, transformation=None, template=None):
 
 
 def ask(path, prompt, model, retries=2):
-    VC.require_key()
-    body = {
-        "model": model,
-        "messages": [{"role": "user", "content": [
-            {"type": "text", "text": prompt},
-            {"type": "image_url",
-             "image_url": {"url": "data:image/jpeg;base64," + VC.encode(path)}},
-        ]}],
-        "max_tokens": VC.MAX_TOKENS,
-        "temperature": 0,
-    }
-    import urllib.error
-    import urllib.request
-    last = ""
-    for _ in range(retries + 1):
-        try:
-            req = urllib.request.Request(
-                VC.BASE + "/chat/completions", data=json.dumps(body).encode(),
-                headers={"Authorization": "Bearer " + VC.KEY,
-                         "Content-Type": "application/json"})
-            raw = urllib.request.urlopen(req, timeout=180).read()
-        except (urllib.error.URLError, OSError) as e:
-            last = "%s: %s" % (type(e).__name__, e)
-            continue
-        text, usage = VC.sse_text(raw)
-        d = VC.parse_json(text)
-        if d is not None:
-            d["_tokens"] = usage.get("total_tokens", 0)
-            return d
-        last = "khong parse duoc JSON: " + text[:200]
-    return {"_error": last}
+    value, metadata = VC.ask_json(prompt, path, model=model, retries=retries)
+    if value is None:
+        return {"_error": metadata.get("error", "khong parse duoc JSON")}
+    value["_tokens"] = metadata.get("usage", {}).get("total_tokens", 0)
+    return value
 
 
 def find_root(plan_path):

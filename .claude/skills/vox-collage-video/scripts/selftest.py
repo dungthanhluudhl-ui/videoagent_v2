@@ -16,6 +16,7 @@ import sys
 import tempfile
 
 import beat_sync
+import asset_vision
 import build_gate
 import cleanup
 import fetch_pexels
@@ -27,6 +28,7 @@ import render_review_sheet as review
 import stage_state as state
 import start_video
 import text_gate
+import vision_check
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = state.project_root(__file__)
@@ -42,6 +44,14 @@ def remotion_still(entry, composition, output):
 
 def result(rows, name, ok, detail=""):
     rows.append((name, bool(ok), str(detail or "")))
+
+
+def _query_rejected(value):
+    try:
+        fetch_pexels.parse_query_result(value)
+    except RuntimeError:
+        return True
+    return False
 
 
 def image(path, color=(232, 232, 232), size=(270, 480)):
@@ -943,39 +953,43 @@ def pexels_checks(tmp, rows):
 
     def must_not_call(url, **kwargs):
         blocked_calls.append((url, kwargs))
-        raise AssertionError("benchmark block made an HTTP call")
+        raise AssertionError("blocked Gemini path made a Pexels HTTP call")
+
+    def malformed_query(_prompt, **_kwargs):
+        return None, {"requestCount": 1, "usage": {}, "wallSec": 0.01}
 
     try:
         fetch_pexels.scout_phase(
-            tmp / "blocked", "V99", packet, "initial", query="station",
-            execution_mode="native-cheap-worker-required", get=must_not_call,
-            api_key="fixture-secret")
-        benchmark_blocked = False
+            tmp / "blocked", "V99", packet, "run", get=must_not_call,
+            api_key="fixture-secret", ask=malformed_query)
+        gemini_blocked = False
     except RuntimeError as exc:
-        benchmark_blocked = str(exc) == fetch_pexels.CHEAP_WORKER_BLOCK
-    result(rows, "benchmark-required native worker refuses fallback before Pexels",
-           benchmark_blocked and not blocked_calls)
-    fallback = fetch_pexels.worker_runtime("native-first")
-    native_unknown = fetch_pexels.worker_runtime(
-        "native-cheap-worker-required", native_worker_started=True)
-    result(rows, "native-worker mode is distinct from fallback-main",
+        gemini_blocked = str(exc).startswith(fetch_pexels.GEMINI_WORKER_BLOCK)
+    result(rows, "required Gemini worker fails closed before Pexels on malformed query JSON",
+           gemini_blocked and not blocked_calls)
+    fallback = fetch_pexels.worker_runtime("fallback-main")
+    gemini_runtime = fetch_pexels.worker_runtime("gemini-api")
+    result(rows, "Gemini API worker identity is external and mechanically isolated",
+           gemini_runtime["workerMode"] == "gemini-api" and
+           gemini_runtime["parentContextInherited"] == "NO" and
+           gemini_runtime["actualWorkerModel"] == "ag/gemini-3.7-flash-high" and
+           gemini_runtime["router"] == "http://localhost:20128/v1")
+    result(rows, "ordinary fallback remains explicit and has no cheap-worker identity",
            fallback["workerMode"] == "fallback-main" and
-           native_unknown["workerMode"] == "native")
-    result(rows, "unobservable worker model and context remain UNKNOWN",
            fallback["actualWorkerModel"] == "UNKNOWN" and
-           fallback["parentContextInherited"] == "UNKNOWN" and
-           native_unknown["actualWorkerModel"] == "UNKNOWN" and
-           native_unknown["parentContextInherited"] == "UNKNOWN")
-    with contextlib.redirect_stderr(io.StringIO()):
-        try:
-            fetch_pexels.build_parser().parse_args([
-                "scout", "V99", "need.json", "--phase", "initial",
-                "--execution-mode", "native-cheap-worker-required",
-                "--native-worker-started"])
-            cli_faked = True
-        except SystemExit:
-            cli_faked = False
-    result(rows, "CLI cannot self-assert a fake native-worker start", not cli_faked)
+           fallback["parentContextInherited"] == "UNKNOWN")
+    defaults = fetch_pexels.build_parser().parse_args(
+        ["scout", "V99", "need.json", "--phase", "run"])
+    override = fetch_pexels.build_parser().parse_args(
+        ["scout", "V99", "need.json", "--phase", "run", "--model", "fixture/model"])
+    result(rows, "Pexels CLI defaults to gemini-api Flash High and permits model override",
+           defaults.execution_mode == "gemini-api" and
+           defaults.model == "ag/gemini-3.7-flash-high" and override.model == "fixture/model")
+    result(rows, "strict JSON parsing rejects wrappers and malformed query objects",
+           vision_check.parse_strict_json('{"query":"station"}') == {"query": "station"} and
+           vision_check.parse_strict_json('```json\n{"query":"station"}\n```') is None and
+           all(_query_rejected(value) for value in ({}, {"query": ""},
+                                                     {"query": "x", "extra": True})))
 
     calls = []
 
@@ -991,7 +1005,7 @@ def pexels_checks(tmp, rows):
     run_root = tmp / "scout-project"
     status, search_state = fetch_pexels.scout_phase(
         run_root, "V99", packet, "initial", query="brick station",
-        api_key="fixture-secret", get=fake_get)
+        execution_mode="fallback-main", api_key="fixture-secret", get=fake_get)
     paths = fetch_pexels.worker_paths(run_root, "V99", packet)
     initial_search_calls = [call for call in calls if call[0] == fetch_pexels.PEXELS_SEARCH_URL]
     thumb_calls = [call for call in calls if call[0].startswith("mock://thumb/")]
@@ -1006,7 +1020,7 @@ def pexels_checks(tmp, rows):
     before_repeat = len(calls)
     repeat_status, _repeat = fetch_pexels.scout_phase(
         run_root, "V99", packet, "initial", query="brick station",
-        api_key="fixture-secret", get=fake_get)
+        execution_mode="fallback-main", api_key="fixture-secret", get=fake_get)
     result(rows, "completed initial search is not redundantly repeated",
            repeat_status == "SEARCHED" and len(calls) == before_repeat)
 
@@ -1023,7 +1037,8 @@ def pexels_checks(tmp, rows):
     try:
         fetch_pexels.scout_phase(
             run_root, "V99", packet, "finalize", triage=unproven,
-            require_visual_triage=True, api_key="fixture-secret", get=fake_get)
+            execution_mode="fallback-main", require_visual_triage=True,
+            api_key="fixture-secret", get=fake_get)
         visual_blocked = False
     except RuntimeError as exc:
         visual_blocked = str(exc) == fetch_pexels.VISUAL_TRIAGE_BLOCK
@@ -1031,7 +1046,7 @@ def pexels_checks(tmp, rows):
            visual_blocked and not list(paths["directory"].glob("original-*.jpg")))
     status, refined_state = fetch_pexels.scout_phase(
         run_root, "V99", packet, "refine", query="refined station", triage=first_triage,
-        api_key="fixture-secret", get=fake_get)
+        execution_mode="fallback-main", api_key="fixture-secret", get=fake_get)
     result(rows, "one refinement is allowed only after proven no-useful-result triage",
            status == "REFINED" and refined_state["queryCount"] == 2 and
            refined_state["refinedQuery"] == "refined station" and
@@ -1040,7 +1055,7 @@ def pexels_checks(tmp, rows):
     try:
         fetch_pexels.scout_phase(
             run_root, "V99", packet, "refine", query="forbidden third", triage=first_triage,
-            api_key="fixture-secret", get=fake_get)
+            execution_mode="fallback-main", api_key="fixture-secret", get=fake_get)
         third_blocked = False
     except ValueError:
         third_blocked = True
@@ -1058,7 +1073,8 @@ def pexels_checks(tmp, rows):
                               else "poor mediaBrief match"})
     status, worker_return = fetch_pexels.scout_phase(
         run_root, "V99", packet, "finalize", triage=final_triage,
-        require_visual_triage=True, api_key="fixture-secret", get=fake_get)
+        execution_mode="fallback-main", require_visual_triage=True,
+        api_key="fixture-secret", get=fake_get)
     original_calls = [call for call in calls if call[0].startswith("mock://original/")]
     result(rows, "visual relevance rejects poor matches and ranks useful candidates",
            status == "FINALIZED" and worker_return["visualTriage"] == "PASS" and
@@ -1094,16 +1110,18 @@ def pexels_checks(tmp, rows):
     before_reuse = len(calls)
     reuse_status, reused = fetch_pexels.scout_phase(
         run_root, "V99", packet, "initial", query="ignored because current",
-        api_key="fixture-secret", get=fake_get)
+        execution_mode="fallback-main", api_key="fixture-secret", get=fake_get)
     result(rows, "unchanged need reuses current worker result without sourcing",
            reuse_status == "REUSE" and reused == worker_return and len(calls) == before_reuse)
     changed = copy.deepcopy(packet); changed["mediaBrief"] += " The clock must also be visible."
     result(rows, "changed mediaBrief invalidates worker result",
-           fetch_pexels.current_worker_result(run_root, "V99", changed) is None)
+           fetch_pexels.current_worker_result(
+               run_root, "V99", changed, execution_mode="fallback-main") is None)
     missing_original = run_root / worker_return["shortlist"][0]["localOriginalPath"]
     missing_original.unlink()
     result(rows, "missing shortlisted candidate file invalidates reuse",
-           fetch_pexels.current_worker_result(run_root, "V99", packet) is None)
+           fetch_pexels.current_worker_result(
+               run_root, "V99", packet, execution_mode="fallback-main") is None)
 
     artifacts = "\n".join(path.read_text(encoding="utf-8", errors="replace")
                             for path in paths["directory"].glob("*.json"))
@@ -1124,6 +1142,163 @@ def pexels_checks(tmp, rows):
                                   "content-policy scoring", "suspect", "victim")
     result(rows, "Pexels selection code adds no legal/content/identity classifier",
            not any(term in source.lower() for term in forbidden_classifier_terms))
+
+    gemini_calls = []
+    gemini_http_calls = []
+
+    def gemini_get(url, **kwargs):
+        gemini_http_calls.append((url, kwargs))
+        if url == fetch_pexels.PEXELS_SEARCH_URL:
+            first = 9 if kwargs["params"]["query"] == "refined brick railway station" else 1
+            return Response({"photos": photos(first)})
+        if url.startswith("mock://thumb/") or url.startswith("mock://original/"):
+            return Response(content=fixture_bytes)
+        raise AssertionError(f"unexpected mocked URL {url}")
+
+    def gemini_ask(prompt, image_path=None, model=None, strict=False, **_kwargs):
+        image_path = pathlib.Path(image_path) if image_path is not None else None
+        gemini_calls.append({"prompt": prompt, "imagePath": image_path,
+                             "model": model, "strict": strict})
+        metadata = {"requestCount": 1, "responseModel": model, "wallSec": 0.01,
+                    "usage": {"prompt_tokens": 10, "completion_tokens": 3,
+                              "total_tokens": 13}}
+        if image_path is None:
+            query = ("refined brick railway station" if
+                     "initial search produced no sufficiently relevant candidate" in prompt
+                     else "brick railway station facade")
+            return {"query": query}, metadata
+        pexels_id = int(re.search(r'"pexelsId":(\d+)', prompt).group(1))
+        scores = {9: 91, 10: 98, 11: 84, 12: 75}
+        useful = pexels_id in scores
+        return {"pexelsId": pexels_id, "useful": useful,
+                "fitScore": scores.get(pexels_id, 20),
+                "briefMatchNote": ("specific station facade" if useful
+                                   else "generic or weak station match")}, metadata
+
+    gemini_root = tmp / "gemini-worker-project"
+    gemini_status, gemini_return = fetch_pexels.scout_phase(
+        gemini_root, "V99", packet, "run", api_key="fixture-secret",
+        get=gemini_get, ask=gemini_ask)
+    gemini_paths = fetch_pexels.worker_paths(gemini_root, "V99", packet)
+    model_calls = [call for call in gemini_calls if call["imagePath"] is not None]
+    query_calls = [call for call in gemini_calls if call["imagePath"] is None]
+    pexels_calls = [call for call in gemini_http_calls
+                    if call[0] == fetch_pexels.PEXELS_SEARCH_URL]
+    gemini_originals = [call for call in gemini_http_calls
+                        if call[0].startswith("mock://original/")]
+    result(rows, "Gemini formulates initial and at most one refined semantic Pexels query",
+           gemini_status == "FINALIZED" and len(query_calls) == 2 and
+           len(pexels_calls) == 2 and gemini_return["refinementCount"] == 1 and
+           "initial search produced no sufficiently relevant candidate" in
+           query_calls[1]["prompt"])
+    result(rows, "Gemini query prompts contain only compact need and no plan transcript or secrets",
+           all(packet["mediaBrief"] in call["prompt"] for call in query_calls) and
+           all(term not in "\n".join(call["prompt"] for call in query_calls)
+               for term in ("fixture-secret", '"scenes"', '"transcript"',
+                            "generic or weak station match")) and
+           all(call["strict"] for call in query_calls))
+    result(rows, "each candidate thumbnail is sent directly from disk to Gemini with mediaBrief",
+           len(model_calls) == 16 and all(call["imagePath"].is_file() for call in model_calls) and
+           all(packet["mediaBrief"] in call["prompt"] for call in model_calls) and
+           all(call["strict"] for call in model_calls))
+    result(rows, "Gemini semantic score ranks shortlist without padding and originals only follow shortlist",
+           [item["pexelsId"] for item in gemini_return["shortlist"]] == [10, 9, 11] and
+           gemini_return["shortlistCount"] == 3 and len(gemini_originals) == 3 and
+           {call[0] for call in gemini_originals} ==
+           {"mock://original/9", "mock://original/10", "mock://original/11"})
+    result(rows, "Gemini worker return exposes external identity and excludes rejected thumbnails",
+           gemini_return["workerMode"] == "gemini-api" and
+           gemini_return["parentContextInherited"] == "NO" and
+           gemini_return["router"] == "http://localhost:20128/v1" and
+           gemini_return["geminiModel"] == "ag/gemini-3.7-flash-high" and
+           all(item["pexelsId"] in {9, 10, 11} for item in gemini_return["shortlist"]) and
+           "rejectedCandidates" not in gemini_return and
+           len(list(gemini_paths["directory"].glob("thumb-*.jpg"))) == 16)
+    result(rows, "Gemini call and token telemetry is factual when router usage is present",
+           gemini_return["geminiCallCount"] == 18 and
+           gemini_return["geminiQueryCalls"] == 2 and
+           gemini_return["geminiVisionCalls"] == 16 and
+           gemini_return["geminiInputTokens"] == 180 and
+           gemini_return["geminiOutputTokens"] == 54 and
+           gemini_return["geminiTotalTokens"] == 234 and
+           gemini_return["pexelsQueryCount"] == 2 and
+           gemini_return["thumbnailDownloads"] == 16 and
+           gemini_return["originalDownloads"] == 3)
+    gemini_telemetry = [json.loads(line) for line in
+                        state.video_paths(gemini_root, "V99")["economics"].read_text(
+                            encoding="utf-8").splitlines()][-1]
+    result(rows, "Pexels telemetry preserves factual Gemini metrics and UNKNOWN main counters",
+           gemini_telemetry["geminiCallCount"] == 18 and
+           gemini_telemetry["geminiTotalTokens"] == 234 and
+           gemini_telemetry["mainTokens"] == "UNKNOWN" and
+           gemini_telemetry["mainContext"] == "UNKNOWN" and
+           gemini_telemetry["context"] == "UNKNOWN")
+    unknown_runtime = fetch_pexels.worker_runtime("gemini-api")
+    fetch_pexels.record_gemini_call(
+        unknown_runtime, {"requestCount": 1, "usage": {}, "wallSec": 0.01}, "query")
+    fetch_pexels.finish_gemini_metrics(unknown_runtime)
+    result(rows, "unreported Gemini token fields remain UNKNOWN and are never estimated",
+           unknown_runtime["geminiCallCount"] == 1 and
+           unknown_runtime["geminiInputTokens"] == "UNKNOWN" and
+           unknown_runtime["geminiOutputTokens"] == "UNKNOWN" and
+           unknown_runtime["geminiTotalTokens"] == "UNKNOWN")
+
+    first_candidate = state.read_json(gemini_paths["candidates"], {})["candidates"][0]
+    cache_probe_calls = []
+
+    def cache_probe(prompt, image_path=None, model=None, strict=False, **_kwargs):
+        cache_probe_calls.append((prompt, image_path, model, strict))
+        pexels_id = int(re.search(r'"pexelsId":(\d+)', prompt).group(1))
+        return {"pexelsId": pexels_id, "useful": False, "fitScore": 1,
+                "briefMatchNote": "cache probe"}, {
+                    "requestCount": 1, "usage": {}, "wallSec": 0.01}
+
+    cache_runtime = fetch_pexels.worker_runtime("gemini-api")
+    _cached, cache_hit, cache_key = fetch_pexels.cached_candidate_judgment(
+        gemini_root, "V99", packet, first_candidate, cache_runtime, ask=cache_probe)
+    result(rows, "same candidate bytes brief style model and prompt reuse Gemini judgment",
+           cache_hit and not cache_probe_calls)
+    thumb_path = pathlib.Path(first_candidate["localThumbPath"])
+    original_thumb = thumb_path.read_bytes()
+    thumb_path.write_bytes(original_thumb + b"changed")
+    changed_runtime = fetch_pexels.worker_runtime("gemini-api")
+    _changed, changed_hit, changed_key = fetch_pexels.cached_candidate_judgment(
+        gemini_root, "V99", packet, first_candidate, changed_runtime, ask=cache_probe)
+    thumb_path.write_bytes(original_thumb)
+    changed_brief = copy.deepcopy(packet); changed_brief["mediaBrief"] += " Include a clock."
+    base_key = fetch_pexels.candidate_vision_cache_key(
+        thumb_path, packet, vision_check.MODEL, first_candidate["pexelsId"])
+    brief_key = fetch_pexels.candidate_vision_cache_key(
+        thumb_path, changed_brief, vision_check.MODEL, first_candidate["pexelsId"])
+    model_key = fetch_pexels.candidate_vision_cache_key(
+        thumb_path, packet, "fixture/other-model", first_candidate["pexelsId"])
+    old_prompt_version = fetch_pexels.VISION_PROMPT_VERSION
+    try:
+        fetch_pexels.VISION_PROMPT_VERSION = "fixture-changed-prompt"
+        prompt_key = fetch_pexels.candidate_vision_cache_key(
+            thumb_path, packet, vision_check.MODEL, first_candidate["pexelsId"])
+    finally:
+        fetch_pexels.VISION_PROMPT_VERSION = old_prompt_version
+    result(rows, "candidate vision cache stales on bytes brief model or prompt version change",
+           not changed_hit and changed_key != cache_key and base_key != brief_key and
+           base_key != model_key and base_key != prompt_key and len(cache_probe_calls) == 1)
+    malformed = fetch_pexels.parse_candidate_judgment(
+        {"pexelsId": first_candidate["pexelsId"], "useful": True},
+        first_candidate["pexelsId"], "fixture-hash")
+    result(rows, "malformed Gemini vision output cannot become a useful candidate",
+           malformed["useful"] is False and malformed["fitScore"] == 0)
+    artifacts = "\n".join(path.read_text(encoding="utf-8", errors="replace")
+                            for path in gemini_paths["directory"].glob("*.json"))
+    result(rows, "Gemini and Pexels credentials stay absent from packets returns caches and telemetry",
+           "fixture-secret" not in artifacts and
+           (not vision_check.KEY or vision_check.KEY not in artifacts) and
+           "Authorization" not in artifacts)
+    result(rows, "vision_check asset_vision and Pexels worker share Flash High default with overrides",
+           vision_check.MODEL == "ag/gemini-3.7-flash-high" and
+           asset_vision.VC.MODEL == vision_check.MODEL and
+           fetch_pexels.vision.MODEL == vision_check.MODEL and
+           'os.environ.get("VOX_VISION_MODEL"' in
+           (HERE / "vision_check.py").read_text(encoding="utf-8"))
 
 
 def optional_dependency_checks(rows):
@@ -1264,18 +1439,19 @@ def source_scout_checks(rows):
     contract = contract_path.read_text(encoding="utf-8") if contract_path.is_file() else ""
     compact_text = " ".join(text.split())
     compact_skill = " ".join(skill.split())
-    result(rows, "Claude-compatible Source Scout file is retained without false Codex-native claim",
-           path.is_file() and "Claude-compatible" in text and
-           "not authoritative for Codex" in text)
+    result(rows, "compatibility Source Scout points to external Gemini rather than a child agent",
+           path.is_file() and "external Gemini API worker" in compact_text and
+           "not an executable Claude/Codex child-agent requirement" in compact_text)
     result(rows, "one compact Pexels worker reference is canonical",
            contract_path.is_file() and "canonical contract" in contract and
            not (HERE.parent / "references" / "pexels-source-worker" / "SKILL.md").exists())
-    result(rows, "Source Scout policy is native-first with exactly one native attempt",
-           "NATIVE-FIRST + BOUNDED FALLBACK-MAIN" in skill and
-           "attempt Source Scout delegation exactly once" in skill)
-    result(rows, "one failed/unavailable native spawn falls back to main without retry",
-           "sourceScoutMode` to `fallback-main`" in compact_skill and
-           "do not retry it" in compact_skill)
+    result(rows, "Source Scout policy uses the external Gemini OpenAI-compatible router",
+           "external Gemini API" in skill and "OpenAI-compatible router" in skill and
+           "gemini-api" in skill)
+    result(rows, "V20 Gemini failure is blocking and cannot silently fall back to main",
+           "For V20, `gemini-api` is **REQUIRED**" in compact_skill and
+           "BLOCKED — GEMINI_CHEAP_WORKER_NOT_AVAILABLE" in compact_skill and
+           "MAIN Codex fallback is forbidden for V20" in compact_skill)
     result(rows, "Source Scout compact brief excludes full plan/transcript",
            "at most 2,048 bytes" in text and "whole transcript/PLAN" in text)
     result(rows, "Source Scout candidate cap is eight", "at most eight previews" in text)
@@ -1283,13 +1459,14 @@ def source_scout_checks(rows):
     result(rows, "Source Scout write scope excludes canonical production paths",
            "input/.videoagent/V<N>/candidates/<needId>/" in text and
            "Never write `src/`, `input/V<N>/`, or `public/V<N>/`" in text)
-    result(rows, "Source Scout cannot recursively spawn agents",
-           "never" in compact_text.lower() and "spawn another agent" in compact_text)
-    result(rows, "fallback-main cannot claim proven subagent economics",
-           "NOT PROVEN — native Codex" in skill and "never PASS" in skill)
-    result(rows, "benchmark-required Source Scout mode is fail-closed",
-           "native-cheap-worker-required" in skill and
-           "BLOCKED — PEXELS_CHEAP_WORKER_NOT_AVAILABLE" in skill)
+    result(rows, "Source Scout has no native Codex or Luna runtime dependency",
+           "does not require Codex spawning" in skill and "Luna" in skill and
+           "external Gemini API" in compact_skill)
+    result(rows, "rejected thumbnails stay outside MAIN context and final choice remains MAIN-owned",
+           "rejected thumbnails do not enter main context" in skill.lower() and
+           "Never auto-select worker rank 1" in compact_skill)
+    result(rows, "external worker context identity is mechanically NO",
+           "parentContextInherited = NO" in skill and "conversation history" in contract)
 
 
 def active_workflow_checks(rows):
